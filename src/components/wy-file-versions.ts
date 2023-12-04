@@ -27,8 +27,7 @@ import {
 import { openUrl } from "src/utils/urls";
 import { relativeTime } from "src/utils/datetime";
 import { WeavyContextProps } from "src/types/weavy.types";
-import { Feature, type FeaturesConfigType, type FeaturesListType } from "src/types/features.types";
-import { hasFeature } from "src/utils/features";
+import { type FeaturesConfigType, type FeaturesListType } from "src/types/features.types";
 import "./wy-empty";
 
 @customElement("wy-file-versions")
