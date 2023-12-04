@@ -1,0 +1,169 @@
+@use "base/var";
+@use "base/color";
+@use "type";
+
+.wy-input {
+  --wy-component-background-color: #{color.token(--wy-background)};
+  --wy-component-color: #{color.token(--wy-on-background)};
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+  border: var.default(--wy-input-border-width) solid #{color.token(--wy-outline-variant)};
+  display: block;
+  width: 100%;
+  padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
+  font-family: #{var.default(--wy-input-font-family)}, inherit;
+  font-size: var.default(--wy-input-font-size);
+  font-weight: var.default(--wy-input-font-weight);
+  line-height: var.default(--wy-input-line-height);
+  background-clip: padding-box;
+  appearance: none; // Fix appearance for date inputs in Safari
+  // Note: This has no effect on <select>s in some browsers, due to the limited stylability of `<select>`s in CSS.
+  border-radius: var.default(--wy-input-border-radius);
+
+  &:focus {
+    --wy-component-color: #{color.token(--wy-on-surface)};
+    color: var(--wy-component-color);
+    border-color: #{color.token(--wy-primary)};
+    outline: 0;
+  }
+  // Placeholder
+  &::placeholder {
+    color: #{color.token(--wy-outline)};
+    // Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
+    opacity: 1;
+  }
+  // Disabled and read-only inputs
+  //
+  // HTML5 says that controls under a fieldset > legend:first-child won't be
+  // disabled if the fieldset is disabled. Due to implementation difficulty, we
+  // don't honor that edge case; we style them as disabled anyway.
+  &:disabled {
+    opacity: 38%;
+  }
+  // Reset styles
+  // File input buttons theming
+  &::file-selector-button, &::-webkit-file-upload-button {
+    color: var(--wy-component-color);
+    background-color: var(--wy-component-background-color);
+    padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
+    margin: calc(-1 * #{var.default(--wy-input-padding-y)}) calc(-1 * #{var.default(--wy-input-padding-x)});
+    margin-inline-end: var.default(--wy-input-padding-x);
+    pointer-events: none;
+    border-color: inherit;
+    border-style: solid;
+    border-width: 0;
+    border-inline-end-width: var.default(--wy-input-border-width);
+    border-radius: 0; // stylelint-disable-line property-disallowed-list
+  }
+
+  &:hover:not(:disabled):not([readonly]) {
+    &::file-selector-button, ::-webkit-file-upload-button {
+      background-color: var(--wy-component-background-color);
+    }
+  }
+
+  &[type="file"] {
+    overflow: hidden; // prevent pseudo element button overlap
+
+    &:not(:disabled):not([readonly]) {
+      cursor: pointer;
+    }
+  }
+  // Add some height to date inputs on iOS
+  // https://github.com/twbs/bootstrap/issues/23307
+  // TODO: we can remove this workaround once https://bugs.webkit.org/show_bug.cgi?id=198959 is resolved
+  &::-webkit-date-and-time-value {
+    // Multiply line-height by 1em if it has no unit
+    height: calc(#{var.default(--wy-input-line-height)} * 1em);
+  }
+
+  &[type="search"]::-webkit-search-cancel-button {
+    // REVIEW: can we use close.svg?
+    -webkit-appearance: none;
+  }
+}
+
+.wy-input-filled {
+  --wy-component-background-color: #{color.token(--wy-surface-2)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+  
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+
+  border-radius: 1.25rem;
+  border-color: var(--wy-component-background-color);
+
+  &:focus {
+    border-color: #{color.token(--wy-outline-variant)};
+  }
+}
+
+.wy-input-label {
+  @include type.label;
+  display: block;
+  margin-bottom: .5rem;
+}
+
+.wy-description {
+  margin-top: .25rem;
+  font-size: var.default(--wy-font-size-sm);
+}
+
+.wy-is-invalid {
+  &, &:focus {
+    border-color: color.token(--wy-error);
+  }
+}
+
+.wy-invalid-feedback {
+  margin-top: 0.25rem;
+  font-size: var.default(--wy-font-size-sm);
+  color: #{color.token(--wy-error)};
+}
+
+.wy-input-group {
+  position: relative;
+
+  // Optional leading icon
+  > wy-icon {
+    position: absolute;
+    top: 0rem;
+    left: 0rem;
+    z-index: 4;
+
+    + .wy-input {
+      padding-left: 2.5rem;
+    }
+  }
+
+ 
+}
+
+// Required trailing button
+.wy-input-group-button-icon {
+  position: absolute;
+  top: 0rem;
+  right: 0rem;
+  z-index: 4;
+  border-radius: var.default(--wy-input-border-radius);
+}
+
+.wy-input-group-input-filled ~ .wy-button-icon {
+  border-radius: 1.25rem;
+}
+
+.wy-input-group-input {
+  padding-right: 2.5rem;
+
+  &:placeholder-shown {
+    ~ .wy-input-group-button-icon[type=reset] {
+      display: none;
+    } 
+  }
+
+  &:not(:placeholder-shown) {
+    ~ .wy-input-group-button-icon[type=reset] + .wy-input-group-button-icon {
+      display: none;
+    }
+  }
+}

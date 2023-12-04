@@ -1,0 +1,130 @@
+@use "base/color";
+@use "base/var";
+@use "buttons"; // Ensures correct order, since buttons is needed by reactions
+@use "dropdown"; // Ensures correct order, since dropdown is needed by reactions
+
+.wy-likes {
+  display: inline-flex;
+  align-items: center;
+}
+
+.wy-like-button {
+  background: var(--wy-component-background-color);
+  color: var(--wy-primary);
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.wy-like-count {
+  padding: 0 .5rem;
+  color: var(--wy-outline);
+  font-size: var.default(--wy-font-size-sm);
+}
+
+.wy-reaction-count {
+  margin: 0 0.5rem 0 .125rem;
+  line-height: 1;
+  font-size: var.default(--wy-font-size-sm);
+}
+
+.wy-reaction-menu {
+  padding: .25rem;
+  font-size: 1.125rem;
+  border-radius: 2.5rem;
+}
+
+.wy-reaction-picker {
+  display: flex;
+
+  .wy-reaction-button {
+    color: unset;
+  }
+
+  // button{
+  //   span{
+  //     font-size: 2rem;
+  //   }
+  // }
+}
+
+
+.wy-reactions {
+  display: inline-flex;
+  align-items: center;
+  column-gap: .1875rem;
+  // hidden when empty
+  &:empty {
+    display: none;
+  }
+}
+
+.wy-reactions-line {
+  display: flex;
+  align-items: center;
+}
+
+:host(wy-reactions) {
+  .wy-emoji {
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+
+    &:first-child {
+      margin-left: .1875rem;
+    }
+
+    &:last-child {
+      margin-right: .1875rem;
+    }
+  }
+}
+  
+  :host(wy-reactions[small]) {
+    .wy-reaction-lineup, .wy-reaction-like-button {
+      .wy-emoji {
+        width: 1.125rem;
+        height: 1.125rem;
+        font-size: 1rem;
+    
+        &:first-child {
+          margin-left: .125rem;
+        }
+    
+        &:last-child {
+          margin-right: .125rem;
+        }
+      }
+
+      .wy-like-count {
+        font-size: var.default(--wy-font-size-xs);
+      }
+    }
+  }
+
+
+
+.wy-table-reactions {
+  // avatar
+  td:first-child {
+    width: 3rem;
+  }
+  // name
+  td:nth-child(2) {
+    width: 100%;
+  }
+
+  tr:last-child td {
+    box-shadow: none;
+  }
+}
+
+.wy-reaction {
+  font-size: 1.125rem;
+}
+
+.wy-reaction-menu-button, .wy-like-button {
+  background: var(--wy-component-background-color);
+  color: currentColor;
+  border-radius: var.default(--wy-border-radius-pill);
+  background-clip: content-box;
+}

@@ -1,0 +1,75 @@
+// DARK MODE
+
+$tokens: (
+  // theme colors
+  --wy-primary: --wy-primary-80,
+  --wy-on-primary: --wy-primary-20, 
+  --wy-primary-container: --wy-primary-30,
+  --wy-on-primary-container: --wy-primary-90, 
+
+  --wy-secondary: --wy-secondary-80,
+  --wy-on-secondary: --wy-secondary-20, 
+  --wy-secondary-container: --wy-secondary-30,
+  --wy-on-secondary-container: --wy-secondary-90,
+
+  --wy-tertiary: --wy-tertiary-80,
+  --wy-on-tertiary: --wy-tertiary-20, 
+  --wy-tertiary-container: --wy-tertiary-30,
+  --wy-on-tertiary-container: --wy-tertiary-90,
+
+  --wy-error: --wy-error-80, 
+  --wy-on-error: --wy-error-20, 
+  --wy-error-container: --wy-error-30, 
+  --wy-on-error-container: --wy-error-90, 
+
+  /*  warning is a custom addition */
+  --wy-warning: --wy-warning-90, 
+  --wy-on-warning: --wy-warning-30, 
+  --wy-warning-container: --wy-warning-50, 
+  --wy-on-warning-container: --wy-warning-95, 
+
+  --wy-background: --wy-neutral-10,
+  --wy-on-background: --wy-neutral-90,
+
+  --wy-surface: --wy-neutral-10,
+  --wy-on-surface: --wy-neutral-90,
+
+  --wy-surface-variant: --wy-neutral-variant-30,
+  --wy-on-surface-variant: --wy-neutral-variant-80, 
+
+  --wy-outline: --wy-neutral-variant-60,
+  --wy-outline-variant: --wy-neutral-variant-30,
+
+  --wy-inverse-surface: --wy-neutral-90,
+  --wy-on-inverse-surface: --wy-neutral-20,
+  --wy-inverse-primary: --wy-primary-40,
+ 
+  --wy-surface-1: --wy-surface-1-dark, // --wy-surface + --wy-primary with 5% opacity
+  --wy-surface-2: --wy-surface-2-dark, // --wy-surface + --wy-primary with 8% opacity
+  --wy-surface-3: --wy-surface-3-dark, // --wy-surface + --wy-primary with 11 opacity
+  --wy-surface-4: --wy-surface-4-dark, // --wy-surface + --wy-primary with 12% opacity
+  --wy-surface-5: --wy-surface-5-dark, // --wy-surface + --wy-primary with 14% opacity
+
+  --wy-link: --wy-primary-80,
+
+  // custom colors
+  --wy-blue: --wy-blue-dark,
+  --wy-indigo: --wy-indigo-dark,
+  --wy-purple: --wy-purple-dark,
+  --wy-pink: --wy-pink-dark,
+  --wy-red: --wy-red-dark,
+  --wy-orange: --wy-orange-dark,
+  --wy-yellow: --wy-yellow-dark,
+  --wy-green: --wy-green-dark,
+  --wy-teal: --wy-teal-dark,
+  --wy-cyan: --wy-cyan-dark,
+  --wy-gray: --wy-gray-dark,
+
+  --wy-presence-active: --wy-green-dark,
+);
+
+@mixin styles {
+  // dark mode
+  color-scheme: dark;
+}
+

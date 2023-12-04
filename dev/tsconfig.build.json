@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    //"isolatedModules": false,
+    "declaration": true,
+    // helps local development, could be dropped out of the NPM package though
+    "declarationMap": true,
+    "outDir": "../dist/types"
+  },
+  "include": [
+    "../src/**/*.ts",
+    "src/scss/**/*.scss"
+  ],
+  "exclude": [
+    "node_modules",
+    "../dev",
+    "../locales",
+    "../dist",
+    "../src/utils/tanstack-dev-tools.ts"
+  ]
+}

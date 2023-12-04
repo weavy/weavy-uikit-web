@@ -1,0 +1,67 @@
+@use "base/var";
+@use "base/const";
+@use "base/color";
+@use "base/scroll";
+
+.wy-sheet {
+  // Reset scrollbar adjust
+  --wy-scrollbar-adjust-top: 0;
+  --wy-scrollbar-adjust-bottom: 0;
+
+  --wy-component-background-color: #{color.token(--wy-surface-3)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+
+  position: fixed;
+  z-index: const.$zindex-modal;
+  display: flex;
+  flex-direction: column;
+  
+  bottom: .5rem;
+  left: .5rem;
+  right: .5rem;
+  max-height: max(50vh, 50%);
+  min-height: 3rem;
+  margin: .5rem auto;
+  max-width: 32rem;
+
+  // transition hide
+  transition: opacity var.default(--wy-transition);
+
+  border-radius: var.default(--wy-border-radius);
+  box-shadow: var.default(--wy-shadow-level1);
+
+  > .wy-appbars, > .wy-appbar {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+  }
+}
+
+.wy-sheet-body {
+  overflow: hidden;
+  padding: .5rem;
+  position: relative;
+  min-height: 3rem;
+
+  &.wy-scroll-y{
+    overflow-y: auto;
+  }
+}
+
+// Transitions
+.wy-sheet {
+  &:not(.wy-show) {
+    opacity: 0;
+    transform: translateY(32rem);
+  }
+
+  &.wy-show {
+    opacity: 1;
+    transform: none;
+    // transition show
+    transition: transform var.default(--wy-transition), opacity var.default(--wy-transition);
+    pointer-events: auto;
+  }
+}

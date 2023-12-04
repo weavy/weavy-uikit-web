@@ -1,0 +1,55 @@
+@use "base/var";
+@use "base/color";
+@use "base/text";
+
+$badge-padding-y: .35em !default;
+$badge-padding-x: .65em !default;
+$badge-font-size: .75em !default;
+$badge-font-weight: var.default(--wy-font-weight-bold) !default;
+
+.wy-badge {
+  display: inline-block;
+  padding: $badge-padding-y $badge-padding-x;
+  font-size: $badge-font-size;
+  font-weight: $badge-font-weight;
+  line-height: 1;
+  color: color.token(--wy-on-primary);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+
+  // Empty badges collapse automatically
+  &:empty {
+    display: none;
+  }
+
+  border-radius: var.default(--wy-border-radius-pill);
+  background-color: color.token(--wy-primary);
+}
+
+.wy-button {
+  position: relative; // so that we can position .badge
+
+  // badge, e.g. notification count
+  .wy-badge {
+    font-size: var.default(--wy-font-size-xs);
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-radius: 1rem;
+    margin: 0;
+    padding: .25rem;
+    min-width: 1rem;
+    max-width: 2rem;
+    height: 1rem;
+    line-height: .5rem;
+    display: block;
+    text-align: center;
+    
+    @include text.truncate;
+
+    &:empty {
+      display: none;
+    }
+  }
+}

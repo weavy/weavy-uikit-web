@@ -1,0 +1,32 @@
+// weavy reboot
+@use "components/base/reboot";
+
+// weavy ui components 
+@use "components/base/scroll";
+@use "components/appbar";
+@use "components/buttons";
+@use "components/card";
+@use "components/dropdown";
+@use "components/empty";
+@use "components/files";
+@use "components/grid";
+@use "components/icons";
+@use "components/input";
+@use "components/item";
+@use "components/list";
+@use "components/overlays";
+@use "components/pager";
+@use "components/pane";
+@use "components/panels";
+@use "components/preview";
+@use "components/preview-code";
+@use "components/preview-embed";
+@use "components/preview-html";
+@use "components/preview-image";
+@use "components/preview-media";
+@use "components/preview-pdf";
+@use "components/preview-text";
+@use "components/sheet";
+@use "components/sidebar";
+@use "components/spinner";
+@use "components/tables";

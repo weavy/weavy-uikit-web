@@ -1,0 +1,75 @@
+// LIGHT MODE
+
+$tokens: (
+  // theme colors
+  --wy-primary: --wy-primary-40,
+  --wy-on-primary: --wy-white,
+  --wy-primary-container: --wy-primary-90,
+  --wy-on-primary-container: --wy-primary-10, 
+
+  --wy-secondary: --wy-secondary-40,
+  --wy-on-secondary: --wy-white, 
+  --wy-secondary-container: --wy-secondary-90,
+  --wy-on-secondary-container: --wy-secondary-10,
+
+  --wy-tertiary: --wy-tertiary-40,
+  --wy-on-tertiary: --wy-white, 
+  --wy-tertiary-container: --wy-tertiary-90,
+  --wy-on-tertiary-container: --wy-tertiary-10,
+
+  --wy-error: --wy-error-40, 
+  --wy-on-error: --wy-white, 
+  --wy-error-container: --wy-error-90, 
+  --wy-on-error-container: --wy-error-10, 
+
+  /* Warning is a custom addition */
+  --wy-warning: --wy-warning-80, 
+  --wy-on-warning: --wy-black, 
+  --wy-warning-container: --wy-warning-90, 
+  --wy-on-warning-container: --wy-warning-10, 
+
+  --wy-background: --wy-neutral-99,
+  --wy-on-background: --wy-neutral-10,
+
+  --wy-surface: --wy-neutral-99,
+  --wy-on-surface: --wy-neutral-10,
+
+  --wy-surface-variant: --wy-neutral-variant-90,
+  --wy-on-surface-variant: --wy-neutral-variant-30, 
+
+  --wy-outline: --wy-neutral-variant-50,
+  --wy-outline-variant: --wy-neutral-variant-80,
+
+  --wy-inverse-surface: --wy-neutral-20,
+  --wy-on-inverse-surface: --wy-neutral-95,
+  --wy-inverse-primary: --wy-primary-80,
+
+  --wy-surface-1: --wy-surface-1-light, // --wy-surface + --wy-primary with 5% opacity
+  --wy-surface-2: --wy-surface-2-light, // --wy-surface + --wy-primary with 8% opacity
+  --wy-surface-3: --wy-surface-3-light, // --wy-surface + --wy-primary with 11 opacity
+  --wy-surface-4: --wy-surface-4-light, // --wy-surface + --wy-primary with 12% opacity
+  --wy-surface-5: --wy-surface-5-light, // --wy-surface + --wy-primary with 14% opacity
+
+  --wy-link: --wy-primary-40,
+
+  // custom colors
+  --wy-blue: --wy-blue-light,
+  --wy-indigo: --wy-indigo-light,
+  --wy-purple: --wy-purple-light,
+  --wy-pink: --wy-pink-light,
+  --wy-red: --wy-red-light,
+  --wy-orange: --wy-orange-light,
+  --wy-yellow: --wy-yellow-light,
+  --wy-green: --wy-green-light,
+  --wy-teal: --wy-teal-light,
+  --wy-cyan: --wy-cyan-light,
+  --wy-gray: --wy-gray-light,
+
+  --wy-presence-active: --wy-green-light,
+);
+
+@mixin styles {
+    // light mode
+    color-scheme: light;
+}
+

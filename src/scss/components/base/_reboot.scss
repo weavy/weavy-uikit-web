@@ -1,0 +1,54 @@
+@use "color";
+@use "var";
+
+// Some cherry-picked and ported from bootstrap/scss/reboot
+// Use :where() to get specificity 0 https://developer.mozilla.org/en-US/docs/Web/CSS/:where
+
+// General style reboot selector for custom element, shadow dom and all classes starting with wy-
+:where(:host, :host > *, [class^='wy-'], [class*=' wy-']) {
+
+  box-sizing: border-box;
+
+  // See https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/
+  *::before, *::after {
+    box-sizing: inherit;
+  }
+  // Self and descendants
+  &, & * {
+    // A
+    &:where(a) {
+      text-decoration: var.default(--wy-link-decoration);
+      color: color.token(--wy-link);
+
+      &:hover {
+        text-decoration: var.default(--wy-link-hover-decoration);
+      }
+
+      &:where(:not([href]):not([class])) {
+
+        &, &:hover {
+          text-decoration: none;
+        }
+      }
+    }
+
+    // P
+    &:where(p) {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+
+    // LABEL
+    &:where(label) {
+      cursor: inherit;
+    }
+
+    &[hidden] {
+      display: none !important;
+    }
+
+    &:where([role="button"]) {
+      cursor: pointer;
+    }
+  }
+}

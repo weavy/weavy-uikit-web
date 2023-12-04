@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html style="--wy-theme-color: #61afef">
+  <head>
+    <script>
+      fetch("/api/contextual/acme-chat-2?type=chat");
+      fetch("/api/contextual/acme-feed-2?type=posts");
+      fetch("/api/contextual/acme-files-2?type=files");
+    </script>
+    <!--script src="./weavy.js"></script-->
+    <link rel="modulepreload" href="locales/sv-SE.js" />
+    <script type="module" src="./dev/tools/tanstack-dev-tools.js" async defer></script>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          "Open Sans", "Helvetica Neue", sans-serif;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      wy-chat {
+        display: flex;
+        height: 100vh;
+      }
+    </style>
+        <script type="module">
+          import * as svSE from "./locales/sv-SE.js";
+          import {Weavy} from "./weavy.esm.js";
+    
+          const weavy = new Weavy({
+            url: "{WEAVY_URL}",
+            reactions: ["👍", "❤️", "😂", "😒", "😁"],
+            zoomAuthenticationUrl: "{ZOOM_AUTH_URL}",
+            locales: ["sv-SE"],
+          });
+    
+          weavy.localizedTemplates = new Map([
+            ["sv-SE", svSE]
+          ]);
+          weavy.locale = "sv-SE";
+          weavy.tokenFactory = async (refresh) => {
+            let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);
+    
+            if (response.ok) {
+              let data = await response.json();
+              return data.access_token;
+            } else {
+              throw new Error("Could not get access token from server!");
+            }
+          };
+        </script>
+  </head>
+  <body>
+
+
+    <div style="flex: 1; display: flex">
+      <wy-chat style="flex: 1" uid="acme-chat-2" features='{"reactions": true}'></wy-chat>
+      <wy-posts style="flex: 1" uid="acme-feed-2" features='{"reactions": true}'></wy-posts>
+      <wy-files style="flex: 1" uid="acme-files-2" features='{"reactions": true}'></wy-files>
+    </div>
+
+    <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
+  </body>
+</html>

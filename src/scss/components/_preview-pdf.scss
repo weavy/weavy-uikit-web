@@ -1,0 +1,92 @@
+@use 'base/var';
+@use 'base/color';
+@use 'base/scroll';
+
+// pdfjs :roots copied from pdfjs-dist/web/pdf_viewer.css
+
+:host(wy-pdf-viewer) {
+    --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+    --input-focus-border-color: Highlight;
+    --input-focus-outline: 1px solid Canvas;
+    --input-unfocused-border-color: transparent;
+    --input-disabled-border-color: transparent;
+    --input-hover-border-color: black;
+
+    --xfa-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+    --xfa-focus-outline: auto;
+
+    --focus-outline: solid 2px blue;
+    --hover-outline: dashed 2px blue;
+    --freetext-line-height: 1.35;
+    --freetext-padding: 2px;
+    --editorFreeText-editing-cursor: text;
+    --editorInk-editing-cursor: pointer;
+
+    --viewer-container-height: 0;
+    --pdfViewer-padding-bottom: 0;
+    --page-margin: 2rem auto;
+    --page-border: none;
+    --page-border-image: none;
+    --spreadHorizontalWrapped-margin-LR: -3.5px;
+    --scale-factor: 1;
+
+    @media (forced-colors: active) {
+        --input-focus-border-color: CanvasText;
+        --input-unfocused-border-color: ActiveText;
+        --input-disabled-border-color: GrayText;
+        --input-hover-border-color: Highlight;
+    }
+
+    @media (forced-colors: active) {
+        --xfa-focus-outline: 2px solid CanvasText;
+    }
+
+    @media (forced-colors: active) {
+        --focus-outline: solid 3px ButtonText;
+        --hover-outline: dashed 3px ButtonText;
+    }
+
+    @media screen and (forced-colors: active) {
+        --page-border: 1px solid CanvasText;
+        --page-border-image: none;
+        --spreadHorizontalWrapped-margin-LR: 3.5px;
+    }
+}
+
+// Weavy styling
+
+.wy-content-pdf {
+    .wy-input[data-pdf-target='pageNumber'] {
+        width: 3rem;
+    }
+
+    .wy-input[data-pdf-target='zoomLevel'] {
+        width: 5rem;
+    }
+
+    .wy-pdf-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        bottom: 0;
+        left: 0;
+
+        @include scroll.scroll-y;
+        @include scroll.scroll-x;
+
+        .wy-scrollbars & {
+            @include scroll.custom-scrollbar;
+
+            @supports (overflow-y: overlay) {
+                overflow-y: overlay;
+            }
+        }
+    }
+
+    @import 'preview-pdf-viewer';
+
+    .pdfViewer .page {
+        box-shadow: var.default(--wy-shadow-level2);
+        background-color: color.token(--wy-white);
+    }
+}

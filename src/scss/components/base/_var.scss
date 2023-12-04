@@ -1,0 +1,125 @@
+@use "sass:map";
+@use "const";
+@use "md";
+
+// VARIABLE DEFINITIONS
+
+/*
+ * INSTRUCTIONS:
+ * - variables cannot reference themselves
+ * - variables may reference other variables, but must ALWAYS have an explicit default fallback (since that variable may not exist in reality).
+ * - The fallback value should be the same as any referenced variable
+ */
+
+$defaults: (
+    /* Typography */
+
+    // Font should be inherited/unset by default
+    --wy-font-family:               unset, // #{$font-family-sans-serif};
+    --wy-font-weight:               unset, // #{$font-weight-normal};
+
+    --wy-line-height:               1.5,
+
+    --wy-font-size-base:            1rem, // Assumes the browser default, typically 16px
+    --wy-font-size-xxs:             calc(.625 * var(--wy-font-size-base, 1rem)), // .625rem 10px
+    --wy-font-size-xs:              calc(.75  * var(--wy-font-size-base, 1rem)), //  .75rem 12px
+    --wy-font-size-sm:              calc(.875 * var(--wy-font-size-base, 1rem)), // .875rem 14px
+    --wy-font-size-lg:              calc(1.25 * var(--wy-font-size-base, 1rem)), // 1.25rem 20px
+
+    --wy-headings-font-style:       unset,
+    --wy-headings-font-family:      var(--wy-font-family, unset),
+    --wy-headings-font-weight:      #{const.$font-weight-medium},
+    --wy-headings-line-height:      var(--wy-line-height, 1.5),
+
+    /* Border */
+    --wy-border-radius:             .5rem,
+    --wy-border-radius-sm:          calc(.75 * var(--wy-border-radius, .5rem)), // .375rem;
+    --wy-border-radius-lg:          calc(1.5 * var(--wy-border-radius, .5rem)), // .75rem;
+    --wy-border-radius-xl:          calc(2   * var(--wy-border-radius, .5rem)), //  1rem;
+    --wy-border-radius-pill:        50rem,
+
+    /* Links */
+    //--wy-link-color:              #{color.token(--wy-primary)},  ---> --wy-link in colors
+    --wy-link-decoration:           none,
+    --wy-link-hover-decoration:     unset,
+
+    /* Tables */
+    --wy-table-cell-padding-x:      .25rem,
+    --wy-table-cell-padding-y:      .25rem,
+
+    /* Inputs */
+    --wy-input-padding-y:           .4375rem,
+    --wy-input-padding-x:           .75rem,
+    --wy-input-font-family:         var(--wy-font-family, inherit), // VERY SPECIAL CASE: inherit instead of unset
+    --wy-input-font-size:           var(--wy-font-size-base, 1rem),
+    --wy-input-font-weight:         var(--wy-font-weight, unset),
+    --wy-input-line-height:         var(--wy-line-height, 1.5rem),
+    --wy-input-border-width:        1px,
+    --wy-input-border-radius:       var(--wy-border-radius, .5rem),
+
+
+    /* Shadows */
+    --wy-shadow-level0:             none, // xxs
+    --wy-shadow-level1:             #{md.$shadow-2dp}, // xs
+    --wy-shadow-level2:             #{md.$shadow-4dp}, // sm
+    --wy-shadow-level3:             #{md.$shadow-8dp}, // 
+    --wy-shadow-level4:             #{md.$shadow-16dp}, // lg
+
+    /* Transitions */
+    --wy-transition-curve:          #{md.$animation-curve-default},
+    --wy-transition-duration:       #{md.$animation-duration},
+    --wy-transition-duration-fast:  #{md.$animation-duration-fast},
+    --wy-transition:                var(--wy-transition-duration, #{md.$animation-duration}) var(--wy-transition-curve, #{md.$animation-curve-default}),
+    --wy-transition-fast:           var(--wy-transition-duration-fast, #{md.$animation-duration-fast}) var(--wy-transition-curve, #{md.$animation-curve-default}),
+
+    /* Opacity */
+    --wy-opacity-backdrop:          95%,
+    --wy-opacity-muted:             38%,
+    --wy-opacity-disabled:          38%,
+    /*
+    --wy-opacity-disabled:          12%,
+    --wy-opacity-on-disabled:       38%,
+    */
+
+    /* State layer */
+    --wy-opacity-state-hover:       8%,
+    --wy-opacity-state-focus:       12%,
+    --wy-opacity-state-active:      12%,
+    --wy-opacity-state-drag:        16%,
+
+    /* Surface elevation */
+    --wy-surface-1-mix:             5%,
+    --wy-surface-2-mix:             8%,
+    --wy-surface-3-mix:             11%,
+    --wy-surface-4-mix:             12%,
+    --wy-surface-5-mix:             14%,
+
+    /* Components */
+    --wy-appbar-height:             3rem,
+    --wy-footerbar-height:          4rem,
+
+    /* Buttons */
+    --wy-btn-padding-x:             1.5rem,
+    --wy-btn-padding-y:             .5rem,
+    --wy-btn-font-family:           var(--wy-font-family, unset),
+    --wy-btn-font-size:             var(--wy-font-size-base, 1rem),
+    --wy-btn-font-weight:           #{const.$font-weight-normal},
+    --wy-btn-line-height:           var(--wy-line-height, 1.5),
+    --wy-btn-border-width:          0,
+    --wy-btn-border-color:          transparent,
+    --wy-btn-border-radius:         1.25rem,
+
+    --wy-avatar-font-size:          .382em, // Golden section
+    --wy-avatar-font-weight:        #{const.$font-weight-semibold}
+);
+
+@function default($name) {
+    $value: map.get($defaults, $name);
+    @return var(#{$name}, #{$value});
+}
+
+@mixin custom-properties {
+    @each $name, $value in $defaults {
+        #{$name}: $value;
+      }
+}

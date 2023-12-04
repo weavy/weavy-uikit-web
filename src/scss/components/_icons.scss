@@ -1,0 +1,219 @@
+@use "base/color";
+@use "base/var";
+
+.wy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  position: relative;
+
+  &:not([width]) {
+    width: var(--wy-component-icon-width, 1.5rem);
+  }
+
+  &:not([height]) {
+    height: var(--wy-component-icon-height, 1.5rem);
+  }
+
+  width: var(--wy-component-icon-width);
+  height: var(--wy-component-icon-height);
+}
+
+// For being first element in buttons etc
+.wy-icon-first {
+  margin-left: -.5rem;
+}
+
+// For being last element in buttons etc
+.wy-icon-last {
+  margin-right: -.5rem;
+}
+
+.wy-icon-padded {
+  //width: calc(var(--wy-component-icon-width, 1.5rem) * 9 / 10);
+  //height: calc(var(--wy-component-icon-height, 1.5rem) * 9 / 10);
+  //margin: calc(var(--wy-component-icon-width, 1.5rem) / 10)
+  margin: 16.66666667%;
+}
+
+.wy-icon-inline {
+  vertical-align: -.25em;
+}
+
+
+.wy-icon-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--wy-component-background-color, #{color.token(--wy-background)});
+  border-radius: 50%;
+  border: 1px solid var(--wy-component-background-color, #{color.token(--wy-background)});
+}
+
+// stacked icons (icon+overlay icon)
+.wy-icon-stack {
+  display: inline-flex;
+  position: relative;
+  line-height: 1;
+
+  .wy-icon, > svg {
+    &:last-child {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background-color: var(--wy-component-background-color, #{color.token(--wy-background)});
+      border-radius: 50%;
+      width: calc(var(--wy-component-icon-width) / 2);
+      height: calc(var(--wy-component-icon-height) / 2);
+    }
+  }
+}
+
+// stacked icons (icon+active icon)
+.wy-icon-active-stack {
+  display: inline-flex;
+  position: relative;
+  line-height: 1;
+
+  .wy-icon-stack-item {
+      transition: opacity var.default(--wy-transition);
+      align-self: center;
+      justify-self: center;
+      margin: auto;
+      //display: inline-flex;
+  }
+
+  .wy-icon-stack-item:last-child {
+      position: absolute;
+      opacity: 0;
+  }
+
+  &.wy-active, .wy-active & {
+    .wy-icon-stack-item:first-child {
+        opacity: 0;
+    }
+
+    .wy-icon-stack-item:last-child {
+      opacity: 1;
+    }
+  }
+}
+
+// icons normally inherit the text color of its parent
+.wy-icon {
+  &:not([class*="wy-icon-color-"]):not([class*="wy-kind-"]) * {
+    fill: currentColor;
+  }
+}
+
+// big file type icon
+.wy-content-icon {
+  color: var(--wy-component-color, color.token(--wy-on-surface-variant));
+  border-radius: var(--wy-component-border-radius, var.default(--wy-border-radius-lg));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 1rem 2rem;
+  margin: auto;
+
+  > .wy-icon-stack, > .wy-icon, > wy-icon, ::slotted(.wy-icon-stack), ::slotted(.wy-icon), ::slotted(wy-icon) {
+    --wy-component-icon-width: 4rem;
+    --wy-component-icon-height: 4rem;
+  }
+}
+
+// Name after content icon
+.wy-content-name, .wy-content-meta {
+  padding: 1rem 2rem;
+  text-align: center;
+}
+
+// theme icons
+@each $name in color.$all-color-names {
+  .wy-icon-color-#{$name} * {
+    &, & * {
+      fill: color.token(--wy-#{$name});
+    }
+  }
+}
+
+// file type icons
+[class*="wy-kind-"] {
+  &, & * {
+    fill: color.token(--wy-gray);
+
+  }
+}
+
+.wy-kind-archive {
+  fill: color.token(--wy-orange);
+}
+
+.wy-kind-audio * {
+  fill: color.token(--wy-teal);
+}
+
+.wy-kind-code * {
+  fill: color.token(--wy-green);
+}
+
+.wy-kind-document * {
+  fill: color.token(--wy-blue);
+}
+
+.wy-kind-email * {
+  fill: color.token(--wy-red);
+}
+
+.wy-kind-presentation * {
+  fill: color.token(--wy-orange);
+}
+
+.wy-kind-spreadsheet * {
+  fill: color.token(--wy-green);
+}
+
+.wy-kind-image * {
+  fill: color.token(--wy-pink);
+}
+
+.wy-kind-text * {
+  fill: color.token(--wy-cyan);
+}
+
+.wy-kind-video * {
+  fill: color.token(--wy-purple);
+}
+
+.wy-ext-pdf * {
+  fill: color.token(--wy-red);
+}
+
+.wy-kind-text-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: -.3125rem;
+}
+
+
+// progress icon
+[data-icon=progress] {
+
+  &.wy-icon-primary {
+    color: color.token(--wy-primary);
+  }
+
+  :first-child {
+    fill: none;
+    stroke: color.token(--wy-surface-variant);
+  }
+
+  :last-child {
+    fill: none;
+    stroke: currentColor;
+  }
+}
+

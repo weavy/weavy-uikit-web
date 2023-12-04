@@ -1,0 +1,36 @@
+@use "base/color";
+@use "code";
+
+// user generated content. e.g. text in comments, messages etc.
+.wy-content {
+  @include code.themes;
+
+  overflow-wrap: break-word;
+  min-width: 0;
+  // inline code
+  :not(pre) > code {
+    overflow-wrap: inherit;
+  }
+  // code block
+  pre, pre > code[class*=language-] {
+    white-space: pre-wrap;
+  }
+
+  :last-child {
+    margin-bottom: 0;
+  }
+
+  &:empty {
+    display: none;
+  }
+}
+
+// hashtags
+.wy-hashtag {
+  color: #{color.token(--wy-primary)};
+}
+
+// mentions
+.wy-mention {
+  font-weight: 500;
+}

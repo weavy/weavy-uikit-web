@@ -1,0 +1,192 @@
+@use "sass:math";
+@use "base/var";
+@use "base/const";
+@use "base/color";
+@use "base/backdrop";
+@use "base/position";
+@use "base/text";
+
+.wy-appbars {
+  @include position.sticky-top;
+
+  @include backdrop.filter {
+    > .wy-appbar {
+      backdrop-filter: none;
+    }
+  }
+
+  --wy-component-background-color: #{color.token(--wy-surface-1)};
+  background-color: var(--wy-component-background-color);
+
+  box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
+
+  > .wy-appbar, > .wy-toolbar {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.wy-appbar {
+  --wy-component-color: #{color.token(--wy-on-surface)};
+  --wy-component-background-color: #{color.token(--wy-surface-1)};
+
+  display: grid;
+  align-items: center;
+  justify-content: space-between;
+  justify-items: center;
+  height: var.default(--wy-appbar-height);
+  padding: .25rem;
+  flex: 0 0 var.default(--wy-appbar-height);
+  grid-template-columns: minmax(2.5rem, max-content) minmax(0, max-content) minmax(2.5rem, max-content);
+  column-gap: .5rem;
+  line-height: var.default(--wy-line-height-base);
+
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+  box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
+
+  .wy-badge {
+    align-self: center;
+  }
+
+  .wy-button {
+    max-height: 2.5rem;
+  }
+}
+
+
+
+.wy-appbar-buttons, .wy-toolbar-buttons {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.wy-toolbar-buttons-last {
+  margin-inline-start: auto;
+}
+
+.wy-appbar-text {
+  @include text.truncate;
+  max-width: 100%;
+  
+  color: inherit !important;
+  user-select: none;
+
+  a {
+    color: inherit;
+
+    &:hover {
+      color: inherit;
+    }
+  }
+}
+.wy-appbar-text-trashed {
+  text-decoration: line-through;
+}
+
+
+// floating toolbars (mainly for pdf preview, but can be also be used for other things)
+.wy-toolbars-bottom {
+  position: absolute;
+  z-index: const.$zindex-fixed;
+  bottom: calc(#{var.default(--wy-footerbar-height)} / 2);
+  left: 0;
+  right: 0;
+  min-height: var.default(--wy-appbar-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+}
+
+.wy-toolbar {
+  --wy-component-color: #{color.token(--wy-on-surface)};
+  --wy-component-background-color: #{color.token(--wy-surface-1)};
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  justify-items: center;
+  min-height: var.default(--wy-appbar-height);
+  padding: .25rem;
+  flex: 1 0 var.default(--wy-appbar-height);
+  column-gap: .25rem;
+  line-height: var.default(--wy-line-height-base);
+
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+  box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
+}
+
+.wy-toolbar-center {
+  margin: 0 auto;
+  border-radius: var.default(--wy-border-radius);
+  
+  .wy-input {
+    text-align: center;
+    //border-color: transparent;
+  }
+}
+
+.wy-toolbar-text {
+  margin-left: .25rem;
+}
+
+.wy-footerbars {
+  padding-bottom: var.default(--wy-footerbar-height);
+
+  > .wy-toolbar {
+    box-shadow: none;
+  }
+}
+
+.wy-footerbar {
+  --wy-component-background-color: #{color.token(--wy-surface-1)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+  
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: const.$zindex-sticky;
+
+  &::after {
+    content: "";
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
+    box-shadow: #{color.token(--wy-outline-variant)} 0px 1px 0px 0px inset;
+    position: absolute;
+    width: 100vw;
+    left: 0;
+    bottom: 0;
+    height: 100%;
+    z-index: -1;
+
+    @include backdrop.filter;
+  }
+
+  .wy-buttons {
+    flex-direction: row-reverse;
+
+    > :not(:last-child) {
+      margin: 0 0 0 .5rem;
+    }
+  }
+}
+
+.wy-footerbar-sticky {
+  position: sticky;
+}
+
+.wy-footerbars-fixed {
+  .wy-footerbar {
+    position: fixed;
+
+    &::after {
+      position: fixed;
+      height: var.default(--wy-footerbar-height);
+    }
+  }
+}

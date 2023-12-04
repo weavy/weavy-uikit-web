@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file target-language="sv-SE" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+    <body>
+      <trans-unit id="s26f91b6796e33111">
+        <source>Restore</source>
+        <target state="">Återställ</target>
+      </trans-unit>
+      <trans-unit id="sdc673e73b5c13aea">
+        <source>Delete</source>
+        <target state="">Radera</target>
+      </trans-unit>
+      <trans-unit id="s9fb1c9e781c38ec2">
+        <source>Open in <x id="0" equiv-text="${fileProvider}"/></source>
+        <target state=""> Öppna i <x id="0" equiv-text="${fileProvider}"/>
+        </target>
+      </trans-unit>
+      <trans-unit id="s60320a18282b2b33">
+        <source>Rename</source>
+        <target state="">Byt namn</target>
+      </trans-unit>
+      <trans-unit id="s0d7fcbf8f03c7116">
+        <source>Unsubscribe</source>
+        <target state="">Avprenumerera</target>
+      </trans-unit>
+      <trans-unit id="s58aac558ddaa15a3">
+        <source>Subscribe</source>
+        <target state="">Prenumerera</target>
+      </trans-unit>
+      <trans-unit id="s9ebb630d372e4145">
+        <source>Trash</source>
+        <target state="">Ta bort</target>
+      </trans-unit>
+      <trans-unit id="sd3386a2ef42e80b9">
+        <source>Download</source>
+        <target state="">Ladda ner</target>
+      </trans-unit>
+      <trans-unit id="s2a200f62cfdb269c">
+        <source>Cloud File Browser</source>
+        <target state="">Molnlagring</target>
+      </trans-unit>
+      <trans-unit id="s9252c3f0ce55297b">
+        <source>Add files</source>
+        <target state="">Lägg till filer</target>
+      </trans-unit>
+      <trans-unit id="s79145f82d32504e5">
+        <source>From device</source>
+        <target state="">Från enhet</target>
+      </trans-unit>
+      <trans-unit id="s1d2863ddb9533fcc">
+        <source>From cloud</source>
+        <target state="">Från molnlagring</target>
+      </trans-unit>
+      <trans-unit id="s0b3525368392bc8b">
+        <source>File conflict</source>
+        <target state="">Filkonflikt</target>
+      </trans-unit>
+      <trans-unit id="s6271883e61d007c2">
+        <source>Upload error</source>
+        <target state="">Uppladdningsfel</target>
+      </trans-unit>
+      <trans-unit id="se725f4eac532d6d0">
+        <source>All uploads finished</source>
+        <target state="">Alla uppladningar klara</target>
+      </trans-unit>
+      <trans-unit id="sef49aec68fd1dc66">
+        <source>Name</source>
+        <target state="">Namn</target>
+      </trans-unit>
+      <trans-unit id="s7f47cec3e840a432">
+        <source>Modified</source>
+        <target state="">Ändrad</target>
+      </trans-unit>
+      <trans-unit id="s78789724e789221c">
+        <source>Size</source>
+        <target state="">Storlek</target>
+      </trans-unit>
+      <trans-unit id="s94c650bef124bd01">
+        <source>Ascending</source>
+        <target state="">Stigande</target>
+      </trans-unit>
+      <trans-unit id="s15bdec250a4a55fb">
+        <source>Descending</source>
+        <target state="">Fallande</target>
+      </trans-unit>
+      <trans-unit id="s45a359a3fa397256">
+        <source>List view</source>
+        <target state="">Lista</target>
+      </trans-unit>
+      <trans-unit id="sb206d032da78e466">
+        <source>Grid view</source>
+        <target state="">Rutnät</target>
+      </trans-unit>
+      <trans-unit id="s2b85774393f15042">
+        <source>Hide trashed</source>
+        <target state="">Göm borttagna</target>
+      </trans-unit>
+      <trans-unit id="s728c109d24cb2252">
+        <source>Download files</source>
+        <target state="">Ladda ner filer</target>
+      </trans-unit>
+      <trans-unit id="sd7c7478edbbcced8">
+        <source>File actions</source>
+        <target state="">Filhändelser</target>
+      </trans-unit>
+      <trans-unit id="s57a6b59f8e17ed4b">
+        <source>Replace existing file?</source>
+        <target state="">Ersätt befintlig?</target>
+      </trans-unit>
+      <trans-unit id="s2a8434b16dc214a3">
+        <source>Replace</source>
+        <target state="">Ersätt</target>
+      </trans-unit>
+      <trans-unit id="s70af97de3ad8fb23">
+        <source>Kind</source>
+        <target state="">Typ</target>
+      </trans-unit>
+      <trans-unit id="s1ea911617f4bf7e7">
+        <source>Open in <x id="0" equiv-text="${this.provider}"/>?</source>
+        <target state="">Öppna i <x id="0" equiv-text="${this.provider}"/>?</target>
+      </trans-unit>
+      <trans-unit id="s737d13effc0cee9d">
+        <source>No preview available :(</source>
+        <target state="">Ingen förhandsvisning tillgänglig :(</target>
+      </trans-unit>
+      <trans-unit id="s417b90913e05bc17">
+        <source>Preview</source>
+        <target state="">Förhandsvisning</target>
+      </trans-unit>
+      <trans-unit id="sc65ea2cf2f21a13a">
+        <source>Zoom out</source>
+        <target state="">Zooma ut</target>
+      </trans-unit>
+      <trans-unit id="s236ae937cbcd6a39">
+        <source>Zoom in</source>
+        <target state="">Zooma in</target>
+      </trans-unit>
+      <trans-unit id="s473ac9da86ea91f9">
+        <source>Fit to width</source>
+        <target state="">Anpassa sidbredd</target>
+      </trans-unit>
+      <trans-unit id="s2ea30e6262e90c5b">
+        <source>Fit to screen</source>
+        <target state="">Fyll skärm</target>
+      </trans-unit>
+      <trans-unit id="s2359515613fb2d9a">
+        <source>Comment was trashed.</source>
+        <target state="">Kommentaren togs bort.</target>
+      </trans-unit>
+      <trans-unit id="s8f4be9f086eb530f">
+        <source>Undo</source>
+        <target state="">Ångra</target>
+      </trans-unit>
+      <trans-unit id="s9ff2ac475c7b07db">
+        <source>Reactions</source>
+        <target state="">Reaktioner</target>
+      </trans-unit>
+      <trans-unit id="sf3f8c55fbe624c77">
+        <source>1 like</source>
+        <target state="">1 gillar</target>
+      </trans-unit>
+      <trans-unit id="sf3c0a3d70e58c0e9">
+        <source><x id="0" equiv-text="${reactionLength}"/> likes</source>
+        <target state=""><x id="0" equiv-text="${reactionLength}"/> gillar</target>
+      </trans-unit>
+      <trans-unit id="sa3a9a5b55e9923bf">
+        <source>Likes</source>
+        <target state="">Personer som gillar</target>
+      </trans-unit>
+      <trans-unit id="sfef95f1ec987bff3">
+        <source>Zoom meeting</source>
+        <target state="">Zoom-möte</target>
+      </trans-unit>
+      <trans-unit id="s48287bbcb6ba7b8d">
+        <source>Ended <x id="0" equiv-text="${dateFromNow}"/></source>
+        <target state="">Slutade <x id="0" equiv-text="${dateFromNow}"/></target>
+      </trans-unit>
+      <trans-unit id="s588f3ded8091c8c0">
+        <source>Play recording</source>
+        <target state="">Spela upp inspelning</target>
+      </trans-unit>
+      <trans-unit id="s96cf128ca399b6fc">
+        <source>Join meeting</source>
+        <target state="">Gå med i möte</target>
+      </trans-unit>
+      <trans-unit id="s52caf8c8abd32779">
+        <source>Votes on <x id="0" equiv-text="${this.option.text}"/></source>
+        <target state="">Röster på <x id="0" equiv-text="${this.option.text}"/></target>
+      </trans-unit>
+      <trans-unit id="sbed0d484327fe0c8">
+        <source>edited</source>
+        <target state="">redigerad</target>
+      </trans-unit>
+      <trans-unit id="s64ef2a6c2dd1d3d1">
+        <source>Edit</source>
+        <target state="">Redigera</target>
+      </trans-unit>
+      <trans-unit id="se9beb5e1e43f9764">
+        <source>Edit comment</source>
+        <target state="">Redigera kommentar</target>
+      </trans-unit>
+      <trans-unit id="sed073ac6112070e7">
+        <source>Create a comment...</source>
+        <target state="">Skriv en kommentar...</target>
+      </trans-unit>
+      <trans-unit id="sdc12d4d35420eeb7">
+        <source>Comments</source>
+        <target state="">Kommentarer</target>
+      </trans-unit>
+      <trans-unit id="se19e2ed58cd65d6c">
+        <source>Versions</source>
+        <target state="">Versioner</target>
+      </trans-unit>
+      <trans-unit id="s46cbf33973ae5386">
+        <source>Restore side panel</source>
+        <target state="">Återställ sidopanel</target>
+      </trans-unit>
+      <trans-unit id="s9c4d64a06ba60af0">
+        <source>Maximize side panel</source>
+        <target state="">Maximera sidopanel</target>
+      </trans-unit>
+      <trans-unit id="s6e68e284db76e5b4">
+        <source>Seen by <x id="0" equiv-text="${member.display_name}"/> at <x id="1" equiv-text="${dateSeenFull}"/></source>
+        <target state="">Sedd av <x id="0" equiv-text="${member.display_name}"/> vid <x id="1" equiv-text="${dateSeenFull}"/></target>
+      </trans-unit>
+      <trans-unit id="sd3b60ec2f9fb421b">
+        <source>New messages</source>
+        <target state="">Nya meddelanden</target>
+      </trans-unit>
+      <trans-unit id="sb33fd019a70e1a18">
+        <source>Poll</source>
+        <target state="">Omröstning</target>
+      </trans-unit>
+      <trans-unit id="sab28965d6b550459">
+        <source>Post was trashed.</source>
+        <target state="">Inlägget togs bort.</target>
+      </trans-unit>
+      <trans-unit id="s6acd68c5d25381a5">
+        <source><x id="0" equiv-text="${this.commentCount}"/> comments</source>
+        <target state=""><x id="0" equiv-text="${this.commentCount}"/> kommentarer</target>
+      </trans-unit>
+      <trans-unit id="s343f95633406dc81">
+        <source>1 comment</source>
+        <target state="">1 kommentar</target>
+      </trans-unit>
+      <trans-unit id="s8b4c8439803b5b65">
+        <source>Edit post</source>
+        <target state="">Redigera inlägg</target>
+      </trans-unit>
+      <trans-unit id="s4e53b5a018b324d9">
+        <source>Edit post...</source>
+        <target state="">Redigera inlägg...</target>
+      </trans-unit>
+      <trans-unit id="saf84ec86139d349e">
+        <source>Comment</source>
+        <note from="lit-localize">Button action to comment</note>
+        <target state="">Kommentera</target>
+      </trans-unit>
+      <trans-unit id="sc00a88b90cd60661">
+        <source>Discard</source>
+        <note from="lit-localize">Button action to discard</note>
+        <target state="">Släng</target>
+      </trans-unit>
+      <trans-unit id="s3d099ab47fec57b6">
+        <source>Like</source>
+        <note from="lit-localize">Button action to like</note>
+        <target state="">Gilla</target>
+      </trans-unit>
+      <trans-unit id="s9bfc95548d124b1c">
+        <source>React</source>
+        <note from="lit-localize">Button action to react</note>
+        <target state="">Reagera</target>
+      </trans-unit>
+      <trans-unit id="sea4f08110bb8f15d">
+        <source>Remove</source>
+        <note from="lit-localize">Button action to remove</note>
+        <target state="">Ta bort</target>
+      </trans-unit>
+      <trans-unit id="s57adf424d57c8a0f">
+        <source>Send</source>
+        <note from="lit-localize">Button action to send</note>
+        <target state="">Skicka</target>
+      </trans-unit>
+      <trans-unit id="s8b0432eecbd8b034">
+        <source>Update</source>
+        <note from="lit-localize">Button action to update</note>
+        <target state="">Uppdatera</target>
+      </trans-unit>
+      <trans-unit id="sf863f06a8efefe1e">
+        <source>Create a post...</source>
+        <target>Skapa ett inlägg...</target>
+      </trans-unit>
+      <trans-unit id="sb357ea19a722d827">
+        <source>Post</source>
+        <target>Publicera</target>
+      </trans-unit>
+      <trans-unit id="s251a18781c6a3625">
+        <source>+ add an option</source>
+        <target>+ lägg till alternativ</target>
+      </trans-unit>
+      <trans-unit id="sf60480d4fe3a8e08">
+        <source><x id="0" equiv-text="${name}"/> is typing<x id="1" equiv-text="${ellipsis}"/></source>
+        <target><x id="0" equiv-text="${name}"/> skriver<x id="1" equiv-text="${ellipsis}"/></target>
+        <note from="lit-localize">A is typing...</note>
+      </trans-unit>
+      <trans-unit id="s2cc555789d54845c">
+        <source><x id="0" equiv-text="${nameList}"/> are typing<x id="1" equiv-text="${ellipsis}"/></source>
+        <target><x id="0" equiv-text="${nameList}"/> skriver<x id="1" equiv-text="${ellipsis}"/></target>
+        <note from="lit-localize">A, B and C are typing...</note>
+      </trans-unit>
+      <trans-unit id="s16430e1864d70df9">
+        <source>Type a message...</source>
+        <target>Skriv ett meddelande...</target>
+      </trans-unit>
+      <trans-unit id="sfaacc9c26728c711">
+        <source>Drop files here to upload.</source>
+        <target>Släpp filer här för att ladda upp.</target>
+      </trans-unit>
+      <trans-unit id="sbe2dba1939d68a7a">
+        <source>Edit comment...</source>
+        <target>Redigera kommentar...</target>
+      </trans-unit>
+      <trans-unit id="s6f8a74d96705c80d">
+        <source>Search for people...</source>
+        <target>Sök efter personer...</target>
+      </trans-unit>
+      <trans-unit id="s12b57a05d9905236">
+        <source>Your search did not match any people.</source>
+        <target>Din sökning hade inga träffar.</target>
+      </trans-unit>
+      <trans-unit id="s00a84204340a1db4">
+        <source>Selected</source>
+        <target>Valda</target>
+      </trans-unit>
+      <trans-unit id="s4854cd48f30ff8ee">
+        <source>People</source>
+        <target>Personer</target>
+      </trans-unit>
+      <trans-unit id="s515e890f5b7dece7">
+        <source>Add members</source>
+        <target>Lägg till medlemmar</target>
+      </trans-unit>
+      <trans-unit id="s355b21b89ce5d9c5">
+        <source>Details</source>
+        <target>Detaljer</target>
+      </trans-unit>
+      <trans-unit id="s7e1dcfc0a1c85479">
+        <source>Conversation name</source>
+        <target>Konversationens namn</target>
+      </trans-unit>
+      <trans-unit id="s49360e6ce199180f">
+        <source>Changing the name of a group chat changes it for everyone.</source>
+        <target>Ändring av namnet på en grupp ändrar det för alla.</target>
+      </trans-unit>
+      <trans-unit id="s9f5a5f23312798f0">
+        <source>Members</source>
+        <target>Medlemmar</target>
+      </trans-unit>
+      <trans-unit id="sb38253b7012e60c5">
+        <source>Remove member</source>
+        <target>Ta bort medlem</target>
+      </trans-unit>
+      <trans-unit id="s215e54ddbbcc5f07">
+        <source>Leave conversation</source>
+        <target>Lämna konversation</target>
+      </trans-unit>
+      <trans-unit id="scb6a9c1a1757adbc">
+        <source>You</source>
+        <target>Du</target>
+      </trans-unit>
+      <trans-unit id="s5bb4026da28b7914">
+        <source>Mark as read</source>
+        <target>Markera som läst</target>
+      </trans-unit>
+      <trans-unit id="sb5d1c3e0fa747687">
+        <source>Mark as unread</source>
+        <target>Markera som oläst</target>
+      </trans-unit>
+      <trans-unit id="sbc0cd0b4dfb7dde1">
+        <source>Unpin</source>
+        <target>Lossa</target>
+      </trans-unit>
+      <trans-unit id="s8db89619f41917b4">
+        <source>Pin</source>
+        <target>Fäst</target>
+      </trans-unit>
+      <trans-unit id="sb5d079518d9b14e2">
+        <source>Unstar</source>
+        <target>Ta bort stjärna</target>
+      </trans-unit>
+      <trans-unit id="sd98b59251f065471">
+        <source>Star</source>
+        <target>Stjärnmärk</target>
+      </trans-unit>
+      <trans-unit id="s0058d65423075c1c">
+        <source>New conversation</source>
+        <target>Ny konversation</target>
+      </trans-unit>
+      <trans-unit id="scd9d7826cea1fd2d">
+        <source>Select a conversation</source>
+        <target>Välj en konversation</target>
+      </trans-unit>
+      <trans-unit id="sf001ba58cf846564">
+        <source>Messenger</source>
+        <target>Meddelanden</target>
+      </trans-unit>
+      <trans-unit id="s0fbf6dc6a1966408">
+        <source>Next</source>
+        <target>Nästa</target>
+      </trans-unit>
+      <trans-unit id="sf9aee319a006c9b4">
+        <source>Add</source>
+        <target>Lägg till</target>
+      </trans-unit>
+      <trans-unit id="se323ece17b96a4df">
+        <source>No more users found.</source>
+        <target>Inga fler personer funna.</target>
+      </trans-unit>
+      <trans-unit id="saae1c70e168b45b4">
+        <source>Admin</source>
+        <target>Admin</target>
+      </trans-unit>
+      <trans-unit id="s1a60287b81ec038c">
+        <source>Search for conversations...</source>
+        <target>Sök efter konversationer...</target>
+      </trans-unit>
+      <trans-unit id="s78636b92c1a3909c">
+        <source>Pending</source>
+        <target>Väntande</target>
+      </trans-unit>
+      <trans-unit id="s3bdfdd0bd23b0c44">
+        <source>The server is offline, try again in a few minutes...</source>
+        <target>Servern är offline försök igen om några minuter...</target>
+      </trans-unit>
+      <trans-unit id="s4618f04d05e51e94">
+        <source>Let's get started!</source>
+        <target>Låt oss komma igång!</target>
+      </trans-unit>
+      <trans-unit id="sa667dd9e4a8a6750">
+        <source>Add some files to get started!</source>
+        <target>Lägg till filer för att komma igång!</target>
+      </trans-unit>
+      <trans-unit id="sf59f359396914fa2">
+        <source>Remove all</source>
+        <target>Ta bort alla</target>
+        <note from="lit-localize">Button action to remove all</note>
+      </trans-unit>
+      <trans-unit id="s527d43090df3bdb7">
+        <source>You are currently offline.</source>
+        <target>Du är just nu offline.</target>
+      </trans-unit>
+      <trans-unit id="s275e39c24f663f7e">
+        <source>Start the conversation!</source>
+        <target>Starta en konversation!</target>
+      </trans-unit>
+      <trans-unit id="s426827ed0daf0c4f">
+        <source>Show trashed</source>
+        <target>Visa borttagna</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

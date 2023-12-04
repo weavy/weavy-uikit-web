@@ -1,0 +1,21 @@
+@use "components/base/color";
+@use "components/base/colormode-light";
+@use "components/base/colormode-dark";
+
+:where(:root) {
+    @include colormode-light.styles;
+}
+
+.wy-light {
+    &, :host(&), :host-context(&), ::slotted(&) {
+        @include colormode-light.styles;
+        @include color.custom-properties-tokens(colormode-light.$tokens);
+    }
+}
+
+.wy-dark:not(.wy-light) {
+    &, :host(&), :host-context(&), ::slotted(&) {
+        @include colormode-dark.styles;
+        @include color.custom-properties-tokens(colormode-dark.$tokens);
+    }
+}

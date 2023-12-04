@@ -1,0 +1,7 @@
+@use "components/base/reboot";
+@use "components/base/scroll";
+@use "components/base/var";
+
+:where(:root, :host > * ) {
+    @include var.custom-properties;
+}

@@ -1,0 +1,20 @@
+@use "base/color";
+@use "base/const";
+
+.wy-dragging {
+    &::after {
+        content: attr(data-drag-title);
+        background-color: rgba(255, 255, 255, .5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 2px dashed color.token(--wy-primary);
+        font-weight: const.$font-weight-bold;
+        z-index: 10000;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+    }
+}

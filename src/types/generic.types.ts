@@ -1,0 +1,1 @@
+export type PlainObjectType = { [key: PropertyKey]: unknown };
