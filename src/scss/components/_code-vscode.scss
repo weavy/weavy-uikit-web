@@ -1,8 +1,10 @@
+@use "base/color";
+
 // Theme generated from VS Code using https://prism.dotenv.dev/
 
 code[class*="language-"],
 pre[class*="language-"] {
-  color: #000000;
+  color: #{color.token(--wy-code-text)};
   font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
   text-align: left;
   white-space: pre-wrap;
@@ -53,8 +55,8 @@ pre[class*="language-"] {
 
 :not(pre) > code[class*="language-"],
 pre[class*="language-"] {
-  color: white;
-  background: #ffffff;
+  color: #{color.token(--wy-code-text)};
+  background: #{color.token(--wy-background)};
 }
 
 :not(pre) > code[class*="language-"] {
@@ -63,110 +65,92 @@ pre[class*="language-"] {
   white-space: normal;
 }
 
-
-.token.comment {
-  color: #008000;
-  
-}
-
-.token.builtin {
-  color: #0070C1;
-  
-}
-
-.token.number {
-  color: #098658;
-  
-}
-
 .token.variable {
-  color: #098658;
-  
-}
-
-.token.inserted {
-  color: #098658;
-  
+  color: #{color.token(--wy-code-variable)};
 }
 
 .token.operator {
-  color: #000000;
-  
+  color: #{color.token(--wy-code-operator)};
+}
+
+.token.prolog {
+  color: #{color.token(--wy-code-prolog)};
+}
+
+.token.comment {
+  color: #{color.token(--wy-code-comment)};
+}
+
+.token.builtin {
+  color: #{color.token(--wy-code-builtin)};
+}
+
+.token.number {
+  color: #{color.token(--wy-code-number)};
+}
+
+.token.inserted {
+  color: #{color.token(--wy-code-inserted)};
 }
 
 .token.constant {
-  color: #811F3F;
-  
+  color: #{color.token(--wy-code-constant)};
 }
 
 .token.hexcode {
-  color: #811F3F;
-  
+  color: #{color.token(--wy-code-hexcode)};
 }
 
 .token.regex {
-  color: #811F3F;
-  
+  color: #{color.token(--wy-code-regex)};
 }
 
 .token.char {
-  color: #811F3F;
-  
+  color: #{color.token(--wy-code-char)};
 }
 
 .token.tag {
-  color: #800000;
-  
+  color: #{color.token(--wy-code-tag)};
 }
 
 .token.attr-name {
-  color: #FF0000;
-  
+  color: #{color.token(--wy-code-attr-name)};
 }
 
 .token.selector {
-  color: #FF0000;
-  
+  color: #{color.token(--wy-code-selector)};
 }
 
 .token.property {
-  color: #FF0000;
-  
+  color: #{color.token(--wy-code-property)};
 }
 
 .token.deleted {
-  color: #A31515;
-  
+  color: #{color.token(--wy-code-deleted)};
 }
 
 .token.string {
-  color: #A31515;
-  
+  color: #{color.token(--wy-code-string)};
 }
 
 .token.changed {
-  color: #0451A5;
-  
+  color: #{color.token(--wy-code-changed)};
 }
 
 .token.punctuation {
-  color: #0451A5;
-  
+  color: #{color.token(--wy-code-punctuation)};
 }
 
 .token.function {
-  color: #0000FF;
-  
+  color: #{color.token(--wy-code-function)};
 }
 
 .token.keyword {
-  color: #0000FF;
-  
+  color: #{color.token(--wy-code-keyword)};
 }
 
 .token.class-name {
-  color: #267F99;
-  
+  color: #{color.token(--wy-code-class-name)};
 }
 
 .token.important,

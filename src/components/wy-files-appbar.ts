@@ -50,7 +50,6 @@ import { WeavyContextProps } from "src/types/weavy.types";
 @customElement("wy-files-appbar")
 @localized()
 export class WyFilesAppbar extends LitElement {
-  
   static override styles = [filesCss];
 
   @consume({ context: weavyContextDefinition, subscribe: true })
@@ -231,44 +230,32 @@ export class WyFilesAppbar extends LitElement {
     return html`
       <nav class="wy-toolbar">
         <div class="wy-toolbar-buttons">
-          ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments) ||
-          hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
-            ? html`
-                <wy-dropdown title=${msg("Add files")}>
-                  <span slot="button">${msg("Add files")}</span>
-                  <wy-icon slot="button" name="plus" last></wy-icon>
-                  ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-                    ? html`
-                        <wy-dropdown-item @click=${this.openFileInput}>
-                          <wy-icon name="attachment"></wy-icon>
-                          <span>${msg("From device")}</span>
-                        </wy-dropdown-item>
-                        <input
-                          type="file"
-                          ${ref(this.fileInputRef)}
-                          @click=${(e: Event) => e.stopPropagation()}
-                          @change=${(e: Event) =>
-                            this.dispatchUploadFiles(
-                              (e.target as HTMLInputElement).files,
-                              e.target as HTMLInputElement
-                            )}
-                          multiple
-                          hidden
-                          tabindex="-1"
-                        />
-                      `
-                    : nothing}
-                  ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
-                    ? html`
-                        <wy-dropdown-item @click=${this.openCloudFiles}>
-                          <wy-icon name="cloud"></wy-icon>
-                          <span>${msg("From cloud")}</span>
-                        </wy-dropdown-item>
-                      `
-                    : nothing}
-                </wy-dropdown>
-              `
-            : nothing}
+          <wy-dropdown title=${msg("Add files")}>
+            <span slot="button">${msg("Add files")}</span>
+            <wy-icon slot="button" name="plus" last></wy-icon>
+            <wy-dropdown-item @click=${this.openFileInput}>
+              <wy-icon name="attachment"></wy-icon>
+              <span>${msg("From device")}</span>
+            </wy-dropdown-item>
+            <input
+              type="file"
+              ${ref(this.fileInputRef)}
+              @click=${(e: Event) => e.stopPropagation()}
+              @change=${(e: Event) =>
+                this.dispatchUploadFiles((e.target as HTMLInputElement).files, e.target as HTMLInputElement)}
+              multiple
+              hidden
+              tabindex="-1"
+            />
+            ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
+              ? html`
+                  <wy-dropdown-item @click=${this.openCloudFiles}>
+                    <wy-icon name="cloud"></wy-icon>
+                    <span>${msg("From cloud")}</span>
+                  </wy-dropdown-item>
+                `
+              : nothing}
+          </wy-dropdown>
         </div>
         <div class="wy-toolbar-buttons wy-toolbar-buttons-last">
           ${fileMutationResults?.length

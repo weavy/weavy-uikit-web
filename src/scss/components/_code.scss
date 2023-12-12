@@ -1,19 +1,11 @@
 // Themes generated from VS Code using https://prism.dotenv.dev/
 
-// TODO: Use CSS variables for colors to optimize code and provide theming
-
 .wy-code, %wy-code {
   & pre {
     text-wrap: pretty;
   }
   
-  :not(.wy-dark) &, &:not(.wy-dark), :not(:host(.wy-dark)) &, :not(:host-context(.wy-dark)) &  {
-    @import "code-vscode-light";
-  }
-
-  .wy-dark &, &.wy-dark, :host(.wy-dark) &, :host-context(.wy-dark) & {
-    @import "code-vscode-dark";
-  }
+  @import "code-vscode";
 }
 
 @mixin themes {

@@ -66,6 +66,31 @@ $tokens: (
   --wy-gray: --wy-gray-dark,
 
   --wy-presence-active: --wy-green-dark,
+
+  // syntax highlight
+  --wy-code-text: --wy-code-text-dark,
+  --wy-code-variable: --wy-code-variable-dark,
+  --wy-code-operator: --wy-code-operator-dark,
+  --wy-code-prolog: --wy-code-prolog-dark,
+  --wy-code-comment: --wy-code-comment-dark,
+  --wy-code-builtin: --wy-code-builtin-dark,
+  --wy-code-number: --wy-code-number-dark,
+  --wy-code-inserted: --wy-code-inserted-dark,
+  --wy-code-constant: --wy-code-constant-dark,
+  --wy-code-hexcode: --wy-code-hexcode-dark,
+  --wy-code-regex: --wy-code-regex-dark,
+  --wy-code-char: --wy-code-char-dark,
+  --wy-code-tag: --wy-code-tag-dark,
+  --wy-code-attr-name: --wy-code-attr-name-dark,
+  --wy-code-selector: --wy-code-selector-dark,
+  --wy-code-property: --wy-code-property-dark,
+  --wy-code-deleted: --wy-code-deleted-dark,
+  --wy-code-string: --wy-code-string-dark,
+  --wy-code-changed: --wy-code-changed-dark,
+  --wy-code-punctuation: --wy-code-punctuation-dark,
+  --wy-code-function: --wy-code-function-dark,
+  --wy-code-keyword: --wy-code-keyword-dark,
+  --wy-code-class-name: --wy-code-class-name-dark,
 );
 
 @mixin styles {

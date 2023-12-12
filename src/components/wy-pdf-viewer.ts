@@ -18,7 +18,6 @@ import { WeavyContextProps } from "src/types/weavy.types";
 @customElement("wy-pdf-viewer")
 @localized()
 export default class WyPdfViewer extends LitElement {
-  
   static override styles = [
     allCss,
     css`
@@ -155,23 +154,36 @@ export default class WyPdfViewer extends LitElement {
   }
 
   clearDocument() {
-    this.loadingTask?.destroy();
-    //console.debug("loadingtask cleanup", loadingTask)
+    try {
+      this.loadingTask?.destroy();
+      //console.debug("loadingTask cleanup", loadingTask)
+    } catch (e) {
+      /* No worries */
+    }
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore due to incorrect param type def?
-    this.pdfViewer?.setDocument(null);
-    this.pdfLinkService.setDocument(null, null);
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore due to incorrect param type def?
+      this.pdfViewer?.setDocument(null);
+    } catch (e) {
+      /* No worries */
+    }
+
+    try {
+      this.pdfLinkService.setDocument(null, null);
+    } catch (e) {
+      /* No worries */
+    }
   }
 
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
-    if(changedProperties.has("weavyContext") && this.weavyContext) {
+    if (changedProperties.has("weavyContext") && this.weavyContext) {
       if (!this.WORKER_URL) {
         this.WORKER_URL = new URL("/js/pdf.worker.min.js", this.weavyContext.url);
         // Setting worker path to worker bundle.
         pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
       }
-  
+
       if (!this.CMAP_URL) {
         this.CMAP_URL = new URL("/cmaps/", this.weavyContext.url);
       }
@@ -181,7 +193,12 @@ export default class WyPdfViewer extends LitElement {
   override update(changedProperties: PropertyValues<this & WeavyContextProps>) {
     super.update(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("src") || changedProperties.has("pdfViewer")) && this.weavyContext && this.src && this.pdfViewer) {
+    if (
+      (changedProperties.has("weavyContext") || changedProperties.has("src") || changedProperties.has("pdfViewer")) &&
+      this.weavyContext &&
+      this.src &&
+      this.pdfViewer
+    ) {
       this.loadingTask = pdfjsLib.getDocument({
         url: this.src,
         enableXfa: this.ENABLE_XFA,
@@ -229,20 +246,22 @@ export default class WyPdfViewer extends LitElement {
         this.pageNumberRef.value!.value = this.pdfViewer!.currentPageNumber.toFixed(0);
       });
 
-      this.pdfEventBus.on("pagesinit", () => {
+      this.pdfEventBus.on("pagesinit", (...paramws: any) => {
         // We can use pdfViewer now, e.g. let's change default scale.
-        this.pdfViewer!.currentScaleValue = "auto";
-        this.pageNumberRef.value!.value = "1";
-        this.totalPagesRef.value!.innerText = this.pdfViewer!.pagesCount.toFixed(0);
+        if (this.isConnected) {
+          this.pdfViewer!.currentScaleValue = "auto";
+          this.pageNumberRef.value!.value = "1";
+          this.totalPagesRef.value!.innerText = this.pdfViewer!.pagesCount.toFixed(0);
 
-        // We can try searching for things.
-        if (this.SEARCH_FOR) {
-          if (this.pdfFindController && !("_onFind" in this.pdfFindController)) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore due to missing type def
-            this.pdfFindController.executeCommand("find", { query: this.SEARCH_FOR });
-          } else {
-            this.pdfEventBus.dispatch("find", { type: "", query: this.SEARCH_FOR });
+          // We can try searching for things.
+          if (this.SEARCH_FOR) {
+            if (this.pdfFindController && !("_onFind" in this.pdfFindController)) {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore due to missing type def
+              this.pdfFindController.executeCommand("find", { query: this.SEARCH_FOR });
+            } else {
+              this.pdfEventBus.dispatch("find", { type: "", query: this.SEARCH_FOR });
+            }
           }
         }
       });
@@ -263,7 +282,8 @@ export default class WyPdfViewer extends LitElement {
                 @keyup=${inputConsumeWithBlurOnEscape}
                 @change=${this.updatePage}
                 @click=${this.select}
-                data-pdf-target="pageNumber" />
+                data-pdf-target="pageNumber"
+              />
               <span class="wy-toolbar-text">/</span>
               <span class="wy-toolbar-text" ${ref(this.totalPagesRef)}>1</span>
             </div>
@@ -279,7 +299,8 @@ export default class WyPdfViewer extends LitElement {
                 @change=${this.updateZoom}
                 @click=${this.select}
                 value="100%"
-                data-pdf-target="zoomLevel" />
+                data-pdf-target="zoomLevel"
+              />
               <button class="wy-button wy-button-icon btn-zoom-in" @click=${this.zoomIn} title=${msg("Zoom in")}
                 ><wy-icon name="plus"></wy-icon
               ></button>

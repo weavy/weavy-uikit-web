@@ -16,6 +16,9 @@ import { chrome } from "src/utils/browser";
 import { RealtimeDataType, RealtimeEventType } from "src/types/realtime.types";
 import { ConnectionState, NetworkState, NetworkStatus } from "src/types/server.types";
 
+import colorModes from "../scss/colormodes.scss";
+import { adoptGlobalStyles } from "src/utils/styles";
+
 /**
  * The locale used in the source files.
  */
@@ -621,6 +624,8 @@ export class WeavyContext implements WeavyOptions {
     } else {
       globalContextProvider.setValue(this);
     }
+
+    adoptGlobalStyles([colorModes])
 
     defer(() => {
       if (document) {

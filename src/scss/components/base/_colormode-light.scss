@@ -23,7 +23,7 @@ $tokens: (
   --wy-on-error-container: --wy-error-10, 
 
   /* Warning is a custom addition */
-  --wy-warning: --wy-warning-80, 
+  --wy-warning: --wy-warning-70, 
   --wy-on-warning: --wy-black, 
   --wy-warning-container: --wy-warning-90, 
   --wy-on-warning-container: --wy-warning-10, 
@@ -66,6 +66,31 @@ $tokens: (
   --wy-gray: --wy-gray-light,
 
   --wy-presence-active: --wy-green-light,
+
+  // syntax highlight
+  --wy-code-text: --wy-code-text-light,
+  --wy-code-variable: --wy-code-variable-light,
+  --wy-code-operator: --wy-code-operator-light,
+  --wy-code-prolog: --wy-code-prolog-light,
+  --wy-code-comment: --wy-code-comment-light,
+  --wy-code-builtin: --wy-code-builtin-light,
+  --wy-code-number: --wy-code-number-light,
+  --wy-code-inserted: --wy-code-inserted-light,
+  --wy-code-constant: --wy-code-constant-light,
+  --wy-code-hexcode: --wy-code-hexcode-light,
+  --wy-code-regex: --wy-code-regex-light,
+  --wy-code-char: --wy-code-char-light,
+  --wy-code-tag: --wy-code-tag-light,
+  --wy-code-attr-name: --wy-code-attr-name-light,
+  --wy-code-selector: --wy-code-selector-light,
+  --wy-code-property: --wy-code-property-light,
+  --wy-code-deleted: --wy-code-deleted-light,
+  --wy-code-string: --wy-code-string-light,
+  --wy-code-changed: --wy-code-changed-light,
+  --wy-code-punctuation: --wy-code-punctuation-light,
+  --wy-code-function: --wy-code-function-light,
+  --wy-code-keyword: --wy-code-keyword-light,
+  --wy-code-class-name: --wy-code-class-name-light,
 );
 
 @mixin styles {

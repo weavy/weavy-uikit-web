@@ -4,6 +4,7 @@ import { argbFromHex, hexFromArgb } from "@material/material-color-utilities";
 import { Blend } from "@material/material-color-utilities";
 import { TonalPalette } from "@material/material-color-utilities";
 import { argbFromRgba, getComputedColor } from "./colors";
+import { type CSSResult, type CSSResultOrNative, supportsAdoptingStyleSheets } from "lit";
 
 export function getCSSThemeColor(element: Element) {
   // By inherited --wy-theme
@@ -196,7 +197,7 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
     pink: { light: 60, dark: 70 },
     red: { light: 60, dark: 60 },
     orange: { light: 70, dark: 70 },
-    yellow: { light: 80, dark: 80 },
+    yellow: { light: 70, dark: 80 },
     green: { light: 60, dark: 60 },
     teal: { light: 60, dark: 60 },
     cyan: { light: 50, dark: 60 },
@@ -260,3 +261,34 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
   //console.log("seedcolors cache", seedColorsCache.length, seedColorsCache[0].seedColor === seedColor)
   return colors;
 }
+
+
+/**
+ * Applies the given styles to a `shadowRoot`. When Shadow DOM is
+ * available but `adoptedStyleSheets` is not, styles are appended to the
+ * `shadowRoot` to [mimic spec behavior](https://wicg.github.io/construct-stylesheets/#using-constructed-stylesheets).
+ * Note, when shimming is used, any styles that are subsequently placed into
+ * the shadowRoot should be placed *before* any shimmed adopted styles. This
+ * will match spec behavior that gives adopted sheets precedence over styles in
+ * shadowRoot.
+ */
+export const adoptGlobalStyles = (
+  styles: Array<CSSResultOrNative>
+) => {
+  if (supportsAdoptingStyleSheets) {
+    document.adoptedStyleSheets = styles.map((s) =>
+      s instanceof CSSStyleSheet ? s : s.styleSheet!
+    );
+  } else {
+    for (const s of styles) {
+      const style = document.createElement('style');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nonce = (global as any)['litNonce'];
+      if (nonce !== undefined) {
+        style.setAttribute('nonce', nonce);
+      }
+      style.textContent = (s as CSSResult).cssText;
+      (document.head || document.documentElement).appendChild(style);
+    }
+  }
+};

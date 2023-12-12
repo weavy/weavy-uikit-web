@@ -25,21 +25,12 @@ The Weavy UI components that you decide to use must be wrapped in the `<wy-provi
  ```html
 <!DOCTYPE html>
 <head>
-  <script type="module" src="./dist/index.js"></script>
+  <script src="./dist/weavy.js"></script>
 </head>
 <body>
-  <wy-provider url="https://mysite.weavy.io" tokenfactory="async (refresh) => {
-    let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
-
-    if (response.ok) {          
-      let data = await response.json();
-      return data.access_token
-    } else {
-      throw new Error('Could not get access token from server!')
-    }
-  }">
+  <wy-context url="https://mysite.weavy.io" tokenfactory="async (refresh) => '{ACCESS_TOKEN}'">
     <wy-files uid="acme-files"></wy-files>
-  </wy-provider>
+  </wy-context>
 </body>
 ```
 
@@ -49,14 +40,22 @@ The Weavy UI components that you decide to use must be wrapped in the `<wy-provi
 
 ```js
 // Make the web components available in HTML/DOM
-import "@weavy/uikit-web"
+import "@weavy/uikit-web";
 ```
 
 ***...or..***
 
 ```js
 // Import the component classes
-import { WeavyProvider, WeavyFiles, WeavyChat } from "@weavy/uikit-web"
+import { Weavy, WyMessenger } from "@weavy/uikit-web";
+
+const weavy = new Weavy()
+
+weavy.url = "{WEAVY_URL}";
+weavy.tokenFactory = async (refresh) => "{ACCESS_TOKEN}";
+
+const messenger = new WyMessenger();
+document.body.append(messenger);
 ```
 
 ## Run the components demo in developer mode
