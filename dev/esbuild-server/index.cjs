@@ -61,8 +61,8 @@ function createServerSentEventHandler() {
     return { setupConnection, sendMessage };
 }
 function createServer(buildOptions = {}, serverOptions = {}) {
-    const { historyApiFallback = false, port = 8080, injectLiveReload = true, open = false, proxy, onProxyRewrite = (proxyRes) => proxyRes, onSendHtml } = serverOptions;
-    const serverUrl = `http://localhost:${port}`;
+    const { historyApiFallback = false, host = "localhost", port = 8080, injectLiveReload = true, open = false, proxy, onProxyRewrite = (proxyRes) => proxyRes, onSendHtml } = serverOptions;
+    const serverUrl = `${serverOptions.https ? "https" : "http"}://${host}:${port}`;
     const buildDir = path_1.default.resolve(buildOptions.outfile
         ? path_1.default.dirname(buildOptions.outfile)
         : buildOptions.outdir ??
@@ -210,7 +210,7 @@ function createServer(buildOptions = {}, serverOptions = {}) {
     let stopped = false;
     let ctx;
     const start = async () => {
-        server.listen(port);
+        server.listen({port, host});
         ctx = await (0, esbuild_1.context)({
             outdir: !buildOptions.outdir && !buildOptions.outfile ? buildDir : undefined,
             ...buildOptions,

@@ -18,11 +18,11 @@ export const autofocusRef = (r: Element | undefined) => {
   r && requestAnimationFrame(() => (r as HTMLElement)?.focus?.());
 };
 
-export async function whenParentsDefined(element: Element) {
+export async function whenParentsDefined(element: Element, prefix: string = "wy-") {
   const whenParentElementsDefined = [];
   for (let parent: Element | null = element; (parent = parent.parentElement); ) {
-    if (parent.matches(":not(:defined)")) {
-      //console.log("Waiting for defining", parent.localName);
+    if (parent.matches(":not(:defined)") && parent.localName.startsWith(prefix)) {
+      console.log("Waiting for defining", parent.localName);
       whenParentElementsDefined.push(customElements.whenDefined(parent.localName))
     }
   }
