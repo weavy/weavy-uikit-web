@@ -10,7 +10,7 @@ import { InfiniteQueryController } from "../controllers/infinite-query-controlle
 import { ConversationsResultType } from "../types/conversations.types";
 import { getApiOptions } from "../data/api";
 import type { UserType } from "../types/users.types";
-import { getConversationsOptions } from "src/data/conversations";
+import { getConversationsOptions } from "../data/conversations";
 import { InfiniteData } from "@tanstack/query-core";
 
 import "./wy-conversation-list-item";
@@ -29,15 +29,15 @@ import {
   getMarkConversationMutation,
   getPinConversationMutation,
   getStarConversationMutation,
-} from "src/data/conversation";
-import { updateCacheItem } from "src/utils/query-cache";
-import { ConversationType } from "src/types/app.types";
+} from "../data/conversation";
+import { updateCacheItem } from "../utils/query-cache";
+import { ConversationType } from "../types/app.types";
 import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
-import { inputConsumeWithClearAndBlurOnEscape } from "src/utils/keyboard";
-import { QueryController } from "src/controllers/query-controller";
-import { RealtimePresenceEventType } from "src/types/realtime.types";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
+import { QueryController } from "../controllers/query-controller";
+import { RealtimePresenceEventType } from "../types/realtime.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-conversation-list")
 @localized()
@@ -285,5 +285,6 @@ export default class WeavyConversationList extends LitElement {
       this.weavyContext.unsubscribe(null, "member_added", this.handleRefresh);
       this.weavyContext.unsubscribe(null, "online", this.handlePresenceChange);
     }
+    super.disconnectedCallback();
   }
 }

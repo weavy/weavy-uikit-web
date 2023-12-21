@@ -102,7 +102,7 @@
 
 // icons normally inherit the text color of its parent
 .wy-icon {
-  &:not([class*="wy-icon-color-"]):not([class*="wy-kind-"]) * {
+  &:not([class*="wy-icon-color-"]):not([class*="wy-kind-"]):not([data-icon=progress]) * {
     fill: currentColor;
   }
 }

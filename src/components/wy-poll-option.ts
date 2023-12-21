@@ -6,14 +6,14 @@ import chatCss from "../scss/all.scss";
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import { getVotesOptions } from "src/data/poll";
-import { UserType } from "src/types/users.types";
+import { getVotesOptions } from "../data/poll";
+import { UserType } from "../types/users.types";
 import { localized, msg, str } from "@lit/localize";
 
 import "./wy-sheet";
 import "./wy-avatar";
 import "./wy-icon";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-poll-option")
 @localized()

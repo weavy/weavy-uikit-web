@@ -40,12 +40,12 @@ import { MutationStateController } from "../controllers/mutation-state-controlle
 import { openUrl } from "../utils/urls";
 import { portal } from "lit-modal-portal";
 import { MutationState } from "@tanstack/query-core";
-import { toUpperCaseFirst } from "src/utils/strings";
+import { toUpperCaseFirst } from "../utils/strings";
 
 import "./wy-cloud-files";
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
-import { removeMutation } from "src/utils/mutation-cache";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { removeMutation } from "../utils/mutation-cache";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-files-appbar")
 @localized()

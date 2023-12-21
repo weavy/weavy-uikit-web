@@ -4,7 +4,7 @@ import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
 import { updateMutationContext } from "../utils/mutation-cache";
-import type { AppType } from "src/types/app.types";
+import type { AppType } from "../types/app.types";
 
 export type MutateFileNameVariables = {
   file: FileType;

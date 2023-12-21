@@ -1,6 +1,6 @@
 import { Context, ContextProvider, ContextType } from "@lit/context";
 import { LitElement, ReactiveControllerHost } from "lit";
-import { ContextProviderEvent, type Options } from "../../node_modules/@lit/context/lib/controllers/context-provider.js";
+import { ContextProviderEvent, type Options } from "./context/controllers/context-provider";
 
 type ReactiveElementHost = Partial<ReactiveControllerHost> & HTMLElement;
 

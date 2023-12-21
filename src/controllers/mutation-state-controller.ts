@@ -7,12 +7,13 @@ import {
   type Mutation,
   type DefaultError,
   type MutationCache,
-  replaceEqualDeep,
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
 import { WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import { whenParentsDefined } from "src/utils/dom";
+import { whenParentsDefined } from "../utils/dom";
+import { eqObjects } from "../utils/objects";
+import type { PlainObjectType } from "../types/generic.types";
 
 type MutationStateOptions<TResult = MutationState> = {
   filters?: MutationFilters;
@@ -40,6 +41,7 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
   resolveContext?: (value: void | PromiseLike<void>) => void;
   result?: MutationState<TData, TError, TVariables, TContext>[];
   mutationCacheUnsubscribe?: () => void;
+  alwaysUpdate: boolean = false;
 
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
@@ -81,8 +83,9 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
 
     this.mutationCacheUnsubscribe = mutationCache.subscribe((event) => {
       if (/added|removed|updated/.test(event.type)) {
-        const nextResult = replaceEqualDeep(this.result, getResult(mutationCache, options));
-        if (this.result !== nextResult) {
+        //const nextResult = replaceEqualDeep(this.result, getResult(mutationCache, options));
+        const nextResult = getResult(mutationCache, options);
+        if (this.result !== nextResult || eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)) {
           //console.log("trackMutationState update", this.result, nextResult)
 
           this.result = nextResult;

@@ -78,5 +78,6 @@ export default class TanstackDevTools extends LitElement {
 
   override disconnectedCallback(): void {
     this.devtools?.unmount();
+    super.disconnectedCallback();
   }
 }

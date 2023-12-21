@@ -13,7 +13,7 @@ import allCss from "../scss/all.scss";
 import { getExtension, getIcon } from "../utils/files";
 import type { FileType, PreviewFormatType } from "../types/files.types";
 
-import type { FeaturesConfigType, FeaturesListType } from "src/types/features.types";
+import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 
 @customElement("wy-preview-item")

@@ -3,7 +3,7 @@
     "target": "es2019",
     "module": "es2020",
     "lib": [
-      "es2022",
+      "ES2022",
       "DOM",
       "DOM.Iterable"
     ],
@@ -33,7 +33,7 @@
     "noImplicitOverride": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "useDefineForClassFields": false,
     "plugins": [
       {

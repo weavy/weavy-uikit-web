@@ -1,10 +1,10 @@
 import { LocaleModule } from "@lit/localize";
-import { type WeavyContext } from "src/client/weavy-context";
+import { type WeavyContext } from "../client/weavy-context";
 
 /**
  * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
  */
-export type WeavyTokenFactory = (refresh?: boolean) => Promise<string>;
+export type WeavyTokenFactory = (refresh: boolean) => Promise<string>;
 
 export interface WeavyOptions {
   /**

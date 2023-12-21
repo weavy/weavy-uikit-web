@@ -1,8 +1,8 @@
 import { MutationObserver } from "@tanstack/query-core";
 import { type WeavyContext } from "../client/weavy-context";
-import { ConversationType } from "src/types/app.types";
-import { ConversationMutationContextType } from "src/types/conversations.types";
-import { updateCacheItem } from "src/utils/query-cache";
+import { ConversationType } from "../types/app.types";
+import { ConversationMutationContextType } from "../types/conversations.types";
+import { updateCacheItem } from "../utils/query-cache";
 
 export type MutateDeliveredConversationVariables = {
   id: number | null;

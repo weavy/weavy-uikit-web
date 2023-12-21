@@ -1,11 +1,11 @@
 import { BlobType, FileMutationContextType, MutateFileProps } from "../types/files.types";
 import { type ServerErrorResponseType } from "../types/server.types";
 import { type WeavyContext } from "../client/weavy-context";
-import { AppType } from "src/types/app.types";
-import { UserType } from "src/types/users.types";
+import { AppType } from "../types/app.types";
+import { UserType } from "../types/users.types";
 import { MutationKey } from "@tanstack/query-core";
 import { getTempFile } from "./file-create";
-import { updateMutationContext } from "src/utils/mutation-cache";
+import { updateMutationContext } from "../utils/mutation-cache";
 
 export type UploadBlobProps = {
   file: File;

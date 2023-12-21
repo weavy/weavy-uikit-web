@@ -72,29 +72,29 @@ export default class WyPosts extends LitElement {
   features: FeaturesConfigType = {};
 
   /**
-   * Realtime: New post created.
-   * @event realtime:post_created
+   * Event: New post created.
+   * @event wy:post_created
    */
   realtimePostCreatedEvent = (realtimeEvent: RealtimePostEventType) =>
     new CustomEvent("wy:post_created", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: New comment created on a post.
-   * @event realtime:comment_created
+   * Event: New comment created on a post.
+   * @event wy:comment_created
    */
   realtimeCommentCreatedEvent = (realtimeEvent: RealtimeCommentEventType) =>
     new CustomEvent("wy:comment_created", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Post reaction added.
-   * @event realtime:reaction_added
+   * Event: Post reaction added.
+   * @event wy:reaction_added
    */
   realtimeReactionAddedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_added", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Post reaction removed.
-   * @event realtime:reaction_removed
+   * Event: Post reaction removed.
+   * @event wy:reaction_removed
    */
   realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });

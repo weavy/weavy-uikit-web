@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import chatCss from "../scss/all.scss";
-import type { ReactionType } from "src/types/reactions.types";
+import type { ReactionType } from "../types/reactions.types";
 import "./wy-avatar";
 
 @customElement("wy-reaction-item")

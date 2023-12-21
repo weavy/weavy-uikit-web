@@ -4,7 +4,7 @@ import type { PostMutationContextType, PostType } from "../types/posts.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItem, updateCacheItems } from "../utils/query-cache";
 
-import { CommentMutationContextType, CommentType } from "src/types/comments.types";
+import { CommentMutationContextType, CommentType } from "../types/comments.types";
 
 export type MutateCommentVariables = {
   id: number;

@@ -1,7 +1,10 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "emitDeclarationOnly": true,
+    "downlevelIteration": false,
     //"isolatedModules": false,
     "declaration": true,
     // helps local development, could be dropped out of the NPM package though

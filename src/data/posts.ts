@@ -6,8 +6,8 @@ import type {
 
 import { type WeavyContext } from "../client/weavy-context";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
-import { MutatePostProps, PostType, PostsResultType } from "src/types/posts.types";
-import { PollOptionType } from "src/types/polls.types";
+import { MutatePostProps, PostType, PostsResultType } from "../types/posts.types";
+import { PollOptionType } from "../types/polls.types";
 
 export function getPostsOptions(
   weavyContext: WeavyContext,

@@ -8,26 +8,26 @@ import "./wy-file-menu";
 import "./wy-spinner";
 
 import filesCss from "../scss/all.scss";
-import type { FileType } from "src/types/files.types";
-import { getExtension, getIcon } from "src/utils/files";
+import type { FileType } from "../types/files.types";
+import { getExtension, getIcon } from "../utils/files";
 import { classMap } from "lit/directives/class-map.js";
-import { QueryController } from "src/controllers/query-controller";
-import { getApiOptions } from "src/data/api";
+import { QueryController } from "../controllers/query-controller";
+import { getApiOptions } from "../data/api";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "src/client/context-definition";
+import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { repeat } from "lit/directives/repeat.js";
-import type { AppType } from "src/types/app.types";
+import type { AppType } from "../types/app.types";
 import {
   FileVersionDeleteMutationType,
   FileVersionMutationType,
   getFileVersionDeleteMutation,
   getFileVersionRestoreMutation,
   getFileVersionsKey,
-} from "src/data/file-versions";
-import { openUrl } from "src/utils/urls";
-import { relativeTime } from "src/utils/datetime";
-import { WeavyContextProps } from "src/types/weavy.types";
-import { type FeaturesConfigType, type FeaturesListType } from "src/types/features.types";
+} from "../data/file-versions";
+import { openUrl } from "../utils/urls";
+import { relativeTime } from "../utils/datetime";
+import { WeavyContextProps } from "../types/weavy.types";
+import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import "./wy-empty";
 
 @customElement("wy-file-versions")

@@ -3,8 +3,8 @@ import { type WeavyContext } from "../client/weavy-context";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
-import { updateMutationContext } from "src/utils/mutation-cache";
-import { AppType } from "src/types/app.types";
+import { updateMutationContext } from "../utils/mutation-cache";
+import { AppType } from "../types/app.types";
 
 export type MutateFileSubscribeVariables = {
   file: FileType;

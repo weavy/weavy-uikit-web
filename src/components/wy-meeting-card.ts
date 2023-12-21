@@ -1,11 +1,11 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MeetingType } from "../types/meetings.types";
 import chatCss from "../scss/all.scss";
 import { localized, msg, str } from "@lit/localize";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "src/client/context-definition";
-import { relativeTime } from "src/utils/datetime";
+import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { relativeTime } from "../utils/datetime";
 import "./wy-icon";
 import "./wy-button";
 

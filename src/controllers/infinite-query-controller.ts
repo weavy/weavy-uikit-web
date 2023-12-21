@@ -11,7 +11,7 @@ import {
 
 import { ContextConsumer } from "@lit/context";
 import { WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import { whenParentsDefined } from "src/utils/dom";
+import { whenParentsDefined } from "../utils/dom";
 
 export class InfiniteQueryController<TData = unknown> implements ReactiveController {
   host: ReactiveControllerHost;

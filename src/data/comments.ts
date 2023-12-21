@@ -8,9 +8,9 @@ import type {
 
 import { type WeavyContext } from "../client/weavy-context";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
-import { PostType } from "src/types/posts.types";
-import { PollOptionType } from "src/types/polls.types";
-import { CommentType, CommentsResultType, MutateCommentProps } from "src/types/comments.types";
+import { PostType } from "../types/posts.types";
+import { PollOptionType } from "../types/polls.types";
+import { CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
 
 export function getCommentsOptions(
   weavyContext: WeavyContext,

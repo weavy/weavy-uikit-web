@@ -8,8 +8,8 @@ import {
 
 import { type WeavyContext } from "../client/weavy-context";
 
-import { ConversationMutationContextType, ConversationsResultType } from "src/types/conversations.types";
-import { ConversationType } from "src/types/app.types";
+import { ConversationMutationContextType, ConversationsResultType } from "../types/conversations.types";
+import { ConversationType } from "../types/app.types";
 
 export type MutateAddConversationVariables = {
   members: number[];

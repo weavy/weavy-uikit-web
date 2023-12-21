@@ -7,7 +7,7 @@ import "./wy-spinner";
 import "./wy-preview-icon";
 
 import allCss from "../scss/all.scss";
-import { codecError, mediaError, mediaLoaded } from "src/utils/media";
+import { codecError, mediaError, mediaLoaded } from "../utils/media";
 
 @customElement("wy-preview-media")
 export class WyPreviewMedia extends LitElement {

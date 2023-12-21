@@ -1,23 +1,23 @@
 import { LocaleModule, configureLocalization } from "@lit/localize";
 import { QueryClient, type Mutation } from "@tanstack/query-core";
 import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
-import { WeavyTokenFactory, WeavyOptions } from "src/types/weavy.types";
-import WeavyPortal from "src/components/wy-portal";
+import { WeavyTokenFactory, WeavyOptions } from "../types/weavy.types";
+import WeavyPortal from "../components/wy-portal";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClientRestore, persistQueryClientSubscribe } from "@tanstack/query-persist-client-core";
-import { FileMutationContextType } from "src/types/files.types";
+import { FileMutationContextType } from "../types/files.types";
 
-import { assign } from "src/utils/objects";
-import { defaultFetchSettings } from "src/utils/data";
-import { WyContextProvider as ContextProvider } from "src/utils/context-provider";
+import { assign } from "../utils/objects";
+import { defaultFetchSettings } from "../utils/data";
+import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 import { globalContextProvider, weavyContextDefinition } from "./context-definition";
-import { defer } from "src/utils/dom";
-import { chrome } from "src/utils/browser";
-import { RealtimeDataType, RealtimeEventType } from "src/types/realtime.types";
-import { ConnectionState, NetworkState, NetworkStatus } from "src/types/server.types";
+import { defer } from "../utils/dom";
+import { chrome } from "../utils/browser";
+import { RealtimeDataType, RealtimeEventType } from "../types/realtime.types";
+import { ConnectionState, NetworkState, NetworkStatus } from "../types/server.types";
 
 import colorModes from "../scss/colormodes.scss";
-import { adoptGlobalStyles } from "src/utils/styles";
+import { adoptGlobalStyles } from "../utils/styles";
 
 /**
  * The locale used in the source files.

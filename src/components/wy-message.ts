@@ -6,18 +6,18 @@ import { hasFeature } from "../utils/features";
 import { localized, msg, str } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "src/types/members.types";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MemberType } from "../types/members.types";
+import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
 import chatCss from "../scss/all.scss";
-import type { AppType } from "src/types/app.types";
+import type { AppType } from "../types/app.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
-import type { EmbedType } from "src/types/embeds.types";
+import type { EmbedType } from "../types/embeds.types";
 
 import "./wy-avatar";
 import "./wy-embed";

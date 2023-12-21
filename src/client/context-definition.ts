@@ -1,6 +1,6 @@
 import { createContext } from "@lit/context";
 import { type WeavyContext } from "./weavy-context";
-import { WyContextProvider as ContextProvider } from "src/utils/context-provider";
+import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 
 export { type WeavyContext } from "./weavy-context";
 export const weavyContextDefinition = createContext<WeavyContext>(Symbol.for("weavy-context"));

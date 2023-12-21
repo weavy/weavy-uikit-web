@@ -2,20 +2,20 @@ import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "src/types/members.types";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MemberType } from "../types/members.types";
+import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import type { EmbedType } from "src/types/embeds.types";
+import type { EmbedType } from "../types/embeds.types";
 import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { PollOptionType } from "src/types/polls.types";
+import { PollOptionType } from "../types/polls.types";
 
 import chatCss from "../scss/all.scss";
 
 import "./wy-post-trashed";
 import "./wy-post-view";
 import "./wy-post-edit";
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
 
 @customElement("wy-post")
 export default class WyPost extends LitElement {

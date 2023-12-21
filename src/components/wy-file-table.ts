@@ -10,10 +10,10 @@ import type { FileOrderByType, FileOrderType, FileType } from "../types/files.ty
 import { WyFilesList } from "./wy-files-list";
 
 import { repeat } from "lit/directives/repeat.js";
-import { type WeavyContext } from "src/client/context-definition";
-import { inputConsume } from "src/utils/keyboard";
+import { type WeavyContext } from "../client/context-definition";
+import { inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
-import { autofocusRef } from "src/utils/dom";
+import { autofocusRef } from "../utils/dom";
 
 export type FileOrderHeaderType = { by: FileOrderByType | undefined; title: string }[];
 

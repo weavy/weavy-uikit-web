@@ -5,7 +5,7 @@ import { ref } from "lit/directives/ref.js";
 import type { FileType } from "../types/files.types";
 
 import chatCss from "../scss/all.scss";
-import { checkImageLoad, imageLoaded } from "src/utils/images";
+import { checkImageLoad, imageLoaded } from "../utils/images";
 
 @customElement("wy-image-grid")
 export default class WyImageGrid extends LitElement {

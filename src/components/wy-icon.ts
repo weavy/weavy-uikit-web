@@ -2,7 +2,7 @@ import { LitElement, html, type PropertyValues, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { getIconName, getIconMapping, defaultIcon, nativeColors } from "../utils/icons";
 import { classMap } from "lit/directives/class-map.js";
-import { toKebabCase } from "src/utils/strings";
+import { toKebabCase } from "../utils/strings";
 import { ifDefined } from "lit/directives/if-defined.js";
 
 import allStyles from "../scss/all.scss";

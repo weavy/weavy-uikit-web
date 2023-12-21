@@ -1,11 +1,11 @@
 import { type WeavyContext } from "../client/weavy-context";
 import type { BlobType, ExternalBlobType, FileMutationContextType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
 import { getTempFile } from "./file-create";
-import { updateMutationContext } from "src/utils/mutation-cache";
+import { updateMutationContext } from "../utils/mutation-cache";
 
 export type MutateExternalBlobVariables = {
   externalBlob: ExternalBlobType;

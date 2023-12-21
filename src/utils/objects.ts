@@ -5,7 +5,7 @@
  * Released under the MIT License.
  */
 
-import { PlainObjectType } from "src/types/generic.types";
+import { PlainObjectType } from "../types/generic.types";
 
 /**
  * Checks if an object is an object.

@@ -1,4 +1,4 @@
-import { PlainObjectType } from "src/types/generic.types";
+import { PlainObjectType } from "../types/generic.types";
 import { assign } from "./objects";
 
 /**

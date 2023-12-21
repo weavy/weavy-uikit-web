@@ -5,11 +5,11 @@ import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import chatCss from "../scss/all.scss";
 import type { MessageType } from "../types/messages.types";
-import type { UserType } from "src/types/users.types";
-import { type MembersResultType } from "src/types/members.types";
+import type { UserType } from "../types/users.types";
+import { type MembersResultType } from "../types/members.types";
 import { localized, msg } from "@lit/localize";
-import { DeliveredConversationMutationType, getDeliveredConversationMutation } from "src/data/conversation";
-import { relativeTime } from "src/utils/datetime";
+import { DeliveredConversationMutationType, getDeliveredConversationMutation } from "../data/conversation";
+import { relativeTime } from "../utils/datetime";
 import { ifDefined } from "lit/directives/if-defined.js";
 
 import "./wy-avatar";
@@ -17,8 +17,8 @@ import "./wy-typing";
 import "./wy-icon";
 import "./wy-button";
 import "./wy-dropdown";
-import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "src/types/realtime.types";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-conversation-list-item")
 @localized()
@@ -268,5 +268,6 @@ export default class WyConversationListItem extends LitElement {
   //     this.weavyContext.unsubscribe(`a${this.conversationId}`, "message_created", this.handleMessageCreated);
   //     this.weavyContext.unsubscribe(`a${this.conversationId}`, "conversation_marked", this.handleConversationMarked);
   //   }
+  //   super.disconnectedCallback();
   // }
 }

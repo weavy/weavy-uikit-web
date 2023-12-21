@@ -18,7 +18,9 @@ export function updateMutationContext(
   if (mutation && mutation.state.context) {
     const newContext = { ...mutation.state.context };
     contextMutation(newContext);
-    mutation.state.context = newContext;
+    const newState = { ...mutation.state, context: newContext };
+    //mutation.state.context = newContext;
+    mutation.state = newState;
 
     mutationCache.notify({
       mutation,

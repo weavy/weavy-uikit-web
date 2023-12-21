@@ -2,8 +2,8 @@ import { type MutationKey, MutationObserver } from "@tanstack/query-core";
 import { type WeavyContext } from "../client/weavy-context";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
-import { PollMutationContextType, PollOptionType } from "src/types/polls.types";
-import { PostType } from "src/types/posts.types";
+import { PollMutationContextType, PollOptionType } from "../types/polls.types";
+import { PostType } from "../types/posts.types";
 
 export type MutatePollVariables = {
   optionId: number;

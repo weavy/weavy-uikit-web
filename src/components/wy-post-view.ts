@@ -5,17 +5,17 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { hasFeature } from "../utils/features";
 import type WeavyPreview from "../components/wy-preview";
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "src/types/members.types";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MemberType } from "../types/members.types";
+import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import type { EmbedType } from "src/types/embeds.types";
+import type { EmbedType } from "../types/embeds.types";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { PollOptionType } from "src/types/polls.types";
+import { PollOptionType } from "../types/polls.types";
 
 import { localized, msg, str } from "@lit/localize";
 
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "src/client/context-definition";
+import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
 import chatCss from "../scss/all.scss";
 
@@ -30,9 +30,9 @@ import "./wy-embed";
 import "./wy-comments";
 import "./wy-skeleton";
 
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
-import { relativeTime } from "src/utils/datetime";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
+import { relativeTime } from "../utils/datetime";
 
 @customElement("wy-post-view")
 @localized()

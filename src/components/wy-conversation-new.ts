@@ -5,15 +5,15 @@ import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
 import allStyles from "../scss/all.scss";
-import { MemberType } from "src/types/members.types";
-import { AddConversationMutationType, getAddConversationMutation } from "src/data/conversations";
+import { MemberType } from "../types/members.types";
+import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
 import { localized, msg } from "@lit/localize";
 
 import "./wy-users-search";
 import "./wy-overlay";
 import "./wy-button";
 import "./wy-icon";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-conversation-new")
 @localized()

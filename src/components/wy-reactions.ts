@@ -16,7 +16,7 @@ import {
 } from "../data/reactions";
 
 import chatCss from "../scss/all.scss";
-import { QueryController } from "src/controllers/query-controller";
+import { QueryController } from "../controllers/query-controller";
 
 import "./wy-spinner";
 import "./wy-reaction-item";

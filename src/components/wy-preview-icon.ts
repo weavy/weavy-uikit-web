@@ -5,7 +5,7 @@ import { localized, msg, str } from "@lit/localize";
 import "./wy-icon";
 
 import allCss from "../scss/all.scss";
-import { getProvider } from "src/utils/files";
+import { getProvider } from "../utils/files";
 
 @customElement("wy-preview-icon")
 @localized()

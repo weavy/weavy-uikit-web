@@ -5,17 +5,17 @@ import { type WeavyContext, weavyContextDefinition } from "../client/context-def
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import chatCss from "../scss/all.scss";
 import throttle from "lodash.throttle";
-import type { MemberType, MembersResultType } from "src/types/members.types";
-import { getInfiniteSearchMemberOptions } from "src/data/members";
+import type { MemberType, MembersResultType } from "../types/members.types";
+import { getInfiniteSearchMemberOptions } from "../data/members";
 import { localized, msg } from "@lit/localize";
-import { InfiniteQueryController } from "src/controllers/infinite-query-controller";
-import { InfiniteScrollController } from "src/controllers/infinite-scroll-controller";
+import { InfiniteQueryController } from "../controllers/infinite-query-controller";
+import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 
 import "./wy-button";
 import "./wy-icon";
 import "./wy-avatar";
 import "./wy-spinner";
-import {  inputConsumeWithClearAndBlurOnEscape } from "src/utils/keyboard";
+import {  inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
 
 @customElement("wy-users-search")
 @localized()

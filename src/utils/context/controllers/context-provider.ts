@@ -1,6 +1,16 @@
-import { ContextEvent as ContextRequestEvent } from "@lit/context";
-import { ValueNotifier } from "node_modules/@lit/context/lib/value-notifier.js";
-import type { Context, ContextType } from "@lit/context";
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+import {ContextRequestEvent} from '../context-request-event.js';
+import {ValueNotifier} from '../value-notifier.js';
+import type {Context, ContextType} from '../create-context.js';
+import type {
+  ReactiveController,
+  ReactiveControllerHost,
+} from '@lit/reactive-element';
 
 declare global {
   interface HTMLElementEventMap {
@@ -8,11 +18,13 @@ declare global {
      * A 'context-provider' event can be emitted by any element which hosts
      * a context provider to indicate it is available for use.
      */
-    "context-provider": ContextProviderEvent<Context<unknown, unknown>>;
+    'context-provider': ContextProviderEvent<Context<unknown, unknown>>;
   }
 }
 
-export class ContextProviderEvent<C extends Context<unknown, unknown>> extends Event {
+export class ContextProviderEvent<
+  C extends Context<unknown, unknown>
+> extends Event {
   readonly context: C;
 
   /**
@@ -20,7 +32,7 @@ export class ContextProviderEvent<C extends Context<unknown, unknown>> extends E
    * @param context the context which this provider can provide
    */
   constructor(context: C) {
-    super("context-provider", { bubbles: true, composed: true });
+    super('context-provider', {bubbles: true, composed: true});
     this.context = context;
   }
 }
@@ -30,6 +42,8 @@ export interface Options<C extends Context<unknown, unknown>> {
   initialValue?: ContextType<C>;
 }
 
+type ReactiveElementHost = Partial<ReactiveControllerHost> & HTMLElement;
+
 /**
  * A ReactiveController which adds context provider behavior to a
  * custom element.
@@ -37,16 +51,30 @@ export interface Options<C extends Context<unknown, unknown>> {
  * This controller simply listens to the `context-request` event when
  * the host is connected to the DOM and registers the received callbacks
  * against its observable Context implementation.
+ *
+ * The controller may also be attached to any HTML element in which case it's
+ * up to the user to call hostConnected() when attached to the DOM. This is
+ * done automatically for any custom elements implementing
+ * ReactiveControllerHost.
  */
-export class WyContextProvider<T extends Context<unknown, unknown>> extends ValueNotifier<ContextType<T>> {
-  protected readonly host: HTMLElement;
+export class ContextProvider<
+    T extends Context<unknown, unknown>,
+    HostElement extends ReactiveElementHost = ReactiveElementHost
+  >
+  extends ValueNotifier<ContextType<T>>
+  implements ReactiveController
+{
+  protected readonly host: HostElement;
   private readonly context: T;
-  protected isAttached: boolean;
 
-  constructor(host: HTMLElement, options: Options<T>);
+  constructor(host: HostElement, options: Options<T>);
   /** @deprecated Use new ContextProvider(host, options) */
-  constructor(host: HTMLElement, context: T, initialValue?: ContextType<T>);
-  constructor(host: HTMLElement, contextOrOptions: T | Options<T>, initialValue?: ContextType<T>) {
+  constructor(host: HostElement, context: T, initialValue?: ContextType<T>);
+  constructor(
+    host: HostElement,
+    contextOrOptions: T | Options<T>,
+    initialValue?: ContextType<T>
+  ) {
     super(
       (contextOrOptions as Options<T>).context !== undefined
         ? (contextOrOptions as Options<T>).initialValue
@@ -58,13 +86,13 @@ export class WyContextProvider<T extends Context<unknown, unknown>> extends Valu
     } else {
       this.context = contextOrOptions as T;
     }
-
-    this.isAttached = true;
     this.attachListeners();
-    this.dispatchWhenConnected();
+    this.host.addController?.(this);
   }
 
-  onContextRequest = (ev: ContextRequestEvent<Context<unknown, unknown>>): void => {
+  onContextRequest = (
+    ev: ContextRequestEvent<Context<unknown, unknown>>
+  ): void => {
     // Only call the callback if the context matches.
     // Also, in case an element is a consumer AND a provider
     // of the same context, we want to avoid the element to self-register.
@@ -85,7 +113,9 @@ export class WyContextProvider<T extends Context<unknown, unknown>> extends Valu
    * re-parent our subscriptions, because is a more specific provider than us
    * for its subtree.
    */
-  onProviderRequest = (ev: ContextProviderEvent<Context<unknown, unknown>>): void => {
+  onProviderRequest = (
+    ev: ContextProviderEvent<Context<unknown, unknown>>
+  ): void => {
     // Ignore events when the context doesn't match.
     // Also, in case an element is a consumer AND a provider
     // of the same context it shouldn't provide to itself.
@@ -99,7 +129,7 @@ export class WyContextProvider<T extends Context<unknown, unknown>> extends Valu
     // Re-parent all of our subscriptions in case this new child provider
     // should take them over.
     const seen = new Set<unknown>();
-    for (const [callback, { consumerHost }] of this.subscriptions) {
+    for (const [callback, {consumerHost}] of this.subscriptions) {
       // Prevent infinite loops in the case where a one host element
       // is providing the same context multiple times.
       //
@@ -117,30 +147,20 @@ export class WyContextProvider<T extends Context<unknown, unknown>> extends Valu
         continue;
       }
       seen.add(callback);
-      consumerHost.dispatchEvent(new ContextRequestEvent(this.context, callback, true));
+      consumerHost.dispatchEvent(
+        new ContextRequestEvent(this.context, callback, true)
+      );
     }
     ev.stopPropagation();
   };
 
   private attachListeners() {
-    this.host.addEventListener("context-request", this.onContextRequest);
-    this.host.addEventListener("context-provider", this.onProviderRequest);
+    this.host.addEventListener('context-request', this.onContextRequest);
+    this.host.addEventListener('context-provider', this.onProviderRequest);
   }
 
-  detachListeners() {
-    this.isAttached = false;
-    this.host.removeEventListener("context-request", this.onContextRequest);
-    this.host.removeEventListener("context-provider", this.onProviderRequest);
-  }
-
-  dispatchWhenConnected(): void {
-    if (this.isAttached) {
-      if (this.host.isConnected) {
-        // emit an event to signal a provider is available for this context
-        this.host.dispatchEvent(new ContextProviderEvent(this.context));
-      } else {
-        requestAnimationFrame(this.dispatchWhenConnected);
-      }
-    }
+  hostConnected(): void {
+    // emit an event to signal a provider is available for this context
+    this.host.dispatchEvent(new ContextProviderEvent(this.context));
   }
 }

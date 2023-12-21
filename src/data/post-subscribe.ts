@@ -3,8 +3,8 @@ import { type WeavyContext } from "../client/weavy-context";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
 
-import { AppType } from "src/types/app.types";
-import { PostMutationContextType, PostType } from "src/types/posts.types";
+import { AppType } from "../types/app.types";
+import { PostMutationContextType, PostType } from "../types/posts.types";
 
 export type MutatePostSubscribeVariables = {
   id: number;

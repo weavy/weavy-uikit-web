@@ -6,22 +6,22 @@ import { hasFeature } from "../utils/features";
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "src/types/members.types";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MemberType } from "../types/members.types";
+import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { PollOptionType } from "src/types/polls.types";
+import { PollOptionType } from "../types/polls.types";
 
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
 import chatCss from "../scss/all.scss";
 
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
 import WeavyPreview from "./wy-preview";
-import type { EmbedType } from "src/types/embeds.types";
-import { relativeTime } from "src/utils/datetime";
+import type { EmbedType } from "../types/embeds.types";
+import { relativeTime } from "../utils/datetime";
 
 import "./wy-avatar";
 import "./wy-attachment";

@@ -4,33 +4,33 @@ import type { FeaturesConfigType, FeaturesListType } from "../types/features.typ
 import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import { InfiniteScrollController } from "src/controllers/infinite-scroll-controller";
-import { InfiniteQueryController } from "src/controllers/infinite-query-controller";
+import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
+import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import {
   CommentMutationContextType,
   CommentType,
   CommentsResultType,
   MutateCommentProps,
-} from "src/types/comments.types";
-import { getAddCommentMutationOptions, getCommentsOptions } from "src/data/comments";
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
+} from "../types/comments.types";
+import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
 import { InfiniteData } from "@tanstack/query-core";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 
-import { MutationController } from "src/controllers/mutation-controller";
-import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMutation } from "src/data/comment-remove";
-import { PollMutationType, getPollMutation } from "src/data/poll";
+import { MutationController } from "../controllers/mutation-controller";
+import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMutation } from "../data/comment-remove";
+import { PollMutationType, getPollMutation } from "../data/poll";
 
 import chatCss from "../scss/all.scss";
 
 import "./wy-comment";
 import "./wy-spinner";
 import "./wy-comment-editor";
-import { addCacheItem, updateCacheItem } from "src/utils/query-cache";
-import { RealtimeCommentEventType, RealtimeReactionEventType } from "src/types/realtime.types";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { addCacheItem, updateCacheItem } from "../utils/query-cache";
+import { RealtimeCommentEventType, RealtimeReactionEventType } from "../types/realtime.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-comments")
 @localized()
@@ -258,5 +258,6 @@ export default class WyComments extends LitElement {
       this.weavyContext.unsubscribe(`a${this.app.id}`, "reaction_added", this.handleRealtimeReactionAdded);
       this.weavyContext.unsubscribe(`a${this.app.id}`, "reaction_removed", this.handleRealtimeReactionDeleted);
     }
+    super.disconnectedCallback();
   }
 }

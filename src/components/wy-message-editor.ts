@@ -4,7 +4,7 @@ import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
 import { hasFeature } from "../utils/features";
 import { Feature } from "../types/features.types";
-import { desktop } from "src/utils/browser";
+import { desktop } from "../utils/browser";
 import { weavyDesktopMessageKeymap } from "../utils/editor/commands";
 
 import WyEditor from "./wy-editor";

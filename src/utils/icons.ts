@@ -1,5 +1,5 @@
 import * as mdi from "@mdi/js"
-import { FileActionType } from "src/types/files.types"
+import { FileActionType } from "../types/files.types"
 
 export const defaultIcon = mdi.mdiSelect
 

@@ -24,7 +24,7 @@ import throttle from "lodash.throttle";
 import { typingMutation } from "../data/typing";
 import { type MeetingType } from "../types/meetings.types";
 import { addMeetingMutation } from "../data/meetings";
-import { MutationController } from "src/controllers/mutation-controller";
+import { MutationController } from "../controllers/mutation-controller";
 import {
   BlobType,
   ExternalBlobType,
@@ -32,28 +32,28 @@ import {
   FileStatusType,
   FileType,
   MutateFileProps,
-} from "src/types/files.types";
-import { toUpperCaseFirst } from "src/utils/strings";
-import { getUploadBlobMutationOptions } from "src/data/blob-upload";
-import type { AppType } from "src/types/app.types";
-import type { AutocompleteUserType, UserType, UsersAutocompleteResultType } from "src/types/users.types";
-import { MutationStateController } from "src/controllers/mutation-state-controller";
+} from "../types/files.types";
+import { toUpperCaseFirst } from "../utils/strings";
+import { getUploadBlobMutationOptions } from "../data/blob-upload";
+import type { AppType } from "../types/app.types";
+import type { AutocompleteUserType, UserType, UsersAutocompleteResultType } from "../types/users.types";
+import { MutationStateController } from "../controllers/mutation-state-controller";
 import { repeat } from "lit/directives/repeat.js";
 import { MutationState } from "@tanstack/query-core";
-import { removeMutation, removeMutations } from "src/utils/mutation-cache";
+import { removeMutation, removeMutations } from "../utils/mutation-cache";
 import WeavyCloudFiles from "./wy-cloud-files";
-import { ExternalBlobMutationType, getExternalBlobMutation } from "src/data/blob-external";
-import { PollOptionType } from "src/types/polls.types";
-import { clearEmbeds, getEmbeds, initEmbeds } from "src/utils/embeds";
-import type { EmbedType } from "src/types/embeds.types";
+import { ExternalBlobMutationType, getExternalBlobMutation } from "../data/blob-external";
+import { PollOptionType } from "../types/polls.types";
+import { clearEmbeds, getEmbeds, initEmbeds } from "../utils/embeds";
+import type { EmbedType } from "../types/embeds.types";
 import "./wy-embed";
-import { DropZoneController } from "src/controllers/dropzone-controller";
+import { DropZoneController } from "../controllers/dropzone-controller";
 
 import WeavyAvatar from "./wy-avatar";
 import "./wy-dropdown";
 import "./wy-file-item";
-import { inputConsume, inputConsumeWithBlurOnEscape } from "src/utils/keyboard";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { inputConsume, inputConsumeWithBlurOnEscape } from "../utils/keyboard";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-editor")
 @localized()

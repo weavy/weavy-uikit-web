@@ -5,20 +5,20 @@ import { type WeavyContext, weavyContextDefinition } from "../client/context-def
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "src/types/members.types";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MemberType } from "../types/members.types";
+import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import type { EmbedType } from "src/types/embeds.types";
+import type { EmbedType } from "../types/embeds.types";
 import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { PollOptionType } from "src/types/polls.types";
+import { PollOptionType } from "../types/polls.types";
 
 import chatCss from "../scss/all.scss";
 
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
-import { MutationController } from "src/controllers/mutation-controller";
-import { CommentMutationContextType, CommentType, MutateCommentProps } from "src/types/comments.types";
-import { getUpdateCommentMutationOptions } from "src/data/comments";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
+import { MutationController } from "../controllers/mutation-controller";
+import { CommentMutationContextType, CommentType, MutateCommentProps } from "../types/comments.types";
+import { getUpdateCommentMutationOptions } from "../data/comments";
 
 import "./wy-attachment";
 import "./wy-image-grid";
@@ -28,7 +28,7 @@ import "./wy-embed";
 import "./wy-button";
 import "./wy-icon";
 import "./wy-editor";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-comment-edit")
 @localized()

@@ -1,8 +1,8 @@
 import { MutationObserver } from "@tanstack/query-core";
 import { type WeavyContext } from "../client/weavy-context";
-import { updateCacheItem } from "src/utils/query-cache";
-import { MessageType } from "src/types/messages.types";
-import { ReactableType } from "src/types/reactions.types";
+import { updateCacheItem } from "../utils/query-cache";
+import { MessageType } from "../types/messages.types";
+import { ReactableType } from "../types/reactions.types";
 
 /// POST to add a reaction to a message
 export function addReactionMutation(

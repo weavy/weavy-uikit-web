@@ -10,9 +10,9 @@ import type { UserType } from "../types/users.types";
 import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 
 import chatCss from "../scss/all.scss";
-import { type AppType } from "src/types/app.types";
+import { type AppType } from "../types/app.types";
 import { localized, msg } from "@lit/localize";
-import type { MembersResultType } from "src/types/members.types";
+import type { MembersResultType } from "../types/members.types";
 
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";

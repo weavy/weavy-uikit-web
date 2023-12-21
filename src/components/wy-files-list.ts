@@ -15,7 +15,7 @@ import { repeat } from "lit/directives/repeat.js";
 
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import type { FeaturesConfigType, FeaturesListType } from "src/types/features.types";
+import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 
 @customElement("wy-files-list")
 @localized()

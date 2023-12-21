@@ -137,36 +137,36 @@ export default class WyFiles extends LitElement {
   protected availableFeatures?: FeaturesListType = [];
 
   /**
-   * Realtime: New file created.
-   * @event realtime:file_created
+   * Event: New file created.
+   * @event wy:file_created
    */
   protected realtimeFileCreatedEvent = (realtimeEvent: RealtimeFileEventType) =>
     new CustomEvent("wy:file_created", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: File updated.
-   * @event realtime:file_updated
+   * Event: File updated.
+   * @event wy:file_updated
    */
   protected realtimeFileUpdatedEvent = (realtimeEvent: RealtimeFileEventType) =>
     new CustomEvent("wy:file_updated", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: File trashed.
-   * @event realtime:file_trashed
+   * Event: File trashed.
+   * @event wy:file_trashed
    */
   protected realtimeFileTrashedEvent = (realtimeEvent: RealtimeFileEventType) =>
     new CustomEvent("wy:file_trashed", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: File restored.
-   * @event realtime:file_restored
+   * Event: File restored.
+   * @event wy:file_restored
    */
   protected realtimeFileRestoredEvent = (realtimeEvent: RealtimeFileEventType) =>
     new CustomEvent("wy:file_restored", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: File permanently deleted.
-   * @event realtime:file_deleted
+   * Event: File permanently deleted.
+   * @event wy:file_deleted
    */
   protected realtimeFileDeletedEvent = (realtimeEvent: RealtimeFileEventType) =>
     new CustomEvent("wy:file_deleted", { bubbles: true, composed: false, detail: realtimeEvent });

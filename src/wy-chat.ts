@@ -1,5 +1,5 @@
 import { customElement, property } from "lit/decorators.js";
-import WyConversation from "src/components/wy-conversation";
+import WyConversation from "./components/wy-conversation";
 import { ThemeController } from "./controllers/theme-controller";
 import { PropertyValues } from "lit";
 import colorModes from "./scss/colormodes.scss";

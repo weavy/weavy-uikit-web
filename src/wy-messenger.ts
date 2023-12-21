@@ -12,13 +12,13 @@ import { ThemeController } from "./controllers/theme-controller";
 import { localized, msg } from "@lit/localize";
 import { ContextConsumer } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "./client/context-definition";
-import type {
+import {
   RealtimeAppEventType,
   RealtimeConversationDeliveredEventType,
   RealtimeConversationMarkedEventType,
   RealtimeMessageEventType,
   RealtimeReactionEventType,
-} from "src/types/realtime.types";
+} from "./types/realtime.types";
 import type { ConversationType } from "./types/app.types";
 import { QueryController } from "./controllers/query-controller";
 import { getApiOptions } from "./data/api";
@@ -129,46 +129,54 @@ export default class WyMessenger extends LitElement {
   resizer = new ResizeController(this);
 
   /**
-   * Realtime: New message created.
-   * @event realtime:message_created
+   * Event: New message created.
+   * @event wy:message_created
    */
   realtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) =>
     new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message reaction added.
-   * @event realtime:reaction_added
+   * Event: Message reaction added.
+   * @event wy:reaction_added
    */
   realtimeReactionAddedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_added", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message reaction removed.
-   * @event realtime:reaction_removed
+   * Event: Message reaction removed.
+   * @event wy:reaction_removed
    */
   realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Conversation app details updated.
-   * @event realtime:app_updated
+   * Event: Conversation app details updated.
+   * @event wy:app_updated
    */
   realtimeAppUpdatedEvent = (realtimeEvent: RealtimeAppEventType) =>
     new CustomEvent("wy:app_updated", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message seen-by status updated.
-   * @event realtime:conversation_marked
+   * Event: Message seen-by status updated.
+   * @event wy:conversation_marked
    */
   realtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) =>
     new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message delivered status updated.
-   * @event realtime:conversation_delivered
+   * Event: Message delivered status updated.
+   * @event wy:conversation_delivered
    */
   realtimeConversationDeliveredEvent = (realtimeEvent: RealtimeConversationDeliveredEventType) =>
     new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent });
+
+  handleRealtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) => {
+    this.dispatchEvent(this.realtimeMessageCreatedEvent(realtimeEvent));
+  };
+
+  handleRealtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) => {
+    this.dispatchEvent(this.realtimeConversationMarkedEvent(realtimeEvent));
+  };
 
   protected conversationQuery = new QueryController<ConversationType>(this);
 
@@ -197,6 +205,11 @@ export default class WyMessenger extends LitElement {
   }
 
   protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+    if (changedProperties.has("weavyContext") && this.weavyContext) {
+      this.weavyContext.subscribe(null, "message_created", this.handleRealtimeMessageCreatedEvent);
+      this.weavyContext.subscribe(null, "conversation_marked", this.handleRealtimeConversationMarkedEvent);
+    }
+
     if ((changedProperties.has("conversationId") || changedProperties.has("weavyContext")) && this.weavyContext) {
       if (this.conversationId) {
         this.conversationQuery.trackQuery(
@@ -228,17 +241,13 @@ export default class WyMessenger extends LitElement {
               .conversation=${conversation}
               .availableFeatures=${this.availableFeatures}
               .features=${this.features}
-              @realtime:app_updated=${(e: CustomEvent<RealtimeAppEventType>) =>
+              @wy:app_updated=${(e: CustomEvent<RealtimeAppEventType>) =>
                 this.dispatchEvent(this.realtimeAppUpdatedEvent(e.detail))}
-              @realtime:conversation_delivered=${(e: CustomEvent<RealtimeConversationDeliveredEventType>) =>
+              @wy:conversation_delivered=${(e: CustomEvent<RealtimeConversationDeliveredEventType>) =>
                 this.dispatchEvent(this.realtimeConversationDeliveredEvent(e.detail))}
-              @realtime:conversation_marked=${(e: CustomEvent<RealtimeConversationMarkedEventType>) =>
-                this.dispatchEvent(this.realtimeConversationMarkedEvent(e.detail))}
-              @realtime:message_created=${(e: CustomEvent<RealtimeMessageEventType>) =>
-                this.dispatchEvent(this.realtimeMessageCreatedEvent(e.detail))}
-              @realtime:reaction_added=${(e: CustomEvent<RealtimeReactionEventType>) =>
+              @wy:reaction_added=${(e: CustomEvent<RealtimeReactionEventType>) =>
                 this.dispatchEvent(this.realtimeReactionAddedEvent(e.detail))}
-              @realtime:reaction_removed=${(e: CustomEvent<RealtimeReactionEventType>) =>
+              @wy:reaction_removed=${(e: CustomEvent<RealtimeReactionEventType>) =>
                 this.dispatchEvent(this.realtimeReactionRemovedEvent(e.detail))}
             >
               <span slot="action" class="wy-close-conversation">
@@ -261,5 +270,14 @@ export default class WyMessenger extends LitElement {
         condition: (entry) => entry.contentRect.width <= 768,
       });
     }
+  }
+
+  override disconnectedCallback(): void {
+    if (this.weavyContext) {
+      // realtime
+      this.weavyContext.unsubscribe(null, "message_created", this.handleRealtimeMessageCreatedEvent);
+      this.weavyContext.unsubscribe(null, "conversation_marked", this.handleRealtimeConversationMarkedEvent);
+    }
+    super.disconnectedCallback();
   }
 }

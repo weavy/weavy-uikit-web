@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import type { EmbedType } from "src/types/embeds.types";
+import type { EmbedType } from "../types/embeds.types";
 import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import chatCss from "../scss/all.scss";

@@ -8,7 +8,7 @@ import "./wy-spinner";
 
 import allCss from "../scss/all.scss";
 
-import { checkImageLoad, imageLoaded } from "src/utils/images";
+import { checkImageLoad, imageLoaded } from "../utils/images";
 
 @customElement("wy-preview-image")
 @localized()

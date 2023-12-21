@@ -9,8 +9,8 @@ import "./wy-spinner";
 
 import allCss from "../scss/all.scss";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "src/client/context-definition";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-preview-text")
 export class WyPreviewText extends LitElement {

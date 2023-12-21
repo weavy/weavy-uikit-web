@@ -1,5 +1,5 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { persistProperties } from "src/utils/persist-properties";
+import { persistProperties } from "../utils/persist-properties";
 
 export class PersistStateController<T = ReactiveControllerHost> implements ReactiveController {
   host: ReactiveControllerHost;

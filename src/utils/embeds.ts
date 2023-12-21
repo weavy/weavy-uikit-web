@@ -1,4 +1,4 @@
-import { WeavyContext } from "src/client/weavy-context";
+import { WeavyContext } from "../client/weavy-context";
 
 const regexp = /(((https?|ftp):\/\/|(www|ftp)\.)[\w]+(.[\w]+)([\w\-.,@?^=%&amp;:/~+#]*[\w\-@?^=%&amp;/~+#]))/gim;
 

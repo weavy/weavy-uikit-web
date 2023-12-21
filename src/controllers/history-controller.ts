@@ -5,7 +5,7 @@ import {
   restoreHistoryProperties,
   setBrowserState,
   updateHistoryProperties,
-} from "src/utils/browser-history";
+} from "../utils/browser-history";
 
 export class HistoryController<T = ReactiveControllerHost> implements ReactiveController {
   host: ReactiveControllerHost;

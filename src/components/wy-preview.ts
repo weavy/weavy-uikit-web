@@ -6,20 +6,20 @@ import { classMap } from "lit/directives/class-map.js";
 
 import { type FeaturesListType, type FeaturesConfigType, Feature } from "../types/features.types";
 import type { FilesResultType, FileType } from "../types/files.types";
-import type { AppType } from "src/types/app.types";
+import type { AppType } from "../types/app.types";
 
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
 import { portal } from "lit-modal-portal";
-import { hasFeature } from "src/utils/features";
+import { hasFeature } from "../utils/features";
 import { localized, msg } from "@lit/localize";
-import type { UserType } from "src/types/users.types";
+import type { UserType } from "../types/users.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { SwipeScrollController } from "src/controllers/swipe-scroll-controller";
+import { SwipeScrollController } from "../controllers/swipe-scroll-controller";
 import { repeat } from "lit/directives/repeat.js";
-import { PersistStateController } from "src/controllers/persist-state-controller";
-import { HistoryController } from "src/controllers/history-controller";
+import { PersistStateController } from "../controllers/persist-state-controller";
+import { HistoryController } from "../controllers/history-controller";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "src/client/context-definition";
+import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
 import "./wy-button";
 import "./wy-icon";

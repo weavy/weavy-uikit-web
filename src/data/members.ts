@@ -1,4 +1,4 @@
-import { MembersResultType } from "src/types/members.types";
+import { MembersResultType } from "../types/members.types";
 import { type WeavyContext } from "../client/weavy-context";
 import {
   InfiniteData,

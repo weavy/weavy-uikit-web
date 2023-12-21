@@ -5,13 +5,13 @@ import { type WeavyContext, weavyContextDefinition } from "../client/context-def
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "src/types/members.types";
-import type { MeetingType } from "src/types/meetings.types";
+import type { MemberType } from "../types/members.types";
+import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import type { MutatePostProps, PostMutationContextType, PostType } from "src/types/posts.types";
-import type { EmbedType } from "src/types/embeds.types";
+import type { MutatePostProps, PostMutationContextType, PostType } from "../types/posts.types";
+import type { EmbedType } from "../types/embeds.types";
 import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { PollOptionType } from "src/types/polls.types";
+import { PollOptionType } from "../types/polls.types";
 
 import chatCss from "../scss/all.scss";
 
@@ -24,11 +24,11 @@ import "./wy-reactions";
 import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-embed";
-import type { AppType } from "src/types/app.types";
-import type { UserType } from "src/types/users.types";
-import { MutationController } from "src/controllers/mutation-controller";
-import { getUpdatePostMutationOptions } from "src/data/posts";
-import { WeavyContextProps } from "src/types/weavy.types";
+import type { AppType } from "../types/app.types";
+import type { UserType } from "../types/users.types";
+import { MutationController } from "../controllers/mutation-controller";
+import { getUpdatePostMutationOptions } from "../data/posts";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-post-edit")
 @localized()

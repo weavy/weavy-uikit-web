@@ -3,11 +3,11 @@ import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import chatCss from "../scss/all.scss";
-import { getInitials } from "src/utils/strings";
-import { type MembersResultType } from "src/types/members.types";
-import { type UserType } from "src/types/users.types";
+import { getInitials } from "../utils/strings";
+import { type MembersResultType } from "../types/members.types";
+import { type UserType } from "../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { type PresenceType } from "src/types/presence.types";
+import { type PresenceType } from "../types/presence.types";
 
 import "./wy-presence";
 

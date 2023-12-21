@@ -12,7 +12,7 @@ import { portal } from "lit-modal-portal";
 
 import "./wy-overlay";
 import "./wy-spinner";
-import { ExternalBlobType } from "src/types/files.types";
+import { ExternalBlobType } from "../types/files.types";
 import type WeavyOverlay from "./wy-overlay";
 import { ifDefined } from "lit/directives/if-defined.js";
 

@@ -2,7 +2,7 @@ import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import chatCss from "../scss/all.scss";
-import { Presence, type PresenceType } from "src/types/presence.types";
+import { Presence, type PresenceType } from "../types/presence.types";
 
 @customElement("wy-presence")
 export default class WyPresence extends LitElement {

@@ -1,10 +1,10 @@
 import { type MutationKey, MutationObserver, type QueryKey } from "@tanstack/query-core";
 import { type WeavyContext } from "../client/weavy-context";
 import type { FileMutationContextType, FileType } from "../types/files.types";
-import type { AppType } from "src/types/app.types";
-import { removeCacheItem, updateCacheItem, updateCacheItems } from "src/utils/query-cache";
-import type { ServerErrorResponseType } from "src/types/server.types";
-import { updateMutationContext } from "src/utils/mutation-cache";
+import type { AppType } from "../types/app.types";
+import { removeCacheItem, updateCacheItem, updateCacheItems } from "../utils/query-cache";
+import type { ServerErrorResponseType } from "../types/server.types";
+import { updateMutationContext } from "../utils/mutation-cache";
 
 export type MutateFileVersionVariables = {
   versionFile: FileType;

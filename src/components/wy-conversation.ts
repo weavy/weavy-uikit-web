@@ -61,9 +61,9 @@ import type {
   RealtimeConversationMarkedEventType,
   RealtimeMessageEventType,
   RealtimeReactionEventType,
-} from "src/types/realtime.types";
-import { whenParentsDefined } from "src/utils/dom";
-import { WeavyContextProps } from "src/types/weavy.types";
+} from "../types/realtime.types";
+import { whenParentsDefined } from "../utils/dom";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-conversation")
 @localized()
@@ -132,43 +132,44 @@ export default class WyConversation extends LitElement {
   releaseFocusEvent = () => new CustomEvent<undefined>("release-focus", { bubbles: true, composed: true });
 
   /**
-   * Realtime: New message created.
-   * @event realtime:message_created
+   * Event: New message created.
+   * @event wy:message_created
    */
-  realtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) =>
-    new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent });
+  realtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) =>{
+    return new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent });
+  }
 
   /**
-   * Realtime: Message reaction added.
-   * @event realtime:reaction_added
+   * Event: Message reaction added.
+   * @event wy:reaction_added
    */
   realtimeReactionAddedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_added", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message reaction removed.
-   * @event realtime:reaction_removed
+   * Event: Message reaction removed.
+   * @event wy:reaction_removed
    */
   realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Conversation app details updated.
-   * @event realtime:app_updated
+   * Event: Conversation app details updated.
+   * @event wy:app_updated
    */
   realtimeAppUpdatedEvent = (realtimeEvent: RealtimeAppEventType) =>
     new CustomEvent("wy:app_updated", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message seen-by status updated.
-   * @event realtime:conversation_marked
+   * Event: Message seen-by status updated.
+   * @event wy:conversation_marked
    */
   realtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) =>
     new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent });
 
   /**
-   * Realtime: Message delivered status updated.
-   * @event realtime:conversation_delivered
+   * Event: Message delivered status updated.
+   * @event wy:conversation_delivered
    */
   realtimeConversationDeliveredEvent = (realtimeEvent: RealtimeConversationDeliveredEventType) =>
     new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent });
@@ -384,7 +385,7 @@ export default class WyConversation extends LitElement {
         messageId: realtimeEvent.message.id,
       });
     }
-
+    
     // display toast
     if (!this.isAtBottom && !this.lastReadMessageId) {      
       this.lastReadMessageId = realtimeEvent.message.id;

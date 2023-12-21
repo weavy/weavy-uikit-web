@@ -10,9 +10,9 @@ import {
 import { UserType } from "../types/users.types";
 import { type ServerErrorResponseType } from "../types/server.types";
 import { type WeavyContext } from "../client/weavy-context";
-import { AppType } from "src/types/app.types";
+import { AppType } from "../types/app.types";
 import { removeSuccessfulUploadBlobMutations } from "./blob-upload";
-import { updateMutationContext } from "src/utils/mutation-cache";
+import { updateMutationContext } from "../utils/mutation-cache";
 
 export const getTempFile = (
   file: File | URL | undefined,

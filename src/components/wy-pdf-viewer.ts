@@ -12,8 +12,8 @@ import { PDFViewer, EventBus, PDFFindController, PDFLinkService } from "pdfjs-di
 
 import "./wy-button";
 import "./wy-icon";
-import { inputConsumeWithBlurOnEscape } from "src/utils/keyboard";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { inputConsumeWithBlurOnEscape } from "../utils/keyboard";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-pdf-viewer")
 @localized()

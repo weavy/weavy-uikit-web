@@ -7,16 +7,16 @@ import filesCss from "../scss/all.scss";
 import { getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
 import type { FileActionType, FileStatusType, FileType } from "../types/files.types";
 
-import type { FeaturesConfigType, FeaturesListType } from "src/types/features.types";
+import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { inputConsume } from "src/utils/keyboard";
-import { getFileActionIconMapping } from "src/utils/icons";
+import { inputConsume } from "../utils/keyboard";
+import { getFileActionIconMapping } from "../utils/icons";
 import { ref } from "lit/directives/ref.js";
 
 import "./wy-icon";
 import "./wy-file-menu";
 import "./wy-spinner";
-import { autofocusRef } from "src/utils/dom";
+import { autofocusRef } from "../utils/dom";
 
 @customElement("wy-file-item")
 export class WyFileItem extends LitElement {

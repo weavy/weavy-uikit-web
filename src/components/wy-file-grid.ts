@@ -8,10 +8,10 @@ import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilen
 import type { FileType } from "../types/files.types";
 
 import { WyFilesList } from "./wy-files-list";
-import { type WeavyContext } from "src/client/context-definition";
-import { inputConsume } from "src/utils/keyboard";
+import { type WeavyContext } from "../client/context-definition";
+import { inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
-import { autofocusRef } from "src/utils/dom";
+import { autofocusRef } from "../utils/dom";
 
 export function renderFileCard(
   this: WyFilesList,

@@ -7,7 +7,7 @@ import { localized, msg } from "@lit/localize";
 
 import "./wy-icon";
 import "./wy-spinner";
-import { WeavyContextProps } from "src/types/weavy.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-empty")
 @localized()
