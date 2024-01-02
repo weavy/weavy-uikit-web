@@ -26,7 +26,7 @@ const server = createServer(esbuildDevelopmentConfig, {
   static: "./demo",
   proxy: (path) => {
     if (path.startsWith("/api")) {
-      return path.replace(/^\/api/, "http://localhost:3001");
+      return path.replace(/^\/api/, "http://localhost:3001/api");
     }
   },
   onSendHtml: (html) => {

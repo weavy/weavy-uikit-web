@@ -55,7 +55,7 @@ app.post("/webhooks", (req, res) => {
   res.end("OK");
 });
 
-app.get("/contextual/:id", async (req, res) => {
+app.get("/api/contextual/:id", async (req, res) => {
   // setup contextual app
   let response = await fetch(new URL("/api/apps/init", weavyUrl), {
     method: "POST",
@@ -72,7 +72,7 @@ app.get("/contextual/:id", async (req, res) => {
   res.end(await response.text());
 });
 
-app.get("/token", async (req, res) => {
+app.get("/api/token", async (req, res) => {
   let username = currentUser; // get user from session
 
   if ((!req.query.refresh || req.query.refresh === "false") && _tokens.find((t) => t.username === username)) {

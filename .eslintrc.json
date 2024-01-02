@@ -52,6 +52,12 @@
   ],
   "overrides": [
     {
+      "files": "bin/**/*.[mc]js",
+      "env": {
+        "node": true
+      }
+    },
+    {
       "files": "dev/**/*.[mc]js",
       "env": {
         "node": true
