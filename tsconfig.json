@@ -56,7 +56,7 @@
   "exclude": [
     "node_modules",
     "dev/**/*.[mc]js",
-    "bin/**/*.[mc]js",
+    "cli/**/*.[mc]js",
     "**/dist/*"
   ]
 }

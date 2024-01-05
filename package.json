@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "19.0.5",
+  "version": "19.0.6",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -33,7 +33,7 @@
     "test:watch": "web-test-runner --config dev/web-test-runner.config.mjs --watch"
   },
   "bin": {
-    "weavy": "./bin/weavy-cli.mjs"
+    "weavy": "./cli/weavy-cli.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.11.1",
