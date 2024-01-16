@@ -29,3 +29,14 @@ export async function whenParentsDefined(element: Element, prefix: string = "wy-
   
   await Promise.all(whenParentElementsDefined);
 }
+
+export const observeConnected = (target: Element, callback: (isConnected: boolean, target: Element) => void) => {
+  let lastIsConnected: boolean;
+  return new ResizeObserver(() => {
+    const { isConnected } = target;
+    if (isConnected !== lastIsConnected) {
+      lastIsConnected = isConnected;
+      callback(isConnected, target);
+    }
+  }).observe(target);
+}

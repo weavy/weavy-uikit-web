@@ -39,7 +39,7 @@ import type { AppType } from "../types/app.types";
 import type { AutocompleteUserType, UserType, UsersAutocompleteResultType } from "../types/users.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { repeat } from "lit/directives/repeat.js";
-import { MutationState } from "@tanstack/query-core";
+import { Mutation, MutationState } from "@tanstack/query-core";
 import { removeMutation, removeMutations } from "../utils/mutation-cache";
 import WeavyCloudFiles from "./wy-cloud-files";
 import { ExternalBlobMutationType, getExternalBlobMutation } from "../data/blob-external";
@@ -530,7 +530,7 @@ export default class WyEditor extends LitElement {
     removeMutation(
       this.weavyContext.queryClient,
       ["apps", this.app.id, "blobs", `${this.editorLocation}-${this.parentId || this.app.id}`],
-      (m) => m.state.data.id === mutation.data?.id
+      (m) => (m as Mutation<BlobType, Error, MutateFileProps, FileMutationContextType>).state.data?.id === mutation.data?.id
     );
   }
 

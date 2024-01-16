@@ -24,7 +24,9 @@ export type MutateCommentProps = {
   embed: number;
 };
 
-export type CommentMutationContextType = {};
+export type CommentMutationContextType = { 
+  tempId?: number 
+};
 
 export type CommentType = MsgType & {
   temp?: boolean;

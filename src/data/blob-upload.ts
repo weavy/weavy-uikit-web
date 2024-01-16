@@ -87,35 +87,35 @@ export function getUploadBlobMutationOptions(
       const file = getTempFile(variables.file, variables.file.name, variables.file.size, variables.file.type, user);
 
       variables.onProgress = ({ progress }) => {
-        updateMutationContext(queryClient, blobsKey, variables, (context: FileMutationContextType) => {
-          context.status.state = "pending";
-          context.status.progress = progress;
+        updateMutationContext(queryClient, blobsKey, variables, (context) => {
+          (context as FileMutationContextType).status.state = "pending";
+          (context as FileMutationContextType).status.progress = progress;
         });
       };
 
       return <FileMutationContextType>{ type: "upload", file, status: { state: "pending" } };
     },
     onSuccess: (_data: BlobType, variables: MutateFileProps, _context: FileMutationContextType | undefined) => {
-      updateMutationContext(queryClient, blobsKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
-        context.status.progress = undefined;
-        context.status.text = undefined;
+      updateMutationContext(queryClient, blobsKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
+        (context as FileMutationContextType).status.progress = undefined;
+        (context as FileMutationContextType).status.text = undefined;
       });
     },
     onError(error: Error, variables: MutateFileProps, _context: FileMutationContextType | undefined) {
       const serverError = error.cause as ServerErrorResponseType;
       if (serverError && serverError.status === 409) {
-        updateMutationContext(queryClient, blobsKey, variables, (context: FileMutationContextType) => {
-          context.status.state = "conflict";
-          context.status.progress = undefined;
-          context.status.text = serverError.detail || serverError.title;
+        updateMutationContext(queryClient, blobsKey, variables, (context) => {
+          (context as FileMutationContextType).status.state = "conflict";
+          (context as FileMutationContextType).status.progress = undefined;
+          (context as FileMutationContextType).status.text = serverError.detail || serverError.title;
         });
       } else {
-        updateMutationContext(queryClient, blobsKey, variables, (context: FileMutationContextType) => {
+        updateMutationContext(queryClient, blobsKey, variables, (context) => {
           if (context) {
-            context.status.state = "error";
-            context.status.progress = undefined;
-            context.status.text = serverError.detail || serverError.title;
+            (context as FileMutationContextType).status.state = "error";
+            (context as FileMutationContextType).status.progress = undefined;
+            (context as FileMutationContextType).status.text = serverError.detail || serverError.title;
           }
         });
       }

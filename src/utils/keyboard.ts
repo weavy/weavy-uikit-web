@@ -29,3 +29,30 @@ export function inputConsumeWithClearAndBlurOnEscape(e: KeyboardEvent) {
     inputBlurOnEscape(e);
   }
 }
+
+export function clickOnEnter(e: KeyboardEvent) {
+  if (e.key === "Enter") {
+    e.stopPropagation();
+    (e.target as HTMLElement).click();
+  }
+}
+
+export function consumeOnSpace(e: KeyboardEvent) {
+  if (e.key === " ") {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+
+export function clickOnEnterAndConsumeOnSpace(e: KeyboardEvent) {
+  clickOnEnter(e);
+  consumeOnSpace(e);
+}
+
+export function clickOnSpace(e: KeyboardEvent) {
+    if (e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      (e.target as HTMLElement).click();
+    }
+}

@@ -43,7 +43,7 @@ export class DropZoneController implements ReactiveController {
 
     if (event.dataTransfer?.items) {
       // Use DataTransferItemList interface to access the file(s)
-      [...event.dataTransfer.items].forEach((item, i) => {
+      [...event.dataTransfer.items].forEach((item) => {
         // If dropped items aren't files, reject them
         if (item.kind === "file") {
           const file = item.getAsFile();
@@ -53,7 +53,7 @@ export class DropZoneController implements ReactiveController {
       });
     } else if (event.dataTransfer?.files) {
       // Use DataTransfer interface to access the file(s)
-      [...event.dataTransfer.files].forEach((file, i) => {
+      [...event.dataTransfer.files].forEach((file) => {
         files.push(file!);
         //console.log(`… file[${i}].name = ${file.name}`);
       });

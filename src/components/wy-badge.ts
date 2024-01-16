@@ -26,30 +26,18 @@ export default class WyBadge extends LitElement {
   badgeQuery = new QueryController<BadgeType>(this);
 
   private handleBadgeRefresh = () => {
-    setTimeout(() => this.badgeQuery.result.refetch(), 500);
+    setTimeout(() => {
+      if (!this.badgeQuery.result.isRefetching) {
+        this.badgeQuery.result.refetch();
+      }
+    }, 500);
   };
 
-  /**
-   * Event: New message created.
-   * @event wy:message_created
-   */
-  realtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) =>
-    new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Message seen-by status updated.
-   * @event wy:conversation_marked
-   */
-  realtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) =>
-    new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  handleRealtimeMessage = (realtimeEvent: RealtimeMessageEventType) => {
+  handleRealtimeMessage = (_realtimeEvent: RealtimeMessageEventType) => {
     this.handleBadgeRefresh();
-    this.dispatchEvent(this.realtimeMessageCreatedEvent(realtimeEvent));
   };
-  handleRealtimeSeenBy = (realtimeEvent: RealtimeConversationMarkedEventType) => {
+  handleRealtimeSeenBy = (_realtimeEvent: RealtimeConversationMarkedEventType) => {
     this.handleBadgeRefresh();
-    this.dispatchEvent(this.realtimeConversationMarkedEvent(realtimeEvent));
   };
 
   override async updated(changedProperties: PropertyValues<this & WeavyContextProps>) {

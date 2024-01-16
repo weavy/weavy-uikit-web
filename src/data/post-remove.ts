@@ -31,7 +31,7 @@ export function getTrashPostMutationOptions(weavyContext: WeavyContext, app: App
       );
       return <PostMutationContextType>{ type: "trash", id: variables.id };
     },
-    onSuccess: (data: PostType, variables: MutatePostVariables, _context: any) => {
+    onSuccess: (data: PostType, variables: MutatePostVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -39,9 +39,9 @@ export function getTrashPostMutationOptions(weavyContext: WeavyContext, app: App
         (existingPost: PostType) => Object.assign(existingPost, data)
       );
     },
-    onError(error: Error, variables: MutatePostVariables, _context: any) {
+    /*onError(error: Error, variables: MutatePostVariables, _context: PostMutationContextType) {
       //updateCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id, (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false }))
-    },
+    },*/
   };
 
   return options;
@@ -74,7 +74,7 @@ export function getRestorePostMutationOptions(weavyContext: WeavyContext, app: A
       );
       return <PostMutationContextType>{ type: "restore", file: variables.id };
     },
-    onSuccess: (data: PostType, variables: MutatePostVariables, _context: any) => {
+    onSuccess: (data: PostType, variables: MutatePostVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -82,9 +82,9 @@ export function getRestorePostMutationOptions(weavyContext: WeavyContext, app: A
         (existingPost: PostType) => Object.assign(existingPost, data)
       );
     },
-    onError(error: Error, variables: MutatePostVariables, _context: any) {
+    /*onError(error: Error, variables: MutatePostVariables, _context: any) {
       //updateCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id, (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true }))
-    },
+    },*/
   };
 
   return options;

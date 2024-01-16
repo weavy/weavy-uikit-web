@@ -39,7 +39,7 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContext, paren
       );
       return <CommentMutationContextType>{ type: "trash", id: variables.id };
     },
-    onSuccess: (data: CommentType, variables: MutateCommentVariables, _context: any) => {
+    onSuccess: (data: CommentType, variables: MutateCommentVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -50,9 +50,9 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContext, paren
         item.comment_count = (item.comment_count || 1) - 1;
       });
     },
-    onError(error: Error, variables: MutateCommentVariables, _context: any) {
-      //updateCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id, (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false }))
-    },
+    /*onError(error: Error, variables: MutateCommentVariables, _context: any) {
+      updateCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id, (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false }))
+    },*/
   };
 
   return options;
@@ -85,7 +85,7 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContext, par
       );
       return <PostMutationContextType>{ type: "restore", file: variables.id };
     },
-    onSuccess: (data: CommentType, variables: MutateCommentVariables, _context: any) => {
+    onSuccess: (data: CommentType, variables: MutateCommentVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -96,9 +96,9 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContext, par
         item.comment_count = (item.comment_count || 0) + 1;
       });
     },
-    onError(error: Error, variables: MutateCommentVariables, _context: any) {
-      //updateCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id, (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true }))
-    },
+    /*onError(error: Error, variables: MutateCommentVariables, _context: any) {
+      updateCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id, (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true }))
+    },*/
   };
 
   return options;

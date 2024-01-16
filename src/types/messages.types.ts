@@ -16,7 +16,9 @@ export type MutateMessageProps = {
   embed: number;
 };
 
-export type MessageMutationContextType = {};
+export type MessageMutationContextType = {
+  tempId?: number;
+};
 
 export type MessageType = MsgType & {
   temp: boolean;

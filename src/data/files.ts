@@ -8,7 +8,7 @@ export function getInfiniteFileListOptions(
   weavyContext: WeavyContext,
   appId: number | null,
   filters: { order?: FileOrderType; trashed?: boolean } = {},
-  options: any = {}
+  options: Object = {}
 ): InfiniteQueryObserverOptions<FilesResultType, Error, InfiniteData<FilesResultType>> {
   const PAGE_SIZE = 25;
 
@@ -20,9 +20,10 @@ export function getInfiniteFileListOptions(
 
   return {
     ...options,
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: filesKey,
     initialPageParam: 0,
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number>) => {
+    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const skip = opt.pageParam;
       const trashed: boolean = !!filters?.trashed;
       const orderParam = filters.order ? filters.order.by + (filters.order.descending ? "+desc" : "") : "";
@@ -34,8 +35,8 @@ export function getInfiniteFileListOptions(
       const response = await weavyContext.get(url);
       return await response.json();
     },
-    getNextPageParam: (lastPage: any, pages: any) => {
-      if (lastPage?.end < lastPage?.count) {
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage?.end && lastPage?.end < lastPage?.count) {
         return pages.length * PAGE_SIZE;
       }
       return null;

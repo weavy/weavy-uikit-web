@@ -31,7 +31,7 @@ export default class WyFileMenu extends LitElement {
   noWrapper: boolean = false;
 
   @property({ type: Object })
-  has: { [key: string]: boolean } = {
+  hasEventListener: { [key: string]: boolean } = {
     "edit-name": false,
     subscribe: false,
     trash: false,
@@ -43,10 +43,10 @@ export default class WyFileMenu extends LitElement {
   override addEventListener(type: any, listener: any, options?: any): void {
     // Check if any event is listened to
 
-    const propertyName = type as keyof typeof this.has;
-    if (Object.prototype.hasOwnProperty.call(this.has, propertyName)) {
+    const propertyName = type as keyof typeof this.hasEventListener;
+    if (Object.prototype.hasOwnProperty.call(this.hasEventListener, propertyName)) {
       //console.log(`Setting ${propertyName} to true`)
-      Object.assign(this.has, {
+      Object.assign(this.hasEventListener, {
         [propertyName]: true,
       });
     }
@@ -120,7 +120,7 @@ export default class WyFileMenu extends LitElement {
       <wy-dropdown directionX="left" ?noWrapper=${this.noWrapper}>
         ${isNotTemp && this.file.is_trashed
           ? html`
-              ${this.has["restore"]
+              ${this.hasEventListener["restore"]
                 ? html`
                     <wy-dropdown-item @click=${() => this.dispatchRestore()}>
                       <wy-icon name="delete-restore"></wy-icon>
@@ -128,10 +128,10 @@ export default class WyFileMenu extends LitElement {
                     </wy-dropdown-item>
                   `
                 : nothing}
-              ${this.has["restore"] && this.has["delete-forever"]
+              ${this.hasEventListener["restore"] && this.hasEventListener["delete-forever"]
                 ? html` <wy-dropdown-divider></wy-dropdown-divider> `
                 : nothing}
-              ${this.has["delete-forever"]
+              ${this.hasEventListener["delete-forever"]
                 ? html`
                     <wy-dropdown-item @click=${() => this.dispatchDeleteForever()}>
                       <wy-icon name="delete-forever"></wy-icon>
@@ -166,7 +166,7 @@ export default class WyFileMenu extends LitElement {
                   `}
               ${isNotTemp
                 ? html`
-                    ${this.has["edit-name"]
+                    ${this.hasEventListener["edit-name"]
                       ? html`
                           <wy-dropdown-item @click=${() => this.dispatchEditName()}>
                             <wy-icon name="textbox"></wy-icon>
@@ -174,7 +174,7 @@ export default class WyFileMenu extends LitElement {
                           </wy-dropdown-item>
                         `
                       : nothing}
-                    ${this.has["subscribe"]
+                    ${this.hasEventListener["subscribe"]
                       ? this.file.is_subscribed
                         ? html`
                             <wy-dropdown-item @click=${() => this.dispatchSubscribe(false)}>
@@ -189,7 +189,7 @@ export default class WyFileMenu extends LitElement {
                             </wy-dropdown-item>
                           `
                       : nothing}
-                    ${this.has["trash"]
+                    ${this.hasEventListener["trash"]
                       ? html`
                           <wy-dropdown-divider></wy-dropdown-divider>
                           <wy-dropdown-item @click=${() => this.dispatchTrash()}>

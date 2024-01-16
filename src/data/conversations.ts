@@ -24,15 +24,16 @@ export type AddConversationMutationType = MutationObserver<
 
 export function getConversationsOptions(
   weavyContext: WeavyContext,
-  options: any = {},
+  options: Object = {},
   searchText?: () => string | undefined
 ): InfiniteQueryObserverOptions<ConversationsResultType, Error, InfiniteData<ConversationsResultType>> {
   const PAGE_SIZE = 25;
   return {
     ...options,
     initialPageParam: 0,
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["conversations"],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number>) => {
+    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const query = searchText?.() || '';
       const skip = opt.pageParam;
       const url = `/api/conversations?contextual=false&q=${query}&skip=${skip}&top=${PAGE_SIZE}`;
@@ -42,7 +43,7 @@ export function getConversationsOptions(
       result.data = result.data || [];
       return result;
     },
-    getNextPageParam: (lastPage: any, pages: any) => {
+    getNextPageParam: (lastPage, pages) => {
       if (lastPage?.end < lastPage?.count) {
         return pages.length * PAGE_SIZE;
       }

@@ -11,10 +11,10 @@ import { falsyBoolean } from "../converters/falsy-boolean";
 
 import WeavyIcon from "./wy-icon";
 import "./wy-button";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "src/utils/keyboard";
 
 @customElement("wy-dropdown")
 export default class WyDropdown extends LitElement {
-  
   static override styles = [
     css`
       /*:host {
@@ -130,13 +130,19 @@ export default class WyDropdown extends LitElement {
       this._slotButton.length === 0 || (this._slotButton.length === 1 && this._slotButton[0] instanceof WeavyIcon);
 
     return html`
-      <span @click=${this.handleClickToggle}>
+      <span
+        tabindex="0"
+        @click=${this.handleClickToggle}
+        @keydown=${clickOnEnterAndConsumeOnSpace}
+        @keyup=${clickOnSpace}
+      >
         <wy-button
           .kind=${isIcon ? "icon" : undefined}
           ${ref(this.popperReferenceRef)}
           class=${classMap({ "wy-active": this.visible })}
           title=${this.title}
-          ?disabled=${this.disabled}>
+          ?disabled=${this.disabled}
+        >
           <slot name="button" @slotchange=${() => this.requestUpdate()}>
             <wy-icon name=${this.icon}></wy-icon>
           </slot>
@@ -152,7 +158,6 @@ export default class WyDropdown extends LitElement {
 
 @customElement("wy-dropdown-item")
 export class WyDropdownItem extends LitElement {
-  
   static override styles = [
     dropdownStyles,
     css`
@@ -172,7 +177,6 @@ export class WyDropdownItem extends LitElement {
 
 @customElement("wy-dropdown-option")
 export class WyDropdownOption extends LitElement {
-  
   static override styles = [
     dropdownStyles,
     css`
@@ -203,7 +207,6 @@ export class WyDropdownOption extends LitElement {
 
 @customElement("wy-dropdown-divider")
 export class WyDropdownDivider extends LitElement {
-  
   static override styles = [
     dropdownStyles,
     css`

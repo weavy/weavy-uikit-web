@@ -23,6 +23,7 @@ export function getSearchMemberOptions(weavyContext: WeavyContext, text: () => s
   const PAGE_SIZE = 25;
 
   return {
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["searchmembers"],
     enabled: false,
     queryFn: async () => {
@@ -44,7 +45,7 @@ export function getInfiniteSearchMemberOptions(
     queryKey: ["searchmembers"],
     initialPageParam: 0,
     enabled: true,
-    queryFn: <QueryFunction<MembersResultType, QueryKey, unknown>>(async (
+    queryFn: <QueryFunction<MembersResultType, QueryKey, number | unknown>>(async (
       opt: QueryFunctionContext<QueryKey, number>
     ) => {      
       const inputText = text();
@@ -57,8 +58,8 @@ export function getInfiniteSearchMemberOptions(
       result.data = result.data || [];
       return result;
     }),
-    getNextPageParam: (lastPage: any, pages: any) => {
-      if (lastPage?.end < lastPage?.count) {
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage?.end && lastPage?.end < lastPage?.count) {
         return pages.length * PAGE_SIZE;
       }
       return undefined;

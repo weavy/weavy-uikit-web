@@ -17,11 +17,11 @@ import type { MembersResultType } from "../types/members.types";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import "./wy-message";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "src/utils/keyboard";
 
 @customElement("wy-messages")
 @localized()
 export default class WyMessages extends LitElement {
-  
   static override styles = [
     chatCss,
     css`
@@ -80,7 +80,7 @@ export default class WyMessages extends LitElement {
     const flattenedPages = this.infiniteMessages?.pages.flatMap((messageResult) => messageResult.data);
 
     let lastDate: Date;
-    
+
     return html`
       <div class="wy-messages">
         <div ${ref(this.pagerRef)} class="wy-pager"></div>
@@ -100,12 +100,16 @@ export default class WyMessages extends LitElement {
                   lastDate = messageDate;
                   dateContent = html`<div class="wy-date-separator"><time>${messageDateShort}</time></div>`;
                 }
-                
+
                 let unreadMarkerContent = html``;
-                if (this.unreadMarkerId && this.unreadMarkerId === message.id) {                  
+                if (this.unreadMarkerId && this.unreadMarkerId === message.id) {
                   unreadMarkerContent = html`<div
                     class="wy-toast wy-toast-action"
-                    @click=${() => this.dispatchScrollToBottom()}>
+                    tabindex="0"
+                    @click=${() => this.dispatchScrollToBottom()}
+                    @keydown=${clickOnEnterAndConsumeOnSpace}
+                    @keyup=${clickOnSpace}
+                  >
                     ${msg("New messages")}
                   </div>`;
                 }
@@ -147,7 +151,8 @@ export default class WyMessages extends LitElement {
                       ? this.members.data.filter((member) => {
                           return member.marked_id === message.id && member.id !== this.user.id;
                         })
-                      : []}></wy-message>`,
+                      : []}
+                  ></wy-message>`,
                   html`${this.unreadMarkerPosition === "bottom" ? unreadMarkerContent : nothing}`,
                 ];
               }

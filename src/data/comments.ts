@@ -10,20 +10,21 @@ import { type WeavyContext } from "../client/weavy-context";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { PostType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";
-import { CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
+import { CommentMutationContextType, CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
 
 export function getCommentsOptions(
   weavyContext: WeavyContext,
   type: string,
   parentId: number | null,
-  options: any = {}
+  options: Object = {}
 ): InfiniteQueryObserverOptions<CommentsResultType, Error, InfiniteData<CommentsResultType>> {
   const PAGE_SIZE = 25;
   return {
     ...options,
     initialPageParam: 0,
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["comments", parentId],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number>) => {
+    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const skip = opt.pageParam;
       const url =
         "/api/" + type + "/" + parentId + "/comments?orderby=createdat+asc&skip=" + skip + "&top=" + PAGE_SIZE;
@@ -34,7 +35,7 @@ export function getCommentsOptions(
 
       return result;
     },
-    getNextPageParam: (lastPage: any, pages: any) => {
+    getNextPageParam: (lastPage, pages) => {
       if (lastPage?.end < lastPage?.count) {
         return pages.length * PAGE_SIZE;
       }
@@ -65,19 +66,21 @@ export function getUpdateCommentMutationOptions(weavyContext: WeavyContext, muta
       return response.json();
     },
     mutationKey: mutationKey,
-    onSuccess: (data: CommentType, variables: any, context: any) => {
-      updateCacheItem(weavyContext.queryClient, ["comments", variables.parentId], variables.id, (item: CommentType) => {
-        item.text = data.text;
-        item.html = data.html;
-        item.attachment_ids = data.attachment_ids;
-        item.attachments = data.attachments;
-        item.meeting = data.meeting;
-        item.meeting_id = data.meeting_id;
-        item.modified_at = data.modified_at;
-        item.modified_by = data.modified_by;
-        item.options = data.options;
-        item.embed = data.embed;
-      });
+    onSuccess: (data: CommentType, variables: MutateCommentProps) => {
+      if (variables.id) {
+        updateCacheItem(weavyContext.queryClient, ["comments", variables.parentId], variables.id, (item: CommentType) => {
+          item.text = data.text;
+          item.html = data.html;
+          item.attachment_ids = data.attachment_ids;
+          item.attachments = data.attachments;
+          item.meeting = data.meeting;
+          item.meeting_id = data.meeting_id;
+          item.modified_at = data.modified_at;
+          item.modified_by = data.modified_by;
+          item.options = data.options;
+          item.embed = data.embed;
+        });
+      }
     },
   };
 
@@ -133,9 +136,9 @@ export function getAddCommentMutationOptions(weavyContext: WeavyContext, mutatio
         reactions: [],
       };
       addCacheItem(queryClient, ["comments", variables.parentId], tempData, undefined, { descending: false });
-      return { tempId };
+      return { tempId } as CommentMutationContextType;
     },
-    onSuccess: (data: CommentType, variables: MutateCommentProps, context: any) => {
+    onSuccess: (data: CommentType, variables: MutateCommentProps, context: CommentMutationContextType) => {
       addCacheItem(queryClient, ["comments", variables.parentId], data, context.tempId, { descending: false });
 
       updateCacheItem(queryClient, [variables.type, variables.appId], variables.parentId, (item: PostType) => {

@@ -50,21 +50,21 @@ export function getSubscribeFileMutationOptions(weavyContext: WeavyContext, app:
         status: { state: "pending" },
       };
     },
-    onSuccess: (data: FileType, variables: MutateFileSubscribeVariables, _context: any) => {
+    onSuccess: (data: FileType, variables: MutateFileSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
         Object.assign(existingFile, data, { status: "ok" })
       );
-      updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
+      updateMutationContext(queryClient, filesKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileSubscribeVariables, _context: any) {
+    onError(error: Error, variables: MutateFileSubscribeVariables) {
       updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
         Object.assign(existingFile, { is_subscribed: variables.file.is_subscribed, status: "error" })
       );
-      updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "error";
-        context.status.text = error.message;
+      updateMutationContext(queryClient, filesKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "error";
+        (context as FileMutationContextType).status.text = error.message;
       });
     },
   };

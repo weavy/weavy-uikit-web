@@ -53,18 +53,18 @@ export function getRenameFileMutationOptions(weavyContext: WeavyContext, app: Ap
       );
       return <FileMutationContextType>{ type: "rename", file: variables.file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileNameVariables, _context: any) => {
+    onSuccess: (data: FileType, variables: MutateFileNameVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, data)
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileNameVariables, _context: any) {
+    onError(error: Error, variables: MutateFileNameVariables) {
       // Show/update in mutation list also?
       updateCacheItems(
         queryClient,
@@ -72,9 +72,9 @@ export function getRenameFileMutationOptions(weavyContext: WeavyContext, app: Ap
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, { name: variables.file.name })
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "error";
-        context.status.text = error.message;
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "error";
+        (context as FileMutationContextType).status.text = error.message;
       });
     },
   };

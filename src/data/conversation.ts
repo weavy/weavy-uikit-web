@@ -104,7 +104,7 @@ export function getMarkConversationMutationOptions(weavyContext: WeavyContext) {
       const response = await weavyContext.post(url, markAsRead ? "PUT" : "DELETE", "");
       return response.json();
     },
-    onMutate: async (variables: MutateMarkConversationVariables) => {
+    onMutate: async (/*variables: MutateMarkConversationVariables*/) => {
       // updateCacheItem(weavyContext.queryClient, ["conversations"], variables.id!, (item: ConversationType) => {
       //   item.is_unread = !variables.markAsRead;
       // });

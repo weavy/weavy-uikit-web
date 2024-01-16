@@ -29,11 +29,15 @@
   margin-left: auto;
   margin-right: auto;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .wy-avatar-presence {
   position: relative;
-  display:  inline-flex;
+  display:  flex;
 }
 
 .wy-avatar-group {
@@ -49,8 +53,8 @@
   top: 0;
   left: 0;
   display: unset;
-  -webkit-mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) 39%, rgba(0, 0, 0, 1) 40%);
-  mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) 39%, rgba(0, 0, 0, 1) 40%);
+  -webkit-mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + .125rem) , rgb(0, 0, 0) calc(35% + .1875rem));
+  mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + .125rem) , rgb(0, 0, 0) calc(35% + .1875rem));
 }
 
 .wy-avatar-group wy-avatar:last-child {

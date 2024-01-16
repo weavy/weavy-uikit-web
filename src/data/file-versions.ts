@@ -16,7 +16,7 @@ export type FileVersionMutationType = MutationObserver<
   MutateFileVersionVariables,
   FileMutationContextType
 >;
-export type FileVersionDeleteMutationType = MutationObserver<void, any, MutateFileVersionVariables, void>;
+export type FileVersionDeleteMutationType = MutationObserver<void, Error, MutateFileVersionVariables, void>;
 
 export function getFileVersionsKey(app: AppType, file: FileType): QueryKey {
   return ["apps", app.id, "file", file.id, "versions"];
@@ -53,27 +53,29 @@ export function getFileVersionRestoreMutationOptions(weavyContext: WeavyContext,
       );
       return <FileMutationContextType>{ type: "version", file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileVersionVariables, context: any) => {
+    onSuccess: (data: FileType, variables: MutateFileVersionVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.versionFile.id,
         (existingFile: FileType) => Object.assign(existingFile, data, { status: "ok" })
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileVersionVariables, context: any) {
-      updateCacheItems(
-        queryClient,
-        { queryKey: options.mutationKey, exact: false },
-        variables.versionFile.id,
-        (existingFile: FileType) => Object.assign(existingFile, context.previousFile, { status: "error" })
-      );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "error";
-        context.status.text = error.message;
+    onError(error: Error, variables: MutateFileVersionVariables, context: FileMutationContextType | undefined) {
+      if (context?.file) {
+        updateCacheItems(
+          queryClient,
+          { queryKey: options.mutationKey, exact: false },
+          variables.versionFile.id,
+          (existingFile: FileType) => Object.assign(existingFile, context.file, { status: "error" })
+        );
+      }
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "error";
+        (context as FileMutationContextType).status.text = error.message;
       });
     },
     onSettled() {
@@ -119,20 +121,20 @@ export function getFileVersionDeleteMutationOptions(weavyContext: WeavyContext, 
       }
     },
     onMutate: async (variables: MutateFileVersionVariables) => {
-      const versionPredicate = (item: any) =>
+      const versionPredicate = (item: FileType) =>
         item.id === variables.versionFile.id && item.version === variables.versionFile.version;
       updateCacheItem(queryClient, fileVersionKey, versionPredicate, (existingFile: FileType) =>
         Object.assign(existingFile, { status: "pending" })
       );
     },
-    onSuccess: (data: any, variables: MutateFileVersionVariables, context: any) => {
-      const versionPredicate = (item: any) =>
+    onSuccess: (data: void, variables: MutateFileVersionVariables) => {
+      const versionPredicate = (item: FileType) =>
         item.id === variables.versionFile.id && item.version === variables.versionFile.version;
       removeCacheItem(queryClient, fileVersionKey, versionPredicate);
     },
-    onError(error: any, variables: MutateFileVersionVariables, context: any) {
+    onError(error: Error, variables: MutateFileVersionVariables) {
       // Show in error list instead?
-      const versionPredicate = (item: any) =>
+      const versionPredicate = (item: FileType) =>
         item.id === variables.versionFile.id && item.version === variables.versionFile.version;
       updateCacheItem(queryClient, fileVersionKey, versionPredicate, (existingFile: FileType) =>
         Object.assign(existingFile, { status: undefined })

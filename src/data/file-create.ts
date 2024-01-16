@@ -197,11 +197,11 @@ export function getCreateFileMutationOptions(weavyContext: WeavyContext, user: U
     },
     onSuccess: (_data: FileType, variables: CreateFileProps, _context: FileMutationContextType | undefined) => {
       //updateCacheItem(queryClient, filesKey, context!.file?.refId || context!.file?.id, (file: FileType) => Object.assign(file, data, { status: "ok", statusText: undefined, progress: undefined }));
-      updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
+      updateMutationContext(queryClient, filesKey, variables, (context) => {
         if (context) {
-          context.status.state = "ok";
-          context.status.progress = undefined;
-          context.status.text = undefined;
+          (context as FileMutationContextType).status.state = "ok";
+          (context as FileMutationContextType).status.progress = undefined;
+          (context as FileMutationContextType).status.text = undefined;
         }
       });
       //console.log("FILE SUCCESS");
@@ -212,9 +212,9 @@ export function getCreateFileMutationOptions(weavyContext: WeavyContext, user: U
         //updateCacheItem(queryClient, filesKey, context!.file?.refId || context!.file?.id, (file: FileType) => Object.assign(file, { status: "conflict", statusText: error.detail || error.title, progress: undefined }));
         updateMutationContext(queryClient, filesKey, variables, (context) => {
           if (context) {
-            context.status.progress = undefined;
-            context.status.state = "conflict";
-            context.status.text = error.message;
+            (context as FileMutationContextType).status.progress = undefined;
+            (context as FileMutationContextType).status.state = "conflict";
+            (context as FileMutationContextType).status.text = error.message;
           }
         });
       } else {
@@ -228,9 +228,9 @@ export function getCreateFileMutationOptions(weavyContext: WeavyContext, user: U
         }
         updateMutationContext(queryClient, filesKey, variables, (context) => {
           if (context) {
-            context.status.state = "error";
-            context.status.progress = undefined;
-            context.status.text = error.message;
+            (context as FileMutationContextType).status.state = "error";
+            (context as FileMutationContextType).status.progress = undefined;
+            (context as FileMutationContextType).status.text = error.message;
           }
         });
       }

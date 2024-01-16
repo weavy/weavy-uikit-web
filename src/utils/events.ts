@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PlainObjectType } from "../types/generic.types";
 import { eqObjects } from "./objects";
 //console.debug("events.js");

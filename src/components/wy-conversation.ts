@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ContextConsumer } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { portal } from "lit-modal-portal";
-import type { ConversationType } from "../types/app.types";
+import { ConversationTypes, type ConversationType } from "../types/app.types";
 import type {
   MessageMutationContextType,
   MessageType,
@@ -68,10 +68,6 @@ import { WeavyContextProps } from "../types/weavy.types";
 @customElement("wy-conversation")
 @localized()
 export default class WyConversation extends LitElement {
-  _chatRoomId = "edb400ac-839b-45a7-b2a8-6a01820d1c44";
-  _chatId = "d65dd4bc-418e-403c-9f56-f9cf4da931ed";
-  _privateChatId = "7e14f418-8f15-46f4-b182-f619b671e470";
-
   static override styles = [
     chatCss,
     css`
@@ -131,59 +127,16 @@ export default class WyConversation extends LitElement {
    */
   releaseFocusEvent = () => new CustomEvent<undefined>("release-focus", { bubbles: true, composed: true });
 
-  /**
-   * Event: New message created.
-   * @event wy:message_created
-   */
-  realtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) =>{
-    return new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent });
-  }
-
-  /**
-   * Event: Message reaction added.
-   * @event wy:reaction_added
-   */
-  realtimeReactionAddedEvent = (realtimeEvent: RealtimeReactionEventType) =>
-    new CustomEvent("wy:reaction_added", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Message reaction removed.
-   * @event wy:reaction_removed
-   */
-  realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
-    new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Conversation app details updated.
-   * @event wy:app_updated
-   */
-  realtimeAppUpdatedEvent = (realtimeEvent: RealtimeAppEventType) =>
-    new CustomEvent("wy:app_updated", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Message seen-by status updated.
-   * @event wy:conversation_marked
-   */
-  realtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) =>
-    new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Message delivered status updated.
-   * @event wy:conversation_delivered
-   */
-  realtimeConversationDeliveredEvent = (realtimeEvent: RealtimeConversationDeliveredEventType) =>
-    new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent });
-
   isContextualChat(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === this._chatId;
+    return (conversation ?? this.conversation)?.type === ConversationTypes.ContextualChat;
   }
 
   isPrivateChat(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === this._privateChatId;
+    return (conversation ?? this.conversation)?.type === ConversationTypes.PrivateChat;
   }
 
   isChatRoom(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === this._chatRoomId;
+    return (conversation ?? this.conversation)?.type === ConversationTypes.ChatRoom;
   }
 
   messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
@@ -220,17 +173,16 @@ export default class WyConversation extends LitElement {
     await super.performUpdate();
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {  
-
+  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     if ((changedProperties.has("weavyContext") || changedProperties.has("conversation")) && this.weavyContext) {
       const lastConversation = changedProperties.get("conversation");
 
       // if context updated
-      if(changedProperties.has("weavyContext")){
+      if (changedProperties.has("weavyContext")) {
         this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
         this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "chat"]));
 
-        if (!this.isContextualChat()) {                   
+        if (!this.isContextualChat()) {
           this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
           this.leaveConversationMutation = getLeaveConversationMutation(this.weavyContext);
           this.addMembersMutation = getAddMembersToConversationMutation(this.weavyContext);
@@ -239,7 +191,7 @@ export default class WyConversation extends LitElement {
       }
 
       // conversation object is updated
-      if(changedProperties.has("conversation") && this.conversation){
+      if (changedProperties.has("conversation") && this.conversation) {
         if (!this.isContextualChat()) {
           this.conversationTitleInput = this.conversationTitle = this.conversation.display_name;
         }
@@ -258,22 +210,20 @@ export default class WyConversation extends LitElement {
         }
 
         // Always scroll to bottom when conversation changed
-        if(this.conversation.id !== lastConversation?.id){          
-          this.wasAtBottom = true;  
+        if (this.conversation.id !== lastConversation?.id) {
+          this.wasAtBottom = true;
         }
-        
-      } 
+      }
 
       // conversation id is changed
-      if (lastConversation && this.conversation && lastConversation.id !== this.conversation.id) {              
+      if (lastConversation && this.conversation && lastConversation.id !== this.conversation.id) {
         this.unsubscribeToRealtime(lastConversation);
       }
-   
 
-      if(!this.conversation){        
-          this.messagesQuery.untrackInfiniteQuery();
-          this.addMessageMutation.untrackMutation();
-          this.membersQuery.untrackQuery();        
+      if (!this.conversation) {
+        this.messagesQuery.untrackInfiniteQuery();
+        this.addMessageMutation.untrackMutation();
+        this.membersQuery.untrackQuery();
       }
     } else {
       // Check state for scrollParentToBottom
@@ -297,21 +247,26 @@ export default class WyConversation extends LitElement {
       this.conversation &&
       this.user
     ) {
-
-      if(!this.isContextualChat()){
+      if (!this.isContextualChat()) {
         if (hasFeature(this.availableFeatures, Feature.Receipts, this.features?.receipts)) {
           this.membersQuery.trackQuery(getMemberOptions(this.weavyContext, this.conversation.id));
         }
       }
-      
 
       // set unread messages banner
       this.lastReadMessageId =
-        !this.isContextualChat() && this.conversation.is_unread 
+        !this.isContextualChat() && this.conversation.is_unread
           ? (this.conversation?.members?.data || []).filter((member) => member.id === this.user?.id)?.[0]?.marked_id
           : undefined;
       this.lastReadMessagePosition = "bottom";
+    }
 
+    if (
+      (changedProperties.has("weavyContext") || changedProperties.has("conversation")) &&
+      this.weavyContext &&
+      (this.conversation && this.conversation.id !== changedProperties.get("conversation")?.id)
+    ) {
+      //console.log("subscribing conversation realtime", this.conversation.id);
       // realtime
       this.weavyContext.subscribe(`a${this.conversation.id}`, "message_created", this.handleRealtimeMessage);
       this.weavyContext.subscribe(`a${this.conversation.id}`, "reaction_added", this.handleRealtimeReactionAdded);
@@ -339,23 +294,23 @@ export default class WyConversation extends LitElement {
   }
 
   private handleSubmit(e: CustomEvent) {
-    if (this.conversation && this.user) {      
-      this.addMessageMutation.mutate(
-        {
+    if (this.conversation && this.user) {
+      this.addMessageMutation
+        .mutate({
           appId: this.conversation.id,
           text: e.detail.text,
           meetingId: e.detail.meetingId,
           embed: e.detail.embed,
           blobs: e.detail.blobs,
           userId: this.user.id,
-        }
-      ).then((data: MessageType) => {        
-        this.markConversationMutation?.mutate({
-          id: this.conversation!.id,
-          markAsRead: true,
-          messageId: data.id,
+        })
+        .then((data: MessageType) => {
+          this.markConversationMutation?.mutate({
+            id: this.conversation!.id,
+            markAsRead: true,
+            messageId: data.id,
+          });
         });
-      });
       this.lastReadMessageId = undefined;
       requestAnimationFrame(() => {
         this.scrollToBottom();
@@ -385,14 +340,12 @@ export default class WyConversation extends LitElement {
         messageId: realtimeEvent.message.id,
       });
     }
-    
+
     // display toast
-    if (!this.isAtBottom && !this.lastReadMessageId) {      
+    if (!this.isAtBottom && !this.lastReadMessageId) {
       this.lastReadMessageId = realtimeEvent.message.id;
       this.lastReadMessagePosition = "top";
     }
-
-    this.dispatchEvent(this.realtimeMessageCreatedEvent(realtimeEvent));
   };
 
   handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
@@ -411,8 +364,6 @@ export default class WyConversation extends LitElement {
         ];
       }
     );
-
-    this.dispatchEvent(this.realtimeReactionAddedEvent(realtimeEvent));
   };
 
   handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
@@ -427,8 +378,6 @@ export default class WyConversation extends LitElement {
         item.reactions = item.reactions.filter((item) => item.created_by_id !== realtimeEvent.actor.id);
       }
     );
-
-    this.dispatchEvent(this.realtimeReactionRemovedEvent(realtimeEvent));
   };
 
   handleRealtimeAppUpdated = (realtimeEvent: RealtimeAppEventType) => {
@@ -437,7 +386,6 @@ export default class WyConversation extends LitElement {
     }
 
     this.conversationTitle = this.conversationTitleInput = realtimeEvent.app.display_name;
-    this.dispatchEvent(this.realtimeAppUpdatedEvent(realtimeEvent));
   };
 
   handleRealtimeSeenBy = (realtimeEvent: RealtimeConversationMarkedEventType) => {
@@ -459,8 +407,6 @@ export default class WyConversation extends LitElement {
         item.marked_at = realtimeEvent.marked_at;
       }
     );
-
-    this.dispatchEvent(this.realtimeConversationMarkedEvent(realtimeEvent));
   };
 
   handleRealtimeDelivered = (realtimeEvent: RealtimeConversationDeliveredEventType) => {
@@ -481,8 +427,6 @@ export default class WyConversation extends LitElement {
         item.delivered_at = realtimeEvent.delivered_at;
       }
     );
-
-    this.dispatchEvent(this.realtimeConversationDeliveredEvent(realtimeEvent));
   };
 
   get isAtBottom() {
@@ -501,11 +445,13 @@ export default class WyConversation extends LitElement {
       return;
     }
 
+    //console.log("unsubscribing conversation realtime", conversation.id);
+
     this.weavyContext.unsubscribe(`a${conversation.id}`, "message_created", this.handleRealtimeMessage);
     this.weavyContext.unsubscribe(`a${conversation.id}`, "reaction_added", this.handleRealtimeReactionAdded);
     this.weavyContext.unsubscribe(`a${conversation.id}`, "reaction_removed", this.handleRealtimeReactionDeleted);
 
-    if (!this.isContextualChat()) {
+    if (!this.isContextualChat(conversation)) {
       this.weavyContext.unsubscribe(`a${conversation.id}`, "conversation_marked", this.handleRealtimeSeenBy);
       this.weavyContext.unsubscribe(`a${conversation.id}`, "app_updated", this.handleRealtimeAppUpdated);
       this.weavyContext.unsubscribe(null, "conversation_delivered", this.handleRealtimeDelivered);
@@ -576,7 +522,7 @@ export default class WyConversation extends LitElement {
                   ${this.availableFeatures && this.conversation && this.user
                     ? html`
                         <wy-typing appId=${this.conversation?.id} userId=${this.user.id}>
-                          ${this.conversation.type === this._privateChatId
+                          ${this.conversation.type === ConversationTypes.PrivateChat
                             ? html`<wy-presence
                                 placement="text"
                                 .status=${otherMember?.presence}
@@ -655,7 +601,7 @@ export default class WyConversation extends LitElement {
             `
           : html`
               <div class="wy-messages">
-                <wy-empty>
+                <wy-empty class="wy-pane">
                   ${isPending || membersIsPending || !this.user
                     ? html`<wy-spinner overlay></wy-spinner>`
                     : msg("Start the conversation!")}

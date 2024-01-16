@@ -3,6 +3,7 @@ import { type WeavyContext } from "../client/weavy-context";
 
 export function getApiOptions<T>(weavyContext: WeavyContext, apiKey: QueryKey, apiPath?: string) {
   return {
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: apiKey,
     queryFn: async () => {
       const response = await weavyContext.get("/api/" + (apiPath ? apiPath : apiKey.join("/")));

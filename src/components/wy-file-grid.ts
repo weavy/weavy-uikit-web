@@ -9,7 +9,7 @@ import type { FileType } from "../types/files.types";
 
 import { WyFilesList } from "./wy-files-list";
 import { type WeavyContext } from "../client/context-definition";
-import { inputConsume } from "../utils/keyboard";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 
@@ -64,10 +64,14 @@ export function renderFileCard(
         "wy-card-trashed": file.is_trashed,
         "wy-card-hover": !file.is_trashed && !isRenaming,
       })}"
+      title="${file.name} • ${fileSize} • ${fileDate}"
+      tabindex="0"
       @click=${(e: Event) => {
         !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file);
       }}
-      title="${file.name} • ${fileSize} • ${fileDate}">
+      @keydown=${clickOnEnterAndConsumeOnSpace}
+      @keyup=${clickOnSpace}
+    >
       <div class="wy-card-actions">
         <wy-file-menu
           .file=${file}
@@ -77,7 +81,8 @@ export function renderFileCard(
           @trash=${(e: CustomEvent) => this.dispatchTrash(e.detail.file)}
           @restore=${(e: CustomEvent) => this.dispatchRestore(e.detail.file)}
           @delete-forever=${(e: CustomEvent) => this.dispatchDeleteForever(e.detail.file)}
-          @subscribe=${(e: CustomEvent) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}></wy-file-menu>
+          @subscribe=${(e: CustomEvent) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}
+        ></wy-file-menu>
       </div>
       ${!file.is_trashed && file.thumbnail_url
         ? html`
@@ -85,7 +90,8 @@ export function renderFileCard(
               class="wy-card-top wy-card-content ${classMap({ "wy-card-top-image": file.kind === "image" })}"
               src=${file.thumbnail_url}
               alt=${file.name}
-              loading="lazy" />
+              loading="lazy"
+            />
           `
         : html`
             <div class="wy-content-icon wy-card-top wy-card-content">
@@ -107,7 +113,8 @@ export function renderFileCard(
                 }}
                 @click=${(e: Event) => e.preventDefault()}
                 @focus=${handleSelectFilename}
-                ${ref(autofocusRef)} />
+                ${ref(autofocusRef)}
+              />
             `
           : html` <span title=${file.name}>${file.name}</span> `}
       </div>

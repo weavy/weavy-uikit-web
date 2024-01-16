@@ -246,7 +246,7 @@ export default class WyPdfViewer extends LitElement {
         this.pageNumberRef.value!.value = this.pdfViewer!.currentPageNumber.toFixed(0);
       });
 
-      this.pdfEventBus.on("pagesinit", (...paramws: any) => {
+      this.pdfEventBus.on("pagesinit", () => {
         // We can use pdfViewer now, e.g. let's change default scale.
         if (this.isConnected) {
           this.pdfViewer!.currentScaleValue = "auto";

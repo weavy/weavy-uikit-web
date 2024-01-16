@@ -16,12 +16,12 @@ import {
   RealtimeAppEventType,
   RealtimeConversationDeliveredEventType,
   RealtimeConversationMarkedEventType,
-  RealtimeMessageEventType,
-  RealtimeReactionEventType,
+  RealtimeMemberEventType,
+  RealtimeMessageEventType
 } from "./types/realtime.types";
-import type { ConversationType } from "./types/app.types";
+import { ConversationTypes, type ConversationType, AppType, EntityTypes } from "./types/app.types";
 import { QueryController } from "./controllers/query-controller";
-import { getApiOptions } from "./data/api";
+import { getApi, getApiOptions } from "./data/api";
 import type { UserType } from "./types/users.types";
 
 import "./components/wy-empty";
@@ -109,7 +109,7 @@ export default class WyMessenger extends LitElement {
   @property()
   name?: string;
 
-  @property({ attribute: false })
+  @state()
   user?: UserType;
 
   @state()
@@ -124,67 +124,131 @@ export default class WyMessenger extends LitElement {
   @state()
   availableFeatures?: FeaturesListType;
 
+  protected conversationQuery = new QueryController<ConversationType>(this);
+  protected userQuery = new QueryController<UserType>(this);
+
   //history = new HistoryController<this>(this, 'messenger', ['conversationId'])
-  persistState = new PersistStateController<this>(this, "messenger", ["conversationId"]);
-  resizer = new ResizeController(this);
+  protected persistState = new PersistStateController<this>(this, "messenger", ["conversationId"]);
+  protected resizer = new ResizeController(this);
+
+  @state()
+  hasEventListener: { [key: string]: boolean } = {
+    "wy:message_created": false,
+    "wy:app_created": false,
+    "wy:conversation_marked": false,
+    "wy:conversation_delivered": false,
+    "wy:member_added": false
+  };
+
+  /**
+   * @ignore
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  override addEventListener(type: any, listener: any, options?: any): void {
+    // Check if any event is listened to
+
+    const propertyName = type as keyof typeof this.hasEventListener;
+    if (Object.prototype.hasOwnProperty.call(this.hasEventListener, propertyName)) {
+      //console.log(`Setting ${propertyName} to true`)
+      this.hasEventListener = {
+        ...this.hasEventListener,
+        [propertyName]: true,
+      };
+    }
+    super.addEventListener(type, listener, options);
+  }
 
   /**
    * Event: New message created.
    * @event wy:message_created
    */
-  realtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) =>
-    new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent });
+  protected realtimeMessageCreatedEvent = async (realtimeEvent: RealtimeMessageEventType) => {
+    if (realtimeEvent.message.parent?.type === EntityTypes.App && await this.conversationBelongsToMessenger(realtimeEvent.message.app_id)) {
+      this.dispatchEvent(new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent }));
+    }
+  }
 
   /**
-   * Event: Message reaction added.
-   * @event wy:reaction_added
+   * Event: Conversation added.
+   * @event wy:app_created
    */
-  realtimeReactionAddedEvent = (realtimeEvent: RealtimeReactionEventType) =>
-    new CustomEvent("wy:reaction_added", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Message reaction removed.
-   * @event wy:reaction_removed
-   */
-  realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
-    new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Conversation app details updated.
-   * @event wy:app_updated
-   */
-  realtimeAppUpdatedEvent = (realtimeEvent: RealtimeAppEventType) =>
-    new CustomEvent("wy:app_updated", { bubbles: true, composed: false, detail: realtimeEvent });
+  protected realtimeAppCreatedEvent = async (realtimeEvent: RealtimeAppEventType) => {
+    if (await this.conversationBelongsToMessenger(realtimeEvent.app)) {
+      this.dispatchEvent(new CustomEvent("wy:app_created", { bubbles: true, composed: false, detail: realtimeEvent }));
+    }
+  }
 
   /**
    * Event: Message seen-by status updated.
    * @event wy:conversation_marked
    */
-  realtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) =>
-    new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent });
+  protected realtimeConversationMarkedEvent = async (realtimeEvent: RealtimeConversationMarkedEventType) => {
+    if (await this.conversationBelongsToMessenger(realtimeEvent.conversation)) {
+      this.dispatchEvent(new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent }));
+    }
+  }
 
   /**
    * Event: Message delivered status updated.
    * @event wy:conversation_delivered
    */
-  realtimeConversationDeliveredEvent = (realtimeEvent: RealtimeConversationDeliveredEventType) =>
-    new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  handleRealtimeMessageCreatedEvent = (realtimeEvent: RealtimeMessageEventType) => {
-    this.dispatchEvent(this.realtimeMessageCreatedEvent(realtimeEvent));
-  };
-
-  handleRealtimeConversationMarkedEvent = (realtimeEvent: RealtimeConversationMarkedEventType) => {
-    this.dispatchEvent(this.realtimeConversationMarkedEvent(realtimeEvent));
-  };
-
-  protected conversationQuery = new QueryController<ConversationType>(this);
-
-  protected selectConversation(id: number) {
-    this.conversationId = id;
+  protected realtimeConversationDeliveredEvent = async (realtimeEvent: RealtimeConversationDeliveredEventType) => {
+    if (await this.conversationBelongsToMessenger(realtimeEvent.conversation)) {
+      this.dispatchEvent(new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent }));
+    }
   }
 
-  protected clearConversation() {
+  /**
+   * Event: A member is added to a conversation app.
+   * @event wy:member_added
+   */
+  protected realtimeMemberAddedEvent = async (realtimeEvent: RealtimeMemberEventType) => {
+    if (await this.conversationBelongsToMessenger(realtimeEvent.app)) {
+      this.dispatchEvent(new CustomEvent("wy:member_added", { bubbles: true, composed: false, detail: realtimeEvent }));
+    }
+  }
+
+  /**
+   * Checks if a conversation belongs to Messenger.
+   * 
+   * @param conversation {AppType | number} - The conversation or id to check if it belongs to Messenger.
+   * @returns Promise<Boolean>
+   */
+  async conversationBelongsToMessenger(conversation: AppType | number ): Promise<Boolean> {
+    if (!this.weavyContext) {
+      return false
+    }
+
+    let checkConversation: AppType;
+
+    if (typeof conversation === "number") {
+      checkConversation = await getApi<ConversationType>(this.weavyContext, ["conversations", conversation]);
+    } else if (typeof conversation.type === "string") {
+      checkConversation = conversation as ConversationType;
+    } else {
+      return false;
+    }
+
+    return checkConversation.type === ConversationTypes.ChatRoom || checkConversation.type === ConversationTypes.PrivateChat
+  }
+
+  /**
+   * Set the active conversation.
+   * 
+   * @param id {number} - The id of the conversation to select.
+   */
+  async selectConversation(id: number) {
+    if (await this.conversationBelongsToMessenger(id)) {
+      this.conversationId = id;
+    } else {
+      throw new Error(`The conversation ${id} is invalid.`);
+    }
+  }
+
+  /**
+   * Deselects any active conversation.
+   */
+  clearConversation() {
     this.conversationId = null;
   }
 
@@ -193,7 +257,7 @@ export default class WyMessenger extends LitElement {
     new ThemeController(this, WyMessenger.styles);
   }
 
-  override async performUpdate() {
+  protected override async performUpdate() {
     await whenParentsDefined(this);
     this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
 
@@ -206,8 +270,11 @@ export default class WyMessenger extends LitElement {
 
   protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.weavyContext.subscribe(null, "message_created", this.handleRealtimeMessageCreatedEvent);
-      this.weavyContext.subscribe(null, "conversation_marked", this.handleRealtimeConversationMarkedEvent);
+      this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
+    }
+
+    if (!this.userQuery.result?.isPending) {
+      this.user = this.userQuery.result?.data;
     }
 
     if ((changedProperties.has("conversationId") || changedProperties.has("weavyContext")) && this.weavyContext) {
@@ -217,6 +284,34 @@ export default class WyMessenger extends LitElement {
         );
       } else {
         this.conversationQuery.untrackQuery();
+      }
+    }
+
+    if ((changedProperties.has("weavyContext") || changedProperties.has("hasEventListener") || changedProperties.has("user")) && this.weavyContext && this.user) {
+      this.weavyContext.unsubscribe(null, "message_created", this.realtimeMessageCreatedEvent);
+      this.weavyContext.unsubscribe(null, "conversation_marked", this.realtimeConversationMarkedEvent);
+      this.weavyContext.unsubscribe(null, "conversation_delivered", this.realtimeConversationDeliveredEvent);
+      this.weavyContext.unsubscribe(null, "app_created", this.realtimeAppCreatedEvent);
+      this.weavyContext.unsubscribe(null, "member_added", this.realtimeMemberAddedEvent);
+
+      if (this.hasEventListener["wy:message_created"]) {
+        this.weavyContext.subscribe(null, "message_created", this.realtimeMessageCreatedEvent);
+      }
+
+      if (this.hasEventListener["wy:conversation_marked"]) {
+        this.weavyContext.subscribe(null, "conversation_marked", this.realtimeConversationMarkedEvent);
+      }
+
+      if (this.hasEventListener["wy:conversation_delivered"]) {
+        this.weavyContext.subscribe(null, "conversation_delivered", this.realtimeConversationDeliveredEvent);
+      }
+
+      if (this.hasEventListener["wy:app_created"]) {
+        this.weavyContext.subscribe(null, "app_created", this.realtimeAppCreatedEvent);
+      }
+ 
+      if (this.hasEventListener["wy:member_added"]) {
+        this.weavyContext.subscribe(null, "member_added", this.realtimeMemberAddedEvent);
       }
     }
   }
@@ -241,14 +336,6 @@ export default class WyMessenger extends LitElement {
               .conversation=${conversation}
               .availableFeatures=${this.availableFeatures}
               .features=${this.features}
-              @wy:app_updated=${(e: CustomEvent<RealtimeAppEventType>) =>
-                this.dispatchEvent(this.realtimeAppUpdatedEvent(e.detail))}
-              @wy:conversation_delivered=${(e: CustomEvent<RealtimeConversationDeliveredEventType>) =>
-                this.dispatchEvent(this.realtimeConversationDeliveredEvent(e.detail))}
-              @wy:reaction_added=${(e: CustomEvent<RealtimeReactionEventType>) =>
-                this.dispatchEvent(this.realtimeReactionAddedEvent(e.detail))}
-              @wy:reaction_removed=${(e: CustomEvent<RealtimeReactionEventType>) =>
-                this.dispatchEvent(this.realtimeReactionRemovedEvent(e.detail))}
             >
               <span slot="action" class="wy-close-conversation">
                 <wy-button kind="icon" @click=${() => this.clearConversation()}>
@@ -275,8 +362,11 @@ export default class WyMessenger extends LitElement {
   override disconnectedCallback(): void {
     if (this.weavyContext) {
       // realtime
-      this.weavyContext.unsubscribe(null, "message_created", this.handleRealtimeMessageCreatedEvent);
-      this.weavyContext.unsubscribe(null, "conversation_marked", this.handleRealtimeConversationMarkedEvent);
+      this.weavyContext.unsubscribe(null, "message_created", this.realtimeMessageCreatedEvent);
+      this.weavyContext.unsubscribe(null, "conversation_marked", this.realtimeConversationMarkedEvent);
+      this.weavyContext.unsubscribe(null, "conversation_delivered", this.realtimeConversationDeliveredEvent);
+      this.weavyContext.unsubscribe(null, "app_created", this.realtimeAppCreatedEvent);
+      this.weavyContext.unsubscribe(null, "member_added", this.realtimeMemberAddedEvent);
     }
     super.disconnectedCallback();
   }

@@ -121,14 +121,4 @@ export default class WyContext extends LitElement implements WeavyOptions {
   protected override render() {
     return html` <slot></slot> `;
   }
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-    this.weavyContext?.queryClient.mount();
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.weavyContext?.queryClient.unmount();
-  }
 }

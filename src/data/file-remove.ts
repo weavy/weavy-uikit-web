@@ -36,27 +36,27 @@ export function getTrashFileMutationOptions(weavyContext: WeavyContext, app: App
       );
       return <FileMutationContextType>{ type: "trash", file: variables.file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileVariables, _context: any) => {
+    onSuccess: (data: FileType, variables: MutateFileVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, data)
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileVariables, _context: any) {
+    onError(error: Error, variables: MutateFileVariables) {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false })
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "error";
-        context.status.text = error.message;
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "error";
+        (context as FileMutationContextType).status.text = error.message;
       });
     },
   };
@@ -97,27 +97,27 @@ export function getRestoreFileMutationOptions(weavyContext: WeavyContext, app: A
       );
       return <FileMutationContextType>{ type: "restore", file: variables.file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileVariables, _context: any) => {
+    onSuccess: (data: FileType, variables: MutateFileVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, data, { is_trashed: false, status: "ok" })
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileVariables, _context: any) {
+    onError(error: Error, variables: MutateFileVariables) {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true })
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "error";
-        context.status.text = error.message;
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "error";
+        (context as FileMutationContextType).status.text = error.message;
       });
     },
   };
@@ -156,13 +156,13 @@ export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContext, 
       );
       return <FileMutationContextType>{ type: "delete-forever", file: variables.file, status: { state: "pending" } };
     },
-    onSuccess: (_data: void, variables: MutateFileVariables, _context: any) => {
+    onSuccess: (_data: void, variables: MutateFileVariables) => {
       removeCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id);
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "ok";
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileVariables, _context: any) {
+    onError(error: Error, variables: MutateFileVariables) {
       // Show in error list instead?
       updateCacheItems(
         queryClient,
@@ -170,9 +170,9 @@ export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContext, 
         variables.file.id,
         (existingFile: FileType) => Object.assign(existingFile, { status: undefined })
       );
-      updateMutationContext(queryClient, options.mutationKey, variables, (context: FileMutationContextType) => {
-        context.status.state = "error";
-        context.status.text = error.message;
+      updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
+        (context as FileMutationContextType).status.state = "error";
+        (context as FileMutationContextType).status.text = error.message;
       });
     },
   };

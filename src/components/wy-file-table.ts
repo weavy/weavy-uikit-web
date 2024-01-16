@@ -11,7 +11,7 @@ import { WyFilesList } from "./wy-files-list";
 
 import { repeat } from "lit/directives/repeat.js";
 import { type WeavyContext } from "../client/context-definition";
-import { inputConsume } from "../utils/keyboard";
+import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 
@@ -59,7 +59,12 @@ export function renderFileTableHeaders(this: WyFilesList, order?: FileOrderType)
         };
         return html` <th>
           ${header.by
-            ? html`<div class="wy-table-sort-link" @click=${onHeaderClick}
+            ? html`<div
+                class="wy-table-sort-link"
+                tabindex="0"
+                @click=${onHeaderClick}
+                @keydown=${clickOnEnterAndConsumeOnSpace}
+                @keyup=${clickOnSpace}
                 >${header.title}
                 ${(active && html`<wy-icon name=${order?.descending ? "menu-down" : "menu-up"}></wy-icon>`) ||
                 nothing}</div
@@ -125,7 +130,8 @@ export function renderFileTableRow(
       class=${ifDefined(file.is_trashed ? "wy-table-trashed" : undefined)}
       @click=${(e: Event) => {
         !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file);
-      }}>
+      }}
+    >
       <td class="wy-table-cell-icon"><wy-icon name=${icon} size="24" kind=${file.kind} ext=${ext}></wy-icon></td>
       <td class="wy-files-td-filename">
         ${isRenaming
@@ -142,7 +148,8 @@ export function renderFileTableRow(
                 }}
                 @click=${(e: Event) => e.preventDefault()}
                 @focus=${handleSelectFilename}
-                ${ref(autofocusRef)} />
+                ${ref(autofocusRef)}
+              />
             `
           : html` <span>${file.name}</span> `}
       </td>
@@ -160,7 +167,8 @@ export function renderFileTableRow(
           @trash=${(e: CustomEvent) => this.dispatchTrash(e.detail.file)}
           @restore=${(e: CustomEvent) => this.dispatchRestore(e.detail.file)}
           @delete-forever=${(e: CustomEvent) => this.dispatchDeleteForever(e.detail.file)}
-          @subscribe=${(e: CustomEvent) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}>
+          @subscribe=${(e: CustomEvent) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}
+        >
         </wy-file-menu>
       </td>
     </tr>

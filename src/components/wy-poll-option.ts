@@ -14,11 +14,11 @@ import "./wy-sheet";
 import "./wy-avatar";
 import "./wy-icon";
 import { WeavyContextProps } from "../types/weavy.types";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "src/utils/keyboard";
 
 @customElement("wy-poll-option")
 @localized()
 export default class WyPollOption extends LitElement {
-  
   static override styles = chatCss;
 
   @consume({ context: weavyContextDefinition, subscribe: true })
@@ -69,14 +69,28 @@ export default class WyPollOption extends LitElement {
     const { data, isLoading } = this.getVotesQuery.result ?? {};
     const ratio = this.totalVotes > 0 ? Math.round(((this.option.vote_count || 0) / this.totalVotes) * 100) : 0;
     return html`
-      <div class="wy-item wy-poll-option" @click=${() => this.dispatchVote(this.option.id!)}>
+      <div
+        class="wy-item wy-poll-option"
+        tabindex="0"
+        @click=${() => this.dispatchVote(this.option.id!)}
+        @keydown=${clickOnEnterAndConsumeOnSpace}
+        @keyup=${clickOnSpace}
+      >
         <div class="wy-progress" style="width: ${ratio + "%"}"></div>
         ${this.option.has_voted
           ? html`<wy-icon name="check-circle"></wy-icon>`
           : html`<wy-icon name="circle-outline"></wy-icon>`}
         <div class="wy-item-body">${this.option.text}</div>
         ${ratio > 0
-          ? html`<a class="wy-facepile" @click=${(e: Event) => this.openSheet(e)}> ${ratio + "%"} </a>`
+          ? html`<span
+              class="wy-facepile"
+              tabindex="0"
+              @click=${(e: Event) => this.openSheet(e)}
+              @keydown=${clickOnEnterAndConsumeOnSpace}
+              @keyup=${clickOnSpace}
+            >
+              ${ratio + "%"}
+            </span>`
           : nothing}
       </div>
 
@@ -87,7 +101,8 @@ export default class WyPollOption extends LitElement {
             .show=${this.showSheet}
             .sheetId="${this.sheetId}"
             @release-focus=${() =>
-              this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}>
+              this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+          >
             <span slot="appbar-text">${msg(str`Votes on ${this.option.text}`)}</span>
             <!-- <wy-spinner></wy-spinner> -->
             ${data && !isLoading

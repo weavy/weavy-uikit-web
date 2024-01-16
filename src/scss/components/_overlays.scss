@@ -30,7 +30,7 @@
     perspective-origin: center center;
 
     .wy-panel {
-        background-color: color.token(--wy-background);
+        //background-color: color.token(--wy-background);
         //max-height: 100vh; // Causes height error in safari
 
         &:not(.wy-transition) {

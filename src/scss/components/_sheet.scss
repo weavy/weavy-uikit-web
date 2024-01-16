@@ -18,6 +18,7 @@
   z-index: const.$zindex-modal;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   
   bottom: .5rem;
   left: .5rem;

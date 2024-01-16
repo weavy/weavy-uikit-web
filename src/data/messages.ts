@@ -7,13 +7,13 @@ import type {
 } from "@tanstack/query-core";
 
 import { type WeavyContext } from "../client/weavy-context";
-import { MessageType, MutateMessageProps, type MessagesResultType } from "../types/messages.types";
+import { MessageType, MutateMessageProps, type MessagesResultType, MessageMutationContextType } from "../types/messages.types";
 import { addCacheItem } from "../utils/query-cache";
 
 export function getMessagesOptions(
   weavyContext: WeavyContext,
   appId: number | null,
-  options: any = {}
+  options: Object = {}
 ): InfiniteQueryObserverOptions<MessagesResultType, Error, InfiniteData<MessagesResultType>> {
   const PAGE_SIZE = 25;
 
@@ -21,23 +21,24 @@ export function getMessagesOptions(
   return {
     ...options,
     initialPageParam: 0,
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["messages", appId],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number>) => {
+    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const skip = opt.pageParam;
       const url = "/api/apps/" + appId + "/messages?orderby=createdat+desc&skip=" + skip + "&top=" + PAGE_SIZE;
 
       const response = await weavyContext.get(url);
-      const result = await response.json();
+      const result = await response.json() as MessagesResultType;
       result.data = result.data?.reverse() || [];
       return result;
     },
-    getNextPageParam: (lastPage: any, pages: any) => {
+    getNextPageParam: (lastPage, pages) => {
       if (lastPage?.end < lastPage?.count) {
         return pages.length * PAGE_SIZE;
       }
       return undefined;
     },
-    select: (data: any) => ({
+    select: (data) => ({
       // reverse scroll
       pages: [...data.pages].reverse(),
       pageParams: [...data.pageParams].reverse(),
@@ -63,7 +64,7 @@ export function getAddMessageMutationOptions(weavyContext: WeavyContext, mutatio
       return response.json();
     },
     mutationKey: mutationKey,
-    onMutate: async (variables: any) => {
+    onMutate: async (variables: MutateMessageProps) => {
       await queryClient.cancelQueries({ queryKey: ["messages", variables.appId] });
 
       const tempId = Math.random();
@@ -84,9 +85,9 @@ export function getAddMessageMutationOptions(weavyContext: WeavyContext, mutatio
         reactions: [],
       };
       addCacheItem(queryClient, ["messages", variables.appId], tempData);
-      return { tempId };
+      return { tempId } as MessageMutationContextType;
     },
-    onSuccess: (data: MessageType, variables: any, context: any) => {
+    onSuccess: (data: MessageType, variables: MutateMessageProps, context: MessageMutationContextType) => {
       addCacheItem(queryClient, ["messages", variables.appId], data, context.tempId);
     },
   };

@@ -11,6 +11,13 @@ type WeavyPostalConfigType = {
 
 type WeavyIdType = string | true;
 
+type PostMessageType = object & { 
+  name?: string,
+  distributeName?: string,
+  weavyId?: WeavyIdType,
+  weavyMessageId?: string
+};
+
 function extractOrigin(url: string) {
   let extractOrigin: string = "";
   try {
@@ -230,7 +237,7 @@ class WeavyPostalParent extends WeavyEvents {
     }
   }
 
-  private async whenPostMessage(contentWindow: MessageEventSource, message: any, transfer?: Transferable[]) {
+  private async whenPostMessage(contentWindow: MessageEventSource, message: PostMessageType, transfer?: Transferable[]) {
     //var whenReceipt = new WeavyPromise();
 
     if (transfer === null) {
@@ -270,7 +277,7 @@ class WeavyPostalParent extends WeavyEvents {
     }
   }
 
-  postToChildren(message: any, transfer?: Transferable[]) {
+  postToChildren(message: PostMessageType, transfer?: Transferable[]) {
     if (typeof message !== "object" || !message.name) {
       console.error("postToChildren() Invalid message format", message);
       return;
@@ -299,7 +306,7 @@ class WeavyPostalParent extends WeavyEvents {
     });
   }
 
-  async postToFrame(windowName: string, weavyId: WeavyIdType, message: any, transfer?: Transferable[]) {
+  async postToFrame(windowName: string, weavyId: WeavyIdType, message: PostMessageType, transfer?: Transferable[]) {
     if (typeof message !== "object" || !message.name) {
       console.error("postToFrame() Invalid message format", message);
       return;
@@ -316,7 +323,7 @@ class WeavyPostalParent extends WeavyEvents {
     return await this.whenPostMessage(contentWindow, message, transfer);
   }
 
-  async postToSelf(message: any, transfer?: Transferable[]) {
+  async postToSelf(message: PostMessageType, transfer?: Transferable[]) {
     if (typeof message !== "object" || !message.name) {
       console.error("postToSelf() Invalid message format", message);
       return;
@@ -327,7 +334,7 @@ class WeavyPostalParent extends WeavyEvents {
     return await this.whenPostMessage(window.self, message, transfer);
   }
 
-  postToSource(e: MessageEvent, message: any, transfer?: Transferable[]) {
+  postToSource(e: MessageEvent, message: PostMessageType, transfer?: Transferable[]) {
     if (e.source && e.data.weavyId !== undefined) {
       const fromSelf = e.source === window.self && e.origin === this.origin;
       const fromFrame = this.contentWindowOrigins.has(e.source) && e.origin === this.contentWindowOrigins.get(e.source);

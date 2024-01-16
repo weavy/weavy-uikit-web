@@ -29,6 +29,7 @@ import { relativeTime } from "../utils/datetime";
 import { WeavyContextProps } from "../types/weavy.types";
 import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import "./wy-empty";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "src/utils/keyboard";
 
 @customElement("wy-file-versions")
 @localized()
@@ -146,7 +147,10 @@ export class WyFileVersions extends LitElement {
                         class="wy-item wy-item-hover wy-item-lg ${classMap({
                           "wy-active": versionFile.version == this.activeVersion?.version,
                         })}"
+                        tabindex="0"
                         @click=${() => this.selectVersion(versionFile)}
+                        @keydown=${clickOnEnterAndConsumeOnSpace}
+                        @keyup=${clickOnSpace}
                       >
                         <wy-icon name=${versionIcon} size="48" kind=${versionFile.kind} ext=${ext}></wy-icon>
                         <div class="wy-item-body">

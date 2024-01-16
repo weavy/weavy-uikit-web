@@ -25,6 +25,12 @@ export type AppType = {
   is_trashed: boolean;
 };
 
+export enum ConversationTypes {
+  ChatRoom = "edb400ac-839b-45a7-b2a8-6a01820d1c44",
+  ContextualChat = "d65dd4bc-418e-403c-9f56-f9cf4da931ed",
+  PrivateChat = "7e14f418-8f15-46f4-b182-f619b671e470",
+}
+
 export type ConversationType = AppType & {
   id: number;
   created_by_id: number;
@@ -33,13 +39,8 @@ export type ConversationType = AppType & {
   is_unread: boolean;
   is_pinned: boolean;
   is_starred: boolean;
-  type: string;
+  type: ConversationTypes;
   avatar_url: string;
-};
-
-export type EntityType = {
-  id: number;
-  type: "app" | "file" | "message" | "user" | "comment" | "post";
 };
 
 export enum EntityTypes {
@@ -50,3 +51,10 @@ export enum EntityTypes {
   Comment = "comment",
   Post = "post",
 }
+
+export type EntityType = {
+  id: number;
+  type: EntityTypes;
+};
+
+//export type ConversationAppType = typeof ConversationTypes[keyof typeof ConversationTypes]

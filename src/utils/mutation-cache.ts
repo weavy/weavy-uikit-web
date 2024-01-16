@@ -3,8 +3,8 @@ import type { Mutation, MutationKey, MutationState, QueryClient } from "@tanstac
 export function updateMutationContext(
   queryClient: QueryClient,
   mutationKey: MutationKey,
-  variables: any,
-  contextMutation: (context: any) => void
+  variables: unknown,
+  contextMutation: (context: Object) => void
 ) {
   const mutationCache = queryClient.getMutationCache();
 
@@ -37,7 +37,7 @@ export function updateMutationContext(
 export function removeMutation(
   queryClient: QueryClient,
   mutationKey: MutationKey,
-  filter: (mutation: Mutation<any, any, any, unknown>) => boolean
+  filter: (mutation: Mutation<unknown, Error, unknown, unknown>) => boolean
 ) {
   const mutation = queryClient.getMutationCache().find({ mutationKey: mutationKey, exact: true, predicate: filter });
 

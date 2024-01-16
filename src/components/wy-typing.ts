@@ -1,10 +1,13 @@
-import { LitElement, html, type PropertyValueMap } from "lit";
+import { LitElement, html, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { localized, msg, str } from "@lit/localize";
 
 import chatCss from "../scss/all.scss";
+import { RealtimeEventType, RealtimeTypingEventType } from "src/types/realtime.types";
+import { UserType } from "src/types/users.types";
+import { WeavyContextProps } from "src/types/weavy.types";
 
 @customElement("wy-typing")
 @localized()
@@ -23,7 +26,7 @@ export default class WyTyping extends LitElement {
   userId!: number;
 
   @state()
-  activeTypers: Array<any> = [];
+  activeTypers: Array<UserType & { time: number }> = [];
 
   @state()
   text: string = "";
@@ -31,14 +34,14 @@ export default class WyTyping extends LitElement {
   @state()
   typingTimeout: number | null = null;
 
-  handleRealtimeTyping = (realtimeEvent: any) => {
+  handleRealtimeTyping = (realtimeEvent: RealtimeTypingEventType) => {
     if (realtimeEvent.entity.id === this.appId && realtimeEvent.actor.id !== this.userId) {
       this.setTypers(realtimeEvent.actor);
       this.updateTyping();
     }
   };
 
-  handleRealtimeStopTyping = (realtimeEvent: any) => {
+  handleRealtimeStopTyping = (realtimeEvent: RealtimeEventType) => {
     const typers = this.activeTypers;
 
     // remove typing indicator for message sender
@@ -59,7 +62,7 @@ export default class WyTyping extends LitElement {
 
     // discard typing events older than 5 seconds
     const now = Date.now();
-    typers.forEach((item: any, index: number) => {
+    typers.forEach((item, index) => {
       if (now - item.time > 5 * 1000) {
         typers.splice(index, 1);
       }
@@ -72,7 +75,7 @@ export default class WyTyping extends LitElement {
           (now -
             Math.max.apply(
               null,
-              typers.map((x: any) => {
+              typers.map((x) => {
                 return x.time;
               })
             )) /
@@ -84,7 +87,7 @@ export default class WyTyping extends LitElement {
       const ellipsis = ".".repeat(dots); //+ (".").repeat(3 - dots);
 
       // merge names of people typing
-      const names = typers.map((item: any) => item.display_name).sort();
+      const names = typers.map((item) => item.display_name).sort();
 
       // TODO: Replace with translation friendly string template
       let typingText = "";
@@ -111,21 +114,21 @@ export default class WyTyping extends LitElement {
     }
   }
 
-  private setTypers(actor: any) {
+  private setTypers(actor: UserType) {
     const typers = this.activeTypers;
     // remove existing typing events by this user (can only type in one conversation at a time)
-    typers.forEach((item: any, index: number) => {
+    typers.forEach((item, index) => {
       if (item.id === actor.id) {
         typers.splice(index, 1);
       }
     });
 
     // track time when we received this event
-    actor.time = Date.now();
-    typers.push(actor);
+    const trackedActor = { ...actor, time: Date.now() }
+    typers.push(trackedActor);
   }
 
-  protected override willUpdate(changedProperties: PropertyValueMap<any>): void {
+  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>): void {
     if ((changedProperties.has("weavyContext") || changedProperties.has("appId") || changedProperties.has("userId")) && this.weavyContext) {
       this.activeTypers = [];
 

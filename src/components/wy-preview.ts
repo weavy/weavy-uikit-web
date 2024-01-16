@@ -501,7 +501,7 @@ export default class WyPreview extends LitElement {
     );
   }
 
-  override updated(changedProperties: PropertyValues<this>) {
+  override updated() {
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
         if (this.swipeScrollRef.value) {

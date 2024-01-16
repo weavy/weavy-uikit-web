@@ -46,7 +46,7 @@ export function getPollMutationOptions(weavyContext: WeavyContext, mutationKey: 
       //updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.appId, (existingPost: PostType) => Object.assign(existingPost, { is_subscribed: variables.subscribe }));
       return <PollMutationContextType>{ id: variables.optionId };
     },
-    onSuccess: async (data: PostType, variables: MutatePollVariables, _context: any) => {
+    onSuccess: async (data: PostType, variables: MutatePollVariables) => {
       const response = await weavyContext.get("/api/" + variables.parentType + "/" + variables.parentId);
       const json = await response.json();
 
@@ -54,9 +54,9 @@ export function getPollMutationOptions(weavyContext: WeavyContext, mutationKey: 
         Object.assign(existingPost, json)
       );
     },
-    onError(error: Error, variables: MutatePollVariables, _context: any) {
-      //updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) => Object.assign(existingPost, { is_subscribed: variables..is_subscribed }));
-    },
+    /*onError(error: Error, variables: MutatePollVariables) {
+      updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) => Object.assign(existingPost, { is_subscribed: variables..is_subscribed }));
+    },*/
   };
 
   return options;

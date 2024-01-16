@@ -11,7 +11,7 @@ import { assign } from "../utils/objects";
 import { defaultFetchSettings } from "../utils/data";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 import { globalContextProvider, weavyContextDefinition } from "./context-definition";
-import { defer } from "../utils/dom";
+import { defer, observeConnected } from "../utils/dom";
 import { chrome } from "../utils/browser";
 import { RealtimeDataType, RealtimeEventType } from "../types/realtime.types";
 import { ConnectionState, NetworkState, NetworkStatus } from "../types/server.types";
@@ -217,7 +217,7 @@ export class WeavyContext implements WeavyOptions {
         storage: window.sessionStorage,
         throttleTime: this.staleTime,
       });
-  
+
       // TODO: Move to "modern" persistQueryClient?
       const persistQueryClientOptions = {
         queryClient: this.#queryClient,
@@ -235,10 +235,9 @@ export class WeavyContext implements WeavyOptions {
 
       await persistQueryClientRestore(persistQueryClientOptions);
       this.#unsubscribeQueryClient = persistQueryClientSubscribe(persistQueryClientOptions);
-    } catch(e) {
+    } catch (e) {
       console.warn("Query cache persister not available.");
     }
-
 
     //console.log("Query cache restored from session", this.#queryClient.getMutationCache())
   }
@@ -253,7 +252,8 @@ export class WeavyContext implements WeavyOptions {
   // RTM CONNECTION
 
   #connection?: HubConnection;
-  #groups: string[] = [];
+  #connectionEventListeners: Array<{ name: string; callback: Function }> = [];
+
   private signalRAccessTokenRefresh = false;
 
   #whenConnectionStartedResolve?: (value: unknown) => void;
@@ -330,8 +330,8 @@ export class WeavyContext implements WeavyOptions {
           console.info("SignalR reconnected.");
           this.connectionState = "connected";
           this.networkStateIsPending = false;
-          for (let i = 0; i < this.#groups.length; i++) {
-            this.#connection?.invoke("Subscribe", this.#groups[i]);
+          for (let i = 0; i < this.#connectionEventListeners.length; i++) {
+            this.#connection?.invoke("Subscribe", this.#connectionEventListeners[i].name);
           }
         });
         this.connect();
@@ -402,54 +402,61 @@ export class WeavyContext implements WeavyOptions {
     }
   }
 
-  async subscribe<T extends (RealtimeEventType | RealtimeDataType)>(
+  async subscribe<T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
     callback: (realTimeEvent: T) => void
   ) {
-    await this.whenConnectionStarted();
-
     try {
       if (!this.#connection) {
         throw new Error("Connection not created");
       }
 
       const name = group ? group + ":" + event : event;
-      //console.log("Subscribing", name);
-      await this.#connection.invoke("Subscribe", name);
-      this.#groups.push(name);
+
+      if (this.#connectionEventListeners.some((el) => el.name === name && el.callback === callback)) {
+        throw new Error("Duplicate subscribe: " + name);
+      }
+
+      this.#connectionEventListeners.push({ name, callback });
       this.#connection.on(name, callback);
+
+      //console.log("Subscribing", name);
+      await this.whenConnectionStarted();
+      await this.#connection.invoke("Subscribe", name);
     } catch (err: unknown) {
-      console.warn("Error in Subscribe:", err);
+      console.error("Error in Subscribe:", err);
     }
   }
 
-  async unsubscribe<T extends (RealtimeEventType | RealtimeDataType)>(
+  async unsubscribe<T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
     callback: (realTimeEvent: T) => void
   ) {
-    await this.whenConnectionStarted();
-    const name = group ? group + ":" + event : event;
+    try {
+      if (!this.#connection) {
+        throw new Error("Connection not created");
+      }
+      
+      const name = group ? group + ":" + event : event;
 
-    // get first occurrence of group name and remove it
-    const index = this.#groups.findIndex((e) => e === name);
-    if (index !== -1) {
-      this.#groups.splice(index, 1);
-      try {
-        if (!this.#connection) {
-          throw new Error("Connection not created");
-        }
+      // get first occurrence of group name and remove it
+      const index = this.#connectionEventListeners.findIndex((el) => el.name === name && el.callback === callback);
+      if (index !== -1) {
+        this.#connectionEventListeners.splice(index, 1);
+
+        this.#connection?.off(name, callback);
+
         // if no more groups, remove from server
-        if (!this.#groups.find((e) => e === name)) {
+        if (!this.#connectionEventListeners.some((el) => el.name === name)) {
+          await this.whenConnectionStarted();
           await this.#connection.invoke("Unsubscribe", name);
         }
-      } catch (err: unknown) {
-        console.warn("Error in Unsubscribe:", err);
       }
+    } catch (err: unknown) {
+      console.warn("Error in Unsubscribe:", err);
     }
-
-    this.#connection?.off(name, callback);
   }
 
   // NETWORK
@@ -612,9 +619,9 @@ export class WeavyContext implements WeavyOptions {
     this.createQueryClient();
 
     this.whenUrlAndTokenFactory().then(() => {
-      console.log("Weavy url and tokenFactory configured.")
+      console.log("Weavy url and tokenFactory configured.");
       this.createConnection();
-    })
+    });
 
     // Root node for modal portal
 
@@ -625,7 +632,20 @@ export class WeavyContext implements WeavyOptions {
       globalContextProvider.setValue(this);
     }
 
-    adoptGlobalStyles([colorModes])
+    if (this.host.isConnected) {
+      this.#queryClient.mount();
+    }
+
+    observeConnected(this.host, (isConnected) => {
+      if (isConnected) {
+        console.log("Query client mounted");
+        this.#queryClient.mount();
+      } else {
+        this.#queryClient.unmount();
+      }
+    });
+
+    adoptGlobalStyles([colorModes]);
 
     defer(() => {
       if (document) {

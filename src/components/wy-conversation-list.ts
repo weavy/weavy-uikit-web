@@ -275,7 +275,7 @@ export default class WeavyConversationList extends LitElement {
               <div ${ref(this.pagerRef)} class="wy-pager"></div>
             </div>
           `
-        : html`<wy-empty><wy-spinner overlay></wy-spinner></wy-empty>`}
+        : html`<wy-empty class="wy-pane"><wy-spinner overlay></wy-spinner></wy-empty>`}
     `;
   }
 

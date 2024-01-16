@@ -19,6 +19,7 @@ import "./wy-button";
 import "./wy-dropdown";
 import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "src/utils/keyboard";
 
 @customElement("wy-conversation-list-item")
 @localized()
@@ -74,11 +75,11 @@ export default class WyConversationListItem extends LitElement {
     this.dispatchRefetch();
   };
 
-  private handleConversationUpdated = () => {    
+  private handleConversationUpdated = () => {
     this.dispatchRefetch();
   };
 
-  private handleConversationMarked = (realtimeEvent: RealtimeConversationMarkedEventType) => {    
+  private handleConversationMarked = (realtimeEvent: RealtimeConversationMarkedEventType) => {
     if (realtimeEvent.actor.id === this.user!.id) {
       this.dispatchRefetch();
     }
@@ -132,7 +133,7 @@ export default class WyConversationListItem extends LitElement {
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.deliveredConversationMutation = getDeliveredConversationMutation(this.weavyContext);
-      
+
       // realtime
       this.weavyContext.subscribe(`a${this.conversationId}`, "app_updated", this.handleConversationUpdated);
       this.weavyContext.subscribe(`a${this.conversationId}`, "member_added", this.handleConversationUpdated);
@@ -169,7 +170,10 @@ export default class WyConversationListItem extends LitElement {
           "wy-unread": this.unread,
           "wy-active": this.selected,
         })}
+        tabindex="0"
         @click=${(e: Event) => this.dispatchSelected(e, this.conversationId)}
+        @keydown=${clickOnEnterAndConsumeOnSpace}
+        @keyup=${clickOnSpace}
       >
         ${this.room && this.user
           ? html`

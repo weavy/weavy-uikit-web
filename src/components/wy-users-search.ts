@@ -1,4 +1,4 @@
-import { LitElement, PropertyValueMap, css, html, nothing } from "lit";
+import { LitElement, PropertyValues, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
@@ -16,6 +16,7 @@ import "./wy-icon";
 import "./wy-avatar";
 import "./wy-spinner";
 import {  inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
+import { WeavyContextProps } from "src/types/weavy.types";
 
 @customElement("wy-users-search")
 @localized()
@@ -52,7 +53,7 @@ export default class WyUsersSearch extends LitElement {
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<Element> = createRef();
 
-  protected override async updated(changedProperties: PropertyValueMap<any>): Promise<void> {
+  protected override async updated(changedProperties: PropertyValues<this & WeavyContextProps>): Promise<void> {
     this.infiniteScroll.observe(this.peopleQuery.result, this.pagerRef.value);
 
     if (changedProperties.has("weavyContext") && this.weavyContext) {     
@@ -201,7 +202,7 @@ export default class WyUsersSearch extends LitElement {
               </div>
             </div>
           `
-        : html` <wy-spinner></wy-spinner> `}
+        : html` <wy-spinner overlay></wy-spinner> `}
 
       <div class="wy-footerbars">
         <div class="wy-footerbar">
