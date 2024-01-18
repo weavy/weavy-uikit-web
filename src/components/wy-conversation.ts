@@ -532,7 +532,7 @@ export default class WyConversation extends LitElement {
                           <span class="wy-appbar-text">${this.conversationTitle}</span>
                         </wy-typing>
                       `
-                    : nothing}
+                    : html`<span></span>`}
                   ${this.isChatRoom() || this.isPrivateChat()
                     ? html`
                         <wy-dropdown>

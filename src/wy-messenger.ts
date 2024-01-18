@@ -17,7 +17,7 @@ import {
   RealtimeConversationDeliveredEventType,
   RealtimeConversationMarkedEventType,
   RealtimeMemberEventType,
-  RealtimeMessageEventType
+  RealtimeMessageEventType,
 } from "./types/realtime.types";
 import { ConversationTypes, type ConversationType, AppType, EntityTypes } from "./types/app.types";
 import { QueryController } from "./controllers/query-controller";
@@ -33,6 +33,8 @@ import "./components/wy-badge";
 import "./components/wy-spinner";
 import { whenParentsDefined } from "./utils/dom";
 import { WeavyContextProps } from "./types/weavy.types";
+import { InfiniteData } from "@tanstack/query-core";
+import { ConversationsResultType } from "./types/conversations.types";
 
 @customElement("wy-messenger")
 @localized()
@@ -126,6 +128,7 @@ export default class WyMessenger extends LitElement {
 
   protected conversationQuery = new QueryController<ConversationType>(this);
   protected userQuery = new QueryController<UserType>(this);
+  protected featuresQuery = new QueryController<FeaturesListType>(this);
 
   //history = new HistoryController<this>(this, 'messenger', ['conversationId'])
   protected persistState = new PersistStateController<this>(this, "messenger", ["conversationId"]);
@@ -137,7 +140,7 @@ export default class WyMessenger extends LitElement {
     "wy:app_created": false,
     "wy:conversation_marked": false,
     "wy:conversation_delivered": false,
-    "wy:member_added": false
+    "wy:member_added": false,
   };
 
   /**
@@ -163,10 +166,15 @@ export default class WyMessenger extends LitElement {
    * @event wy:message_created
    */
   protected realtimeMessageCreatedEvent = async (realtimeEvent: RealtimeMessageEventType) => {
-    if (realtimeEvent.message.parent?.type === EntityTypes.App && await this.conversationBelongsToMessenger(realtimeEvent.message.app_id)) {
-      this.dispatchEvent(new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent }));
+    if (
+      realtimeEvent.message.parent?.type === EntityTypes.App &&
+      (await this.conversationBelongsToMessenger(realtimeEvent.message.app_id))
+    ) {
+      this.dispatchEvent(
+        new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent })
+      );
     }
-  }
+  };
 
   /**
    * Event: Conversation added.
@@ -176,7 +184,7 @@ export default class WyMessenger extends LitElement {
     if (await this.conversationBelongsToMessenger(realtimeEvent.app)) {
       this.dispatchEvent(new CustomEvent("wy:app_created", { bubbles: true, composed: false, detail: realtimeEvent }));
     }
-  }
+  };
 
   /**
    * Event: Message seen-by status updated.
@@ -184,9 +192,11 @@ export default class WyMessenger extends LitElement {
    */
   protected realtimeConversationMarkedEvent = async (realtimeEvent: RealtimeConversationMarkedEventType) => {
     if (await this.conversationBelongsToMessenger(realtimeEvent.conversation)) {
-      this.dispatchEvent(new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent }));
+      this.dispatchEvent(
+        new CustomEvent("wy:conversation_marked", { bubbles: true, composed: false, detail: realtimeEvent })
+      );
     }
-  }
+  };
 
   /**
    * Event: Message delivered status updated.
@@ -194,9 +204,11 @@ export default class WyMessenger extends LitElement {
    */
   protected realtimeConversationDeliveredEvent = async (realtimeEvent: RealtimeConversationDeliveredEventType) => {
     if (await this.conversationBelongsToMessenger(realtimeEvent.conversation)) {
-      this.dispatchEvent(new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent }));
+      this.dispatchEvent(
+        new CustomEvent("wy:conversation_delivered", { bubbles: true, composed: false, detail: realtimeEvent })
+      );
     }
-  }
+  };
 
   /**
    * Event: A member is added to a conversation app.
@@ -206,35 +218,50 @@ export default class WyMessenger extends LitElement {
     if (await this.conversationBelongsToMessenger(realtimeEvent.app)) {
       this.dispatchEvent(new CustomEvent("wy:member_added", { bubbles: true, composed: false, detail: realtimeEvent }));
     }
-  }
+  };
 
   /**
    * Checks if a conversation belongs to Messenger.
-   * 
+   *
    * @param conversation {AppType | number} - The conversation or id to check if it belongs to Messenger.
    * @returns Promise<Boolean>
    */
-  async conversationBelongsToMessenger(conversation: AppType | number ): Promise<Boolean> {
+  async conversationBelongsToMessenger(conversation: AppType | number): Promise<Boolean> {
     if (!this.weavyContext) {
-      return false
+      return false;
     }
 
     let checkConversation: AppType;
 
     if (typeof conversation === "number") {
-      checkConversation = await getApi<ConversationType>(this.weavyContext, ["conversations", conversation]);
+      checkConversation = await getApi<ConversationType>(
+        this.weavyContext,
+        ["conversations", conversation],
+        undefined,
+        {
+          initialData: () => {
+            // Use any data from the conversation-list query as the initial data for the conversation query
+            return this.weavyContext?.queryClient
+              .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
+              ?.pages.flatMap((cPage) => cPage.data)
+              .find((c) => c.id === conversation);
+          },
+        }
+      );
     } else if (typeof conversation.type === "string") {
       checkConversation = conversation as ConversationType;
     } else {
       return false;
     }
 
-    return checkConversation.type === ConversationTypes.ChatRoom || checkConversation.type === ConversationTypes.PrivateChat
+    return (
+      checkConversation.type === ConversationTypes.ChatRoom || checkConversation.type === ConversationTypes.PrivateChat
+    );
   }
 
   /**
    * Set the active conversation.
-   * 
+   *
    * @param id {number} - The id of the conversation to select.
    */
   async selectConversation(id: number) {
@@ -271,10 +298,15 @@ export default class WyMessenger extends LitElement {
   protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
+      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "chat"]));
     }
 
     if (!this.userQuery.result?.isPending) {
       this.user = this.userQuery.result?.data;
+    }
+
+    if (!this.featuresQuery.result?.isPending) {
+      this.availableFeatures = this.featuresQuery.result?.data;
     }
 
     if ((changedProperties.has("conversationId") || changedProperties.has("weavyContext")) && this.weavyContext) {
@@ -287,7 +319,13 @@ export default class WyMessenger extends LitElement {
       }
     }
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("hasEventListener") || changedProperties.has("user")) && this.weavyContext && this.user) {
+    if (
+      (changedProperties.has("weavyContext") ||
+        changedProperties.has("hasEventListener") ||
+        changedProperties.has("user")) &&
+      this.weavyContext &&
+      this.user
+    ) {
       this.weavyContext.unsubscribe(null, "message_created", this.realtimeMessageCreatedEvent);
       this.weavyContext.unsubscribe(null, "conversation_marked", this.realtimeConversationMarkedEvent);
       this.weavyContext.unsubscribe(null, "conversation_delivered", this.realtimeConversationDeliveredEvent);
@@ -309,7 +347,7 @@ export default class WyMessenger extends LitElement {
       if (this.hasEventListener["wy:app_created"]) {
         this.weavyContext.subscribe(null, "app_created", this.realtimeAppCreatedEvent);
       }
- 
+
       if (this.hasEventListener["wy:member_added"]) {
         this.weavyContext.subscribe(null, "member_added", this.realtimeMemberAddedEvent);
       }
