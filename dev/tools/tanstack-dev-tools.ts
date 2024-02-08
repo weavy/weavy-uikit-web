@@ -3,12 +3,12 @@ import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../../src/client/context-definition";
+import { type WeavyContext, weavyContextDefinition } from "../../lib/client/context-definition";
 
 import { onlineManager } from "@tanstack/query-core";
 import * as TanstackQueryDevtools from "@tanstack/query-devtools";
 import type { DevToolsErrorType, DevtoolsButtonPosition, DevtoolsPosition } from "@tanstack/query-devtools";
-import { falsyBoolean } from "../../src/converters/falsy-boolean";
+import { falsyBoolean } from "../../lib/converters/falsy-boolean";
 
 @customElement("tanstack-dev-tools")
 export default class TanstackDevTools extends LitElement {

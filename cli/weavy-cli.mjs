@@ -17,7 +17,7 @@ const script = scriptIndex === -1 ? args[0] : args[scriptIndex];
 //const nodeArgs = scriptIndex > 0 ? args.slice(0, scriptIndex) : [];
 
 if (['auth-server'].includes(script)) {
-  const result = import("../dev/auth-server.mjs")
+  import("./auth-server.mjs");
   //process.exit(result.status);
   console.log("Running Weavy development auth server...");
 } else {

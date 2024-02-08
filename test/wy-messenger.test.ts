@@ -1,7 +1,7 @@
 import "../dist/weavy-web";
 
 import { expect, fixture, html } from "@open-wc/testing";
-import type WyMessenger from "../src/wy-messenger";
+import type WyMessenger from "../lib/wy-messenger";
 
 function testReadOnly(obj: any, property: any) {
   return () => {

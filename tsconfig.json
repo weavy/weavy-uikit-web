@@ -14,7 +14,7 @@
     "inlineSources": true,
     "outDir": "./dist",
     "rootDirs": [
-      "src",
+      "lib",
       "locales",
       "dev"
     ],
@@ -47,9 +47,9 @@
     ],
   },
   "include": [
-    "src/**/*.ts",
+    "lib/**/*.ts",
     "locales/**/*.ts",
-    "src/scss/**/*.scss",
+    "lib/scss/**/*.scss",
     "dev/tools/**/*.ts",
     "test/**/*.ts"
   ],

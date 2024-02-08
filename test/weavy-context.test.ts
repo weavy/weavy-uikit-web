@@ -1,5 +1,5 @@
 //import { Weavy } from "../dist/weavy.esm";
-import { Weavy } from "../src/index"
+import { Weavy } from "../lib/index"
 
 import { expect} from "@open-wc/testing";
 

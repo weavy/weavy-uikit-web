@@ -37,7 +37,7 @@
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-unused-vars": [
-      "warn",
+      "error",
       {
         "argsIgnorePattern": "^_"
       }
@@ -64,7 +64,7 @@
       }
     },
     {
-      "files": "src/**/*.cjs",
+      "files": "lib/**/*.cjs",
       "env": {
         "browser": true,
         "node": true

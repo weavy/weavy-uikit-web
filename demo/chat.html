@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <script>
-      fetch("/api/contextual/acme-chat?type=chat")
+      //fetch("/api/contextual/acme-chat?type=chat")
     </script>
     <link rel="modulepreload" href="locales/sv-SE.js" />
     <script type="module" src="./weavy.esm.js"></script>
@@ -32,17 +32,8 @@
         zoomAuthenticationUrl="{ZOOM_AUTH_URL}"
         locales='["sv-SE"]'
         locale="sv-SE" 
-        tokenFactory="async (refresh) => {
-          let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
-  
-          if (response.ok) {          
-            let data = await response.json();
-            return data.access_token
-          } else {
-            throw new Error('Could not get access token from server!')
-          }
-        }"></wy-context>
-        <wy-chat uid="acme-chat" features='{"reactions": true}'></wy-chat>
+        tokenUrl="/api/token"></wy-context>
+        <wy-chat uid="acme-chat-new" features='{"reactions": true}'></wy-chat>
         <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
 
   </body>

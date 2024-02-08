@@ -12,14 +12,13 @@
     "outDir": "../dist/types"
   },
   "include": [
-    "../src/**/*.ts",
-    "src/scss/**/*.scss"
+    "../lib/**/*.ts",
+    "lib/scss/**/*.scss"
   ],
   "exclude": [
     "node_modules",
     "../dev",
     "../locales",
-    "../dist",
-    "../src/utils/tanstack-dev-tools.ts"
+    "../dist"
   ]
 }

@@ -5,11 +5,11 @@
   },
   "include": [
     "../dist/**/*.ts",
-    "../src/**/*.ts"
+    "../lib/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "../src/scss/**/*.scss",
+    "../lib/scss/**/*.scss",
     "../dev",
     "../locales",
     "../dist"

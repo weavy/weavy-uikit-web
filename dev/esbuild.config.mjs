@@ -7,7 +7,7 @@ const version = process.argv.find((s) => s.startsWith("--version="))?.split("=")
 console.log(sourceName, version);
 
 export const esbuildConfig = {
-  entryPoints: [{ in: "src/index.ts", out: "weavy.esm" }, "locales/*.ts"],
+  entryPoints: [{ in: "lib/index.ts", out: "weavy.esm" }, "locales/*.ts"],
   outdir: "dist",
   outbase: ".",
   format: "esm",
@@ -47,12 +47,12 @@ export const esbuildConfigESM = {
   sourcemap: false,
   metafile: true,
   //drop: ["console"],
-  pure: ["console.log", "console.debug"],
+  //pure: ["console.log", "console.debug"],
 };
 
 export const esbuildConfigIIFE = {
   ...esbuildConfig,
-  entryPoints: [{ in: "src/index.ts", out: "weavy.iife" }],
+  entryPoints: [{ in: "lib/index.ts", out: "weavy.iife" }],
   format: "iife",
   globalName: "WeavyLib",
   bundle: true,
@@ -62,21 +62,22 @@ export const esbuildConfigIIFE = {
   //drop: ["console"],
   pure: ["console.log", "console.debug"],
   footer: {
-    js: `var { Weavy, WyContext, WyChat, WyFiles, WyMessenger, WyPosts } = WeavyLib;`
-  }
+    js: `var { Weavy, WyContext, WyChat, WyFiles, WyMessenger, WyPosts } = WeavyLib;`,
+  },
 };
 
 export const esbuildConfigUMD = {
   ...esbuildConfig,
-  entryPoints: [{ in: "src/index.ts", out: "weavy" }],
+  entryPoints: [{ in: "lib/index.ts", out: "weavy" }],
   format: "iife",
   bundle: true,
   minify: true,
-  sourcemap: true,
+  sourcemap: false,
   metafile: false,
   //drop: ["console"],
   pure: ["console.log", "console.debug"],
-  banner: { js: `\ufeff(function(root, factory) {
+  banner: {
+    js: `\ufeff(function(root, factory) {
     if (typeof define === 'function' && define.amd) {
       define(factory);
     } else if (typeof module === 'object' && module.exports) {
@@ -91,12 +92,13 @@ export const esbuildConfigUMD = {
       }
 
     }
-  }(typeof self !== 'undefined' ? self : this, () => {` },
+  }(typeof self !== 'undefined' ? self : this, () => {`,
+  },
   globalName: "WeavyLib",
-  footer: { 
+  footer: {
     js: `return WeavyLib;
-    }));`
-  }
+    }));`,
+  },
 };
 
 export const esbuildTestingConfig = {
@@ -108,7 +110,7 @@ export const esbuildTestingConfig = {
 
 export const esbuildDevelopmentConfig = {
   ...esbuildConfig,
-  entryPoints: [...esbuildConfig.entryPoints, "dev/tools/tanstack-dev-tools.ts", "src/scss/variables.scss"],
+  entryPoints: [...esbuildConfig.entryPoints, "dev/tools/tanstack-dev-tools.ts", "lib/scss/variables.scss"],
   minify: false,
   sourcemap: true,
   metafile: false,

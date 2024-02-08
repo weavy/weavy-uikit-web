@@ -1,7 +1,7 @@
 import "../dist/weavy";
 
 import { expect, fixture, html } from "@open-wc/testing";
-import type WyContext from "../src/wy-context";
+import type WyContext from "../lib/wy-context";
 
 function testReadOnly(obj: any, property: any) {
   return () => {
@@ -39,13 +39,24 @@ describe("wy-context", () => {
     expect(el, "changed property url").to.have.attribute("url").that.equals("http://localhost/");
   });
 
+
+  it('has a "tokenUrl" attribute with unreflected property that sets a pre-defined tokenFactory', async () => {
+    const el = await fixture<WyContext>(
+      html` <wy-context tokenUrl="/not/valid/token-url"></wy-context> `
+    );
+    await el.updateComplete;
+    expect(el).to.respondTo("tokenFactory");
+    expect(await el.tokenFactory?.(false)).to.throw("Could not get access token from server!"); 
+    //expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
+  });
+
   it('has a "tokenFactory" attribute with unreflected property that can be invoked', async () => {
     const el = await fixture<WyContext>(
       html` <wy-context tokenfactory="async () =&gt; 'token-factory-result'"></wy-context> `
     );
     await el.updateComplete;
     expect(el).to.respondTo("tokenFactory");
-    expect(await el.tokenFactory?.()).to.equal("token-factory-result");
+    expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
   });
 
   /*it('has a "config" attribute with unreflected property', async () => {
