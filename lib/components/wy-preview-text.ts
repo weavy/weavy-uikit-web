@@ -7,7 +7,7 @@ import { getTextStreamFromResponse } from "../utils/data";
 import "./wy-empty";
 import "./wy-spinner";
 
-import allCss from "../scss/all.scss";
+import allCss from "../scss/all"
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { WeavyContextProps } from "../types/weavy.types";

@@ -6,7 +6,7 @@ import { localized, msg } from "@lit/localize";
 
 import "./wy-spinner";
 
-import allCss from "../scss/all.scss";
+import allCss from "../scss/all"
 
 import { checkImageLoad, imageLoaded } from "../utils/images";
 

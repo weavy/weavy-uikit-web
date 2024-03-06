@@ -26,12 +26,14 @@ export const iconMapping: { [index: string]: string } = {
   "close-circle": mdi.mdiCloseCircle,
   "comment": mdi.mdiComment,
   "comment-outline": mdi.mdiCommentOutline,
+  "confluence": "M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z",
   "content-save": mdi.mdiContentSave,
   "delete": mdi.mdiDelete,
   "delete-restore": mdi.mdiDeleteRestore,
   "delete-forever": mdi.mdiDeleteForever,
   "dots-vertical": mdi.mdiDotsVertical,
   "download": mdi.mdiDownload,
+  "earth": mdi.mdiEarth,
   "emoticon-plus": "M 19 0 L 19 3 L 16 3 L 16 5 L 19 5 L 19 8 L 21 8 L 21 5 L 24 5 L 24 3 L 21 3 L 21 0 L 19 0 z M 12 2 C 6.5 2 2 6.5 2 12 C 2 17.5 6.5 22 12 22 C 17.5 22 22 17.5 22 12 L 20 12 C 20 16.4 16.4 20 12 20 C 7.6 20 4 16.4 4 12 C 4 7.6 7.6 4 12 4 L 12 2 z M 8.5 8 C 7.7 8 7 8.7 7 9.5 C 7 10.3 7.7 11 8.5 11 C 9.3 11 10 10.3 10 9.5 C 10 8.7 9.3 8 8.5 8 z M 15.5 8 C 14.7 8 14 8.7 14 9.5 C 14 10.3 14.7 11 15.5 11 C 16.3 11 17 10.3 17 9.5 C 17 8.7 16.3 8 15.5 8 z M 6.9 14 C 7.7 16 9.7 17.5 12 17.5 C 14.3 17.5 16.3 16 17.1 14 L 6.9 14 z",
   "fit-screen": mdi.mdiFitToScreen,
   "fit-width": mdi.mdiFitToPage,
@@ -112,7 +114,8 @@ export const nativeColors: { [index: string]: string } = {
   "onedrive": "#0078d4",
   "box": "#0161d5",
   "google-drive": "#1a73e8",
-  "zoom": "#4a8cff"
+  "zoom": "#4a8cff",
+  "confluence": "#2684ff"
 }
 
 export function getIconName(name: string) {

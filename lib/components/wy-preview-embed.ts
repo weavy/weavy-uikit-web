@@ -3,11 +3,12 @@ import { customElement, property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
+import type { FileProviderType } from "../types/files.types";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
 
-import allCss from "../scss/all.scss";
+import allCss from "../scss/all"
 
 @customElement("wy-preview-embed")
 @localized()
@@ -32,7 +33,7 @@ export class WyPreviewEmbed extends LitElement {
   icon!: string;
 
   @property()
-  provider?: string;
+  provider?: FileProviderType;
 
   embedElement?: Element;
 

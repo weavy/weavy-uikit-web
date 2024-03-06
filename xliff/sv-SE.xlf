@@ -155,18 +155,6 @@
         <source>Reactions</source>
         <target state="">Reaktioner</target>
       </trans-unit>
-      <trans-unit id="sf3f8c55fbe624c77">
-        <source>1 like</source>
-        <target state="">1 gillar</target>
-      </trans-unit>
-      <trans-unit id="sf3c0a3d70e58c0e9">
-        <source><x id="0" equiv-text="${reactionLength}"/> likes</source>
-        <target state=""><x id="0" equiv-text="${reactionLength}"/> gillar</target>
-      </trans-unit>
-      <trans-unit id="sa3a9a5b55e9923bf">
-        <source>Likes</source>
-        <target state="">Personer som gillar</target>
-      </trans-unit>
       <trans-unit id="sfef95f1ec987bff3">
         <source>Zoom meeting</source>
         <target state="">Zoom-möte</target>
@@ -260,11 +248,6 @@
         <source>Discard</source>
         <note from="lit-localize">Button action to discard</note>
         <target state="">Släng</target>
-      </trans-unit>
-      <trans-unit id="s3d099ab47fec57b6">
-        <source>Like</source>
-        <note from="lit-localize">Button action to like</note>
-        <target state="">Gilla</target>
       </trans-unit>
       <trans-unit id="s9bfc95548d124b1c">
         <source>React</source>
@@ -430,7 +413,7 @@
       </trans-unit>
       <trans-unit id="s3bdfdd0bd23b0c44">
         <source>The server is offline, try again in a few minutes...</source>
-        <target>Servern är offline försök igen om några minuter...</target>
+        <target>Servern är offline, försök igen om några minuter...</target>
       </trans-unit>
       <trans-unit id="sa667dd9e4a8a6750">
         <source>Add some files to get started!</source>
@@ -460,6 +443,18 @@
       <trans-unit id="sc374276841a6c39e">
         <source>Versions are not available for external cloud files.</source>
         <target>Versioner är inte tillgängliga för externa filer från molnet.</target>
+      </trans-unit>
+      <trans-unit id="sc16e00a7a8b2fde2">
+        <source>Back</source>  
+        <target>Tillbaka</target>
+      </trans-unit>
+      <trans-unit id="s8ad15eeb66d528ff">
+        <source>Select a Confluence site</source>
+        <target>Välj ett utrymme i Confluence</target>
+      </trans-unit>
+      <trans-unit id="sa51cfa5b38f02434">
+        <source>Confluence Page Picker</source>
+        <target>Confluence sidväljare</target>
       </trans-unit>
     </body>
   </file>

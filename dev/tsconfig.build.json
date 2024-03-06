@@ -1,5 +1,6 @@
 {
   "extends": "../tsconfig.json",
+  
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -9,11 +10,14 @@
     "declaration": true,
     // helps local development, could be dropped out of the NPM package though
     "declarationMap": true,
-    "outDir": "../dist/types"
+    "noEmit": false,
+    "outDir": "../dist",
+    "declarationDir": "../dist/types",
+    "skipLibCheck": true
   },
   "include": [
     "../lib/**/*.ts",
-    "lib/scss/**/*.scss"
+    "../lib/scss/**/*.scss"
   ],
   "exclude": [
     "node_modules",

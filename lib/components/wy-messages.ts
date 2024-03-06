@@ -10,7 +10,7 @@ import type { InfiniteData } from "@tanstack/query-core";
 import type { UserType } from "../types/users.types";
 import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import { type AppType } from "../types/app.types";
 import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
@@ -77,6 +77,11 @@ export default class WyMessages extends LitElement {
     return this;
   }
 
+  private dispatchVote(id: number, parentId: number) {    
+    const event = new CustomEvent("vote", { detail: { id: id, parentId: parentId, parentType: "messages" } });
+    return this.dispatchEvent(event);
+  }
+  
   override render() {
     const flattenedPages = this.infiniteMessages?.pages.flatMap((messageResult) => messageResult.data);
 
@@ -123,6 +128,7 @@ export default class WyMessages extends LitElement {
                     .app=${this.app}
                     .messageId=${message.id}
                     .me=${message.created_by.id === this.user.id}
+                    .isBot=${message.created_by.is_bot || false}
                     .chatRoom=${this.app?.type === this._chatRoomId}
                     .temp=${message.temp}
                     .displayName=${message.created_by.display_name}
@@ -132,6 +138,7 @@ export default class WyMessages extends LitElement {
                     .html=${message.html}
                     .attachments=${message.attachments}
                     .meeting=${message.meeting}
+                    .pollOptions=${message.options}
                     .embed=${message.embed}
                     .reactions=${message.reactions}
                     .userId=${this.user.id}
@@ -153,6 +160,9 @@ export default class WyMessages extends LitElement {
                           return member.marked_id === message.id && member.id !== this.user.id;
                         })
                       : []}
+                       @vote=${(e: CustomEvent) => {
+                    this.dispatchVote(e.detail.id, e.detail.parentId);
+                  }}
                   ></wy-message>`),
                   html`${this.unreadMarkerPosition === "bottom" ? unreadMarkerContent : nothing}`,
                 ]}`;

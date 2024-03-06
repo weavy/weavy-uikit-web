@@ -1,7 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import chatCss from "./scss/all.scss";
-import colorModes from "./scss/colormodes.scss";
+import chatCss from "./scss/all"
+import colorModes from "./scss/colormodes"
 //import { HistoryController } from './controllers/history-controller'
 import { PersistStateController } from "./controllers/persist-state-controller";
 import { ifDefined } from "lit/directives/if-defined.js";
@@ -40,7 +40,7 @@ import {cache} from 'lit/directives/cache.js';
 
 @customElement("wy-messenger")
 @localized()
-export default class WyMessenger extends LitElement {
+export class WyMessenger extends LitElement {
   static override styles = [
     colorModes,
     chatCss,
@@ -62,7 +62,10 @@ export default class WyMessenger extends LitElement {
 
       wy-conversation {
         flex: 0 1 100%;
-        min-width: 50%;
+        min-width: max(50%, 16rem);
+        min-height: min-content;
+        display: flex;
+        flex-direction: column;
       }
 
       .wy-close-conversation {
@@ -74,16 +77,6 @@ export default class WyMessenger extends LitElement {
         min-width: 0;
         max-width: none;
         border-right: none;
-      }
-
-      wy-conversation.overlay-mode {
-        flex: 0 1 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        z-index: 1;
       }
 
       wy-conversation-list[conversationid].overlay-mode {
@@ -106,7 +99,7 @@ export default class WyMessenger extends LitElement {
 
   protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContext }, this>;
 
-  // Manually consumed in performUpdate()
+  // Manually consumed in scheduleUpdate()
   @state()
   protected weavyContext?: WeavyContext;
 
@@ -286,7 +279,21 @@ export default class WyMessenger extends LitElement {
     new ThemeController(this, WyMessenger.styles);
   }
 
-  protected override async performUpdate() {
+  override connectedCallback(): void {
+    super.connectedCallback();
+
+    if (this.parentElement) {
+      this.resizer.observe({
+        name: "overlay-mode",
+        target: this,
+        condition: (entry) => entry.contentRect.width <= 768,
+      });
+    }
+  }
+
+  
+
+  protected override async scheduleUpdate() {
     await whenParentsDefined(this);
     this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
 
@@ -294,13 +301,13 @@ export default class WyMessenger extends LitElement {
       this.weavyContext = this.weavyContextConsumer?.value;
     }
 
-    await super.performUpdate();
+    await super.scheduleUpdate();
   }
 
   protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
-      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "chat"]));
+      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "messenger"]));
     }
 
     if (!this.userQuery.result?.isPending) {
@@ -314,7 +321,7 @@ export default class WyMessenger extends LitElement {
     if ((changedProperties.has("conversationId") || changedProperties.has("weavyContext")) && this.weavyContext) {
       if (this.conversationId) {
         this.conversationQuery.trackQuery(
-          getApiOptions<ConversationType>(this.weavyContext, ["conversations", this.conversationId],undefined,
+          getApiOptions<ConversationType>(this.weavyContext, ["conversations", this.conversationId], undefined,
           {
             initialData: () => {
               // Use any data from the conversation-list query as the initial data for the conversation query
@@ -399,16 +406,6 @@ export default class WyMessenger extends LitElement {
     `;
   }
 
-  override firstUpdated() {
-    if (this.parentElement) {
-      this.resizer.observe({
-        name: "overlay-mode",
-        target: this,
-        condition: (entry) => entry.contentRect.width <= 768,
-      });
-    }
-  }
-
   override disconnectedCallback(): void {
     if (this.weavyContext) {
       // realtime
@@ -418,6 +415,7 @@ export default class WyMessenger extends LitElement {
       this.weavyContext.unsubscribe(null, "app_created", this.realtimeAppCreatedEvent);
       this.weavyContext.unsubscribe(null, "member_added", this.realtimeMemberAddedEvent);
     }
+
     super.disconnectedCallback();
   }
 }

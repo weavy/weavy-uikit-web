@@ -17,7 +17,7 @@ import { localized, msg, str } from "@lit/localize";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import "./wy-avatar";
 import "./wy-attachment";
@@ -27,7 +27,7 @@ import "./wy-reactions";
 import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-embed";
-import "./wy-comments";
+import "./wy-comment-list";
 import "./wy-skeleton";
 
 import type { AppType } from "../types/app.types";
@@ -293,15 +293,15 @@ export default class WyPostView extends LitElement {
                       : nothing
                   }
                 </div>
+                ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
                 <div class="wy-reactions-line wy-reactions-line-reverse">
-                  <wy-reactions
-                    .hasFeature=${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions)}
+                  <wy-reactions                    
                     .reactions=${this.reactions}
                     parentId=${this.app.id}
                     entityId=${this.postId}
                     messageType="posts"
                     .userId=${this.user.id}></wy-reactions>
-                </div>
+                </div>` : nothing}
               </div>
 
               <!-- comments -->
@@ -309,13 +309,13 @@ export default class WyPostView extends LitElement {
                 this.loadComments
                   ? html`
                       <div ?hidden=${!this.showComments}>
-                        <wy-comments
+                        <wy-comment-list
                           .app=${this.app}
                           .user=${this.user}
                           .parentId=${this.postId}
                           .location=${"posts"}
                           .features=${this.features}
-                          .availableFeatures=${this.availableFeatures}></wy-comments>
+                          .availableFeatures=${this.availableFeatures}></wy-comment-list>
                       </div>
                     `
                   : nothing

@@ -2,7 +2,7 @@ import { customElement, property } from "lit/decorators.js";
 import WyConversation from "./components/wy-conversation";
 import { ThemeController } from "./controllers/theme-controller";
 import { PropertyValues } from "lit";
-import colorModes from "./scss/colormodes.scss";
+import colorModes from "./scss/colormodes"
 import { QueryController } from "./controllers/query-controller";
 import { AppTypes, ConversationType } from "./types/app.types";
 import { WeavyContextProps } from "./types/weavy.types";
@@ -10,7 +10,7 @@ import { RealtimeAppEventType, RealtimeMessageEventType, RealtimeReactionEventTy
 import { getAppOptions } from "./data/app";
 
 @customElement("wy-chat")
-export default class WyChat extends WyConversation {
+export class WyChat extends WyConversation {
   static override styles = [...WyConversation.styles, colorModes];
 
   @property()

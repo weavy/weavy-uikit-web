@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { type FeaturesListType, Feature, type FeaturesConfigType } from "../types/features.types";
 import { hasFeature } from "../utils/features";
-import { type AppType } from "../types/app.types";
+import { AccessType, type AppType } from "../types/app.types";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
@@ -11,15 +11,7 @@ import { localized, msg } from "@lit/localize";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
-import filesCss from "../scss/all.scss";
-
-import "./wy-button";
-import "./wy-dropdown";
-import "./wy-icon";
-import "./wy-spinner";
-import "./wy-sheet";
-
-import "./wy-file-item";
+import filesCss from "../scss/all"
 
 import { type UserType } from "../types/users.types";
 import {
@@ -42,10 +34,20 @@ import { portal } from "lit-modal-portal";
 import { MutationState } from "@tanstack/query-core";
 import { toUpperCaseFirst } from "../utils/strings";
 
-import "./wy-cloud-files";
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
 import { WeavyContextProps } from "../types/weavy.types";
+import { hasAccess } from "../utils/access";
+
+import "./wy-button";
+import "./wy-dropdown";
+import "./wy-icon";
+import "./wy-spinner";
+import "./wy-sheet";
+
+import "./wy-file-item";
+import "./wy-cloud-files";
+import "./wy-confluence";
 
 @customElement("wy-files-appbar")
 @localized()
@@ -230,6 +232,7 @@ export class WyFilesAppbar extends LitElement {
     return html`
       <nav class="wy-toolbar">
         <div class="wy-toolbar-buttons">
+          ${hasAccess(AccessType.Write, this.app?.access || AccessType.None, this.app?.permissions) ? html`
           <wy-dropdown title=${msg("Add files")}>
             <span slot="button">${msg("Add files")}</span>
             <wy-icon slot="button" name="plus" last></wy-icon>
@@ -255,7 +258,13 @@ export class WyFilesAppbar extends LitElement {
                   </wy-dropdown-item>
                 `
               : nothing}
+            ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
+            this.weavyContext?.confluenceAuthenticationUrl 
+              ? html`<wy-confluence dropdown @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}></wy-confluence>`
+              : nothing}
           </wy-dropdown>
+          `: nothing}
+          
         </div>
         <div class="wy-toolbar-buttons wy-toolbar-buttons-last">
           ${fileMutationResults?.length

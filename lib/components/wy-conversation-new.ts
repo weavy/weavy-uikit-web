@@ -4,7 +4,7 @@ import { portal } from "lit-modal-portal";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
-import allStyles from "../scss/all.scss";
+import allStyles from "../scss/all"
 import { MemberType } from "../types/members.types";
 import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
 import { localized, msg } from "@lit/localize";

@@ -4,7 +4,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { consume } from "@lit/context";
 import { portal } from "lit-modal-portal";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import { localized, msg, str } from "@lit/localize";
+import { localized, msg } from "@lit/localize";
 
 import { type Placement as PopperPlacement, type Instance as PopperInstance, createPopper } from "@popperjs/core";
 import type { ReactableType, ReactionsResult } from "../types/reactions.types";
@@ -15,7 +15,7 @@ import {
   replaceReactionMutation,
 } from "../data/reactions";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import { QueryController } from "../controllers/query-controller";
 
 import "./wy-spinner";
@@ -65,9 +65,6 @@ export default class WyReactions extends LitElement {
 
   @property({ attribute: false })
   visible: boolean = false;
-
-  @property({ attribute: false })
-  hasFeature: boolean = true;
 
   @property({ attribute: true, type: String })
   messageType: "messages" | "posts" | "comments" = "messages";
@@ -213,7 +210,7 @@ export default class WyReactions extends LitElement {
   override render() {
     const { data, isLoading } = this.reactionListQuery.result ?? {};
 
-    if (this.hasFeature) {
+    
       const group = [
         ...new Map<string, ReactableType>(this.reactions?.map((item: ReactableType) => [item.content, item])).values(),
       ];
@@ -286,60 +283,7 @@ export default class WyReactions extends LitElement {
           () => (this.showSheet = false)
         )}
       `;
-    } else {
-      const like = "👍";
-
-      const reactionLength = this.reactions?.length;
-      return html`
-        ${this.reactions?.length
-          ? html`
-              <wy-button
-                class="wy-reaction-lineup"
-                kind="icon-inline"
-                ?active=${this.showSheet}
-                @click=${this.handleReactionsClick}>
-                <small class="wy-like-count">
-                  ${this.reactions?.length === 1 ? msg("1 like") : msg(str`${reactionLength} likes`)}
-                </small>
-              </wy-button>
-            `
-          : nothing}
-
-        <wy-button
-          kind="icon-inline"
-          class="wy-reaction-like-button"
-          buttonClass="wy-like-button"
-          @click=${() => {
-            this.handleReaction(like);
-          }}
-          title=${msg("Like", { desc: "Button action to like" })}>
-          <wy-icon
-            ?padded=${this.small}
-            name="${this.reactedEmoji === like ? "thumb-up" : "thumb-up-outline"}"
-            size=${this.small ? 18 : 20}></wy-icon>
-        </wy-button>
-
-        ${portal(
-          this.showSheet,
-          html`
-            <wy-sheet
-              .show=${this.showSheet}
-              .sheetId="${this.sheetId}"
-              @release-focus=${() =>
-                this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}>
-              <span slot="appbar-text">${msg("Likes")}</span>
-              <!-- <wy-spinner spin="true"></wy-spinner> -->
-              ${data && !isLoading
-                ? html`
-                    ${data.data?.map((reaction) => html` <wy-reaction-item .reaction=${reaction}></wy-reaction-item> `)}
-                  `
-                : nothing}
-            </wy-sheet>
-          `,
-          () => (this.showSheet = false)
-        )}
-      `;
-    }
+    
   }
 
   protected override updated(changedProperties: PropertyValues<this & WeavyContextProps>): void {

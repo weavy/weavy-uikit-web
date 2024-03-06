@@ -1,19 +1,19 @@
 import { LitElement, html, nothing, type TemplateResult, type PropertyValues } from "lit";
 import { consume } from "@lit/context";
 import { customElement, property, state } from "lit/decorators.js";
-import { EditorView, keymap, placeholder, dropCursor, ViewUpdate, KeyBinding } from "@codemirror/view";
-import { EditorState, type Extension } from "@codemirror/state";
-import { markdown } from "@codemirror/lang-markdown";
-import { languages } from "@codemirror/language-data";
-import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
-import { Completion, CompletionContext, CompletionResult, autocompletion } from "@codemirror/autocomplete";
+//import { EditorView, keymap, placeholder, dropCursor, ViewUpdate, KeyBinding } from "@codemirror/view";
+//import { EditorState, type Extension } from "@codemirror/state";
+//import { markdown } from "@codemirror/lang-markdown";
+//import { languages } from "@codemirror/language-data";
+//import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
+//import { Completion, CompletionContext, CompletionResult, autocompletion } from "@codemirror/autocomplete";
 import { classMap } from "lit/directives/class-map.js";
-import { weavyKeymap } from "../utils/editor/commands";
-import { mentions } from "../utils/editor/mentions";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+//import { weavyKeymap } from "../utils/editor/commands";
+//import { mentions } from "../utils/editor/mentions";
+//import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { localized, msg } from "@lit/localize";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
@@ -46,14 +46,20 @@ import { ExternalBlobMutationType, getExternalBlobMutation } from "../data/blob-
 import { PollOptionType } from "../types/polls.types";
 import { clearEmbeds, getEmbeds, initEmbeds } from "../utils/embeds";
 import type { EmbedType } from "../types/embeds.types";
-import "./wy-embed";
 import { DropZoneController } from "../controllers/dropzone-controller";
 
-import WeavyAvatar from "./wy-avatar";
-import "./wy-dropdown";
-import "./wy-file-item";
 import { inputConsume, inputConsumeWithBlurOnEscape } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
+import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
+import type { EditorState, Extension } from "@codemirror/state";
+import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
+import { desktop } from "../utils/browser";
+
+import WeavyAvatar from "./wy-avatar";
+import "./wy-embed";
+import "./wy-dropdown";
+import "./wy-file-item";
+import "./wy-confluence";
 
 @customElement("wy-editor")
 @localized()
@@ -138,9 +144,6 @@ export default class WyEditor extends LitElement {
   @state()
   protected draftKey: string = "";
 
-  @state()
-  protected keyMap: KeyBinding[] = [...weavyKeymap, ...defaultKeymap, ...historyKeymap];
-
   protected uploadBlobMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(
     this
   );
@@ -155,6 +158,9 @@ export default class WyEditor extends LitElement {
   protected fileInputRef: Ref<HTMLInputElement> = createRef();
   protected cloudFilesRef: Ref<WeavyCloudFiles> = createRef();
   protected dropZone: DropZoneController = new DropZoneController(this);
+
+  @state()
+  protected keyMap: KeyBinding[] = [];
 
   @state()
   protected editorExtensions?: Extension[];
@@ -185,6 +191,7 @@ export default class WyEditor extends LitElement {
 
   constructor() {
     super();
+
     this.addEventListener("drop-files", this.handleDropFiles);
     this.addEventListener("keyup", inputConsumeWithBlurOnEscape);
   }
@@ -199,102 +206,6 @@ export default class WyEditor extends LitElement {
       this.app &&
       this.user
     ) {
-      this.editorExtensions = [
-        EditorView.contentAttributes.of({
-          spellcheck: "true",
-          autocorrect: "on",
-          autocapitalize: "on",
-        }),
-        history(),
-        dropCursor(),
-        mentions,
-        autocompletion({
-          override: hasFeature(this.availableFeatures, Feature.Mentions, this.features?.mentions)
-            ? [(context: CompletionContext) => this.autocomplete(context)]
-            : null, //showMention
-          closeOnBlur: false,
-          icons: false,
-          addToOptions: [
-            {
-              render: function (completion: MentionsCompletion, _state: EditorState) {
-                const div = document.createElement("div");
-                div.classList.add("wy-item");
-                div.classList.add("wy-item-hover");
-
-                if (!completion.item?.is_member) {
-                  div.classList.add("wy-disabled");
-                }
-
-                const avatar = document.createElement("wy-avatar") as WeavyAvatar;
-                avatar.src = completion.item?.avatar_url || "";
-                avatar.name = completion.item?.display_name || "";
-
-                const name = document.createElement("div");
-                name.classList.add("wy-item-body");
-                name.innerText = completion.item?.display_name || "";
-
-                div.appendChild(avatar);
-                div.appendChild(name);
-                return div;
-              },
-              position: 10,
-            },
-          ],
-        }),
-        placeholder(this.placeholder),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        EditorView.lineWrapping,
-        keymap.of(this.keyMap),
-        markdown({ codeLanguages: languages }),
-        EditorView.domEventHandlers({
-          paste: (evt: ClipboardEvent, _view: EditorView): boolean | void => {
-            let files: File[] = [];
-            const items = evt.clipboardData?.items || [];
-
-            for (const index in items) {
-              const item = items[index];
-              if (item.kind === "file") {
-                const file = item.getAsFile();
-                if (file) {
-                  files = [...files, file];
-                }
-              }
-            }
-
-            if (
-              files.length > 0 &&
-              hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-            ) {
-              for (let i = 0; i < files.length; i++) {
-                this.handleUploadFiles(files);
-              }
-              return true;
-            }
-          },
-          keyup: (evt: KeyboardEvent, _view: EditorView) => {
-            if (
-              this.typing &&
-              _view.state.doc.toString() !== "" &&
-              hasFeature(this.availableFeatures, Feature.Typing, this.features?.typing)
-            ) {
-              this.throttledTyping();
-            }
-
-            if (this.draft) {
-              this.throttledDrafting();
-            }
-
-            if (
-              hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds) &&
-              _view.state.doc.toString() !== ""
-            ) {
-              this.handleEmbeds(_view.state.doc.toString());
-            }
-          },
-        }),
-        EditorView.updateListener.of((_v: ViewUpdate) => {}),
-      ];
-
       this.draftKey = `draft-${this.editorType}-${this.parentId || this.app.id}`;
       this.uploadBlobMutation.trackMutation(
         getUploadBlobMutationOptions(
@@ -372,18 +283,133 @@ export default class WyEditor extends LitElement {
       this.user &&
       this.editorRef.value
     ) {
-      if (!this.editor) {
-        this.editor = new EditorView({
-          state: EditorState.create({
-            doc: this.text,
-            extensions: this.editorExtensions,
-          }),
-          parent: this.editorRef.value,
+      this.weavyContext.whenUrl().then(() => {
+        import("../utils/editor/editor").then(({ 
+          defaultHighlightStyle, 
+          syntaxHighlighting,
+          history,
+          dropCursor,
+          mentions,
+          autocompletion,
+          placeholder,
+          keymap, weavyKeymap, defaultKeymap, historyKeymap,
+          markdown, languages, 
+          EditorView,
+          EditorState,
+          weavyDesktopMessageKeymap
+        }) => {
+          const extraKeyMap = (this.editorType === "messages" && desktop && weavyDesktopMessageKeymap) ? [...weavyDesktopMessageKeymap] : [];
+  
+          this.editorExtensions = [
+            EditorView.contentAttributes.of({
+              spellcheck: "true",
+              autocorrect: "on",
+              autocapitalize: "on",
+            }),
+            history(),
+            dropCursor(),
+            mentions,
+            autocompletion({
+              override: hasFeature(this.availableFeatures, Feature.Mentions, this.features?.mentions)
+                ? [(context: CompletionContext) => this.autocomplete(context)]
+                : null, //showMention
+              closeOnBlur: false,
+              icons: false,
+              addToOptions: [
+                {
+                  render: function (completion: MentionsCompletion, _state: EditorState) {
+                    const div = document.createElement("div");
+                    div.classList.add("wy-item");
+                    div.classList.add("wy-item-hover");
+    
+                    if (!completion.item?.is_member) {
+                      div.classList.add("wy-disabled");
+                    }
+    
+                    const avatar = document.createElement("wy-avatar") as WeavyAvatar;
+                    avatar.src = completion.item?.avatar_url || "";
+                    avatar.name = completion.item?.display_name || "";
+    
+                    const name = document.createElement("div");
+                    name.classList.add("wy-item-body");
+                    name.innerText = completion.item?.display_name || "";
+    
+                    div.appendChild(avatar);
+                    div.appendChild(name);
+                    return div;
+                  },
+                  position: 10,
+                },
+              ],
+            }),
+            placeholder(this.placeholder),
+            syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+            EditorView.lineWrapping,
+            keymap.of([...extraKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap]),
+            markdown({ codeLanguages: languages }),
+            EditorView.domEventHandlers({
+              paste: (evt: ClipboardEvent, _view: EditorView): boolean | void => {
+                let files: File[] = [];
+                const items = evt.clipboardData?.items || [];
+    
+                for (const index in items) {
+                  const item = items[index];
+                  if (item.kind === "file") {
+                    const file = item.getAsFile();
+                    if (file) {
+                      files = [...files, file];
+                    }
+                  }
+                }
+    
+                if (
+                  files.length > 0 &&
+                  hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
+                ) {
+                  for (let i = 0; i < files.length; i++) {
+                    this.handleUploadFiles(files);
+                  }
+                  return true;
+                }
+              },
+              keyup: (evt: KeyboardEvent, _view: EditorView) => {
+                if (
+                  this.typing &&
+                  _view.state.doc.toString() !== "" &&
+                  hasFeature(this.availableFeatures, Feature.Typing, this.features?.typing)
+                ) {
+                  this.throttledTyping();
+                }
+    
+                if (this.draft) {
+                  this.throttledDrafting();
+                }
+    
+                if (
+                  hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds) &&
+                  _view.state.doc.toString() !== ""
+                ) {
+                  this.handleEmbeds(_view.state.doc.toString());
+                }
+              },
+            }),
+            EditorView.updateListener.of((_v: ViewUpdate) => {}),
+          ];
+          
+          if (!this.editor) {
+            this.editor = new EditorView({
+              state: EditorState.create({
+                doc: this.text,
+                extensions: this.editorExtensions,
+              }),
+              parent: this.editorRef.value,
+            });
+    
+            // listen for custom event (ctrl+enter)
+            this.editorRef.value?.querySelector(".cm-editor")?.addEventListener("Weavy-SoftSubmit", this.submit.bind(this));
+          }
         });
-
-        // listen for custom event (ctrl+enter)
-        this.editorRef.value.querySelector(".cm-editor")?.addEventListener("Weavy-SoftSubmit", this.submit.bind(this));
-      }
+      })
     }
 
     if (changedProperties.has("placeholder")) {
@@ -401,10 +427,6 @@ export default class WyEditor extends LitElement {
 
     // add meetings event listener
     window.addEventListener("message", this.createMeeting);
-
-    /*if (this.editorType === "messages" && desktop) {
-      this.keyMap = [...weavyDesktopMessageKeymap, ...this.keyMap];
-    }*/
   }
 
   override disconnectedCallback() {
@@ -725,6 +747,10 @@ export default class WyEditor extends LitElement {
               <wy-icon name="cloud"></wy-icon>
             </wy-button>`
           : nothing}
+        ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
+            this.weavyContext?.confluenceAuthenticationUrl 
+              ? html`<wy-confluence @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}></wy-confluence>`
+              : nothing}
         ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) &&
         this.weavyContext?.zoomAuthenticationUrl
           ? html`<wy-button kind="icon" @click=${this.handleZoomClick}>

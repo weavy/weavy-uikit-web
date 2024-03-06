@@ -13,24 +13,30 @@ export interface WeavyOptions {
   cloudFilePickerUrl?: string | URL;
 
   /**
+   * The url for confluence authentication.
+   */
+  confluenceAuthenticationUrl?: string | URL;
+
+  /**
+   * The name of the confluence product.
+   */
+  confluenceProductName?: string;
+
+  /**
+   * Should the dynamic import of modules from the environment be disabled?
+   */
+  disableEnvironmentImports?: boolean;
+
+  /**
    * Selected locale. The locale must be pre configured in `.locales`.
    */
   locale?: string;
 
   /**
-   * Array of enabled locales. The corresponding locales must be available for loading as a locale .js file.
+   * Array with locale template modules. The corresponding locales must be available for loading as a locale .js file.
+   * Locale is key and the locale module, promise or async function is value.
    */
-  locales?: string[];
-
-  /**
-   * The base url where locale .js files can be found.
-   */
-  localesUrl?: string | URL;
-
-  /**
-   * Map with preloaded locale template modules. Locale is key and the locale module or promise is value.
-   */
-  localizedTemplates?: Map<string, LocaleModule | Promise<LocaleModule>>;
+  locales?: Array<[string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)]>;
 
   /**
    * The max-allowed age of the cache in milliseconds. If a persisted cache is found that is older than this time, it will be discarded.
@@ -72,6 +78,11 @@ export interface WeavyOptions {
    * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
    */
   tokenFactory?: WeavyTokenFactory;
+
+  /**
+   * The time between tokenFactory attempts when a valid token isn't provided yet.
+   */
+  tokenFactoryRetryDelay?: number;
 
   /**
    * The time allowed to pass before tokenFactory is considered to have timed out.

@@ -2,7 +2,7 @@ import { LitElement, type PropertyValues, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
-import overlayStyles from "../scss/all.scss";
+import overlayStyles from "../scss/all"
 
 import "./wy-button";
 import "./wy-icon";

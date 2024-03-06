@@ -4,7 +4,7 @@ import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { localized, msg, str } from "@lit/localize";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import { RealtimeEventType, RealtimeTypingEventType } from "../types/realtime.types";
 import { UserType } from "../types/users.types";
 import { WeavyContextProps } from "../types/weavy.types";

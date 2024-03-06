@@ -6,24 +6,24 @@
 @use "message-editor";
 
 .wy-message-editor {
-  .ͼ1 .cm-scroller {
+  /*.ͼ1*/ .cm-scroller {
     font-family: unset;
     line-height: 1.5;
   }
 
-  .ͼ1 .cm-widgetBuffer {
+  /*.ͼ1*/ .cm-widgetBuffer {
     vertical-align: unset;
   }
 
-  .ͼ1 .cm-placeholder {
+  /*.ͼ1*/ .cm-placeholder {
     color: #{color.token(--wy-outline)};
   }
 
-  .ͼ2 .cm-content {
+  /*.ͼ2*/ .cm-content {
     caret-color: #{color.token(--wy-on-background)};
   }
 
-  .ͼ1.cm-editor {
+  /*.ͼ1*/.cm-editor {
     @extend %message-editor-textfield;
 
     &.cm-focused {
@@ -54,7 +54,7 @@
     border-color: color.token(--wy-error) !important;
   }
   // autocomplete dropdown menu
-  .ͼ1 {
+  //.ͼ1 {
     .cm-tooltip.cm-tooltip-autocomplete > ul {
       font-family: unset;
       max-height: 15rem; // room for 5 items
@@ -63,9 +63,9 @@
         padding: 0;
       }
     }
-  }
+  //}
 
-  .ͼ2 {
+  //.ͼ2 {
     .cm-tooltip {
       border: none;
       background-clip: padding-box;
@@ -81,7 +81,7 @@
       background: #{color.token(--wy-primary-container)};
       color: unset;
     }
-  }
+  //}
 
   .cm-tooltip-autocomplete {
     .cm-completionLabel {

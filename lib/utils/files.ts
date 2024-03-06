@@ -1,4 +1,4 @@
-import { FileKindType, PreviewFormatType, ProviderType } from "../types/files.types";
+import { FileKindType, FileProviderType, PreviewFormatType, ProviderType } from "../types/files.types";
 
 export const fileSizeAsString = (size: number, significantDigits: number = 3) => {
   const format = [" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
@@ -356,7 +356,7 @@ export function getWebPreviewFormat(name: string): PreviewFormatType {
   return "none";
 }
 
-export function getProvider(provider: string | undefined): ProviderType | "" {
+export function getProvider(provider: FileProviderType | undefined): ProviderType | "" {
   switch (provider) {
     case "Google Drive":
       return "google-drive";
@@ -366,6 +366,8 @@ export function getProvider(provider: string | undefined): ProviderType | "" {
       return "onedrive";
     case "Box":
       return "box";
+    case "Confluence":
+      return "confluence";
     default:
       return "";
   }

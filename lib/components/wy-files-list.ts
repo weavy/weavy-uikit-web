@@ -5,7 +5,7 @@ import { localized } from "@lit/localize";
 import "./wy-icon";
 import "./wy-dropdown";
 import "./wy-file-menu";
-import filesCss from "../scss/all.scss";
+import filesCss from "../scss/all"
 
 import type { FileOrderType, FileType, FileViewType } from "../types/files.types";
 

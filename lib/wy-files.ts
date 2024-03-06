@@ -1,5 +1,5 @@
-import filesCss from "./scss/all.scss";
-import colorModes from "./scss/colormodes.scss";
+import filesCss from "./scss/all"
+import colorModes from "./scss/colormodes"
 
 import "./components/wy-dropdown";
 import "./components/wy-button";
@@ -71,7 +71,7 @@ import { whenParentsDefined } from "./utils/dom";
  */
 @customElement("wy-files")
 @localized()
-export default class WyFiles extends LitElement {
+export class WyFiles extends LitElement {
   static override styles = [
     colorModes,
     filesCss,
@@ -87,7 +87,7 @@ export default class WyFiles extends LitElement {
 
   protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContext }, this>;
 
-  // Manually consumed in performUpdate()
+  // Manually consumed in scheduleUpdate()
   @state()
   protected weavyContext?: WeavyContext;
 
@@ -313,8 +313,8 @@ export default class WyFiles extends LitElement {
     this.addEventListener("drop-files", this.handleBlobUpload);
     new ThemeController(this, WyFiles.styles);
   }
-
-  override async performUpdate() {
+  
+  override async scheduleUpdate() {
     await whenParentsDefined(this);
     this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
 
@@ -322,7 +322,7 @@ export default class WyFiles extends LitElement {
       this.weavyContext = this.weavyContextConsumer?.value;
     }
 
-    await super.performUpdate();
+    await super.scheduleUpdate();
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType, weavyContext: WeavyContext, user: UserType }>) {

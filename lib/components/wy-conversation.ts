@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ContextConsumer } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { portal } from "lit-modal-portal";
-import { ConversationTypeGuid, type ConversationType } from "../types/app.types";
+import { ConversationTypeGuid, type ConversationType, AccessType } from "../types/app.types";
 import type {
   MessageMutationContextType,
   MessageType,
@@ -28,7 +28,7 @@ import { QueryController } from "../controllers/query-controller";
 import { hasScroll, isParentAtBottom, scrollParentToBottom } from "../utils/scroll-position";
 import { addCacheItem, keepFirstPage, updateCacheItem, updateCacheItems } from "../utils/query-cache";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import "./wy-empty";
 import "./wy-typing";
@@ -64,7 +64,9 @@ import type {
 } from "../types/realtime.types";
 import { whenParentsDefined } from "../utils/dom";
 import { WeavyContextProps } from "../types/weavy.types";
-import { ReactableType } from "lib/types/reactions.types";
+import { ReactableType } from "../types/reactions.types";
+import { PollMutationType, getPollMutation } from "../data/poll";
+import { hasAccess } from "../utils/access";
 
 @customElement("wy-conversation")
 @localized()
@@ -85,7 +87,7 @@ export default class WyConversation extends LitElement {
 
   protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContext }, this>;
 
-  // Manually consumed in performUpdate()
+  // Manually consumed in scheduleUpdate()
   @state()
   protected weavyContext?: WeavyContext;
 
@@ -149,6 +151,7 @@ export default class WyConversation extends LitElement {
   private addMembersMutation?: AddMembersToConversationMutationType;
   private leaveConversationMutation?: LeaveConversationMutationType;
   private updateConversationMutation?: UpdateConversationMutationType;
+  private pollMutation?: PollMutationType;
 
   private addMessageMutation = new MutationController<
     MessageType,
@@ -167,21 +170,23 @@ export default class WyConversation extends LitElement {
     if (this.conversation && this.user) {
       this.addMessageMutation
         .mutate({
-          appId: this.conversation.id,
+          app_id: this.conversation.id,
           text: e.detail.text,
-          meetingId: e.detail.meetingId,
-          embed: e.detail.embed,
+          meeting_id: e.detail.meetingId,
+          poll_options: e.detail.pollOptions,
+          embed_id: e.detail.embed,
           blobs: e.detail.blobs,
-          userId: this.user.id,
+          user_id: this.user.id,
+          temp_id: Math.random(),
         })
         .then((data: MessageType) => {
-          if(!this.isContextualChat()){            
+          if (!this.isContextualChat()) {
             this.markConversationMutation?.mutate({
               id: this.conversation!.id,
               markAsRead: true,
               messageId: data.id,
             });
-          }          
+          }
         });
       this.lastReadMessageId = undefined;
       requestAnimationFrame(() => {
@@ -194,29 +199,30 @@ export default class WyConversation extends LitElement {
     if (
       !this.weavyContext ||
       !this.conversation ||
-      !this.user ||
-      realtimeEvent.message.app_id !== this.conversation.id ||
-      realtimeEvent.message.created_by_id === this.user.id
+      !this.user
     ) {
       return;
     }
 
     realtimeEvent.message.created_by = realtimeEvent.actor;
-    addCacheItem(this.weavyContext.queryClient, ["messages", this.conversation.id], realtimeEvent.message);
+    const tempId = realtimeEvent.message.metadata?.temp_id ? parseFloat(realtimeEvent.message.metadata?.temp_id) : undefined
+    addCacheItem(this.weavyContext.queryClient, ["messages", realtimeEvent.message.app_id], realtimeEvent.message, tempId);
 
-    // mark as read
-    if (!this.isContextualChat()) {      
-      this.markConversationMutation?.mutate({
-        id: this.conversation!.id,
-        markAsRead: true,
-        messageId: realtimeEvent.message.id,
-      });
-    }
-
-    // display toast
-    if (!this.isAtBottom && !this.lastReadMessageId) {
-      this.lastReadMessageId = realtimeEvent.message.id;
-      this.lastReadMessagePosition = "top";
+    if (realtimeEvent.message.app_id === this.conversation.id) {
+      // mark as read
+      if (!this.isContextualChat()) {      
+        this.markConversationMutation?.mutate({
+          id: this.conversation!.id,
+          markAsRead: true,
+          messageId: realtimeEvent.message.id,
+        });
+      }
+  
+      // display toast
+      if (!this.isAtBottom && !this.lastReadMessageId) {
+        this.lastReadMessageId = realtimeEvent.message.id;
+        this.lastReadMessagePosition = "top";
+      }
     }
   };
 
@@ -376,7 +382,7 @@ export default class WyConversation extends LitElement {
     await this.weavyContext.queryClient.invalidateQueries({ queryKey: ["conversations"] });
   }
 
-  override async performUpdate() {
+  override async scheduleUpdate() {
     await whenParentsDefined(this);
     this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
 
@@ -384,11 +390,10 @@ export default class WyConversation extends LitElement {
       this.weavyContext = this.weavyContextConsumer?.value;
     }
 
-    await super.performUpdate();
+    await super.scheduleUpdate();
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
-    
     if ((changedProperties.has("weavyContext") || changedProperties.has("conversation")) && this.weavyContext) {
       const lastConversation = changedProperties.get("conversation");
 
@@ -415,7 +420,8 @@ export default class WyConversation extends LitElement {
         this.addMessageMutation.trackMutation(
           getAddMessageMutationOptions(this.weavyContext, ["messages", this.conversation.id])
         );
-        
+        this.pollMutation = getPollMutation(this.weavyContext, ["messages", this.conversation.id]);
+
         // Always scroll to bottom when conversation changed
         if (this.conversation.id !== lastConversation?.id) {
           this.wasAtBottom = true;
@@ -423,10 +429,10 @@ export default class WyConversation extends LitElement {
       }
 
       // conversation id is changed
-      if (lastConversation && this.conversation && lastConversation.id !== this.conversation.id) {        
+      if (lastConversation && this.conversation && lastConversation.id !== this.conversation.id) {
         this.unsubscribeToRealtime(lastConversation);
-        
-        if (!this.isContextualChat() && this.conversation.last_message && this.conversation.is_unread) {          
+
+        if (!this.isContextualChat() && this.conversation.last_message && this.conversation.is_unread) {
           this.markConversationMutation?.mutate({
             id: this.conversation.id,
             markAsRead: true,
@@ -449,7 +455,7 @@ export default class WyConversation extends LitElement {
       this.user = this.userQuery.result?.data;
     }
 
-    if (!this.featuresQuery.result?.isPending) {
+    if (!this.availableFeatures && !this.featuresQuery.result?.isPending) {      
       this.availableFeatures = this.featuresQuery.result?.data;
     }
 
@@ -464,15 +470,20 @@ export default class WyConversation extends LitElement {
     ) {
       if (!this.isContextualChat()) {
         if (hasFeature(this.availableFeatures, Feature.Receipts, this.features?.receipts)) {
-          this.membersQuery.trackQuery(getMemberOptions(this.weavyContext, this.conversation.id, {
-            initialData: () => {
-              // Use any data from the conversation query as the initial data for the member query
-              if (this.conversation?.id) {
-                return this.weavyContext?.queryClient.getQueryData<ConversationType>(["conversations", this.conversation.id])?.members;
-              }
-              return undefined;
-            },
-          }));
+          this.membersQuery.trackQuery(
+            getMemberOptions(this.weavyContext, this.conversation.id, {
+              initialData: () => {
+                // Use any data from the conversation query as the initial data for the member query
+                if (this.conversation?.id) {
+                  return this.weavyContext?.queryClient.getQueryData<ConversationType>([
+                    "conversations",
+                    this.conversation.id,
+                  ])?.members;
+                }
+                return undefined;
+              },
+            })
+          );
         }
       }
 
@@ -517,7 +528,7 @@ export default class WyConversation extends LitElement {
     const otherMember =
       this.user && this.isPrivateChat()
         ? (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0]
-        : null;
+        : null;   
 
     return html`
       <div class="wy-messenger-conversation wy-scroll-y">
@@ -604,6 +615,13 @@ export default class WyConversation extends LitElement {
                 .unreadMarkerPosition=${this.lastReadMessagePosition}
                 .pagerRef=${this.pagerRef}
                 @scroll-to-bottom=${() => this.scrollToBottom()}
+                @vote=${(e: CustomEvent) => {
+                  this.pollMutation?.mutate({
+                    optionId: e.detail.id,
+                    parentType: e.detail.parentType,
+                    parentId: e.detail.parentId,
+                  });
+                }}
               ></wy-messages>
             `
           : html`
@@ -615,18 +633,21 @@ export default class WyConversation extends LitElement {
                 </wy-empty>
               </div>
             `}
-
-        <div class="wy-footerbar wy-footerbar-sticky">
-          <wy-message-editor
-            .app=${this.conversation}
-            .user=${this.user}
-            .availableFeatures=${this.availableFeatures}
-            .features=${this.features}
-            .draft=${true}
-            placeholder=${msg("Type a message...")}
-            @submit=${(e: CustomEvent) => this.handleSubmit(e)}
-          ></wy-message-editor>
-        </div>
+        ${this.conversation && hasAccess(AccessType.Write, this.conversation?.access, this.conversation?.permissions)
+          ? html`
+              <div class="wy-footerbar wy-footerbar-sticky">
+                <wy-message-editor
+                  .app=${this.conversation}
+                  .user=${this.user}
+                  .availableFeatures=${this.availableFeatures}
+                  .features=${this.features}
+                  .draft=${true}
+                  placeholder=${msg("Type a message...")}
+                  @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+                ></wy-message-editor>
+              </div>
+            `
+          : nothing}
       </div>
 
       <!-- add members modal -->

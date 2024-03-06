@@ -4,8 +4,6 @@ import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
 import { hasFeature } from "../utils/features";
 import { Feature } from "../types/features.types";
-import { desktop } from "../utils/browser";
-import { weavyDesktopMessageKeymap } from "../utils/editor/commands";
 
 import WyEditor from "./wy-editor";
 
@@ -20,9 +18,6 @@ export default class WyMessageEditor extends WyEditor {
     super();
     this.editorType = "messages";
     this.editorClass = "wy-message-editor";
-
-    this.keyMap =
-      this.editorType === "messages" && desktop ? [...weavyDesktopMessageKeymap, ...this.keyMap] : this.keyMap;
   }
 
   protected override renderTopSlot(): TemplateResult | typeof nothing {
@@ -34,6 +29,7 @@ export default class WyMessageEditor extends WyEditor {
       <!-- Add -->
       ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments) ||
       hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles) ||
+      hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls) ||
       hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings)
         ? html`<wy-dropdown icon="plus" directionY="up">
             ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
@@ -62,6 +58,22 @@ export default class WyMessageEditor extends WyEditor {
                   <wy-dropdown-item @click=${this.openCloudFiles}>
                     <wy-icon name="cloud"></wy-icon>
                     <span>${msg("From cloud")}</span>
+                  </wy-dropdown-item>
+                `
+              : nothing}
+            ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
+            this.weavyContext?.confluenceAuthenticationUrl 
+              ? html`<wy-confluence
+                  dropdown
+                  .user=${this.user}
+                  @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
+                ></wy-confluence>`
+              : nothing}
+            ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls)
+              ? html`
+                  <wy-dropdown-item @click=${this.openPolls}>
+                    <wy-icon name="poll"></wy-icon>
+                    <span>${msg("Poll")}</span>
                   </wy-dropdown-item>
                 `
               : nothing}

@@ -1,4 +1,4 @@
-import allStyles from "../scss/all.scss";
+import allStyles from "../scss/all"
 
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";

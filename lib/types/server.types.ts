@@ -5,6 +5,7 @@ export type ServerErrorResponseType = {
 };
 
 export type ConnectionState = "connecting" | "connected" | "reconnecting" | "disconnected";
+export type ServerState = "ok" | "unauthorized" | "unreachable";
 export type NetworkState = "online" | "offline";
 
 export type NetworkStatus = {

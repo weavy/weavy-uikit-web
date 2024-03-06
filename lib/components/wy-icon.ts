@@ -5,7 +5,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { toKebabCase } from "../utils/strings";
 import { ifDefined } from "lit/directives/if-defined.js";
 
-import allStyles from "../scss/all.scss";
+import allStyles from "../scss/all"
 
 @customElement("wy-icon")
 export default class WyIcon extends LitElement {

@@ -9,7 +9,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import type { AppType } from "../types/app.types";
 import type { UserType } from "../types/users.types";

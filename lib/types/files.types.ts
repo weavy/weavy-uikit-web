@@ -29,7 +29,8 @@ export type FileKindType =
 
 export type PreviewFormatType = "audio" | "code" | "embed" | "html" | "image" | "pdf" | "text" | "video" | "none";
 
-export type ProviderType = "google-drive" | "onedrive" | "box" | "dropbox";
+export type FileProviderType = "Box" | "Dropbox" | "Google Drive" | "OneDrive" | "Confluence";
+export type ProviderType = "box" | "dropbox" | "google-drive" | "onedrive" | "confluence";
 
 export type BlobType = {
   id: number;
@@ -37,10 +38,11 @@ export type BlobType = {
   size?: number;
   media_type?: string;
   thumbnail_url?: string;
+  raw?: string;
 };
 
 export type ExternalBlobType = {
-  provider: "Box" | "Dropbox" | "Google Drive" | "OneDrive";
+  provider: "Box" | "Dropbox" | "Google Drive" | "OneDrive" | "Confluence";
   link: string;
   name: string;
   size: number;
@@ -62,7 +64,7 @@ export type FileType = {
   size?: number;
   metadata?: MetadataType;
   tags?: string[];
-  provider?: ProviderType; // string
+  provider?: FileProviderType; // string
   download_url?: string;
   application_url?: string;
   embed_url?: string;
@@ -82,6 +84,8 @@ export type FileType = {
   is_subscribed: boolean;
   is_trashed: boolean;
   refId?: number; //*
+  raw?: string;
+  confluence?: boolean;
 };
 
 export type FilesResultType = {

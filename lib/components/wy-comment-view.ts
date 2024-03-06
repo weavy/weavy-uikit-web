@@ -15,7 +15,7 @@ import { PollOptionType } from "../types/polls.types";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import type { AppType } from "../types/app.types";
 import type { UserType } from "../types/users.types";
@@ -31,7 +31,7 @@ import "./wy-reactions";
 import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-embed";
-import "./wy-comments";
+import "./wy-comment-list";
 import "./wy-dropdown";
 import "./wy-icon";
 import "./wy-preview";
@@ -200,16 +200,16 @@ export default class WyCommentView extends LitElement {
         </div>
       </div>
 
+      ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
       <div class="wy-reactions-line">
         <wy-reactions
-          small
-          .hasFeature=${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions)}
+          small          
           .reactions=${this.reactions}
           parentId=${this.parentId}
           entityId=${this.commentId}
           messageType="comments"
           .userId=${this.user.id}></wy-reactions>
-      </div>
+      </div>` : nothing}
 
       <wy-preview
         ${ref(this.previewRef)}

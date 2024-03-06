@@ -5,7 +5,7 @@ export { default as WyBadge } from "./wy-badge";
 export { default as WyButton } from "./wy-button";
 export { default as WyCloudFiles } from "./wy-cloud-files";
 export { default as WyComment } from "./wy-comment";
-export { default as WyComments } from "./wy-comments";
+export { default as WyCommentList } from "./wy-comment-list";
 export { default as WyCommentEdit } from "./wy-comment-edit";
 export { default as WyCommentEditor } from "./wy-comment-editor";
 export { default as WyCommentTrashed } from "./wy-comment-trashed";

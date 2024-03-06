@@ -4,7 +4,11 @@ import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signal
 import { modalController } from "lit-modal-portal";
 import WeavyPortal from "../components/wy-portal";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { persistQueryClientRestore, persistQueryClientSubscribe } from "@tanstack/query-persist-client-core";
+import {
+  type Persister,
+  persistQueryClientRestore,
+  persistQueryClientSubscribe,
+} from "@tanstack/query-persist-client-core";
 
 import { assign } from "../utils/objects";
 import { S4, defaultFetchSettings } from "../utils/data";
@@ -16,11 +20,11 @@ import { chrome } from "../utils/browser";
 import type { WeavyTokenFactory, WeavyOptions } from "../types/weavy.types";
 import type { FileMutationContextType } from "../types/files.types";
 import type { RealtimeDataType, RealtimeEventType } from "../types/realtime.types";
-import type { ConnectionState, NetworkState, NetworkStatus } from "../types/server.types";
+import type { ConnectionState, NetworkState, NetworkStatus, ServerState } from "../types/server.types";
 import type { PlainObjectType } from "../types/generic.types";
 import { HeaderContentType, type HttpMethodType, type HttpUploadMethodType } from "../types/http.types";
 
-import colorModes from "../scss/colormodes.scss";
+import colorModes from "../scss/colormodes";
 import { adoptGlobalStyles } from "../utils/styles";
 import { toUrl } from "../converters/url";
 
@@ -60,17 +64,19 @@ export class WeavyContext implements WeavyOptions {
   // CONFIG
 
   static defaults: WeavyOptions = {
-    zoomAuthenticationUrl: undefined,
     cloudFilePickerUrl: "https://filebrowser.weavy.io/v14/",
-    reactions: ["😍", "😎", "😉", "😜", "👍"],
-    locale: SOURCE_LOCALE,
-    locales: [],
-    localesUrl: "./locales",
-    staleTime: 1000 * 1, // 1s
+    confluenceAuthenticationUrl: undefined,
+    confluenceProductName: undefined,
+    disableEnvironmentImports: false,
     gcTime: 1000 * 60 * 60 * 24, // 24h,
-    tokenFactoryTimeout: 20000,
+    locale: SOURCE_LOCALE,
     modalParent: "body",
+    reactions: ["😍", "😎", "😉", "😜", "👍"],
     scrollBehavior: chrome ? "instant" : "smooth",
+    staleTime: 1000 * 1, // 1s
+    tokenFactoryRetryDelay: 2000,
+    tokenFactoryTimeout: 20000,
+    zoomAuthenticationUrl: undefined,
   };
 
   readonly weavySid: string = S4();
@@ -94,49 +100,33 @@ export class WeavyContext implements WeavyOptions {
 
   // OPTIONS
 
-  zoomAuthenticationUrl = WeavyContext.defaults.zoomAuthenticationUrl;
   cloudFilePickerUrl = WeavyContext.defaults.cloudFilePickerUrl;
-  reactions = WeavyContext.defaults.reactions;
-  staleTime = WeavyContext.defaults.staleTime;
+  confluenceAuthenticationUrl = WeavyContext.defaults.confluenceAuthenticationUrl;
+  confluenceProductName = WeavyContext.defaults.confluenceProductName;
+  disableEnvironmentImports = WeavyContext.defaults.disableEnvironmentImports;
   gcTime = WeavyContext.defaults.gcTime;
-  tokenFactoryTimeout = WeavyContext.defaults.tokenFactoryTimeout;
   modalParent = WeavyContext.defaults.modalParent;
+  reactions = WeavyContext.defaults.reactions;
   scrollBehavior = WeavyContext.defaults.scrollBehavior;
+  staleTime = WeavyContext.defaults.staleTime;
+  tokenFactoryRetryDelay = WeavyContext.defaults.tokenFactoryRetryDelay;
+  tokenFactoryTimeout = WeavyContext.defaults.tokenFactoryTimeout;
+  zoomAuthenticationUrl = WeavyContext.defaults.zoomAuthenticationUrl;
 
-  // Reactive options
-  #locales = WeavyContext.defaults.locales;
+  // Promises
 
-  get locales() {
-    return this.#locales;
+  // whenUrl
+  #resolveUrl?: (url: URL) => void;
+
+  #whenUrl = new Promise((r) => {
+    this.#resolveUrl = r;
+  });
+
+  async whenUrl() {
+    await this.#whenUrl;
   }
 
-  set locales(locales) {
-    if (this.isDestroyed) {
-      throw new DestroyError()
-    }
-    
-    if (locales?.length !== this.#locales?.length && this.localization) {
-      throw new Error("Locales may only be configured once");
-    }
-    this.#locales = locales;
-    this.configureLocalization();
-  }
-
-  #localesUrl = WeavyContext.defaults.localesUrl;
-
-  get localesUrl() {
-    return this.#localesUrl;
-  }
-
-  set localesUrl(localesUrl) {
-    if (this.isDestroyed) {
-      throw new DestroyError()
-    }
-    
-    this.#localesUrl = localesUrl;
-    this.configureLocalization();
-  }
-
+  // whenUrlAndTokenFactory
   #resolveUrlAndTokenFactory?: (value: unknown) => void;
 
   #whenUrlAndTokenFactory = new Promise((r) => {
@@ -146,6 +136,30 @@ export class WeavyContext implements WeavyOptions {
   async whenUrlAndTokenFactory() {
     await this.#whenUrlAndTokenFactory;
   }
+
+  // whenTokenIsValid
+  #resolveTokenIsValid?: (value: unknown) => void;
+
+  #whenTokenIsValid = new Promise((r) => {
+    this.#resolveTokenIsValid = r;
+  });
+
+  async whenTokenIsValid() {
+    await this.#whenTokenIsValid;
+  }
+
+  // whenConnectionRequested
+  #resolveConnectionRequested?: (value: unknown) => void;
+
+  #whenConnectionRequested = new Promise((r) => {
+    this.#resolveConnectionRequested = r;
+  });
+
+  async whenConnectionRequested() {
+    await this.#whenConnectionRequested;
+  }
+
+  // Reactive options
 
   #url?: URL;
 
@@ -158,9 +172,9 @@ export class WeavyContext implements WeavyOptions {
 
   set url(url: string | URL | undefined) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     try {
       if (typeof url === "string") {
         this.#url = toUrl(url);
@@ -173,6 +187,20 @@ export class WeavyContext implements WeavyOptions {
       throw new Error("Invalid url");
     }
 
+    if (
+      !this.disableEnvironmentImports &&
+      (globalThis as typeof globalThis & { WEAVY_IMPORT_URL: string }).WEAVY_IMPORT_URL === undefined
+    ) {
+      (globalThis as typeof globalThis & { WEAVY_IMPORT_URL: string }).WEAVY_IMPORT_URL = new URL(
+        "./uikit-web/",
+        url
+      ).href;
+    }
+
+    if (this.#url) {
+      this.#resolveUrl?.(this.#url);
+    }
+
     if (this.#url && this.tokenFactory) {
       this.#resolveUrlAndTokenFactory?.(true);
     }
@@ -180,36 +208,48 @@ export class WeavyContext implements WeavyOptions {
 
   /**
    * Checks the version of the Weavy Context against the Weavy Environment version.
-   * 
+   *
    * @param {string} [version] - Optional version to check against the environment version.
    */
   async checkVersion(version: string = this.version) {
-    await this.#whenUrlAndTokenFactory;
+    await this.whenUrlAndTokenFactory();
+    this.networkStateIsPending = true;
+
     let response;
     try {
       response = await fetch(new URL("/version", this.url), await this.fetchOptions(false));
       if (!response.ok) {
         throw new Error("Could not verify environment version.");
       }
-    } catch(e) {
-      console.warn("Could not check version: " + (e as Error).toString())
+      this.networkStateIsPending = false;
+      this.serverState = "ok";
+    } catch (e) {
+      this.networkStateIsPending = false;
+      this.serverState = "unreachable";
+      console.warn("Could not check version: " + (e as Error).toString());
       return;
     }
-    
+
     const environmentVersion = await response.text();
-    
+
     if (!version || !environmentVersion || version !== environmentVersion) {
       try {
-        const semverVersion = version.split(".").slice(0,2);
-        const semverEnvironmentVersion = environmentVersion.split(".").slice(0,2);
+        const semverVersion = version.split(".").slice(0, 2);
+        const semverEnvironmentVersion = environmentVersion.split(".").slice(0, 2);
 
         if (semverVersion[0] !== semverEnvironmentVersion[0]) {
           throw new Error();
-        } else if(semverVersion[1] !== semverEnvironmentVersion[1]) {
-          console.warn(`Version inconsistency: ${WeavyContext.sourceName}@${this.version} ≠ ${this.#url?.hostname}@${environmentVersion}`);
+        } else if (semverVersion[1] !== semverEnvironmentVersion[1]) {
+          console.warn(
+            `Version inconsistency: ${WeavyContext.sourceName}@${this.version} ≠ ${
+              this.#url?.hostname
+            }@${environmentVersion}`
+          );
         }
-      } catch(e) {
-        throw new Error(`Version mismatch! ${WeavyContext.sourceName}@${this.version} ≠ ${this.#url?.hostname}@${environmentVersion}`);
+      } catch (e) {
+        throw new Error(
+          `Version mismatch! ${WeavyContext.sourceName}@${this.version} ≠ ${this.#url?.hostname}@${environmentVersion}`
+        );
       }
     }
   }
@@ -227,9 +267,15 @@ export class WeavyContext implements WeavyOptions {
 
   set tokenFactory(tokenFactory) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
+    if (this.#tokenFactory && this.#tokenFactory !== tokenFactory) {
+      this.whenUrlAndTokenFactory().then(() => {
+        this.queryClient.refetchQueries({ stale: true });
+      });
+    }
+
     this.#tokenFactory = tokenFactory;
 
     if (this.url && this.#tokenFactory) {
@@ -248,15 +294,15 @@ export class WeavyContext implements WeavyOptions {
 
   set tokenUrl(tokenUrl: string | URL | undefined) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     try {
       if (typeof tokenUrl === "string") {
         this.#tokenUrl = toUrl(tokenUrl);
       } else if (tokenUrl instanceof URL) {
         this.#tokenUrl = tokenUrl;
-      } else {
+      } else if (tokenUrl !== undefined) {
         throw -1;
       }
     } catch (e) {
@@ -283,7 +329,7 @@ export class WeavyContext implements WeavyOptions {
         if (response.ok) {
           const data = await response.json();
 
-          if (!data.access_token) {
+          if (data.access_token === undefined) {
             throw new Error("Token response does not contain required property: access_token");
           }
 
@@ -298,11 +344,62 @@ export class WeavyContext implements WeavyOptions {
   #tokenPromise: Promise<string> | null = null;
   #token: string = "";
 
+  #validateToken(token: unknown) {
+    if (!token) {
+      return false;
+    }
+
+    if (typeof token !== "string") {
+      throw new TypeError(`You have provided an invalid string access token of type ${typeof token}.`);
+    } else if (typeof token === "string" && !token.startsWith("wyu_")) {
+      if (token.startsWith("wys_")) {
+        throw new TypeError("You have provided an API key for authentication. Provide a user access token instead.");
+      } else {
+        throw new TypeError(`You have provided an invalid string as access token.`);
+      }
+    }
+
+    this.#resolveTokenIsValid?.(token);
+
+    return true;
+  }
+
+  #validTokenFromFactory: WeavyTokenFactory = async (refresh: boolean = false) => {
+    const racePromises = [this.whenUrlAndTokenFactory()];
+
+    if (this.tokenFactoryRetryDelay !== Infinity) {
+      racePromises.push(new Promise((r) => setTimeout(r, this.tokenFactoryRetryDelay)));
+    }
+
+    await Promise.race(racePromises);
+
+    const token = await this.tokenFactory?.(refresh);
+
+    if (!this.#validateToken(token)) {
+      // Reset token promise and wait for a more valid token
+      this.#whenUrlAndTokenFactory = new Promise((r) => {
+        this.#resolveUrlAndTokenFactory = r;
+      });
+
+      if (!refresh) {
+        return await this.#validTokenFromFactory(false);
+      }
+    }
+
+    if (!token) {
+      throw new TypeError("Could not get a valid token from tokenFactory.");
+    }
+
+    this.#resolveUrlAndTokenFactory?.(true);
+
+    return token;
+  };
+
   async getToken(refresh: boolean = false): Promise<string> {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     if (this.#token && !refresh) {
       return this.#token;
     }
@@ -311,29 +408,25 @@ export class WeavyContext implements WeavyOptions {
 
     if (!this.#tokenPromise) {
       this.#tokenPromise = new Promise((resolve, reject) => {
-        this.tokenFactory?.(refresh).then(resolve).catch(reject);
+        // Try getting a valid token
+        this.#validTokenFromFactory(refresh).then(resolve).catch(reject);
+
         if (this.tokenFactoryTimeout !== Infinity) {
           setTimeout(() => reject(new Error("Token factory timeout.")), this.tokenFactoryTimeout);
         }
+
         window.addEventListener("offline", () => reject(new Error("Network changed.")), { once: true });
         window.addEventListener("online", () => reject(new Error("Network changed.")), { once: true });
       });
       try {
         const token = await this.#tokenPromise;
 
-        if (typeof token !== "string" || !token.startsWith("wyu_")) {
-          if (token.startsWith("wys_")) {
-            throw new TypeError("You have provided an API key for authentication. Provide a user access token instead.");
-          } else {
-            throw new TypeError("You have provided an invalid string as access token.");
-          }
-        }
-
         this.#tokenPromise = null;
         this.#token = token;
         return this.#token;
       } catch (e) {
         this.#tokenPromise = null;
+        console.error(e);
         throw e;
       }
     } else {
@@ -346,6 +439,7 @@ export class WeavyContext implements WeavyOptions {
 
   #queryClient!: QueryClient;
   #unsubscribeQueryClient?: () => void;
+  #sessionStoragePersister?: Persister;
 
   get queryClient() {
     return this.#queryClient;
@@ -353,9 +447,9 @@ export class WeavyContext implements WeavyOptions {
 
   private async createQueryClient() {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     this.#queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -367,7 +461,7 @@ export class WeavyContext implements WeavyOptions {
 
     //const localStoragePersister = createSyncStoragePersister({ storage: window.localStorage })
     try {
-      const sessionStoragePersister = createSyncStoragePersister({
+      this.#sessionStoragePersister = createSyncStoragePersister({
         key: "WEAVY_QUERY_OFFLINE_CACHE",
         storage: window.sessionStorage,
         throttleTime: this.staleTime,
@@ -376,7 +470,7 @@ export class WeavyContext implements WeavyOptions {
       // TODO: Move to "modern" persistQueryClient?
       const persistQueryClientOptions = {
         queryClient: this.#queryClient,
-        persister: sessionStoragePersister,
+        persister: this.#sessionStoragePersister,
         maxAge: this.gcTime, // 24h - should match gcTime
         buster: WeavyContext.version, // Cache busting parameter (build hash or similar)
         hydrateOptions: undefined,
@@ -399,8 +493,11 @@ export class WeavyContext implements WeavyOptions {
 
   private async disconnectQueryClient() {
     console.log(this.weavyId, "Query client disconnected");
-    this.#unsubscribeQueryClient?.();
     await this.#queryClient.cancelQueries();
+    this.queryClient.setQueriesData({}, undefined);
+    this.queryClient.resetQueries();
+    this.#sessionStoragePersister?.removeClient();
+    this.#unsubscribeQueryClient?.();
     this.#queryClient.unmount();
     this.#queryClient.clear();
   }
@@ -429,9 +526,9 @@ export class WeavyContext implements WeavyOptions {
 
   private async createConnection() {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     if (this.url && this.tokenFactory) {
       this.networkStateIsPending = true;
 
@@ -439,7 +536,13 @@ export class WeavyContext implements WeavyOptions {
         const connectionUrl = new URL("/hubs/rtm", this.url);
         if (this.#connection.baseUrl !== connectionUrl.toString()) {
           this.connectionState = "reconnecting";
-          console.log(this.weavyId, "Reconnecting due to changed url.", this.#connection.baseUrl, "=>", connectionUrl.toString());
+          console.log(
+            this.weavyId,
+            "Reconnecting due to changed url.",
+            this.#connection.baseUrl,
+            "=>",
+            connectionUrl.toString()
+          );
           await this.disconnect();
           this.#connection.baseUrl = connectionUrl.toString();
           this.connect();
@@ -463,7 +566,7 @@ export class WeavyContext implements WeavyOptions {
                   const token = await this.getToken();
                   return token;
                 }
-              } catch(e) {
+              } catch (e) {
                 console.error(e);
                 throw e;
               }
@@ -486,11 +589,11 @@ export class WeavyContext implements WeavyOptions {
         this.#connection.onclose(async (_error) => {
           console.info(this.weavyId, "SignalR closed.");
           this.connectionState = "disconnected";
-          
+
           if (this.isDestroyed) {
-            return
+            return;
           }
-          
+
           this.networkStateIsPending = true;
           this.#whenConnectionStarted = new Promise((resolve, reject) => {
             this.#whenConnectionStartedResolve = resolve;
@@ -525,9 +628,9 @@ export class WeavyContext implements WeavyOptions {
 
   async connect() {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     if (this.#connection) {
       console.log(this.weavyId, "Connecting SignalR...");
       //this.networkStateIsPending = true;
@@ -536,9 +639,6 @@ export class WeavyContext implements WeavyOptions {
         if (!window.navigator.onLine) {
           throw new Error();
         }
-
-        // Check version in parallel to attempting to connect.
-        this.checkVersion();
 
         await Promise.race([this.#connection.start(), this.whenConnectionStarted()]);
         this.signalRAccessTokenRefresh = false;
@@ -566,7 +666,8 @@ export class WeavyContext implements WeavyOptions {
             console.log(this.weavyId, "Retrying SignalR connect with fresh token.");
             this.signalRAccessTokenRefresh = true;
           } else {
-            console.log(this.weavyId, 
+            console.log(
+              this.weavyId,
               "Server is probably down, retrying SignalR connect after a delay or when window regains focus."
             );
             this.connectionState = "reconnecting";
@@ -585,6 +686,10 @@ export class WeavyContext implements WeavyOptions {
           await new Promise((r) => setTimeout(r, 1000));
         }
 
+        // Check version in parallel to attempting to reconnect.
+        this.checkVersion();
+
+        // Reconnect
         this.networkStateIsPending = true;
         await this.connect();
       }
@@ -597,9 +702,11 @@ export class WeavyContext implements WeavyOptions {
     callback: (realTimeEvent: T) => void
   ) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
+    this.#resolveConnectionRequested?.(true);
+
     try {
       const name = group ? group + ":" + event : event;
 
@@ -629,9 +736,9 @@ export class WeavyContext implements WeavyOptions {
     callback: (realTimeEvent: T) => void
   ) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     try {
       const name = group ? group + ":" + event : event;
 
@@ -663,6 +770,7 @@ export class WeavyContext implements WeavyOptions {
 
   #networkEvents = new Set<(status: NetworkStatus) => void>();
   #connectionState: ConnectionState = "connecting";
+  #serverState: ServerState = "ok";
   #networkState: NetworkState = window.navigator.onLine ? "online" : "offline";
   #networkStateIsPending: boolean = false;
 
@@ -672,6 +780,15 @@ export class WeavyContext implements WeavyOptions {
 
   set networkState(state: NetworkState) {
     this.#networkState = state;
+    this.triggerNetworkChange();
+  }
+
+  get serverState() {
+    return this.#serverState;
+  }
+
+  set serverState(state: ServerState) {
+    this.#serverState = state;
     this.triggerNetworkChange();
   }
 
@@ -697,7 +814,8 @@ export class WeavyContext implements WeavyOptions {
     return {
       state:
         this.#networkState === "online"
-          ? this.#connectionState === "connected" || this.#connectionState === "connecting"
+          ? this.#connectionState === "connected" ||
+            this.#serverState === "ok"
             ? "online"
             : "unreachable"
           : "offline",
@@ -727,6 +845,38 @@ export class WeavyContext implements WeavyOptions {
 
   // LOCALIZATION
 
+  //#locales = WeavyContext.defaults.locales;
+
+  #locales: Map<string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)> = new Map([
+    ["sv-SE", () => import("../../locales/sv-SE")],
+  ]);
+
+  get locales() {
+    return Array.from(this.#locales.entries());
+  }
+
+  set locales(locales) {
+    if (this.isDestroyed) {
+      throw new DestroyError();
+    }
+
+    if (this.localization) {
+      throw new Error("Locales may only be configured once");
+    }
+
+    if (!Array.isArray(locales)) {
+      throw new TypeError("Provided locales have invalid format.");
+    }
+
+    locales.forEach((locale) => {
+      if (!Array.isArray(locale) || locale.length !== 2 || typeof locale[0] !== "string") {
+        throw new TypeError("Invalid locale provided: " + locale[0]);
+      }
+      this.#locales.set(...locale);
+    });
+    this.configureLocalization();
+  }
+
   #locale = WeavyContext.sourceLocale;
   localization?: ReturnType<typeof configureLocalization>;
 
@@ -739,9 +889,9 @@ export class WeavyContext implements WeavyOptions {
 
   set locale(newLocale) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     if (!this.locale && !newLocale) {
       return;
     }
@@ -754,37 +904,47 @@ export class WeavyContext implements WeavyOptions {
         if (this.localization) {
           this.localization.setLocale(this.locale);
         } else if (this.locale !== WeavyContext.sourceLocale) {
-          console.error(this.weavyId, `You need to configure additional languages in config to use '${newLocale}'.`);
+          if (this.#locales.has(this.locale)) {
+            this.configureLocalization();
+          }
+          if (this.localization) {
+            (this.localization as ReturnType<typeof configureLocalization>).setLocale(this.locale);
+          } else {
+            console.error(this.weavyId, `You need to configure additional languages in config to use '${newLocale}'.`);
+          }
         }
       });
     }
   }
 
-  localizedTemplates?: Map<string, LocaleModule | Promise<LocaleModule>> = new Map();
-
   async loadLocale(newLocale: string) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
-    if (this.localizedTemplates?.has(newLocale)) {
-      console.log(this.weavyId, "preloaded locale", newLocale);
-      return await (this.localizedTemplates.get(newLocale) as Promise<LocaleModule>);
+
+    if (this.#locales?.has(newLocale)) {
+      const localizedTemplate = this.#locales.get(newLocale);
+      console.log(
+        this.weavyId,
+        typeof localizedTemplate === "function" ? "loading locale" : "preloaded locale",
+        newLocale
+      );
+      return await ((typeof localizedTemplate === "function"
+        ? localizedTemplate()
+        : localizedTemplate) as Promise<LocaleModule>);
     } else {
-      console.log(this.weavyId, "load locale", newLocale);
-      const localePath = new URL(`${this.localesUrl}/${newLocale}.js`, window.location.href);
-      return await (import(localePath.toString()) as Promise<LocaleModule>);
+      throw new Error("The requested locale is not configured");
     }
   }
 
   configureLocalization() {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
-    if (this.locales?.length) {
+
+    if (this.#locales?.size) {
       if (!this.localization) {
-        const targetLocales = this.locales;
+        const targetLocales = this.#locales.keys();
         console.log(this.weavyId, "Configuring locales", targetLocales);
 
         const { getLocale, setLocale } = configureLocalization({
@@ -834,11 +994,17 @@ export class WeavyContext implements WeavyOptions {
 
     this.createQueryClient();
 
+    this.whenConnectionRequested().then(() => {
+      if (!this.isDestroyed) {
+        //console.log(this.weavyId, "Weavy url and tokenFactory configured.");
+        this.createConnection();
+      }
+    });
+
     this.whenUrlAndTokenFactory().then(() => {
       if (!this.isDestroyed) {
-        console.log(this.weavyId, "Weavy url and tokenFactory configured.");
-        this.createConnection();
-      }      
+        this.checkVersion();
+      }
     });
 
     // Context root
@@ -859,7 +1025,7 @@ export class WeavyContext implements WeavyOptions {
 
     this.#hostIsConnectedObserver = observeConnected(this.host, (isConnected) => {
       if (this.isDestroyed) {
-        return
+        return;
       }
 
       if (isConnected) {
@@ -877,9 +1043,9 @@ export class WeavyContext implements WeavyOptions {
 
     defer(async () => {
       if (this.isDestroyed) {
-        return
+        return;
       }
-      
+
       if (modalController.host && modalController.host instanceof WeavyPortal) {
         this.#modalPortal = modalController.host as WeavyPortal;
       } else {
@@ -887,7 +1053,7 @@ export class WeavyContext implements WeavyOptions {
       }
 
       this.#modalPortal.connectedContexts.add(this);
-      
+
       if (document) {
         const modalRoot: HTMLElement =
           (this.modalParent && document.querySelector(this.modalParent)) || document.documentElement;
@@ -919,7 +1085,7 @@ export class WeavyContext implements WeavyOptions {
 
   async fetchOptions(authorized: boolean = true): Promise<RequestInit> {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
 
     const headers: PlainObjectType = {
@@ -927,9 +1093,9 @@ export class WeavyContext implements WeavyOptions {
     };
 
     if (authorized) {
-      headers.Authorization = "Bearer " + (await this.getToken())
+      headers.Authorization = "Bearer " + (await this.getToken());
     }
-    
+
     return assign(
       defaultFetchSettings,
       {
@@ -939,9 +1105,7 @@ export class WeavyContext implements WeavyOptions {
     );
   }
 
-  async get(
-    url: string
-  ): Promise<Response> {
+  async get(url: string): Promise<Response> {
     return await this.post(url, "GET");
   }
 
@@ -953,9 +1117,9 @@ export class WeavyContext implements WeavyOptions {
     retry: boolean = true
   ): Promise<Response> {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
-    
+
     const fetchOptions: RequestInit = assign(
       await this.fetchOptions(),
       {
@@ -966,15 +1130,27 @@ export class WeavyContext implements WeavyOptions {
       true
     );
 
+    this.networkStateIsPending = true;
     const response = await fetch(new URL(url, this.url), fetchOptions);
 
     if (!response.ok) {
-      if ((response.status === 401 || response.status === 403) && retry) {
-        await this.getToken(true);
-        return await this.post(url, method, body, contentType, false);
+      if (response.status === 401 || response.status === 403) {
+        if (retry) {
+          await this.getToken(true);
+          return await this.post(url, method, body, contentType, false);
+        } else {
+          this.networkStateIsPending = false;
+          this.serverState = "unauthorized";
+        }
+      } else {
+        this.networkStateIsPending = false;
+        this.serverState = "unreachable";
       }
 
       //console.error(this.weavyId, `Error calling endpoint ${url}`, response)
+    } else {
+      this.networkStateIsPending = false;
+      this.serverState = "ok";
     }
 
     return response;
@@ -989,7 +1165,7 @@ export class WeavyContext implements WeavyOptions {
     retry: boolean = true
   ) {
     if (this.isDestroyed) {
-      throw new DestroyError()
+      throw new DestroyError();
     }
 
     const token = await this.getToken();
@@ -1031,16 +1207,16 @@ export class WeavyContext implements WeavyOptions {
 
     this.disconnectQueryClient();
     this.disconnect();
-    
+
     if (this.#whenConnectionStartedReject) {
       // add default catch
       this.#whenConnectionStarted.catch(() => {});
       this.#whenConnectionStartedReject(new DestroyError());
     }
-    
+
     this.#hostContextProvider?.detachListeners();
     this.#modalContextProvider?.detachListeners();
-    
+
     if (this.#modalPortal) {
       this.#modalPortal.connectedContexts.delete(this);
       if (!this.#modalPortal.connectedContexts.size) {
@@ -1051,3 +1227,5 @@ export class WeavyContext implements WeavyOptions {
     console.info(this.weavyId, "was destroyed");
   }
 }
+
+export const Weavy = WeavyContext;

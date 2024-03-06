@@ -7,7 +7,7 @@ import "./wy-dropdown";
 import "./wy-file-menu";
 import "./wy-spinner";
 
-import filesCss from "../scss/all.scss";
+import filesCss from "../scss/all"
 import type { FileType } from "../types/files.types";
 import { getExtension, getIcon } from "../utils/files";
 import { classMap } from "lit/directives/class-map.js";
@@ -94,7 +94,7 @@ export class WyFileVersions extends LitElement {
         getApiOptions<FileType[]>(
           this.weavyContext,
           getFileVersionsKey(this.app, this.file),
-          `files/${this.file.id}/versions`
+          `/api/files/${this.file.id}/versions`
         )
       );
     }

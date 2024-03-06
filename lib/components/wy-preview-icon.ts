@@ -4,8 +4,9 @@ import { localized, msg, str } from "@lit/localize";
 
 import "./wy-icon";
 
-import allCss from "../scss/all.scss";
+import allCss from "../scss/all"
 import { getProvider } from "../utils/files";
+import type { FileProviderType } from "../types/files.types";
 
 @customElement("wy-preview-icon")
 @localized()
@@ -27,7 +28,7 @@ export class WyPreviewIcon extends LitElement {
   icon!: string;
 
   @property()
-  provider?: string;
+  provider?: FileProviderType;
 
   @property()
   iconClass?: string;

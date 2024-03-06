@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import "./wy-button";
 

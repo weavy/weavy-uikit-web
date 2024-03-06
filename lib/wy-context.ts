@@ -7,10 +7,9 @@ import type { WeavyTokenFactory, WeavyOptions } from "./types/weavy.types";
 import { indirectEvalObject } from "./converters/indirect-eval-object";
 import { toUrl } from "./converters/url";
 import { LocaleModule } from "@lit/localize";
-import { toMap } from "./converters/map";
 
 @customElement("wy-context")
-export default class WyContext extends LitElement implements WeavyOptions {
+export class WyContext extends LitElement implements WeavyOptions {
   static override styles = [
     css`
       :host {
@@ -35,19 +34,25 @@ export default class WyContext extends LitElement implements WeavyOptions {
   })
   cloudFilePickerUrl?: string | URL;
 
+  @property({
+    attribute: true,
+    converter: {
+      fromAttribute: (value) => toUrl(value),
+    },
+  })
+  confluenceAuthenticationUrl?: string | URL;
+
+  @property({ attribute: true })
+  confluenceProductName?: string;
+
+  @property({ type: Boolean })
+  disableEnvironmentImports?: boolean;
+
   @property({ attribute: true })
   locale?: string;
 
   @property({ attribute: true, type: Array })
-  locales?: string[];
-
-  @property({ attribute: true })
-  localesUrl?: string | URL;
-
-  @property({ attribute: true, converter: {
-    fromAttribute: (value) => toMap<string, LocaleModule | Promise<LocaleModule>>(value!)
-  }})
-  localizedTemplates?: Map<string, LocaleModule | Promise<LocaleModule>>;
+  locales?: Array<[string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)]>;
 
   @property({ attribute: true, type: Number })
   gcTime?: number;
@@ -71,6 +76,9 @@ export default class WyContext extends LitElement implements WeavyOptions {
     },
   })
   tokenFactory?: WeavyTokenFactory;
+
+  @property({ attribute: true, type: Number })
+  tokenFactoryRetryDelay?: number;
 
   @property({ attribute: true, type: Number })
   tokenFactoryTimeout?: number;

@@ -1,20 +1,21 @@
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
+import allCss from "../scss/all"
+
+import { getExtension, getIcon } from "../utils/files";
+import type { FileProviderType, FileType, PreviewFormatType } from "../types/files.types";
+
+import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
+import { ifDefined } from "lit/directives/if-defined.js";
+
 import "./wy-preview-icon";
 import "./wy-preview-image";
 import "./wy-preview-media";
 import "./wy-preview-text";
 import "./wy-preview-embed";
 import "./wy-pdf-viewer";
-
-import allCss from "../scss/all.scss";
-
-import { getExtension, getIcon } from "../utils/files";
-import type { FileType, PreviewFormatType } from "../types/files.types";
-
-import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
-import { ifDefined } from "lit/directives/if-defined.js";
+import "./wy-confluence-viewer";
 
 @customElement("wy-preview-item")
 export class WyPreviewItem extends LitElement {
@@ -27,6 +28,8 @@ export class WyPreviewItem extends LitElement {
       }
     `,
   ];
+
+  
 
   @property({ type: Object })
   file?: FileType;
@@ -59,7 +62,8 @@ export class WyPreviewItem extends LitElement {
       width: number | undefined = file.width,
       height: number | undefined = file.height,
       mediaType: string = file.media_type,
-      provider: string | undefined = file.provider;
+      provider: FileProviderType | undefined = file.provider,
+      raw: string | undefined = file.raw;
 
     if (format === "image") {
       return html`<wy-preview-image src=${src} width=${ifDefined(width)} height=${ifDefined(height)}></wy-preview-image>`;
@@ -80,6 +84,9 @@ export class WyPreviewItem extends LitElement {
     } else if (format === "embed") {
       return html`<wy-preview-embed src=${src} name=${name} icon=${icon} provider=${ifDefined(provider)}></wy-preview-embed>`;
     } else if (format === "none") {
+      if (provider === "Confluence" && raw) {
+        return html`<wy-confluence-viewer src=${ifDefined(link)} icon=${icon} raw=${raw}></wy-confluence-viewer>`;
+      }
       return link
         ? html`<wy-preview-icon src=${link} icon=${icon} provider=${ifDefined(provider)}></wy-preview-icon>`
         : html`<wy-preview-icon src=${src} icon=${icon}></wy-preview-icon>`;

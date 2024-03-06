@@ -115,6 +115,20 @@
   align-items: center;
   max-width: 100%;
 }
+
+// override some styles for message by chat bot
+.wy-message-bot{
+  .wy-message-bubble {
+    --wy-component-background-color: #{color.token(--wy-tertiary-container)};
+    --wy-component-color: #{color.token(--wy-on-tertiary-container)};
+    //--wy-component-border-radius: #{var.default(--wy-border-radius)};
+
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
+    //border-radius: var(--wy-component-border-radius);
+  }
+}
+
 // override some styles for message by current user
 .wy-message-me {
   margin-right: 0;

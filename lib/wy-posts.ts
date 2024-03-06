@@ -6,7 +6,7 @@ import { type WeavyContext, weavyContextDefinition } from "./client/context-defi
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 
-import { AppTypes, type AppType } from "./types/app.types";
+import { AppTypes, type AppType, AccessType } from "./types/app.types";
 import type { PostType, PostsResultType, MutatePostProps } from "./types/posts.types";
 import type { UserType } from "./types/users.types";
 import type { FeaturesConfigType, FeaturesListType } from "./types/features.types";
@@ -18,8 +18,8 @@ import { InfiniteScrollController } from "./controllers/infinite-scroll-controll
 import { MutationController } from "./controllers/mutation-controller";
 import { addCacheItem, updateCacheItem } from "./utils/query-cache";
 
-import colorModes from "./scss/colormodes.scss";
-import postsCss from "./scss/all.scss";
+import colorModes from "./scss/colormodes"
+import postsCss from "./scss/all"
 
 import "./components/wy-post";
 import "./components/wy-editor";
@@ -37,10 +37,11 @@ import { QueryController } from "./controllers/query-controller";
 import { whenParentsDefined } from "./utils/dom";
 import { WeavyContextProps } from "./types/weavy.types";
 import { getAppOptions } from "./data/app";
+import { hasAccess } from "./utils/access";
 
 @customElement("wy-posts")
 @localized()
-export default class WyPosts extends LitElement {
+export class WyPosts extends LitElement {
   static override styles = [
     colorModes, 
     postsCss,
@@ -53,7 +54,7 @@ export default class WyPosts extends LitElement {
 
   protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContext }, this>;
 
-  // Manually consumed in performUpdate()
+  // Manually consumed in scheduleUpdate()
   @state()
   protected weavyContext?: WeavyContext;
 
@@ -122,7 +123,7 @@ export default class WyPosts extends LitElement {
     new ThemeController(this, WyPosts.styles);
   }
 
-  override async performUpdate() {
+  override async scheduleUpdate() {
     await whenParentsDefined(this);
     this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
 
@@ -130,7 +131,7 @@ export default class WyPosts extends LitElement {
       this.weavyContext = this.weavyContextConsumer?.value;
     }
 
-    await super.performUpdate();
+    await super.scheduleUpdate();
   }
 
   private handleSubmit(e: CustomEvent) {
@@ -352,7 +353,7 @@ export default class WyPosts extends LitElement {
     
     return html`
       <div class="wy-posts">
-        ${this.availableFeatures && this.app && this.user
+        ${this.availableFeatures && this.app && this.user && hasAccess(AccessType.Write, this.app.access, this.app.permissions)
           ? html`
               <div class="wy-post">
                 <wy-editor

@@ -7,8 +7,8 @@
       fetch("/api/contextual/acme-files-2?type=files");
     </script>
     <!--script src="./weavy.js"></script-->
-    <link rel="modulepreload" href="locales/sv-SE.js" />
-    <script type="module" src="./dev/tools/tanstack-dev-tools.js" async defer></script>
+    <link rel="modulepreload" href="/locales/sv-SE.ts" />
+    <script type="module" src="/dev/tools/tanstack-dev-tools.ts" async defer></script>
     <style>
       :root {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
@@ -28,19 +28,20 @@
       }
     </style>
         <script type="module">
-          import * as svSE from "./locales/sv-SE.js";
-          import {Weavy} from "./weavy.esm.js";
+          import * as svSE from "/locales/sv-SE.ts";
+          import { Weavy } from "/lib";
     
           const weavy = new Weavy({
-            url: "{WEAVY_URL}",
+            url: "%WEAVY_URL%",
             reactions: ["👍", "❤️", "😂", "😒", "😁"],
-            zoomAuthenticationUrl: "{ZOOM_AUTH_URL}",
-            locales: ["sv-SE"],
+            zoomAuthenticationUrl: "%WEAVY_ZOOM_AUTH_URL%",
+            confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
+            confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
           });
     
-          weavy.localizedTemplates = new Map([
+          weavy.locales = [
             ["sv-SE", svSE]
-          ]);
+          ];
           weavy.locale = "sv-SE";
           weavy.tokenFactory = async (refresh) => {
             let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);

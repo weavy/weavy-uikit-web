@@ -2,7 +2,7 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import { getInitials } from "../utils/strings";
 import { type MembersResultType } from "../types/members.types";
 import { type UserType } from "../types/users.types";
@@ -30,6 +30,9 @@ export default class WyAvatar extends LitElement {
 
   @property()
   name?: string = "";
+
+  @property({type: Boolean})
+  isBot?: boolean = false;
 
   @property()
   avatarClass: string = "";

@@ -54,7 +54,7 @@ export function addToQueryData<TDataItem>(
   queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined,
   item: TDataItem,
   sorting: { by?: string; descending?: boolean } = {},
-  tempId?: number
+  previousId?: number
 ) {
   if (queryData) {
     // True immutable copy
@@ -72,7 +72,7 @@ export function addToQueryData<TDataItem>(
           const pageData = page.data || [];
 
           // remove any previous item or tempId
-          const newData = pageData.filter((pageItem) => pageItem.id !== (item as TDataItem & PlainObjectType).id && (!tempId || pageItem.id !== tempId));
+          const newData = pageData.filter((pageItem) => pageItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || pageItem.id !== previousId));
 
           if (sorting && sorting.by) {
             // Use sorting
@@ -149,7 +149,7 @@ export function addToQueryData<TDataItem>(
       // remove any previous item or tempId
       const newData = [
         ...(queryData as QueryResultType<TDataItem>).filter(
-          (dataItem) => dataItem.id !== (item as TDataItem & PlainObjectType).id && (!tempId || dataItem.id !== tempId)
+          (dataItem) => dataItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || dataItem.id !== previousId)
         ),
       ];
 

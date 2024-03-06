@@ -4,7 +4,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { repeat } from "lit/directives/repeat.js";
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { ConversationsResultType } from "../types/conversations.types";

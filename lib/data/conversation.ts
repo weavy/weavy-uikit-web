@@ -170,7 +170,9 @@ export function getLeaveConversationMutationOptions(weavyContext: WeavyContext) 
 export function getAddMembersToConversationMutationOptions(weavyContext: WeavyContext) {
   const options = {
     mutationFn: async ({ id, members }: MutateAddMembersToConversationVariables) => {
-      await weavyContext.post(`/api/apps/${id}/members`, "POST", JSON.stringify(members));
+      await weavyContext.post(`/api/apps/${id}/members`, "POST", JSON.stringify(members.map((id: number) => {
+        return {'id': id, access: 'write'};
+      })));
     },
     onMutate: async () => {
       return <ConversationMutationContextType>{};

@@ -49,12 +49,6 @@ app.use(express.json());
 
 app.use(cors());
 
-app.post("/webhooks", (req, res) => {
-  console.log("Received webhook...", req.body);
-  //io.emit("notification", req.body)
-  res.end("OK");
-});
-
 app.get("/api/contextual/:id", async (req, res) => {
   // setup contextual app
   let response = await fetch(new URL("/api/apps/init", weavyUrl), {
@@ -93,9 +87,10 @@ app.get("/api/token", async (req, res) => {
         ..._tokens.filter((t) => t.username !== username),
         { username: username, access_token: data.access_token },
       ];
+
       res.json(data);
     } else {
-      res.json({ message: "Could not get access token from server!" });
+      res.status(response.status).json({ access_token: "" });
     }
   }
 });

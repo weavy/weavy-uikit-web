@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import type { ReactionType } from "../types/reactions.types";
 import "./wy-avatar";
 

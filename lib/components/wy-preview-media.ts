@@ -6,7 +6,7 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import "./wy-spinner";
 import "./wy-preview-icon";
 
-import allCss from "../scss/all.scss";
+import allCss from "../scss/all"
 import { codecError, mediaError, mediaLoaded } from "../utils/media";
 
 @customElement("wy-preview-media")

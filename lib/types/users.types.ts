@@ -25,6 +25,7 @@ export type UserType = {
   modified_at?: string
   is_suspended?: boolean;
   is_trashed?: boolean;
+  is_bot?: boolean;
 };
 
 export type AutocompleteUserType = {

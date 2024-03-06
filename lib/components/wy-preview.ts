@@ -1,4 +1,4 @@
-import allCss from "../scss/all.scss";
+import allCss from "../scss/all"
 
 import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -28,7 +28,7 @@ import "./wy-spinner";
 import "./wy-dropdown";
 import "./wy-preview-item";
 import "./wy-file-menu";
-import "./wy-comments";
+import "./wy-comment-list";
 import "./wy-file-versions";
 
 @customElement("wy-preview")
@@ -389,14 +389,14 @@ export default class WyPreview extends LitElement {
               <div class="wy-pane wy-scroll-y">
                 ${this.commentsOpen && this.currentFile && this.currentFile.id >= 1 && this.app && this.user
                   ? html`
-                      <wy-comments
+                      <wy-comment-list
                         .app=${this.app}
                         .user=${this.user}
                         .parentId=${this.currentFile.id}
                         .location=${"files"}
                         .availableFeatures=${this.availableFeatures}
                         .features=${this.features}
-                      ></wy-comments>
+                      ></wy-comment-list>
                     `
                   : nothing}
               </div>

@@ -12,19 +12,25 @@ export class ResizeController implements ReactiveController {
   observers: ResizeCondition[] = [];
   conditions: { [key: string]: boolean } = {};
 
+  checkConditions(entry: ResizeObserverEntry) {
+    let hasChanged = false;
+    this.observers.forEach((observe) => {
+      if (entry.target === observe.target) {
+        const prevCondition = this.conditions[observe.name];
+        const currentCondition = observe.condition(entry);
+        if (prevCondition !== currentCondition) {
+          this.conditions[observe.name] = currentCondition;
+          hasChanged = true;
+        }
+      }
+    });
+    return hasChanged;
+  }
+
   resizer: ResizeObserver = new ResizeObserver((entries) => {
     let hasChanged = false;
     for (const entry of entries) {
-      this.observers.forEach((observe) => {
-        if (entry.target === observe.target) {
-          const prevCondition = this.conditions[observe.name];
-          const currentCondition = observe.condition(entry);
-          if (prevCondition !== currentCondition) {
-            this.conditions[observe.name] = currentCondition;
-            hasChanged = true;
-          }
-        }
-      });
+      hasChanged = this.checkConditions(entry) || hasChanged;
     }
 
     if (hasChanged) {
@@ -33,8 +39,34 @@ export class ResizeController implements ReactiveController {
   });
 
   public observe(resizeCondition: ResizeCondition) {
-    this.resizer.observe(resizeCondition.target);
+    const target = resizeCondition.target;
+    const contentRect = target.getBoundingClientRect();
+
     this.observers.push(resizeCondition);
+    this.resizer.observe(target);
+
+    this.checkConditions({
+      contentBoxSize: [
+        {
+          inlineSize: target.clientWidth,
+          blockSize: target.clientHeight,
+        },
+      ],
+      borderBoxSize: [
+        {
+          inlineSize: contentRect.width,
+          blockSize: contentRect.height,
+        },
+      ],
+      devicePixelContentBoxSize: [
+        {
+          inlineSize: contentRect.width * window.devicePixelRatio,
+          blockSize: contentRect.height * window.devicePixelRatio,
+        },
+      ],
+      contentRect,
+      target,
+    });
   }
 
   hostDisconnected() {

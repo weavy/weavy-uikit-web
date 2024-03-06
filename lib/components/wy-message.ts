@@ -14,11 +14,12 @@ import { Feature, type FeaturesConfigType, type FeaturesListType } from "../type
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import type { AppType } from "../types/app.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
+import { PollOptionType } from "../types/polls.types";
 
 import "./wy-avatar";
 import "./wy-embed";
@@ -30,6 +31,8 @@ import "./wy-reactions";
 import "./wy-meeting-card";
 import "./wy-skeleton";
 import "./wy-preview";
+import "./wy-poll";
+
 
 
 @customElement("wy-message")
@@ -50,6 +53,9 @@ export default class WyMessage extends LitElement {
 
   @property({ type: Boolean })
   me: boolean = false;
+
+  @property({ type: Boolean })
+  isBot: boolean = false;
 
   @property({ type: Boolean })
   chatRoom: boolean = false;
@@ -84,6 +90,9 @@ export default class WyMessage extends LitElement {
   @property({ attribute: false })
   meeting?: MeetingType;
 
+  @property({ type: Array })
+  pollOptions: PollOptionType[] | undefined = [];
+
   @property({ attribute: false })
   embed?: EmbedType;
 
@@ -104,6 +113,12 @@ export default class WyMessage extends LitElement {
 
   private previewRef: Ref<WeavyPreview> = createRef();
 
+  private dispatchVote(id: number) {
+    const event = new CustomEvent("vote", { detail: { id: id, parentId: this.messageId } });
+    return this.dispatchEvent(event);
+  }
+
+
   override render() {
     const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url);
     const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url);
@@ -118,11 +133,11 @@ export default class WyMessage extends LitElement {
       : "";
 
     return html`
-      <div class=${classMap({ "wy-message": true, "wy-message-me": this.me })}>
+      <div class=${classMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-bot": this.isBot })}>
         ${!this.me
           ? html`
               <div class="wy-message-author">
-                <wy-avatar .src="${this.avatar}" .size=${32} .name="${this.displayName}"></wy-avatar>
+                <wy-avatar .src="${this.avatar}" .size=${32} .name="${this.displayName}" .isBot=${this.isBot}></wy-avatar>
               </div>
             `
           : ""}
@@ -154,6 +169,17 @@ export default class WyMessage extends LitElement {
                   <!-- text -->
                   ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
 
+                   <!-- poll -->
+                  ${
+                  this.pollOptions && this.pollOptions.length > 0
+                    ? html`
+                        <wy-poll
+                          .pollOptions=${this.pollOptions}
+                          @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}></wy-poll>
+                      `
+                    : nothing
+                  }
+
                   <!-- meeting -->
                   ${this.meeting ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>` : ``}
 
@@ -167,16 +193,16 @@ export default class WyMessage extends LitElement {
                     : ``}
 
                   <!-- reactions -->
-                  <div class="wy-reactions-line">
-                    ${keyed(`reactions-${this.app.id}-${this.messageId}`, html`<wy-reactions
-                      small
-                      .hasFeature=${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions)}
-                      .reactions=${this.reactions}
-                      parentId=${this.app.id}
-                      entityId=${this.messageId}
-                      messageType="messages"
-                      .userId=${this.userId}></wy-reactions>`)}
-                  </div>
+                  ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
+                    <div class="wy-reactions-line">
+                      ${keyed(`reactions-${this.app.id}-${this.messageId}`, html`<wy-reactions
+                        small                        
+                        .reactions=${this.reactions}
+                        parentId=${this.app.id}
+                        entityId=${this.messageId}
+                        messageType="messages"
+                        .userId=${this.userId}></wy-reactions>`)}
+                    </div>` : nothing}
                 `}
           </div>
         </div>

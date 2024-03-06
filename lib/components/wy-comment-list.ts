@@ -13,7 +13,7 @@ import {
   MutateCommentProps,
 } from "../types/comments.types";
 import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
-import type { AppType } from "../types/app.types";
+import { AccessType, type AppType } from "../types/app.types";
 import type { UserType } from "../types/users.types";
 import { InfiniteData } from "@tanstack/query-core";
 import { repeat } from "lit/directives/repeat.js";
@@ -23,7 +23,7 @@ import { MutationController } from "../controllers/mutation-controller";
 import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMutation } from "../data/comment-remove";
 import { PollMutationType, getPollMutation } from "../data/poll";
 
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 
 import "./wy-comment";
 import "./wy-spinner";
@@ -31,11 +31,11 @@ import "./wy-comment-editor";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { RealtimeCommentEventType, RealtimeReactionEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
+import { hasAccess } from "../utils/access";
 
-@customElement("wy-comments")
+@customElement("wy-comment-list")
 @localized()
-export default class WyComments extends LitElement {
-  
+export default class WyCommentList extends LitElement {
   static override styles = chatCss;
 
   @consume({ context: weavyContextDefinition, subscribe: true })
@@ -60,14 +60,15 @@ export default class WyComments extends LitElement {
   @property({ type: Array })
   availableFeatures?: FeaturesListType;
 
-
   commentsQuery = new InfiniteQueryController<CommentsResultType>(this);
+
   private addCommentMutation = new MutationController<
     CommentType,
     Error,
     MutateCommentProps,
     CommentMutationContextType
   >(this);
+  
   private removeCommentMutation?: RemoveCommentMutationType;
   private restoreCommentMutation?: RemoveCommentMutationType;
   private pollMutation?: PollMutationType;
@@ -217,7 +218,8 @@ export default class WyComments extends LitElement {
                   parentType: e.detail.parentType,
                   parentId: e.detail.parentId,
                 });
-              }}></wy-comment>`,
+              }}
+            ></wy-comment>`,
           ];
         }
       );
@@ -236,18 +238,23 @@ export default class WyComments extends LitElement {
           : html`<wy-spinner class="wy-content-icon"></wy-spinner>`}
         <div ${ref(this.pagerRef)} class="wy-pager"></div>
       </div>
-      <wy-comment-editor
-        editorLocation=${this.location}
-        .app=${this.app}
-        .user=${this.user}
-        .parentId=${this.parentId}
-        .availableFeatures=${this.availableFeatures}
-        .features=${this.features}
-        .typing=${false}
-        .draft=${true}
-        placeholder=${msg("Create a comment...")}
-        buttonText=${msg("Comment", { desc: "Button action to comment" })}
-        @submit=${(e: CustomEvent) => this.handleSubmit(e)}></wy-comment-editor>
+      ${hasAccess(AccessType.Write, this.app.access, this.app.permissions)
+        ? html`
+            <wy-comment-editor
+              editorLocation=${this.location}
+              .app=${this.app}
+              .user=${this.user}
+              .parentId=${this.parentId}
+              .availableFeatures=${this.availableFeatures}
+              .features=${this.features}
+              .typing=${false}
+              .draft=${true}
+              placeholder=${msg("Create a comment...")}
+              buttonText=${msg("Comment", { desc: "Button action to comment" })}
+              @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+            ></wy-comment-editor>
+          `
+        : nothing}
     </div>`;
   }
 

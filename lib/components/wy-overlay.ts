@@ -2,7 +2,7 @@ import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import overlayStyles from "../scss/all.scss";
+import overlayStyles from "../scss/all"
 import { falsyBoolean } from "../converters/falsy-boolean";
 
 import "./wy-button";

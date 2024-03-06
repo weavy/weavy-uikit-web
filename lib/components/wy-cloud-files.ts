@@ -7,7 +7,7 @@ import { localized, msg } from "@lit/localize";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import WeavyPostal from "../utils/postal-parent";
 
-import cloudFilesCss from "../scss/all.scss";
+import cloudFilesCss from "../scss/all"
 import { portal } from "lit-modal-portal";
 
 import "./wy-overlay";

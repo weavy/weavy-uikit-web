@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import { PollOptionType } from "../types/polls.types";
 import "./wy-poll-option";
 

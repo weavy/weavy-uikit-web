@@ -2,7 +2,7 @@ import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { portal } from "lit-modal-portal";
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";

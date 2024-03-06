@@ -7,12 +7,12 @@ export function getApiOptions<T>(weavyContext: WeavyContext, apiKey: QueryKey, a
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: apiKey,
     queryFn: async () => {
-      const response = await weavyContext.post("/api/" + (apiPath ? apiPath : apiKey.join("/")), method, body);
+      const response = await weavyContext.post((apiPath ? apiPath : "/api/" + apiKey.join("/")), method, body);
 
       if (response.ok){
         return (await response.json()) as T;
       } else{      
-        throw new Error(`Error calling ${"/api/" + (apiPath ? apiPath : apiKey.join("/"))}`);
+        throw new Error(`Error calling ${(apiPath ? apiPath : "/api/" + apiKey.join("/"))}`);
       }
       
     },

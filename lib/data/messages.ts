@@ -9,6 +9,7 @@ import type {
 import { type WeavyContext } from "../client/weavy-context";
 import { MessageType, MutateMessageProps, type MessagesResultType, MessageMutationContextType } from "../types/messages.types";
 import { addCacheItem } from "../utils/query-cache";
+import { PollOptionType } from "../types/polls.types";
 
 export function getMessagesOptions(
   weavyContext: WeavyContext,
@@ -52,43 +53,52 @@ export function getAddMessageMutationOptions(weavyContext: WeavyContext, mutatio
   const options = {
     mutationFn: async (variables: MutateMessageProps) => {
       const response = await weavyContext.post(
-        "/api/apps/" + variables.appId + "/messages",
+        "/api/apps/" + variables.app_id + "/messages",
         "POST",
         JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
-          embed_id: variables.embed || null,
-          meeting_id: variables.meetingId,
+          embed_id: variables.embed_id || null,
+          meeting_id: variables.meeting_id,
+          options: variables.poll_options
+            .filter((o: PollOptionType) => o.text.trim() !== "")
+            .map((o: PollOptionType) => {
+              return { text: o.text };
+            }),
+          metadata: {
+            temp_id: variables.temp_id?.toString(),
+          }
         })
       );
       return response.json();
     },
     mutationKey: mutationKey,
     onMutate: async (variables: MutateMessageProps) => {
-      await queryClient.cancelQueries({ queryKey: ["messages", variables.appId] });
+      await queryClient.cancelQueries({ queryKey: ["messages", variables.app_id] });
 
-      const tempId = Math.random();
-      const tempData: MessageType = {
-        id: tempId,
-        app_id: -1,
-        attachment_ids: [],
-        is_trashed: false,
-        text: variables.text,
-        html: variables.text,
-        plain: variables.text,
-        temp: true,
-        created_by_id: variables.userId,
-        created_by: { id: variables.userId, avatar_url: "", display_name: "", presence: undefined, name: "" },
-        created_at: new Date().toUTCString(),
-        attachments: [],
-        attachment_count: 0,
-        reactions: [],
-      };
-      addCacheItem(queryClient, ["messages", variables.appId], tempData);
-      return { tempId } as MessageMutationContextType;
+      if (variables.temp_id) {
+        const tempData: MessageType = {
+          id: variables.temp_id,
+          app_id: -1,
+          attachment_ids: [],
+          is_trashed: false,
+          text: variables.text,
+          html: variables.text,
+          plain: variables.text,
+          temp: true,
+          created_by_id: variables.user_id,
+          created_by: { id: variables.user_id, avatar_url: "", display_name: "", presence: undefined, name: "" },
+          created_at: new Date().toUTCString(),
+          attachments: [],
+          attachment_count: 0,
+          reactions: [],
+        };
+        addCacheItem(queryClient, ["messages", variables.app_id], tempData);
+      }
+      return { temp_id: variables.temp_id } as MessageMutationContextType;
     },
     onSuccess: (data: MessageType, variables: MutateMessageProps, context: MessageMutationContextType) => {
-      addCacheItem(queryClient, ["messages", variables.appId], data, context.tempId);
+      addCacheItem(queryClient, ["messages", variables.app_id], data, context.temp_id);
     },
   };
 

@@ -53,7 +53,10 @@
     overflow-anchor: none;
     display: flex;
     flex-direction: column;                    
-    flex: 1 1 0;
+    flex: 1 0 min-content;
     height: 100%;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
   }
     

@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import chatCss from "../scss/all.scss";
+import chatCss from "../scss/all"
 import throttle from "lodash.throttle";
 import type { MemberType, MembersResultType } from "../types/members.types";
 import { getInfiniteSearchMemberOptions } from "../data/members";

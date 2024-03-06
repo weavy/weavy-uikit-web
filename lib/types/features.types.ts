@@ -1,6 +1,8 @@
 export enum Feature {
   Attachments = "attachments",
   CloudFiles = "cloud_files",
+  Comments = "comments",
+  Confluence = "confluence",
   Embeds = "embeds",
   Meetings = "meetings",
   Mentions = "mentions",
@@ -10,18 +12,17 @@ export enum Feature {
   Receipts = "receipts",
   Thumbnails = "thumbnails",
   Typing = "typing",
-  Webhooks = "webhooks",
-  Comments = "comments",
   Versions = "versions",
   WebDAV = "web_dav",
+  Webhooks = "webhooks",
 }
 
 export type FeaturesListType = Feature[];
 
 /**
- * The `features` config is an opt-out config only. 
- * The features is set by the current license model on the product. 
- * You can only disable features that are available. 
+ * The `features` config is an opt-out config only.
+ * The features is set by the current license model on the product.
+ * You can only disable features that are available.
  * You can never enable a feature if it's not included in the license model.
  */
 export type FeaturesConfigType = {
@@ -33,6 +34,14 @@ export type FeaturesConfigType = {
    * Disable he cloud file picker (Google Drive, Dropbox etc.).
    */
   cloudFiles?: boolean;
+  /**
+   * Disable comments on posts/files.
+   */
+  comments?: boolean;
+  /**
+   * Disable confluence picker.
+   */
+  confluence?: boolean;
   /**
    * Disable creating embeds from urls in the post text.
    */
@@ -61,15 +70,14 @@ export type FeaturesConfigType = {
    * Disable read receipts on messages.
    */
   receipts?: boolean;
+  /**
+   * Disable thumbnail file previews.
+   */
   thumbnails?: boolean;
   /**
    * Disable the typing indicator in the chat when other people types.
    */
   typing?: boolean;
-  /**
-   * Disable comments on posts/files.
-   */
-  comments?: boolean;
   /**
    *  Disable file versions.
    */

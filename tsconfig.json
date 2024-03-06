@@ -12,6 +12,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "inlineSources": true,
+    "noEmit": true,
     "outDir": "./dist",
     "rootDirs": [
       "lib",
@@ -33,7 +34,7 @@
     "noImplicitOverride": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "useDefineForClassFields": false,
     "plugins": [
       {
@@ -50,8 +51,8 @@
     "lib/**/*.ts",
     "locales/**/*.ts",
     "lib/scss/**/*.scss",
-    "dev/tools/**/*.ts",
-    "test/**/*.ts"
+    "dev/tools/**/*.ts", "index.ts",
+    //"test/**/*.ts"
   ],
   "exclude": [
     "node_modules",

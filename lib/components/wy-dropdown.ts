@@ -1,4 +1,4 @@
-import dropdownStyles from "../scss/all.scss";
+import dropdownStyles from "../scss/all"
 
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { customElement, property, queryAssignedElements, state } from "lit/decorators.js";

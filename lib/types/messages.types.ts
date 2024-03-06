@@ -1,4 +1,5 @@
 import { MsgType } from "./msg.types";
+import { PollOptionType } from "./polls.types";
 
 export type MessagesResultType = {
   data: MessageType[];
@@ -8,16 +9,18 @@ export type MessagesResultType = {
 };
 
 export type MutateMessageProps = {
-  appId: number;
-  userId: number;
+  app_id: number;
+  user_id: number;
   text: string;
   blobs?: number[];
-  meetingId?: number;
-  embed: number;
+  meeting_id?: number;
+  poll_options: PollOptionType[];
+  embed_id: number;
+  temp_id?: number;
 };
 
 export type MessageMutationContextType = {
-  tempId?: number;
+  temp_id?: number;
 };
 
 export type MessageType = MsgType & {
