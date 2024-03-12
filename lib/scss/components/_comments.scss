@@ -4,14 +4,14 @@
 @use "reactions";
 
 .wy-comments {
-  padding: .5rem .75rem 0 .75rem;
+  padding: var.wy-rem(.5) var.wy-rem(.75) 0 var.wy-rem(.75);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var.wy-rem(1.25);
 }
 
 .wy-comments-count {
-  padding: 0 .5rem;
+  padding: 0 var.wy-rem(.5);
   @include text.truncate;
 }
 
@@ -24,23 +24,23 @@
   color: var(--wy-component-color);
   display: flex;
   flex-direction: column;
-  gap: .25rem;
-  padding: .25rem;
+  gap: var.wy-rem(.25);
+  padding: var.wy-rem(.25);
   position: relative;
 
   .wy-item {
-    padding-left: .75rem;
-    padding-right: .75rem;
+    padding-left: var.wy-rem(.75);
+    padding-right: var.wy-rem(.75);
 
     > .wy-avatar, > wy-icon, > .wy-icon-stack {
-      margin-left: -.25rem;
+      margin-left: var.wy-rem(-.25);
     }
   }
 
   .wy-reactions-line {
     position: absolute;
-    bottom: -1.125rem;
-    right: .25rem;
+    bottom: var.wy-rem(-1.125);
+    right: var.wy-rem(.25);
   }
 }
 
@@ -50,7 +50,7 @@
 
   .wy-image-grid, .wy-embed, .wy-content, .wy-list, .wy-poll {
     // spacing between content
-    margin-bottom: 1rem;
+    margin-bottom: var.wy-rem(1);
 
     &:last-child {
       margin-bottom: 0;
@@ -59,7 +59,7 @@
 }
 
 .wy-comment-content {
-  padding: 0 .5rem .5rem;
+  padding: 0 var.wy-rem(.5) var.wy-rem(.5);
   display: flex;
   flex-direction: column;
 }

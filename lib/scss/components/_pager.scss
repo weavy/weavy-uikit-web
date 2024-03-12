@@ -1,3 +1,5 @@
+@use "base/var";
+
 tr.wy-pager {
   pointer-events: none;
 }
@@ -5,7 +7,7 @@ tr.wy-pager {
 :not(tr).wy-pager:not(:empty) {
   display: block;
   text-align: center;
-  margin: 1rem auto;
+  margin: var.wy-rem(1) auto;
 }
 
 tr.wy-pager td {
@@ -14,7 +16,7 @@ tr.wy-pager td {
 
   .wy-spinner {
     display: inline;
-    margin: 1rem auto;
+    margin: var.wy-rem(1) auto;
   }
 }
 

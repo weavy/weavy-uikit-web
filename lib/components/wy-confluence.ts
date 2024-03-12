@@ -93,7 +93,7 @@ export default class WyConfluence extends LitElement {
             </wy-dropdown-item>
           `
         : html`
-            <wy-button @click=${() => this.open()} title="Confluence"
+            <wy-button @click=${() => this.open()} title="Confluence" kind="icon"
               ><wy-icon name="confluence" color="native"></wy-icon
             ></wy-button>
           `}

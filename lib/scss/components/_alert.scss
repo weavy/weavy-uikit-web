@@ -6,7 +6,7 @@
 .wy-alerts {
   position: fixed;
   left: 0;
-  top: 4rem;
+  top: var.wy-rem(4);
   right: 0;
   pointer-events: none;
   display: flex;
@@ -14,15 +14,15 @@
   align-items: center;
   justify-content: center;
   z-index: const.$zindex-fixed;
-  gap: 1rem;
+  gap: var.wy-rem(1);
 }
 
 .wy-alert {
   background: color.token(--wy-surface-1);
   color: color.token(--wy-on-surface);
-  margin: 0 0 1rem;
-  //max-width: calc(100% - 3rem);
-  gap: .5rem;
+  margin: 0 0 var.wy-rem(1);
+  //max-width: calc(100% - var.wy-rem(3));
+  gap: var.wy-rem(.5);
   display: flex;
   flex-direction:row;
   flex-wrap: wrap;
@@ -31,14 +31,14 @@
   border-radius: var.default(--wy-border-radius);
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 1rem;
-  padding: .5rem 1rem;
+  margin-bottom: var.wy-rem(1);
+  padding: var.wy-rem(.5) var.wy-rem(1);
   user-select: none;
   //box-shadow: var.default(--wy-shadow-level2);
   position: relative;
   overflow: hidden;
   height: auto;
-  gap: .5rem;
+  gap: var.wy-rem(.5);
 
   &.wy-fade {
     transition: all var.default(--wy-transition);
@@ -55,7 +55,7 @@
 
   .wy-text {
     line-height: 1.5;
-    padding: .5rem;
+    padding: var.wy-rem(.5);
   }
 
   .wy-button {

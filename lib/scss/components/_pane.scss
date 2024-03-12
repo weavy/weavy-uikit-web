@@ -1,4 +1,5 @@
 @use "base/color";
+@use "base/var";
 
 .wy-pane {
   display: flex;
@@ -16,7 +17,7 @@
 }
 
 .wy-pane-group {
-  padding: .75rem;
+  padding: var.wy-rem(.75);
 }
 
 .wy-pane-background {

@@ -1,8 +1,36 @@
 @use "sass:map";
 @use "const";
 @use "md";
+@use "sass:math";
+@use "sass:meta";
 
 // VARIABLE DEFINITIONS
+
+/// Remove the unit of a length
+/// @param {Number} $number - Number to remove unit from
+/// @return {Number} - Unitless number
+@function strip-unit($number) {
+  @if meta.type-of($number) == "number" and not math.is-unitless($number) {
+    @return math.div($number, $number * 0 + 1);
+  }
+
+  @return $number;
+}
+
+/// Function for wrapping rem with --wy-rem
+/// @param {Number|rem|px} $size - The value to wrap. For example 1, 1rem or 1px
+@function wy-rem($size) {
+    @if meta.type-of($size) == "number" and not math.is-unitless($size) {
+        @if math.compatible($size, 1rem) {
+            $size: strip-unit($size);
+        } @else if math.compatible($size, 1px) {
+            $size: math.div(strip-unit($size), 16);
+        }
+    }
+
+    @return calc(#{$size} * var(--wy-rem, 1rem));
+}
+
 
 /*
  * INSTRUCTIONS:
@@ -11,115 +39,117 @@
  * - The fallback value should be the same as any referenced variable
  */
 
-$defaults: (
-    /* Typography */
+ $defaults: (
+  --wy-rem:                       1rem, // Base size for layout
 
-    // Font should be inherited/unset by default
-    --wy-font-family:               unset, // #{$font-family-sans-serif};
-    --wy-font-weight:               unset, // #{$font-weight-normal};
+  /* Typography */
 
-    --wy-line-height:               1.5,
+  // Font should be inherited/unset by default
+  --wy-font-family:               unset, // #{$font-family-sans-serif};
+  --wy-font-weight:               unset, // #{$font-weight-normal};
+  --wy-font-size:                 1em, // Assumes the inherited font-size, typically 16px
 
-    --wy-font-size-base:            1rem, // Assumes the browser default, typically 16px
-    --wy-font-size-xxs:             calc(.625 * var(--wy-font-size-base, 1rem)), // .625rem 10px
-    --wy-font-size-xs:              calc(.75  * var(--wy-font-size-base, 1rem)), //  .75rem 12px
-    --wy-font-size-sm:              calc(.875 * var(--wy-font-size-base, 1rem)), // .875rem 14px
-    --wy-font-size-lg:              calc(1.25 * var(--wy-font-size-base, 1rem)), // 1.25rem 20px
+  --wy-line-height:               1.5,
 
-    --wy-headings-font-style:       unset,
-    --wy-headings-font-family:      var(--wy-font-family, unset),
-    --wy-headings-font-weight:      #{const.$font-weight-medium},
-    --wy-headings-line-height:      var(--wy-line-height, 1.5),
+  --wy-font-size-base:            var(--wy-font-size, 1em), // Deprecated, use --wy-font-size instead
+  --wy-font-size-xxs:             calc(.625 * var(--wy-font-size-base, 1em)), // .625rem 10px
+  --wy-font-size-xs:              calc(.75  * var(--wy-font-size-base, 1em)), //  .75rem 12px
+  --wy-font-size-sm:              calc(.875 * var(--wy-font-size-base, 1em)), // .875rem 14px
+  --wy-font-size-lg:              calc(1.25 * var(--wy-font-size-base, 1em)), // 1.25rem 20px
 
-    /* Border */
-    --wy-border-radius:             .5rem,
-    --wy-border-radius-sm:          calc(.75 * var(--wy-border-radius, .5rem)), // .375rem;
-    --wy-border-radius-lg:          calc(1.5 * var(--wy-border-radius, .5rem)), // .75rem;
-    --wy-border-radius-xl:          calc(2   * var(--wy-border-radius, .5rem)), //  1rem;
-    --wy-border-radius-pill:        50rem,
+  --wy-headings-font-style:       unset,
+  --wy-headings-font-family:      var(--wy-font-family, unset),
+  --wy-headings-font-weight:      #{const.$font-weight-medium},
+  --wy-headings-line-height:      var(--wy-line-height, 1.5),
 
-    /* Links */
-    //--wy-link-color:              #{color.token(--wy-primary)},  ---> --wy-link in colors
-    --wy-link-decoration:           none,
-    --wy-link-hover-decoration:     unset,
+  /* Border */
+  --wy-border-radius:             wy-rem(.5),
+  --wy-border-radius-sm:          calc(.75 * var(--wy-border-radius, wy-rem(.5))), // .375rem;
+  --wy-border-radius-lg:          calc(1.5 * var(--wy-border-radius, wy-rem(.5))), // .75rem;
+  --wy-border-radius-xl:          calc(2   * var(--wy-border-radius, wy-rem(.5))), //  1rem;
+  --wy-border-radius-pill:        wy-rem(50),
 
-    /* Tables */
-    --wy-table-cell-padding-x:      .25rem,
-    --wy-table-cell-padding-y:      .25rem,
+  /* Links */
+  //--wy-link-color:              #{color.token(--wy-primary)},  ---> --wy-link in colors
+  --wy-link-decoration:           none,
+  --wy-link-hover-decoration:     unset,
 
-    /* Inputs */
-    --wy-input-padding-y:           .4375rem,
-    --wy-input-padding-x:           .75rem,
-    --wy-input-font-family:         var(--wy-font-family, inherit), // VERY SPECIAL CASE: inherit instead of unset
-    --wy-input-font-size:           var(--wy-font-size-base, 1rem),
-    --wy-input-font-weight:         var(--wy-font-weight, unset),
-    --wy-input-line-height:         var(--wy-line-height, 1.5rem),
-    --wy-input-border-width:        1px,
-    --wy-input-border-radius:       var(--wy-border-radius, .5rem),
+  /* Tables */
+  --wy-table-cell-padding-x:      wy-rem(.25),
+  --wy-table-cell-padding-y:      wy-rem(.25),
 
+  /* Inputs */
+  --wy-input-padding-y:           wy-rem(.4375),
+  --wy-input-padding-x:           wy-rem(.75),
+  --wy-input-font-family:         var(--wy-font-family, inherit), // VERY SPECIAL CASE: inherit instead of unset
+  --wy-input-font-size:           var(--wy-font-size-base, 1em),
+  --wy-input-font-weight:         var(--wy-font-weight, unset),
+  --wy-input-line-height:         var(--wy-line-height, wy-rem(1.5)),
+  --wy-input-border-width:        1px,
+  --wy-input-border-radius:       var(--wy-border-radius, wy-rem(.5)),
 
-    /* Shadows */
-    --wy-shadow-level0:             none, // xxs
-    --wy-shadow-level1:             #{md.$shadow-2dp}, // xs
-    --wy-shadow-level2:             #{md.$shadow-4dp}, // sm
-    --wy-shadow-level3:             #{md.$shadow-8dp}, // 
-    --wy-shadow-level4:             #{md.$shadow-16dp}, // lg
+  /* Shadows */
+  --wy-shadow-level0:             none, // xxs
+  --wy-shadow-level1:             #{md.$shadow-2dp}, // xs
+  --wy-shadow-level2:             #{md.$shadow-4dp}, // sm
+  --wy-shadow-level3:             #{md.$shadow-8dp}, // 
+  --wy-shadow-level4:             #{md.$shadow-16dp}, // lg
 
-    /* Transitions */
-    --wy-transition-curve:          #{md.$animation-curve-default},
-    --wy-transition-duration:       #{md.$animation-duration},
-    --wy-transition-duration-fast:  #{md.$animation-duration-fast},
-    --wy-transition:                var(--wy-transition-duration, #{md.$animation-duration}) var(--wy-transition-curve, #{md.$animation-curve-default}),
-    --wy-transition-fast:           var(--wy-transition-duration-fast, #{md.$animation-duration-fast}) var(--wy-transition-curve, #{md.$animation-curve-default}),
+  /* Transitions */
+  --wy-transition-curve:          #{md.$animation-curve-default},
+  --wy-transition-duration:       #{md.$animation-duration},
+  --wy-transition-duration-fast:  #{md.$animation-duration-fast},
+  --wy-transition:                var(--wy-transition-duration, #{md.$animation-duration}) var(--wy-transition-curve, #{md.$animation-curve-default}),
+  --wy-transition-fast:           var(--wy-transition-duration-fast, #{md.$animation-duration-fast}) var(--wy-transition-curve, #{md.$animation-curve-default}),
 
-    /* Opacity */
-    --wy-opacity-backdrop:          95%,
-    --wy-opacity-muted:             38%,
-    --wy-opacity-disabled:          38%,
-    /*
-    --wy-opacity-disabled:          12%,
-    --wy-opacity-on-disabled:       38%,
-    */
+  /* Opacity */
+  --wy-opacity-backdrop:          95%,
+  --wy-opacity-muted:             38%,
+  --wy-opacity-disabled:          38%,
+  /*
+  --wy-opacity-disabled:          12%,
+  --wy-opacity-on-disabled:       38%,
+  */
 
-    /* State layer */
-    --wy-opacity-state-hover:       8%,
-    --wy-opacity-state-focus:       12%,
-    --wy-opacity-state-active:      12%,
-    --wy-opacity-state-drag:        16%,
+  /* State layer */
+  --wy-opacity-state-hover:       8%,
+  --wy-opacity-state-focus:       12%,
+  --wy-opacity-state-active:      12%,
+  --wy-opacity-state-drag:        16%,
 
-    /* Surface elevation */
-    --wy-surface-1-mix:             5%,
-    --wy-surface-2-mix:             8%,
-    --wy-surface-3-mix:             11%,
-    --wy-surface-4-mix:             12%,
-    --wy-surface-5-mix:             14%,
+  /* Surface elevation */
+  --wy-surface-1-mix:             5%,
+  --wy-surface-2-mix:             8%,
+  --wy-surface-3-mix:             11%,
+  --wy-surface-4-mix:             12%,
+  --wy-surface-5-mix:             14%,
 
-    /* Components */
-    --wy-appbar-height:             3rem,
-    --wy-footerbar-height:          4rem,
+  /* Components */
+  --wy-appbar-height:             wy-rem(3),
+  --wy-footerbar-height:          wy-rem(4),
 
-    /* Buttons */
-    --wy-btn-padding-x:             1.5rem,
-    --wy-btn-padding-y:             .5rem,
-    --wy-btn-font-family:           var(--wy-font-family, unset),
-    --wy-btn-font-size:             var(--wy-font-size-base, 1rem),
-    --wy-btn-font-weight:           #{const.$font-weight-normal},
-    --wy-btn-line-height:           var(--wy-line-height, 1.5),
-    --wy-btn-border-width:          0,
-    --wy-btn-border-color:          transparent,
-    --wy-btn-border-radius:         1.25rem,
+  /* Buttons */
+  --wy-btn-padding-x:             1.5em,
+  --wy-btn-padding-y:             .5em,
+  --wy-btn-font-family:           var(--wy-font-family, unset),
+  --wy-btn-font-size:             var(--wy-font-size-base, 1em),
+  --wy-btn-font-weight:           #{const.$font-weight-normal},
+  --wy-btn-line-height:           var(--wy-line-height, 1.5),
+  --wy-btn-border-width:          0,
+  --wy-btn-border-color:          transparent,
+  --wy-btn-border-radius:         1.25em,
 
-    --wy-avatar-font-size:          .382em, // Golden section
-    --wy-avatar-font-weight:        #{const.$font-weight-semibold}
+  --wy-avatar-font-size:          .382em, // Golden section
+  --wy-avatar-font-weight:        #{const.$font-weight-semibold}
 );
 
 @function default($name) {
-    $value: map.get($defaults, $name);
-    @return var(#{$name}, #{$value});
+  $value: map.get($defaults, $name);
+  @return var(#{$name}, #{$value});
 }
 
 @mixin custom-properties {
-    @each $name, $value in $defaults {
-        #{$name}: $value;
-      }
+  @each $name, $value in $defaults {
+      #{$name}: $value;
+    }
 }

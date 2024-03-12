@@ -1,3 +1,32 @@
+@use "sass:math";
+@use "sass:meta";
+
+/// Remove the unit of a length
+/// @param {Number} $number - Number to remove unit from
+/// @return {Number} - Unitless number
+@function strip-unit($number) {
+    @if meta.type-of($number) == "number" and not math.is-unitless($number) {
+      @return math.div($number, $number * 0 + 1);
+    }
+  
+    @return $number;
+  }
+  
+  /// Function for wrapping rem with --wy-rem
+  /// @param {Number|rem|px} $size - The value to wrap. For example 1, 1rem or 1px
+  @function wy-rem($size) {
+      @if meta.type-of($size) == "number" and not math.is-unitless($size) {
+          @if math.compatible($size, 1rem) {
+              $size: strip-unit($size);
+          } @else if math.compatible($size, 1px) {
+              $size: math.div(strip-unit($size), 16);
+          }
+      }
+  
+      @return calc(#{$size} * var(--wy-rem, 1rem));
+  }
+  
+
 // Material design animation and shadows from https://fezvrasta.github.io/bootstrap-material-design/
 $animation-curve-fast-out-slow-in: cubic-bezier(0.4, 0, 0.2, 1);
 $animation-curve-linear-out-slow-in: cubic-bezier(0, 0, 0.2, 1);
@@ -9,11 +38,11 @@ $animation-duration-fast: .1s;
 $shadow-umbra-opacity: 0.2;
 $shadow-penumbra-opacity: 0.14;
 $shadow-ambient-opacity: 0.12;
-$shadow-focus: 0 0 .5rem rgba(#000, .18), 0 .5rem 1rem rgba(#000, .36);
-$shadow-2dp: 0 .125rem .125rem 0 rgba(#000, $shadow-penumbra-opacity), 0 .1875rem .0625rem -.125rem rgba(#000, $shadow-umbra-opacity), 0 .0625rem .3125rem 0 rgba(#000, $shadow-ambient-opacity);
-$shadow-3dp: 0 .1875rem .25rem 0 rgba(#000, $shadow-penumbra-opacity), 0 .1875rem .1875rem -.125rem rgba(#000, $shadow-umbra-opacity), 0 .0625rem .5rem 0 rgba(#000, $shadow-ambient-opacity);
-$shadow-4dp: 0 .25rem .3125rem 0 rgba(#000, $shadow-penumbra-opacity), 0 .0625rem .625rem 0 rgba(#000, $shadow-ambient-opacity), 0 .125rem .25rem -.0625rem rgba(#000, $shadow-umbra-opacity);
-$shadow-6dp: 0 .375rem .625rem 0 rgba(#000, $shadow-penumbra-opacity), 0 .0625rem 1.5rem 0 rgba(#000, $shadow-ambient-opacity), 0 .1875rem .3125rem -.0625rem rgba(#000, $shadow-umbra-opacity);
-$shadow-8dp: 0 .5rem .625rem .0625rem rgba(#000, $shadow-penumbra-opacity), 0 .1875rem 1.25rem .125rem rgba(#000, $shadow-ambient-opacity), 0 .3125rem .3125rem -.1875rem rgba(#000, $shadow-umbra-opacity);
-$shadow-16dp: 0 1rem 2.25rem .125rem rgba(#000, $shadow-penumbra-opacity), 0 .375rem 1.875rem .3125rem rgba(#000, $shadow-ambient-opacity), 0 .5rem .625rem -.3125rem rgba(#000, $shadow-umbra-opacity);
-$shadow-24dp: 0 .5625rem 4.375rem .5rem rgba(#000, $shadow-penumbra-opacity), 0 1.0625rem 1.3125rem -.4375rem rgba(#000, $shadow-ambient-opacity), 0 2.25rem 3.5rem .1875rem rgba(#000, $shadow-umbra-opacity);
+$shadow-focus: 0 0 wy-rem(.5) rgba(#000, .18), 0 wy-rem(.5) wy-rem(1) rgba(#000, .36);
+$shadow-2dp: 0 wy-rem(.125) wy-rem(.125) 0 rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(.1875) wy-rem(.0625) wy-rem(-.125) rgba(#000, $shadow-umbra-opacity), 0 wy-rem(.0625) wy-rem(.3125) 0 rgba(#000, $shadow-ambient-opacity);
+$shadow-3dp: 0 wy-rem(.1875) wy-rem(.25) 0 rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(.1875) wy-rem(.1875) wy-rem(-.125) rgba(#000, $shadow-umbra-opacity), 0 wy-rem(.0625) wy-rem(.5) 0 rgba(#000, $shadow-ambient-opacity);
+$shadow-4dp: 0 wy-rem(.25) wy-rem(.3125) 0 rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(.0625) wy-rem(.625) 0 rgba(#000, $shadow-ambient-opacity), 0 wy-rem(.125) wy-rem(.25) wy-rem(-.0625) rgba(#000, $shadow-umbra-opacity);
+$shadow-6dp: 0 wy-rem(.375) wy-rem(.625) 0 rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(.0625) wy-rem(1.5) 0 rgba(#000, $shadow-ambient-opacity), 0 wy-rem(.1875) wy-rem(.3125) wy-rem(-.0625) rgba(#000, $shadow-umbra-opacity);
+$shadow-8dp: 0 wy-rem(.5) wy-rem(.625) wy-rem(.0625) rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(.1875) wy-rem(1.25) wy-rem(.125) rgba(#000, $shadow-ambient-opacity), 0 wy-rem(.3125) wy-rem(.3125) wy-rem(-.1875) rgba(#000, $shadow-umbra-opacity);
+$shadow-16dp: 0 wy-rem(1) wy-rem(2.25) wy-rem(.125) rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(.375) wy-rem(1.875) wy-rem(.3125) rgba(#000, $shadow-ambient-opacity), 0 wy-rem(.5) wy-rem(.625) wy-rem(-.3125) rgba(#000, $shadow-umbra-opacity);
+$shadow-24dp: 0 wy-rem(.5625) wy-rem(4.375) wy-rem(.5) rgba(#000, $shadow-penumbra-opacity), 0 wy-rem(1.0625) wy-rem(1.3125) wy-rem(-.4375) rgba(#000, $shadow-ambient-opacity), 0 wy-rem(2.25) wy-rem(3.5) wy-rem(.1875) rgba(#000, $shadow-umbra-opacity);

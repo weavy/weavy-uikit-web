@@ -6,7 +6,7 @@
 @use "dropzone";
 
 .wy-post-editor {
-  padding: .75rem;
+  padding: var.wy-rem(.75);
 
   &.wy-uploading {
     .wy-icon-active-stack {
@@ -21,7 +21,7 @@
   }
 
   .wy-picker-list:not(:empty) {
-    margin-top: .75rem;
+    margin-top: var.wy-rem(.75);
     border-top: 1px solid #{color.token(--wy-outline-variant)};
   }
 }
@@ -31,12 +31,12 @@
   flex-direction: row;
   align-items: flex-end;
   //border-top: 1px solid #{color.token(--wy-outline-variant};
-  //padding: .5rem .25rem;
-  min-height: 3.5rem;
+  //padding: var.wy-rem(.5) var.wy-rem(.25);
+  min-height: var.wy-rem(3.5);
   flex-wrap: wrap;
 
   > :not(:last-child) {
-    margin-right: .25rem;
+    margin-right: var.wy-rem(.25);
   }
 
   > :last-child {
@@ -67,8 +67,8 @@
 %post-editor-textfield,
 .wy-post-editor-textfield {
   flex: 1 1 100%;
-  max-height: 11.25rem;
-  min-height: 4rem;
+  max-height: var.wy-rem(11.25);
+  min-height: var.wy-rem(4);
   background-color: color.token(--wy-background);
   color: color.token(--wy-on-background);
   border-radius: var.default(--wy-border-radius);

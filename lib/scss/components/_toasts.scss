@@ -3,14 +3,14 @@
 @use "base/const";
 @use "base/color";
 
-$toast-max-width: 16rem !default;
-$toast-padding-x: .75rem !default;
-$toast-padding-y: .5rem !default;
+$toast-max-width: var.wy-rem(16) !default;
+$toast-padding-x: var.wy-rem(.75) !default;
+$toast-padding-y: var.wy-rem(.5) !default;
 
 .wy-toasts {
   position: fixed;
   left: 0;
-  bottom: 3.5rem;
+  bottom: var.wy-rem(3.5);
   right: 0;
   pointer-events: none;
   display: flex;
@@ -18,22 +18,22 @@ $toast-padding-y: .5rem !default;
   align-items: center;
   justify-content: center;
   z-index: const.$zindex-fixed;
-  gap: 1rem;
+  gap: var.wy-rem(1);
 }
 
 .wy-toast {
   background: color.token(--wy-on-surface);
   color: color.token(--wy-surface-2);
-  margin: 0 0 1rem;
+  margin: 0 0 var.wy-rem(1);
   width: $toast-max-width;
-  max-width: calc(100% - 3rem);
-  gap: .5rem;
+  max-width: calc(100% - var.wy-rem(3));
+  gap: var.wy-rem(.5);
   display: flex;
   cursor: pointer;
   border-radius: var.default(--wy-border-radius);
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: .5rem;
+  margin-bottom: var.wy-rem(.5);
   padding: $toast-padding-y $toast-padding-x;
   user-select: none;
   box-shadow: var.default(--wy-shadow-level2);
@@ -57,13 +57,13 @@ $toast-padding-y: .5rem !default;
 
 .wy-toast-action {
   position: sticky;
-  top: 4.5rem;
-  bottom: 4.5rem;
+  top: var.wy-rem(4.5);
+  bottom: var.wy-rem(4.5);
   // TODO: check z-index - needs to be below dropdown z-index (1000) currently $zindex-toast is 1090
   z-index: const.$zindex-toast;
   background-color: color.token(--wy-primary);
   color: color.token(--wy-on-primary);
-  padding: .5rem 1rem;
+  padding: var.wy-rem(.5) var.wy-rem(1);
   border-radius: var.default(--wy-border-radius-pill);
   font-size: var.default(--wy-font-size-xs);
   width: max-content;

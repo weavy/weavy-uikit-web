@@ -24,7 +24,7 @@
 
     --viewer-container-height: 0;
     --pdfViewer-padding-bottom: 0;
-    --page-margin: 2rem auto;
+    --page-margin: #{var.wy-rem(2)} auto;
     --page-border: none;
     --page-border-image: none;
     --spreadHorizontalWrapped-margin-LR: -3.5px;
@@ -57,11 +57,11 @@
 
 .wy-content-pdf {
     .wy-input[data-pdf-target='pageNumber'] {
-        width: 3rem;
+        width: var.wy-rem(3);
     }
 
     .wy-input[data-pdf-target='zoomLevel'] {
-        width: 5rem;
+        width: var.wy-rem(5);
     }
 
     .wy-pdf-container {

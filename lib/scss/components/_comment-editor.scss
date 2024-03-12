@@ -40,11 +40,11 @@
   flex-direction: row;
   align-items: flex-end;
   //border-top: 1px solid #{color.token(--wy-outline-variant};
-  padding: .5rem .25rem;
-  min-height: 3.5rem;
+  padding: var.wy-rem(.5) var.wy-rem(.25);
+  min-height: var.wy-rem(3.5);
 
   > :not(:last-child) {
-    margin-right: .25rem;
+    margin-right: var.wy-rem(.25);
   }
 }
 
@@ -71,10 +71,10 @@
 %comment-editor-textfield,
 .wy-comment-editor-textfield {
   flex: 1 1 100%;
-  max-height: 11.25rem;
+  max-height: var.wy-rem(11.25);
   background-color: color.token(--wy-background);
   color: color.token(--wy-on-background);
-  border-radius: 1.25rem;
+  border-radius: var.wy-rem(1.25);
   border: var.default(--wy-input-border-width) solid #{color.token(--wy-outline-variant)};
   
   &:focus {

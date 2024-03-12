@@ -20,13 +20,13 @@
   flex-direction: column;
   overflow: hidden;
   
-  bottom: .5rem;
-  left: .5rem;
-  right: .5rem;
+  bottom: var.wy-rem(.5);
+  left: var.wy-rem(.5);
+  right: var.wy-rem(.5);
   max-height: max(50vh, 50%);
-  min-height: 3rem;
-  margin: .5rem auto;
-  max-width: 32rem;
+  min-height: var.wy-rem(3);
+  margin: var.wy-rem(.5) auto;
+  max-width: var.wy-rem(32);
 
   // transition hide
   transition: opacity var.default(--wy-transition);
@@ -42,9 +42,9 @@
 
 .wy-sheet-body {
   overflow: hidden;
-  padding: .5rem;
+  padding: var.wy-rem(.5);
   position: relative;
-  min-height: 3rem;
+  min-height: var.wy-rem(3);
 
   &.wy-scroll-y{
     overflow-y: auto;
@@ -55,7 +55,7 @@
 .wy-sheet {
   &:not(.wy-show) {
     opacity: 0;
-    transform: translateY(32rem);
+    transform: translateY(var.wy-rem(32));
   }
 
   &.wy-show {

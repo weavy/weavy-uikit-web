@@ -35,7 +35,7 @@ import {
 } from "../types/files.types";
 import { toUpperCaseFirst } from "../utils/strings";
 import { getUploadBlobMutationOptions } from "../data/blob-upload";
-import type { AppType } from "../types/app.types";
+import { AccessType, type AppType } from "../types/app.types";
 import type { AutocompleteUserType, UserType, UsersAutocompleteResultType } from "../types/users.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { repeat } from "lit/directives/repeat.js";
@@ -322,7 +322,7 @@ export default class WyEditor extends LitElement {
                     div.classList.add("wy-item");
                     div.classList.add("wy-item-hover");
     
-                    if (!completion.item?.is_member) {
+                    if (!completion.item?.access || completion.item.access === AccessType.None) {
                       div.classList.add("wy-disabled");
                     }
     

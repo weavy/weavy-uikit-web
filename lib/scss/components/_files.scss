@@ -49,14 +49,14 @@ wy-files-appbar {
   td:nth-child(3),
   th:nth-child(3) {
     display: none;
-    width: 7rem;
+    width: var.wy-rem(7);
     @include text.truncate;
   }
   // kind
   td:nth-child(4),
   th:nth-child(4) {
     display: none;
-    width: 7.5rem;
+    width: var.wy-rem(7.5);
     text-align: right;
     @include text.truncate;
   }
@@ -64,7 +64,7 @@ wy-files-appbar {
   td:nth-child(5),
   th:nth-child(5) {
     display: none;
-    width: 7rem;
+    width: var.wy-rem(7);
     text-align: right;
     @include text.truncate;
   }
@@ -114,7 +114,7 @@ wy-files-appbar {
 // modified
 .wy-files-td-modified,
 .wy-files-th-modified {
-  width: 7rem;
+  width: var.wy-rem(7);
   @include text.truncate;
   @include breakpoints.media-breakpoint-down(lg) {
     display: none;
@@ -123,7 +123,7 @@ wy-files-appbar {
 // kind
 .wy-files-td-kind,
 .wy-files-th-kind {
-  width: 7.5rem;
+  width: var.wy-rem(7.5);
   text-align: right;
   @include text.truncate;
   @include breakpoints.media-breakpoint-down(lg) {
@@ -133,7 +133,7 @@ wy-files-appbar {
 // size
 .wy-files-td-size,
 .wy-files-th-size {
-  width: 7rem;
+  width: var.wy-rem(7);
   text-align: right;
   @include text.truncate;
   @include breakpoints.media-breakpoint-up(md) {

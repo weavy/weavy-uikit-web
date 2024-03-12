@@ -35,10 +35,10 @@
   justify-content: space-between;
   justify-items: center;
   height: var.default(--wy-appbar-height);
-  padding: .25rem;
+  padding: var.wy-rem(.25);
   flex: 0 0 var.default(--wy-appbar-height);
-  grid-template-columns: minmax(2.5rem, max-content) minmax(0, max-content) minmax(2.5rem, max-content);
-  column-gap: .5rem;
+  grid-template-columns: minmax(var.wy-rem(2.5), max-content) minmax(0, max-content) minmax(var.wy-rem(2.5), max-content);
+  column-gap: var.wy-rem(.5);
   line-height: var.default(--wy-line-height-base);
 
   background-color: var(--wy-component-background-color);
@@ -50,7 +50,7 @@
   }
 
   .wy-button {
-    max-height: 2.5rem;
+    max-height: var.wy-rem(2.5);
   }
 }
 
@@ -110,9 +110,9 @@
   justify-content: flex-start;
   justify-items: center;
   min-height: var.default(--wy-appbar-height);
-  padding: .25rem;
+  padding: var.wy-rem(.25);
   flex: 1 0 var.default(--wy-appbar-height);
-  column-gap: .25rem;
+  column-gap: var.wy-rem(.25);
   line-height: var.default(--wy-line-height-base);
 
   background-color: var(--wy-component-background-color);
@@ -131,7 +131,7 @@
 }
 
 .wy-toolbar-text {
-  margin-left: .25rem;
+  margin-left: var.wy-rem(.25);
 }
 
 .wy-footerbars {
@@ -158,7 +158,7 @@
     color: var(--wy-component-color);
     box-shadow: #{color.token(--wy-outline-variant)} 0px 1px 0px 0px inset;
     position: absolute;
-    width: 100vw;
+    width: 100%;
     left: 0;
     bottom: 0;
     height: 100%;
@@ -171,7 +171,7 @@
     flex-direction: row-reverse;
 
     > :not(:last-child) {
-      margin: 0 0 0 .5rem;
+      margin: 0 0 0 var.wy-rem(.5);
     }
   }
 }

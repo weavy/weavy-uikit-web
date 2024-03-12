@@ -10,6 +10,7 @@
   border: var.default(--wy-input-border-width) solid #{color.token(--wy-outline-variant)};
   display: block;
   width: 100%;
+  min-height: var.wy-rem(2.5);
   padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
   font-family: #{var.default(--wy-input-font-family)}, inherit;
   font-size: var.default(--wy-input-font-size);
@@ -90,7 +91,7 @@
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
 
-  border-radius: 1.25rem;
+  border-radius: var.wy-rem(1.25);
   border-color: var(--wy-component-background-color);
 
   &:focus {
@@ -101,11 +102,11 @@
 .wy-input-label {
   @include type.label;
   display: block;
-  margin-bottom: .5rem;
+  margin-bottom: var.wy-rem(.5);
 }
 
 .wy-description {
-  margin-top: .25rem;
+  margin-top: var.wy-rem(.25);
   font-size: var.default(--wy-font-size-sm);
 }
 
@@ -116,7 +117,7 @@
 }
 
 .wy-invalid-feedback {
-  margin-top: 0.25rem;
+  margin-top: var.wy-rem(.25);
   font-size: var.default(--wy-font-size-sm);
   color: #{color.token(--wy-error)};
 }
@@ -127,12 +128,12 @@
   // Optional leading icon
   > wy-icon {
     position: absolute;
-    top: 0rem;
-    left: 0rem;
+    top: 0;
+    left: 0;
     z-index: 4;
 
     + .wy-input {
-      padding-left: 2.5rem;
+      padding-left: var.wy-rem(2.5);
     }
   }
 
@@ -142,18 +143,18 @@
 // Required trailing button
 .wy-input-group-button-icon {
   position: absolute;
-  top: 0rem;
-  right: 0rem;
+  top: 0;
+  right: 0;
   z-index: 4;
   border-radius: var.default(--wy-input-border-radius);
 }
 
 .wy-input-group-input-filled ~ .wy-button-icon {
-  border-radius: 1.25rem;
+  border-radius: var.wy-rem(1.25);
 }
 
 .wy-input-group-input {
-  padding-right: 2.5rem;
+  padding-right: var.wy-rem(2.5);
 
   &:placeholder-shown {
     ~ .wy-input-group-button-icon[type=reset] {

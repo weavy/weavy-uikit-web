@@ -1,3 +1,5 @@
+@use "base/var";
+
 .wy-facepile {
   display: flex;
   align-items: center;
@@ -5,7 +7,7 @@
   flex-direction: row-reverse;
   
   .wy-avatar {
-    margin-left: -.25rem;
+    margin-left: var.wy-rem(-.25);
     display: inline-flex;
   }
 }

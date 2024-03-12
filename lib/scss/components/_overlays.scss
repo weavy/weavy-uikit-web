@@ -26,7 +26,7 @@
     transform-style: preserve-3d;
     overflow-y: initial;
     overflow-x: initial;
-    perspective: 100rem;
+    perspective: var.wy-rem(100);
     perspective-origin: center center;
 
     .wy-panel {
@@ -34,7 +34,7 @@
         //max-height: 100vh; // Causes height error in safari
 
         &:not(.wy-transition) {
-            transform: translateZ(-4rem) !important;
+            transform: translateZ(var.wy-rem(-4)) !important;
         }
 
         .wy-controls {
@@ -65,16 +65,16 @@
             @include breakpoints.media-breakpoint-up(md) {
                 left: auto;
                 right: auto;
-                top: 2rem;
-                bottom: 3.2rem;
-                margin-left: 4rem;
+                top: var.wy-rem(2);
+                bottom: var.wy-rem(3.2);
+                margin-left: var.wy-rem(4);
                 margin-top: auto;
-                margin-right: 4rem;
+                margin-right: var.wy-rem(4);
                 margin-bottom: auto;
-                border-radius: var.default(--wy-border-radius); //.25rem;
+                border-radius: var.default(--wy-border-radius);
                 box-shadow: var.default(--wy-shadow-level4);
-                width: 32rem;
-                max-height: 32rem;
+                width: var.wy-rem(32);
+                max-height: var.wy-rem(32);
                 &:not(.wy-scroll-y) {
                     overflow: hidden;
                 }
@@ -84,12 +84,12 @@
         &.wy-modal-full {
             // TODO: REMOVE BREAKPOINTS
             @include breakpoints.media-breakpoint-up(md) {
-                left: 1rem;
-                top: 1rem;
-                right: 1rem;
-                bottom: 1rem;
+                left: var.wy-rem(1);
+                top: var.wy-rem(1);
+                right: var.wy-rem(1);
+                bottom: var.wy-rem(1);
                 margin: 0;
-                border-radius: var.default(--wy-border-radius); //.1875rem;
+                border-radius: var.default(--wy-border-radius);
                 box-shadow: var.default(--wy-shadow-level4);
                 width: auto;
                 max-height: none;

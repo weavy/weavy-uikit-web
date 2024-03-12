@@ -55,7 +55,8 @@ export default class WyAvatar extends LitElement {
             <img
               alt=""
               title="${ifDefined(this.title || this.name)}"
-              class="wy-avatar"
+              class="wy-avatar wy-avatar-img"
+              style="--wy-component-avatar-size: calc(${remSize} * var(--wy-rem, 1rem));"
               height="${this.size}"
               width="${this.size}"
               src="${this.src}"
@@ -66,7 +67,7 @@ export default class WyAvatar extends LitElement {
         : html`
             <div
               class="wy-avatar wy-avatar-initials"
-              style="--wy-component-avatar-size: ${remSize}rem;"
+              style="--wy-component-avatar-size: calc(${remSize} * var(--wy-rem, 1rem));"
               title="${ifDefined(this.title || this.name)}">
               <span>${initials}</span>
             </div>
@@ -114,7 +115,7 @@ export class WyAvatarGroup extends LitElement {
       otherMembers?.shift() || (frontMember !== this.user ? this.user : undefined);
 
     return html`
-      <div class="wy-avatar-group" title=${this.name} style="--wy-component-avatar-size: ${remSize}rem;">
+      <div class="wy-avatar-group" title=${this.name} style="--wy-component-avatar-size: calc(${remSize} * var(--wy-rem, 1rem));">
         <wy-avatar
           .src=${backMember?.avatar_url}
           .name=${backMember?.display_name}

@@ -2,16 +2,16 @@
 @use "base/const";
 @use "base/color";
 
-$dropdown-spacer: .25rem;
-$dropdown-min-width: 10rem;
+$dropdown-spacer: var.wy-rem(.25);
+$dropdown-min-width: var.wy-rem(10);
 $dropdown-padding-y: 0;
 $dropdown-padding-x: 0;
 $dropdown-font-size: var.default(--wy-font-size-base);
 $dropdown-border-radius: var.default(--wy-border-radius);
 $dropdown-box-shadow: var.default(--wy-shadow-level1);
 
-$dropdown-item-padding-y: .75rem;
-$dropdown-item-padding-x: 1rem;
+$dropdown-item-padding-y: var.wy-rem(.75);
+$dropdown-item-padding-x: var.wy-rem(1);
 
 .wy-dropdown,
 .wy-dropup {
@@ -100,7 +100,7 @@ $dropdown-item-padding-x: 1rem;
   text-decoration: none;
   white-space: nowrap; // prevent links from randomly breaking onto new lines
   border: 0; // For `<button>`s
-  gap: .25rem;
+  gap: var.wy-rem(.25);
 
   &:hover,
   &:focus {
@@ -139,7 +139,7 @@ $dropdown-item-padding-x: 1rem;
   align-items: center;
 
   > img, > wy-icon {
-    margin-right: .5rem;
+    margin-right: var.wy-rem(.5);
 
     &, & .wy-icon {
       color: inherit;

@@ -8,12 +8,12 @@
   flex: 0 0 auto;
   position: relative;
 
-  &:not([width]) {
-    width: var(--wy-component-icon-width, 1.5rem);
+  &:not([width]), &[width="24"] {
+    width: var(--wy-component-icon-width, var.wy-rem(1.5));
   }
 
-  &:not([height]) {
-    height: var(--wy-component-icon-height, 1.5rem);
+  &:not([height]), &[height="24"] {
+    height: var(--wy-component-icon-height, var.wy-rem(1.5));
   }
 
   width: var(--wy-component-icon-width);
@@ -22,18 +22,18 @@
 
 // For being first element in buttons etc
 .wy-icon-first {
-  margin-left: -.5rem;
+  margin-left: var.wy-rem(-.5);
 }
 
 // For being last element in buttons etc
 .wy-icon-last {
-  margin-right: -.5rem;
+  margin-right: var.wy-rem(-.5);
 }
 
 .wy-icon-padded {
-  //width: calc(var(--wy-component-icon-width, 1.5rem) * 9 / 10);
-  //height: calc(var(--wy-component-icon-height, 1.5rem) * 9 / 10);
-  //margin: calc(var(--wy-component-icon-width, 1.5rem) / 10)
+  //width: calc(var(--wy-component-icon-width, var.wy-rem(1.5)) * 9 / 10);
+  //height: calc(var(--wy-component-icon-height, var.wy-rem(1.5)) * 9 / 10);
+  //margin: calc(var(--wy-component-icon-width, var.wy-rem(1.5)) / 10)
   margin: 16.66666667%;
 }
 
@@ -116,18 +116,18 @@
   justify-content: center;
   flex-direction: column;
   text-align: center;
-  padding: 1rem 2rem;
+  padding: var.wy-rem(1) var.wy-rem(2);
   margin: auto;
 
   > .wy-icon-stack, > .wy-icon, > wy-icon, ::slotted(.wy-icon-stack), ::slotted(.wy-icon), ::slotted(wy-icon) {
-    --wy-component-icon-width: 4rem;
-    --wy-component-icon-height: 4rem;
+    --wy-component-icon-width: #{var.wy-rem(4)};
+    --wy-component-icon-height: #{var.wy-rem(4)};
   }
 }
 
 // Name after content icon
 .wy-content-name, .wy-content-meta {
-  padding: 1rem 2rem;
+  padding: var.wy-rem(1) var.wy-rem(2);
   text-align: center;
 }
 
@@ -193,9 +193,9 @@
 }
 
 .wy-kind-text-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  vertical-align: -.3125rem;
+  width: var.wy-rem(1.25);
+  height: var.wy-rem(1.25);
+  vertical-align: var.wy-rem(-.3125);
 }
 
 

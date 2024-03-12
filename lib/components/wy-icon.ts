@@ -83,10 +83,10 @@ export default class WyIcon extends LitElement {
       ["wy-icon-inline"]: this.inline,
     };
 
-    if (this.overlayPath) {
-      const remSize = this.size / 16;
-      const sizeStyle = remSize ? `width: var(--wy-component-icon-width, ${remSize}rem); height: var(--wy-component-icon-height, ${remSize}rem);` : "";
+    const remSize = this.size !== 24 && this.size / 16;
+    const sizeStyle = remSize ? `width: var(--wy-component-icon-width, calc(${remSize} * var(--wy-rem, 1rem))); height: var(--wy-component-icon-height, calc(${remSize} * var(--wy-rem, 1rem)));` : "";
 
+    if (this.overlayPath) {
       return html`
         <span class="wy-icon-stack" style="${sizeStyle}">
           <svg class="wy-icon ${classMap(iconClasses)}" viewBox="0 0 24 24" width="${this.size}" height="${this.size}">
@@ -102,7 +102,7 @@ export default class WyIcon extends LitElement {
     }
 
     return html`
-      <svg class="wy-icon ${classMap(iconClasses)}" viewBox="0 0 24 24" width="${this.size}" height="${this.size}">
+      <svg class="wy-icon ${classMap(iconClasses)}" style="${sizeStyle}" viewBox="0 0 24 24" width="${this.size}" height="${this.size}">
         <path d="${this.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
         <!--rect width="24" height="24" fill="transparent" /-->
       </svg>

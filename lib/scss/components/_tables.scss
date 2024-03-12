@@ -9,7 +9,7 @@
   background-color: var(--wy-component-background-color);
   table-layout: fixed;
   width: 100%;
-  //margin-bottom: 1rem;
+  //margin-bottom: var.wy-rem(1);
   vertical-align: top;
   border-collapse: collapse;
 
@@ -18,7 +18,7 @@
     box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
     line-height: 1;
     vertical-align: middle;
-    height: 2.5rem;
+    height: var.wy-rem(2.5);
 
     &:first-child {
       padding-left: calc(#{var.default(--wy-table-cell-padding-x)} * 2);
@@ -42,7 +42,7 @@
     vertical-align: middle;
     text-align: center;
     padding: calc(#{var.default(--wy-table-cell-padding-y)} * .5) var.default(--wy-table-cell-padding-x);
-    width: calc(2.5rem + #{var.default(--wy-table-cell-padding-x)} * 2);
+    width: calc(#{var.wy-rem(2.5)} + #{var.default(--wy-table-cell-padding-x)} * 2);
     // reset th styles (for dropdown menus in th)
     font-size: var.default(--wy-font-size-base);
     font-weight: var.default(--wy-font-weight-base);
@@ -90,7 +90,7 @@
 
 .wy-table-no-result {
   text-align: center;
-  padding: 1rem;
+  padding: var.wy-rem(1);
 }
 
 

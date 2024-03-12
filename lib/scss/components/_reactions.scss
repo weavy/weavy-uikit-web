@@ -11,26 +11,26 @@
 .wy-like-button {
   background: var(--wy-component-background-color);
   color: var(--wy-primary);
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var.wy-rem(2.5);
+  height: var.wy-rem(2.5);
 }
 
 .wy-like-count {
-  padding: 0 .5rem;
+  padding: 0 var.wy-rem(.5);
   color: var(--wy-outline);
   font-size: var.default(--wy-font-size-sm);
 }
 
 .wy-reaction-count {
-  margin: 0 0.5rem 0 .125rem;
+  margin: 0 var.wy-rem(.5) 0 var.wy-rem(.125);
   line-height: 1;
   font-size: var.default(--wy-font-size-sm);
 }
 
 .wy-reaction-menu {
-  padding: .25rem;
-  font-size: 1.125rem;
-  border-radius: 2.5rem;
+  padding: var.wy-rem(.25);
+  font-size: var.wy-rem(1.125);
+  border-radius: var.wy-rem(2.5);
 }
 
 .wy-reaction-picker {
@@ -42,7 +42,7 @@
 
   // button{
   //   span{
-  //     font-size: 2rem;
+  //     font-size: var.wy-rem(2);
   //   }
   // }
 }
@@ -51,7 +51,7 @@
 .wy-reactions {
   display: inline-flex;
   align-items: center;
-  column-gap: .1875rem;
+  column-gap: var.wy-rem(.1875);
   // hidden when empty
   &:empty {
     display: none;
@@ -65,16 +65,16 @@
 
 :host(wy-reactions) {
   .wy-emoji {
-    width: 1.125rem;
-    height: 1.125rem;
-    font-size: 1.125rem;
+    width: var.wy-rem(1.125);
+    height: var.wy-rem(1.125);
+    font-size: var.wy-rem(1.125);
 
     &:first-child {
-      margin-left: .1875rem;
+      margin-left: var.wy-rem(.1875);
     }
 
     &:last-child {
-      margin-right: .1875rem;
+      margin-right: var.wy-rem(.1875);
     }
   }
 }
@@ -82,16 +82,16 @@
   :host(wy-reactions[small]) {
     .wy-reaction-lineup, .wy-reaction-like-button {
       .wy-emoji {
-        width: 1.125rem;
-        height: 1.125rem;
-        font-size: 1rem;
+        width: var.wy-rem(1.125);
+        height: var.wy-rem(1.125);
+        font-size: var.wy-rem(1);
     
         &:first-child {
-          margin-left: .125rem;
+          margin-left: var.wy-rem(.125);
         }
     
         &:last-child {
-          margin-right: .125rem;
+          margin-right: var.wy-rem(.125);
         }
       }
 
@@ -106,7 +106,7 @@
 .wy-table-reactions {
   // avatar
   td:first-child {
-    width: 3rem;
+    width: var.wy-rem(3);
   }
   // name
   td:nth-child(2) {
@@ -119,7 +119,7 @@
 }
 
 .wy-reaction {
-  font-size: 1.125rem;
+  font-size: var.wy-rem(1.125);
 }
 
 .wy-reaction-menu-button, .wy-like-button {

@@ -5,17 +5,22 @@
   border-radius: 50%;
 }
 
+.wy-avatar-img {
+  width: var(--wy-component-avatar-size, var.wy-rem(2));
+  height: var(--wy-component-avatar-size, var.wy-rem(2));
+}
+
 .wy-avatar-initials {
   background-color: var(--wy-component-avatar-background-color, #{color.token(--wy-primary)});
   color: var(--wy-component-avatar-color, #{color.token(--wy-on-primary)});
-  width: var(--wy-component-avatar-size, 2rem);
-  height: var(--wy-component-avatar-size, 2rem);
+  width: var(--wy-component-avatar-size, var.wy-rem(2));
+  height: var(--wy-component-avatar-size, var.wy-rem(2));
   display: flex;
   align-items: center;
   align-content: center;
   justify-content: center;
   justify-items: center;
-  font-size: calc(var(--wy-component-avatar-size, 2rem));
+  font-size: calc(var(--wy-component-avatar-size, var.wy-rem(2)));
 
   > span {
     font-size: max(8px, #{var.default(--wy-avatar-font-size)});
@@ -25,7 +30,7 @@
 }
 
 .wy-avatar-header {
-  padding: 1.5rem;
+  padding: var.wy-rem(1.5);
   margin-left: auto;
   margin-right: auto;
   text-align: center;
@@ -44,8 +49,8 @@
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-  width: var(--wy-component-avatar-size, 2rem);
-  height: var(--wy-component-avatar-size, 2rem);
+  width: var(--wy-component-avatar-size, var.wy-rem(2));
+  height: var(--wy-component-avatar-size, var.wy-rem(2));
 }
 
 .wy-avatar-group wy-avatar:first-child {
@@ -53,8 +58,8 @@
   top: 0;
   left: 0;
   display: unset;
-  -webkit-mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + .125rem) , rgb(0, 0, 0) calc(35% + .1875rem));
-  mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + .125rem) , rgb(0, 0, 0) calc(35% + .1875rem));
+  -webkit-mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + var.wy-rem(.125)) , rgb(0, 0, 0) calc(35% + var.wy-rem(.1875)));
+  mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + var.wy-rem(.125)) , rgb(0, 0, 0) calc(35% + var.wy-rem(.1875)));
 }
 
 .wy-avatar-group wy-avatar:last-child {
@@ -62,7 +67,7 @@
   bottom: 0;
   right: 0;
   //background-color: var(--wy-component-background-color, transparent);
-  //outline: .125rem solid var(--wy-component-background-color, transparent);
+  //outline: var.wy-rem(.125) solid var(--wy-component-background-color, transparent);
   display: unset;
 }
 
@@ -73,10 +78,10 @@
   }
 
   background-color: var(--wy-component-background-color, transparent);
-  width: .75rem;
-  height: .75rem;
+  width: var.wy-rem(.75);
+  height: var.wy-rem(.75);
   border-radius: 50%;
-  //outline: .125rem solid ;
+  //outline: var.wy-rem(.125) solid ;
   position: absolute;
   bottom: 0;
   right: -5%;
@@ -92,7 +97,7 @@
     border-radius: inherit;
     background-color: #{color.token(--wy-presence-active)};
     background-clip: content-box;
-    padding: .125rem;
+    padding: var.wy-rem(.125);
     box-sizing: border-box;
   }
 }
@@ -105,8 +110,8 @@
 
 .wy-presence-in-text {
     position: absolute;
-    top: .375rem;
-    left: .25rem;
+    top: var.wy-rem(.375);
+    left: var.wy-rem(.25);
     bottom: auto;
     right: auto;
 }

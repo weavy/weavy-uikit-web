@@ -1,3 +1,5 @@
+@use "base/var";
+
 .wy-typing-show {
   font-style: italic;
   display: none;
@@ -15,5 +17,5 @@
 
 .wy-appbar wy-typing  {
   position: relative;
-  padding: 0 1.25rem;
+  padding: 0 var.wy-rem(1.25);
 }

@@ -28,7 +28,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: var.wy-rem(.25);
     position: relative;
 
     // State layer
@@ -76,9 +76,9 @@
 .wy-button-icon {
     --wy-component-color: #{color.token(--wy-on-surface-variant)};
     //--wy-component-background-color: var(--wy-component-background-color, transparent);
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0.5rem;
+    width: var.wy-rem(2.5);
+    height: var.wy-rem(2.5);
+    padding: var.wy-rem(.5);
     line-height: 1;
     border-radius: var.default(--wy-border-radius-pill);
     border-width: 0;
@@ -101,7 +101,7 @@
 
 .wy-button-inline {
     border-radius: var.default(--wy-border-radius-pill);
-    padding: 0.5rem 0.75rem;
+    padding: var.wy-rem(.5) var.wy-rem(.75);
 }
 
 // primary button
@@ -139,5 +139,5 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var.wy-rem(.5);
 }

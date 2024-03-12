@@ -7,13 +7,13 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: .5rem;
-  padding: .25rem .75rem;
+  gap: var.wy-rem(.5);
+  padding: var.wy-rem(.25) var.wy-rem(.75);
   text-decoration: none;
-  min-height: 3rem;
+  min-height: var.wy-rem(3);
   // Adjust position of icon/avatar (makes padding/margin look ok for all combinations of item content)
   > .wy-avatar, > wy-icon, > wy-spinner, > .wy-icon-stack {
-    margin-left: -.25rem;
+    margin-left: var.wy-rem(-.25);
   }
 }
 
@@ -26,11 +26,11 @@
   }
   // adjust position of buttons/emoji
   + .wy-dropdown, + .wy-button-icon, + .wy-item-actions {
-    margin-right: -.5rem;
+    margin-right: var.wy-rem(-.5);
   }
 
   + .wy-emoji {
-    margin-right: .125rem;
+    margin-right: var.wy-rem(.125);
   }
 }
 
@@ -48,9 +48,9 @@
   font-size: var.default(--wy-font-size-sm);
 
   .wy-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    vertical-align: -.3125rem;
+    width: var.wy-rem(1.25);
+    height: var.wy-rem(1.25);
+    vertical-align: var.wy-rem(-.3125);
   }
 }
 
@@ -64,34 +64,34 @@
 
 .wy-item-actions-top {
   position: absolute;
-  top: .25rem;
-  right: .25rem;
+  top: var.wy-rem(.25);
+  right: var.wy-rem(.25);
   margin:0 !important;
 }
 
 .wy-item-actions-bottom {
   position: absolute;
-  bottom: .25rem;
-  right: .25rem;
+  bottom: var.wy-rem(.25);
+  right: var.wy-rem(.25);
   margin: 0 !important;
 }
 
 .wy-item-body:has(+ .wy-item-actions-bottom) {
   .wy-item-row:last-child {
     // room for 2 icons
-    margin-right: 4.5rem;
+    margin-right: var.wy-rem(4.5);
   }
 }
 
 .wy-item-body:has(+ .wy-item-actions-top) {
   .wy-item-row:first-child {
     // room for 1 icon
-      margin-right: 2rem;
+      margin-right: var.wy-rem(2);
   }
 }
 
 .wy-action-label {
-  margin-right: .5rem;
+  margin-right: var.wy-rem(.5);
   font-style: italic;
 }
 
@@ -101,7 +101,7 @@
   align-items: baseline;
 
   &:first-child {
-    margin-bottom: .125rem;
+    margin-bottom: var.wy-rem(.125);
   }
 
   .wy-item-title {
@@ -114,7 +114,7 @@
 
 
   .wy-meta {
-    margin: 0 .25rem;
+    margin: 0 var.wy-rem(.25);
     white-space: nowrap;
   }
 }
@@ -174,9 +174,9 @@
 
 // Item with room for larger icon and two rows of content
 .wy-item-lg {
-  padding: .75rem;
-  min-height: 4.5rem;
-  gap: .75rem;
+  padding: var.wy-rem(.75);
+  min-height: var.wy-rem(4.5);
+  gap: var.wy-rem(.75);
 
   // adjust position of icon/avatar
   > .wy-avatar, > wy-icon, > .wy-icon-stack {

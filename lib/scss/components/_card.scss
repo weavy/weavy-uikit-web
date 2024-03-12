@@ -65,8 +65,8 @@
 
 .wy-card-actions {
   position: absolute;
-  top: min(.25rem, calc(100% - 2.5rem)); // Account for small heights
-  right: .25rem;
+  top: min(var.wy-rem(.25), calc(100% - var.wy-rem(2.5))); // Account for small heights
+  right: var.wy-rem(.25);
   align-items: center;
   display: flex;
   
@@ -79,12 +79,12 @@
   flex: 1 0 auto;
 
   &:first-child, .wy-card-actions + &:nth-child(2) {
-    padding-block-start: .5rem;
+    padding-block-start: var.wy-rem(.5);
   }
 
-  padding-block-end: .5rem;
-  padding-inline-start: .5rem;
-  padding-inline-end: .5rem;
+  padding-block-end: var.wy-rem(.5);
+  padding-inline-start: var.wy-rem(.5);
+  padding-inline-end: var.wy-rem(.5);
 }
 
 .wy-card-top {
@@ -92,7 +92,7 @@
   object-fit: cover;
   object-position: top center;
   flex: 1 1 100%;
-  max-height: 10rem;
+  max-height: var.wy-rem(10);
 }
 
 .wy-card-top-image {

@@ -16,30 +16,30 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  margin: 1rem .75rem;
+  margin: var.wy-rem(1) var.wy-rem(.75);
 
   --wy-component-border-radius: #{var.default(--wy-border-radius)};
   border-radius: var(--wy-component-border-radius);
 
   .wy-image-grid {
     border-radius: 0;
-    margin-bottom: 1rem;
+    margin-bottom: var.wy-rem(1);
   }
 
   .wy-embed {
-    margin-bottom: 1rem;
+    margin-bottom: var.wy-rem(1);
   }
 
   .wy-comments {
-    margin: .5rem .75rem;
+    margin: var.wy-rem(.5) var.wy-rem(.75);
     border-top: 1px solid #{color.token(--wy-outline-variant)};
-    padding: .75rem 0 0;
+    padding: var.wy-rem(.75) 0 0;
   }
   
 }
 
 .wy-post-body {
-  padding: 0 1rem;
+  padding: 0 var.wy-rem(1);
 
   &:empty {
     display: none;
@@ -47,7 +47,7 @@
   
   .wy-content, .wy-list, .wy-poll {
     // spacing between content
-    margin-bottom: 1rem;
+    margin-bottom: var.wy-rem(1);
   }
 }
 
@@ -55,10 +55,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 .25rem .25rem;
+  margin: 0 var.wy-rem(.25) var.wy-rem(.25);
 
   .wy-meta {
-    margin-right: .5rem
+    margin-right: var.wy-rem(.5);
   }
 }
 
@@ -69,7 +69,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px dashed color.token(--wy-primary);
+    border: var.wy-rem(2px) dashed color.token(--wy-primary);
     font-weight: const.$font-weight-bold;
     z-index: 10000;
     position: absolute;

@@ -46,8 +46,8 @@
       .wy-scrollbars & {
         @include scroll.custom-scrollbar;
         // scrollbar offsets
-        @include scroll.scrollbar-top-padding(0.375rem);
-        @include scroll.scrollbar-bottom-padding(0.375rem);
+        @include scroll.scrollbar-top-padding(var.wy-rem(.375));
+        @include scroll.scrollbar-bottom-padding(var.wy-rem(.375));
       }
     }
   }
@@ -59,7 +59,7 @@
   //.ͼ1 {
     .cm-tooltip.cm-tooltip-autocomplete > ul {
       font-family: unset;
-      max-height: 15rem; // room for 5 items
+      max-height: var.wy-rem(15); // room for 5 items
 
       > li {
         padding: 0;
@@ -95,8 +95,8 @@
     }
 
     .wy-avatar {
-      width: 32px;
-      height: 32px;
+      width: var.wy-rem(2);
+      height: var.wy-rem(2);
     }
   }
 }

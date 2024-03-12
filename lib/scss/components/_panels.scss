@@ -30,9 +30,9 @@
     flex-direction: column;
 
     .wy-controls {
-        top: .25rem;
-        left: .25rem;
-        min-width: 2.5rem;
+        top: var.wy-rem(.25);
+        left: var.wy-rem(.25);
+        min-width: var.wy-rem(2.5);
         width: auto;
         display: flex;
         z-index: 10000;
@@ -77,7 +77,7 @@
             left: 0;
             right: 0;
             height: var.default(--wy-appbar-height);
-            padding: .25rem;
+            padding: var.wy-rem(.25);
             opacity: 0;
             pointer-events: none;
             display: flex;
@@ -122,7 +122,7 @@
                 background-image: svg.$spinner;
                 background-repeat: no-repeat;
                 background-position: 50%;
-                background-size: 2rem;
+                background-size: var.wy-rem(2);
                 background-color: transparent;
             }
         }

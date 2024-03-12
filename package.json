@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "21.0.0",
+  "version": "21.1.0",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -69,7 +69,7 @@
     "@tanstack/query-sync-storage-persister": "^5.20.1",
     "dotenv": "^16.4.2",
     "lit": "^3.1.2",
-    "lit-modal-portal": "mindroute/lit-modal-portal#dist-v5",
+    "lit-modal-portal": "github:mindroute/lit-modal-portal#dist-v5",
     "lodash.throttle": "^4.1.1",
     "pdfjs-dist": "^3.11.174",
     "react": "^16.14.0",
@@ -106,5 +106,9 @@
     "vite-plugin-dts": "^3.7.2",
     "vite-plugin-node-polyfills": "^0.21.0",
     "web-component-analyzer": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }

@@ -9,14 +9,14 @@
 .wy-poll-form {
   background: var(--wy-component-background-color);
   color: var(--wy-component-color);
-  padding: .5rem;
+  padding: var.wy-rem(.5);
 
   &:empty {
     display: none;
   }
 
   input:not(:first-child) {
-    margin-top: .5rem;
+    margin-top: var.wy-rem(.5);
   }
 }
 
@@ -25,9 +25,9 @@
   background-color: #{color.token(--wy-background)};
   border: 1px solid #{color.token(--wy-outline-variant)};
   border-radius: var.default(--wy-border-radius-sm);
-  margin-bottom: .25rem;
-  padding: 0.25rem .5rem;
-  min-height: 2.5rem;
+  margin-bottom: var.wy-rem(.25);
+  padding: var.wy-rem(.25) var.wy-rem(.5);
+  min-height: var.wy-rem(2.5);
   cursor: pointer;
 
   .wy-progress {
