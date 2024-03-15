@@ -7,7 +7,8 @@ import { localized, msg } from "@lit/localize";
 import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
 import allCss from "../scss/all"
 
-import pdfjsLib, { type PDFDocumentLoadingTask, type PDFDocumentProxy } from "pdfjs-dist";
+import * as pdfjsLib from "pdfjs-dist";
+import { type PDFDocumentLoadingTask, type PDFDocumentProxy } from "pdfjs-dist";
 import { PDFViewer, EventBus, PDFFindController, PDFLinkService } from "pdfjs-dist/web/pdf_viewer";
 
 import "./wy-button";

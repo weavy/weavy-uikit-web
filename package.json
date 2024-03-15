@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "21.1.1",
+  "version": "21.1.2",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -10,19 +10,27 @@
     "cli",
     "dist",
     "lib",
+    "locales",
     "test",
+    "xliff",
     "*.json",
     "*.md"
   ],
   "main": "./dist/weavy.js",
-  "module": "./dist/weavy.esm.js",
+  "module": "./dist/weavy.esm.bundle.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/weavy.esm.js",
       "require": "./dist/weavy.js",
       "types": "./dist/types/index.d.ts"
-    }
+    },
+    "./dist/weavy.js": {
+      "import": "./dist/weavy.esm.bundle.js",
+      "require": "./dist/weavy.js",
+      "default": "./dist/weavy.js"
+    },
+    "./lib/*": "./lib/*"
   },
   "customElements": "dist/custom-elements.json",
   "scripts": {
@@ -68,6 +76,8 @@
     "@tanstack/query-persist-client-core": "^5.20.1",
     "@tanstack/query-sync-storage-persister": "^5.20.1",
     "dotenv": "^16.4.2",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
     "lit": "^3.1.2",
     "lit-modal-portal": "github:mindroute/lit-modal-portal#dist-v5",
     "lodash.throttle": "^4.1.1",
@@ -87,12 +97,10 @@
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "@web/test-runner": "^0.18.0",
-    "cors": "^2.8.5",
     "eslint": "^8.56.0",
     "eslint-plugin-lit": "^1.11.0",
     "eslint-plugin-lit-a11y": "^4.1.2",
     "eslint-plugin-wc": "^2.0.4",
-    "express": "^4.18.2",
     "lit-analyzer": "^2.0.3",
     "node-fetch": "^3.3.2",
     "npm-run-all": "^4.1.5",

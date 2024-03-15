@@ -25,7 +25,7 @@ export const defaultFetchSettings: RequestInit = {
  * @param {any} value
  * @returns {any} - Returns the value or undefined if removed.
  */
-export function sanitizeJSON(key: string, value: unknown) {
+export function sanitizeJSON(_key: string, value: unknown) {
   // Filtering out DOM Elements and nodes
   if (value instanceof HTMLElement || value instanceof Node) {
     return undefined;

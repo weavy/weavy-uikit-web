@@ -33,6 +33,8 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-
 # package files
 *.tgz
+
+# vite
+*.timestamp-*.mjs

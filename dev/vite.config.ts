@@ -191,6 +191,13 @@ export default defineConfig({
           chunkFileNames: weavyChunkNames,
         },
         {
+          format: "esm",
+          entryFileNames: "weavy.esm.bundle.js",
+          minifyInternalExports: false,
+          preserveModules: false,
+          inlineDynamicImports: true,
+        },
+        {
           format: "umd",
           entryFileNames: "weavy.js",
           name: "WeavyLib",
