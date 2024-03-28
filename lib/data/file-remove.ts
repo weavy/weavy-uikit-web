@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { removeCacheItems, updateCacheItems } from "../utils/query-cache";
@@ -13,7 +13,7 @@ export type MutateFileVariables = {
 export type RemoveFileMutationType = MutationObserver<FileType, Error, MutateFileVariables, FileMutationContextType>;
 export type DeleteForeverFileMutationType = MutationObserver<void, Error, MutateFileVariables, FileMutationContextType>;
 
-export function getTrashFileMutationOptions(weavyContext: WeavyContext, app: AppType) {
+export function getTrashFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
   const queryClient = weavyContext.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
@@ -64,11 +64,11 @@ export function getTrashFileMutationOptions(weavyContext: WeavyContext, app: App
   return options;
 }
 
-export function getTrashFileMutation(weavyContext: WeavyContext, app: AppType): RemoveFileMutationType {
+export function getTrashFileMutation(weavyContext: WeavyContextType, app: AppType): RemoveFileMutationType {
   return new MutationObserver(weavyContext.queryClient, getTrashFileMutationOptions(weavyContext, app));
 }
 
-export function getRestoreFileMutationOptions(weavyContext: WeavyContext, app: AppType) {
+export function getRestoreFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
   const queryClient = weavyContext.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
@@ -125,11 +125,11 @@ export function getRestoreFileMutationOptions(weavyContext: WeavyContext, app: A
   return options;
 }
 
-export function getRestoreFileMutation(weavyContext: WeavyContext, app: AppType): RemoveFileMutationType {
+export function getRestoreFileMutation(weavyContext: WeavyContextType, app: AppType): RemoveFileMutationType {
   return new MutationObserver(weavyContext.queryClient, getRestoreFileMutationOptions(weavyContext, app));
 }
 
-export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContext, app: AppType) {
+export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
   const queryClient = weavyContext.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
@@ -181,7 +181,7 @@ export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContext, 
 }
 
 export function getDeleteForeverFileMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   app: AppType
 ): DeleteForeverFileMutationType {
   return new MutationObserver(weavyContext.queryClient, getDeleteForeverFileMutationOptions(weavyContext, app));

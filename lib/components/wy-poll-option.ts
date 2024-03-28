@@ -1,11 +1,11 @@
-import { LitElement, html, nothing, type PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { portal } from "lit-modal-portal";
 import chatCss from "../scss/all"
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { getVotesOptions } from "../data/poll";
 import { UserType } from "../types/users.types";
 import { localized, msg, str } from "@lit/localize";
@@ -23,7 +23,7 @@ export default class WyPollOption extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ type: Number, attribute: false })
   totalVotes!: number;
@@ -39,7 +39,7 @@ export default class WyPollOption extends LitElement {
 
   getVotesQuery = new QueryController<UserType[]>(this);
 
-  protected override updated(changedProperties: PropertyValues<this & WeavyContextProps>): void {
+  protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if (changedProperties.has("weavyContext") && this.weavyContext && this.option) {
       this.getVotesQuery.trackQuery(getVotesOptions(this.weavyContext, this.option.id!));
       this.sheetId = "sheet-post-" + this.option.id;

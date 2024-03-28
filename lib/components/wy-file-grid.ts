@@ -8,14 +8,14 @@ import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilen
 import type { FileType } from "../types/files.types";
 
 import { WyFilesList } from "./wy-files-list";
-import { type WeavyContext } from "../client/context-definition";
+import { type WeavyContextType } from "../client/context-definition";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 
 export function renderFileCard(
   this: WyFilesList,
-  weavyContext: WeavyContext | undefined,
+  weavyContext: WeavyContextType | undefined,
   { file }: { file: FileType },
   isRenamingId?: number
 ) {
@@ -98,7 +98,7 @@ export function renderFileCard(
               <wy-icon name=${icon} size="96" kind=${file.kind} ext=${ext}></wy-icon>
             </div>
           `}
-      <div class="wy-card-label wy-card-content wy-filename">
+      <div class="wy-card-content wy-filename">
         ${isRenaming
           ? html`
               <input
@@ -116,7 +116,7 @@ export function renderFileCard(
                 ${ref(autofocusRef)}
               />
             `
-          : html` <span title=${file.name}>${file.name}</span> `}
+          : html`<div class="wy-truncated-text-and-icon"><div>${file.name}</div> ${file.comment_count ? html`<wy-icon size="16" name="comment" color="secondary"></wy-icon>` : nothing}</div>`}
       </div>
     </div>
   `;

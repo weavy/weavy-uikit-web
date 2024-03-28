@@ -65,6 +65,20 @@ $grid-breakpoints: (
   @return if(breakpoint-min($name, $breakpoints) == null, "", "-#{$name}");
 }
 
+// Makes the @content apply to the given size and container
+@mixin container-size-up($name, $container:null, $breakpoints: $grid-breakpoints) {  
+  $min: map-get($breakpoints, $name);     
+  @if $container {
+    @container #{$container} (inline-size >= #{$min}) {
+      @content;
+    }  
+  } @else {
+    @container (inline-size >= #{$min}) {
+      @content;
+    } 
+  }
+}
+
 // Media of at least the minimum breakpoint width. No query for the smallest breakpoint.
 // Makes the @content apply to the given breakpoint and wider.
 @mixin media-breakpoint-up($name, $breakpoints: $grid-breakpoints) {

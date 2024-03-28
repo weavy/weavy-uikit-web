@@ -9,18 +9,18 @@ import {
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
-import { WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { whenParentsDefined } from "../utils/dom";
 
 export class MutationController<TData, TError, TVariables, TContext> implements ReactiveController {
   host: ReactiveControllerHost;
-  context?: ContextConsumer<{ __context__: WeavyContext }, LitElement>;
+  context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
   whenContext?: Promise<void>;
   resolveContext?: (value: void | PromiseLike<void>) => void;
   observer?: MutationObserver<TData, TError, TVariables, TContext>;
   result?: MutationObserverResult<TData, TError, TVariables, TContext>;
 
-  private observeUnsubscribe?: () => void;
+  private observerUnsubscribe?: () => void;
 
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
@@ -50,29 +50,37 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
       throw new Error("No QueryClient provided");
     }
 
-    this.observeUnsubscribe?.();
+    this.observerUnsubscribe?.();
 
     this.observer = new MutationObserver(queryClient, { ...options });
 
-    this.result = this.observer.getCurrentResult();
-
-    this.observeUnsubscribe ??= this.observer.subscribe(() => {
-      if (this.observer) {
-        const nextResult = replaceEqualDeep(this.result, this.observer.getCurrentResult());
-        if (this.result !== nextResult) {
-          //console.log("update", this.result, nextResult)
-          this.result = nextResult;
-          this.host.requestUpdate();
-        }
-      }
-    });
+    this.observerSubscribe();
 
     return this.observer;
   }
 
+  observerSubscribe() {
+    if (this.observer) {
+      this.result = this.observer.getCurrentResult();
+
+      this.observerUnsubscribe ??= this.observer.subscribe(() => {
+        if (this.observer) {
+          const nextResult = replaceEqualDeep(this.result, this.observer.getCurrentResult());
+          if (this.result !== nextResult) {
+            //console.log("update", this.result, nextResult)
+            this.result = nextResult;
+            this.host.requestUpdate();
+          }
+        }
+      });
+
+      this.host.requestUpdate();
+    }
+  }
+
   untrackMutation() {
-    this.observeUnsubscribe?.();
-    this.observeUnsubscribe = undefined;
+    this.observerUnsubscribe?.();
+    this.observerUnsubscribe = undefined;
     this.result = undefined;
     this.observer = undefined;
     this.host.requestUpdate();
@@ -82,8 +90,12 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
     return this.observer!.mutate;
   }
 
+  hostConnected() {
+    this.observerSubscribe();
+  }
+
   hostDisconnected() {
     // Clear the subscription when the host is disconnected
-    this.observeUnsubscribe?.();
+    this.observerUnsubscribe?.();
   }
 }

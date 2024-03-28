@@ -1,7 +1,7 @@
 import { LitElement, html, type PropertyValues, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "./client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "./client/context-definition";
 import { localized } from "@lit/localize";
 
 import { AppTypes, type AppType } from "./types/app.types";
@@ -37,11 +37,11 @@ export class WyComments extends LitElement {
     `,
   ];
 
-  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContext }, this>;
+  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
 
   // Manually consumed in scheduleUpdate()
   @state()
-  protected weavyContext?: WeavyContext;
+  protected weavyContext?: WeavyContextType;
 
   @state()
   user?: UserType;

@@ -1,7 +1,7 @@
-import { LitElement, html, type PropertyValues } from "lit";
+import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
@@ -38,7 +38,7 @@ export default class WyCommentEdit extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   app!: AppType;
@@ -130,7 +130,7 @@ export default class WyCommentEdit extends LitElement {
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if ((changedProperties.has("app") || changedProperties.has("weavyContext")) && this.app && this.weavyContext) {
       this.updateCommentMutation.trackMutation(
         getUpdateCommentMutationOptions(this.weavyContext, ["comments", this.parentId])

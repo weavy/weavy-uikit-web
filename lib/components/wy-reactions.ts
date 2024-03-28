@@ -1,9 +1,9 @@
-import { LitElement, html, nothing, css, PropertyValues } from "lit";
+import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { consume } from "@lit/context";
 import { portal } from "lit-modal-portal";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { localized, msg } from "@lit/localize";
 
 import { type Placement as PopperPlacement, type Instance as PopperInstance, createPopper } from "@popperjs/core";
@@ -43,7 +43,7 @@ export default class WyReactions extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property()
   directionX: "left" | "right" = "left";
@@ -147,7 +147,7 @@ export default class WyReactions extends LitElement {
     this.showSheet = !this.showSheet;
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("reactions")) {
       this.reactedEmoji = this.reactions?.find((r) => r.created_by_id === this.userId)?.content;
     }
@@ -208,7 +208,7 @@ export default class WyReactions extends LitElement {
   }
 
   override render() {
-    const { data, isLoading } = this.reactionListQuery.result ?? {};
+    const { data, isPending } = this.reactionListQuery.result ?? {};
 
     
       const group = [
@@ -273,7 +273,7 @@ export default class WyReactions extends LitElement {
                 this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}>
               <span slot="appbar-text">${msg("Reactions")}</span>
               <!-- <wy-spinner></wy-spinner> -->
-              ${data && !isLoading
+              ${data && !isPending
                 ? html`
                     ${data.data?.map((reaction) => html` <wy-reaction-item .reaction=${reaction}></wy-reaction-item> `)}
                   `
@@ -286,7 +286,7 @@ export default class WyReactions extends LitElement {
     
   }
 
-  protected override updated(changedProperties: PropertyValues<this & WeavyContextProps>): void {
+  protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if ((changedProperties.has("weavyContext") || changedProperties.has("entityId")) && this.weavyContext && this.entityId) {
       this.reactionListQuery.trackQuery(getReactionListOptions(this.weavyContext, this.messageType, this.entityId));
       this.sheetId = "sheet-" + this.messageType + "-" + this.entityId;

@@ -1,7 +1,7 @@
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 
 /// GET chat app
-export async function getFeatures<T>(weavyContext: WeavyContext, type: string) {
+export async function getFeatures<T>(weavyContext: WeavyContextType, type: string) {
   if (!weavyContext) {
     throw new Error("getFeatures must be used within a WeavyContext");
   }

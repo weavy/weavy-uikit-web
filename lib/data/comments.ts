@@ -6,14 +6,14 @@ import type {
   InfiniteData,
 } from "@tanstack/query-core";
 
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { PostType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";
 import { CommentMutationContextType, CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
 
 export function getCommentsOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   type: string,
   parentId: number | null,
   options: Object = {}
@@ -44,7 +44,7 @@ export function getCommentsOptions(
   };
 }
 
-export function getUpdateCommentMutationOptions(weavyContext: WeavyContext, mutationKey: MutationKey) {
+export function getUpdateCommentMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
   const options = {
     mutationFn: async (variables: MutateCommentProps) => {
       const response = await weavyContext.post(
@@ -87,7 +87,7 @@ export function getUpdateCommentMutationOptions(weavyContext: WeavyContext, muta
   return options;
 }
 
-export function getAddCommentMutationOptions(weavyContext: WeavyContext, mutationKey: MutationKey) {
+export function getAddCommentMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
   const queryClient = weavyContext.queryClient;
 
   const options = {

@@ -1,5 +1,5 @@
-import { esbuildPlugin } from "@web/dev-server-esbuild";
 import packageJson from "../package.json" assert { type: "json" };
+import { vitePlugin } from '@remcovaes/web-test-runner-vite-plugin';
 
 const version = process.argv.find((s) => s.startsWith("--version="))?.split("=")[1] || packageJson.version;
 const sourceName = process.argv.find((s) => s.startsWith("--source-name="))?.split("=")[1] || packageJson.name;
@@ -9,11 +9,9 @@ export default {
   nodeResolve: true,
   rootDir: "../",
   plugins: [
-    esbuildPlugin({
-      ts: true,
-      target: "auto",
-      tsconfig: "dev/tsconfig.test.json",
-    }),
+    vitePlugin({
+      //configFile: "./vite.config.ts"
+    })
   ],
   define: {
     WEAVY_VERSION: `'${version.split("+")[0]}+test.${Date.now()}'`,

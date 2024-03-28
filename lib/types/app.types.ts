@@ -1,5 +1,5 @@
+import { ConversationTypeGuid } from "./conversations.types";
 import { MembersResultType } from "./members.types";
-import { MessageType } from "./messages.types";
 import { UserType } from "./users.types";
 
 export type AppType = {
@@ -41,12 +41,6 @@ export enum PermissionType {
   Update = "update",
   Delete = "delete",
   Admin = "admin",
-} 
-
-export enum ConversationTypeGuid {
-  ChatRoom = "edb400ac-839b-45a7-b2a8-6a01820d1c44",
-  ContextualChat = "d65dd4bc-418e-403c-9f56-f9cf4da931ed",
-  PrivateChat = "7e14f418-8f15-46f4-b182-f619b671e470",
 }
 
 export enum AppTypes {
@@ -63,17 +57,6 @@ export enum AppTypeGuid {
   Posts = "5ebfa152-de85-48da-82dd-30a1b560c313",
 }
 
-export type ConversationType = AppType & {
-  id: number;
-  created_by_id: number;
-  display_name: string;
-  last_message: MessageType;
-  is_unread: boolean;
-  is_pinned: boolean;
-  is_starred: boolean;
-  type: ConversationTypeGuid;
-  avatar_url: string;
-};
 
 export enum EntityTypes {
   App = "app",

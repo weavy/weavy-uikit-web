@@ -11,6 +11,8 @@ export { default as WyCommentEditor } from "./wy-comment-editor";
 export { default as WyCommentTrashed } from "./wy-comment-trashed";
 export { default as WyCommentView } from "./wy-comment-view";
 export { default as WyConversation } from "./wy-conversation";
+export { default as WyConversationAppbar } from "./wy-conversation-appbar";
+export { default as WyConversationExtended } from "./wy-conversation-extended";
 export { default as WyConversationList } from "./wy-conversation-list";
 export { default as WyConversationListItem } from "./wy-conversation-list-item";
 export { default as WyConversationNew } from "./wy-conversation-new";

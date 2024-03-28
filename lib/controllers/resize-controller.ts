@@ -69,10 +69,20 @@ export class ResizeController implements ReactiveController {
     });
   }
 
-  hostDisconnected() {
-    // Clear the observer when the host is disconnected
+  reset() {
     this.conditions = {};
     this.observers.length = 0;
+    this.resizer.disconnect();
+  }
+
+  hostConnected() {
+    this.observers.forEach((observer) => {
+      this.resizer.observe(observer.target);
+    })
+  }
+
+  hostDisconnected() {
+    // Clear the observer when the host is disconnected
     this.resizer.disconnect();
   }
 }

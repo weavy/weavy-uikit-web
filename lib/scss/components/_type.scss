@@ -1,53 +1,10 @@
 @use "base/var";
 
-@mixin heading {
-  margin-top: .5em;
-  margin-bottom: .5em;
+.wy-title {
+  font-size: 1.25em;
   font-style: var.default(--wy-headings-font-style);
   font-weight: var.default(--wy-headings-font-weight);
   line-height: var.default(--wy-headings-line-height);
+  margin-block: .5em;  
 }
 
-@mixin title {
-  @include heading;
-  margin-top: .5em;
-  margin-bottom: .5em;
-  font-weight: 400;
-  font-size: 2.5em;
-  line-height: 3em;
-}
-
-@mixin headline {
-  @include heading;
-  margin-top: .5em;
-  margin-bottom: .5em;
-  font-weight: 400;
-  font-size: 1.5em;
-  line-height: 2em;
-}
-
-@mixin label {
-  @include heading;
-  margin-top: 0;
-  margin-bottom: 0;
-  font-weight: 500;
-  font-size: 1em;
-  line-height: 1.5em;
-}
-
-// We never use H1 since we are in a context
-
-// ~ H2
-.wy-title {
-  @include title;
-}
-
-// ~ H3
-.wy-headline {
-  @include headline;
-}
-
-// ~ H4
-.wy-label {
-  @include label;
-}

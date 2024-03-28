@@ -1,4 +1,5 @@
-import { AppType, ConversationType, EntityType } from "./app.types";
+import { AppType, EntityType } from "./app.types";
+import { ConversationType } from "./conversations.types";
 import { CommentType } from "./comments.types";
 import { FileType } from "./files.types";
 import { PlainObjectType } from "./generic.types";

@@ -1,11 +1,11 @@
 import { QueryFunctionContext, QueryKey, InfiniteQueryObserverOptions, InfiniteData } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { FileOrderType, FilesResultType } from "../types/files.types";
 //import { addToQueryData, findAnyExistingItem, updateQueryData } from "../utils/query-cache";
 
 /// GET all posts in an app
 export function getInfiniteFileListOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   appId: number | null,
   filters: { order?: FileOrderType; trashed?: boolean } = {},
   options: Object = {}

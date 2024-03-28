@@ -10,7 +10,7 @@ import type { FileOrderByType, FileOrderType, FileType } from "../types/files.ty
 import { WyFilesList } from "./wy-files-list";
 
 import { repeat } from "lit/directives/repeat.js";
-import { type WeavyContext } from "../client/context-definition";
+import { type WeavyContextType } from "../client/context-definition";
 import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
@@ -19,7 +19,7 @@ export type FileOrderHeaderType = { by: FileOrderByType | undefined; title: stri
 
 export function renderFileTable(
   this: WyFilesList,
-  weavyContext: WeavyContext | undefined,
+  weavyContext: WeavyContextType | undefined,
   files: FileType[],
   order?: FileOrderType,
   isRenamingId?: number
@@ -27,8 +27,8 @@ export function renderFileTable(
   return files && files.length
     ? html`
         <table class="wy-table wy-table-hover wy-table-files">
-          <thead class="wy-files-thead">${renderFileTableHeaders.call(this, order)}</thead>
-          <tbody class="wy-files-tbody">
+          <thead>${renderFileTableHeaders.call(this, order)}</thead>
+          <tbody>
             ${repeat(
               files,
               (file) => file.id,
@@ -79,7 +79,7 @@ export function renderFileTableHeaders(this: WyFilesList, order?: FileOrderType)
 
 export function renderFileTableRow(
   this: WyFilesList,
-  weavyContext: WeavyContext | undefined,
+  weavyContext: WeavyContextType | undefined,
   { file }: { file: FileType },
   isRenamingId?: number
 ) {
@@ -133,7 +133,7 @@ export function renderFileTableRow(
       }}
     >
       <td class="wy-table-cell-icon"><wy-icon name=${icon} size="24" kind=${file.kind} ext=${ext}></wy-icon></td>
-      <td class="wy-files-td-filename">
+      <td>
         ${isRenaming
           ? html`
               <input
@@ -151,13 +151,12 @@ export function renderFileTableRow(
                 ${ref(autofocusRef)}
               />
             `
-          : html` <span>${file.name}</span> `}
+          : html`<div class="wy-truncated-text-and-icon"><div>${file.name}</div> ${file.comment_count ? html`<wy-icon size="16" name="comment" color="secondary"></wy-icon>` : nothing}</div>`}
       </td>
-      <td class="wy-files-td-modified"
-        ><time datetime="${fileChangedAt}" title=${fileDateFull}>${fileDateShort}</time></td
+      <td><time datetime="${fileChangedAt}" title=${fileDateFull}>${fileDateShort}</time></td
       >
-      <td class="wy-files-td-kind"><span>${file.kind}</span></td>
-      <td class="wy-files-td-size"><span>${fileSize}</span></td>
+      <td>${file.kind}</td>
+      <td>${fileSize}</td>
       <td class="wy-table-cell-icon">
         <wy-file-menu
           .file=${file}

@@ -12,7 +12,7 @@ import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
 import chatCss from "../scss/all"
 import type { AppType } from "../types/app.types";
@@ -43,7 +43,7 @@ export default class WyMessage extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ type: Object })
   app!: AppType;
@@ -223,15 +223,15 @@ export default class WyMessage extends LitElement {
                       title=${msg(str`Seen by ${member.display_name} at ${dateSeenFull}`)}
                       .name=${member.display_name}
                       .src=${member.avatar_url}
-                      size=${16}></wy-avatar>`;
+                      size=${18}></wy-avatar>`;
                   })}
                 `
               : this.delivered === true
-              ? html`<wy-icon title="Delivered" class="wy-status-delivered" name="check-circle"></wy-icon>`
+              ? html`<wy-icon title="Delivered" class="wy-status-delivered" name="check-circle" size="18"></wy-icon>`
               : this.sent === true
-              ? html`<wy-icon title="Sent" class="wy-status-sent" name="check-circle-outline"></wy-icon>`
+              ? html`<wy-icon title="Sent" class="wy-status-sent" name="check-circle-outline" size="18"></wy-icon>`
               : this.sent === false
-              ? html`<wy-icon title="Pending" class="wy-status-pending" name="circle-outline"></wy-icon>`
+              ? html`<wy-icon title="Pending" class="wy-status-pending" name="circle-outline" size="18"></wy-icon>`
               : nothing}
           </div>`
         : nothing}

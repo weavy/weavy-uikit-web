@@ -1,9 +1,9 @@
-import { LitElement, html, nothing, type PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import chatCss from "../scss/all"
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import chatCss from "../scss/all";
 import type { MessageType } from "../types/messages.types";
 import type { UserType } from "../types/users.types";
 import { type MembersResultType } from "../types/members.types";
@@ -20,6 +20,7 @@ import "./wy-dropdown";
 import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { ConversationTypeGuid } from "../types/conversations.types";
 
 @customElement("wy-conversation-list-item")
 @localized()
@@ -28,7 +29,7 @@ export default class WyConversationListItem extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: true, type: Number })
   conversationId!: number;
@@ -39,11 +40,14 @@ export default class WyConversationListItem extends LitElement {
   @property({ attribute: true })
   avatarUrl: string = "";
 
+  @property({ attribute: true, type: Boolean })
+  hideAvatar: boolean = false;
+
   @property({ attribute: true })
   displayName: string = "";
 
-  @property({ attribute: true, type: Boolean, reflect: true })
-  room: boolean = false;
+  @property({ attribute: true, type: String, reflect: true })
+  type: ConversationTypeGuid = ConversationTypeGuid.PrivateChat;
 
   @property({ attribute: true, type: Boolean, reflect: true })
   selected: boolean = false;
@@ -130,7 +134,14 @@ export default class WyConversationListItem extends LitElement {
     return this.dispatchEvent(event);
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  private handleTrashConversation() {
+    const event = new CustomEvent("trash", {
+      detail: { id: this.conversationId },
+    });
+    return this.dispatchEvent(event);
+  }
+
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.deliveredConversationMutation = getDeliveredConversationMutation(this.weavyContext);
 
@@ -159,9 +170,10 @@ export default class WyConversationListItem extends LitElement {
       ? relativeTime(this.weavyContext?.locale, new Date(this.lastMessage.created_at))
       : "";
 
-    const otherMember = !this.room
-      ? (this.members?.data || []).filter((member) => member.id !== this.user!.id)?.[0]
-      : null;
+    const otherMember =
+      this.type === ConversationTypeGuid.PrivateChat
+        ? (this.members?.data || []).filter((member) => member.id !== this.user!.id)?.[0]
+        : null;
 
     return html`
       <div
@@ -175,28 +187,33 @@ export default class WyConversationListItem extends LitElement {
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
-        ${this.room && this.user
-          ? html`
-              <wy-avatar-group
-                .members=${this.members}
-                .user=${this.user}
-                .name=${this.displayName}
-                .size=${48}
-              ></wy-avatar-group>
-            `
-          : html`
-              <wy-avatar
-                src=${ifDefined(otherMember?.avatar_url)}
-                name=${this.displayName}
-                size=${48}
-                presence=${otherMember?.presence || "away"}
-                id=${ifDefined(otherMember?.id)}
-              ></wy-avatar>
-            `}
+        ${this.type !== ConversationTypeGuid.BotChat
+          ? this.type === ConversationTypeGuid.ChatRoom && this.user
+            ? html`
+                <wy-avatar-group
+                  .members=${this.members}
+                  .user=${this.user}
+                  .name=${this.displayName}
+                  .size=${48}
+                ></wy-avatar-group>
+              `
+            : html`
+                <wy-avatar
+                  src=${ifDefined(otherMember?.avatar_url)}
+                  name=${this.displayName}
+                  size=${48}
+                  presence=${otherMember?.presence || "away"}
+                  id=${ifDefined(otherMember?.id)}
+                  ?isbot=${otherMember?.is_bot}
+                ></wy-avatar>
+              `
+          : nothing}
 
         <div class="wy-item-body">
           <div class="wy-item-row">
-            <div class="wy-item-title">${this.displayName}</div>
+            <div class="wy-item-title"
+              >${this.displayName || this.lastMessage?.plain || msg("Untitled conversation")}</div
+            >
             ${this.lastMessage
               ? html`<time class="wy-meta" datetime=${this.lastMessage.created_at.toString()} title=${dateFull}
                   >${dateFromNow}</time
@@ -252,11 +269,19 @@ export default class WyConversationListItem extends LitElement {
               <wy-icon name=${this.starred ? "unstar" : "star"}></wy-icon>
               ${this.starred ? msg("Unstar") : msg("Star")}
             </wy-dropdown-item>
-            ${this.room
+            ${this.type === ConversationTypeGuid.ChatRoom
               ? html`<wy-dropdown-item @click=${() => this.handleLeaveConversation()}>
                   <wy-icon name="account-minus"></wy-icon>
                   ${msg("Leave conversation")}
                 </wy-dropdown-item>`
+              : nothing}
+            ${this.type === ConversationTypeGuid.BotChat
+              ? html`
+                  <wy-dropdown-item @click=${() => this.handleTrashConversation()}>
+                    <wy-icon name="trashcan"></wy-icon>
+                    ${msg("Trash")}
+                  </wy-dropdown-item>
+                `
               : nothing}
           </wy-dropdown>
         </div>

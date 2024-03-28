@@ -1,12 +1,12 @@
-import { LitElement, PropertyValues, css, html, nothing } from "lit";
+import { LitElement, type PropertyValueMap, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 
 import allCss from "../scss/all";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { consume } from "@lit/context";
 
-import { WeavyContextProps } from "lib/types/weavy.types";
+import { WeavyContextProps } from "../types/weavy.types";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
@@ -36,7 +36,7 @@ export class WyConfluenceViewer extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property()
   src?: string;
@@ -72,7 +72,7 @@ export class WyConfluenceViewer extends LitElement {
     });
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.productName ??= this.weavyContext.confluenceProductName;
     }
@@ -101,7 +101,7 @@ export class WyConfluenceViewer extends LitElement {
         `;
   }
 
-  protected override async updated(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (
       (changedProperties.has("contentId") ||
         changedProperties.has("PageComponent") ||

@@ -33,7 +33,7 @@ export default class WyCommentEditor extends WyEditor {
       hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings)
         ? html`<wy-dropdown icon="plus" directionY="up">
             ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-              ? html`<wy-dropdown-item @click=${this.openFileInput}>
+              ? html`<wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
                     <wy-icon name="attachment"></wy-icon>
                     <span>${msg("From device")}</span>
                   </wy-dropdown-item>
@@ -52,7 +52,7 @@ export default class WyCommentEditor extends WyEditor {
                   />`
               : nothing}
             ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
-              ? html`<wy-dropdown-item @click=${this.openCloudFiles}>
+              ? html`<wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
                   <wy-icon name="cloud"></wy-icon>
                   <span>${msg("From cloud")}</span>
                 </wy-dropdown-item>`
@@ -66,13 +66,13 @@ export default class WyCommentEditor extends WyEditor {
               : nothing}
             ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) &&
             this.weavyContext?.zoomAuthenticationUrl
-              ? html`<wy-dropdown-item @click=${this.handleZoomClick}>
+              ? html`<wy-dropdown-item @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
                   <wy-icon name="zoom"></wy-icon>
                   <span>${msg("Zoom meeting")}</span>
                 </wy-dropdown-item>`
               : nothing}
             ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls)
-              ? html`<wy-dropdown-item @click=${this.openPolls}>
+              ? html`<wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}>
                   <wy-icon name="poll"></wy-icon>
                   <span>${msg("Poll")}</span>
                 </wy-dropdown-item>`

@@ -5,7 +5,6 @@ export const defaultIcon = mdi.mdiSelect
 
 // Custom mapping to MDI instead of symbols
 export const iconMapping: { [index: string]: string } = {
-  "shield-star": mdi.mdiShieldStar,
   "account-minus": mdi.mdiAccountMinus,
   "account-plus": mdi.mdiAccountPlus,
   "alert": mdi.mdiAlert,
@@ -16,6 +15,7 @@ export const iconMapping: { [index: string]: string } = {
   "backup-restore": mdi.mdiBackupRestore,
   "bell": mdi.mdiBell,
   "bell-off": mdi.mdiBellOff,
+  "bot": mdi.mdiMemory,
   "check": mdi.mdiCheck,
   "check-circle-outline": mdi.mdiCheckCircleOutline,  
   "checkbox-blank": mdi.mdiCheckboxBlankOutline,
@@ -57,6 +57,7 @@ export const iconMapping: { [index: string]: string } = {
   "unread": mdi.mdiCheck,
   "send": mdi.mdiSend,
   "server-network-off": mdi.mdiServerNetworkOff,
+  "shield-star": mdi.mdiShieldStar,
   "sort": mdi.mdiSort,
   "star": mdi.mdiStar,
   "unstar": mdi.mdiStarOff,
@@ -84,7 +85,7 @@ export const iconMapping: { [index: string]: string } = {
   "file-pdf": mdi.mdiFileDocument,
   "file-powerpoint": mdi.mdiFilePowerpoint,
   "file-compressed": mdi.mdiFolderZip,
-  // Providers
+  // Integrations
   "dropbox": mdi.mdiDropbox,
   "onedrive": mdi.mdiMicrosoftOnedrive,
   "box": mdi.mdiBox,

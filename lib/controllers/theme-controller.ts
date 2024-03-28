@@ -17,9 +17,6 @@ export class ThemeController implements ReactiveController {
     if (styles) {
       this.styles = styles;
     }
-
-    this.cssObserverDisconnect = observeCSSThemeColor(host, () => this.checkThemeUpdate());
-    this.metaObserverDisconnect = observeMetaThemeColor(() => this.checkThemeUpdate());
   }
 
   firstUpdate = true;
@@ -54,6 +51,11 @@ export class ThemeController implements ReactiveController {
       this.checkThemeUpdate();
       this.firstUpdate = false;
     }
+  }
+
+  hostConnected() {
+    this.cssObserverDisconnect = observeCSSThemeColor(this.host, () => this.checkThemeUpdate());
+    this.metaObserverDisconnect = observeMetaThemeColor(() => this.checkThemeUpdate());
   }
 
   hostDisconnected() {

@@ -10,8 +10,15 @@
   gap: var.wy-rem(1.25);
 }
 
+
+:host-context(wy-comments) {
+  .wy-comments {
+    padding:0;
+  }
+}
+
 .wy-comments-count {
-  padding: 0 var.wy-rem(.5);
+  padding: 0 var.wy-rem(0.5);
   @include text.truncate;
 }
 
@@ -24,31 +31,43 @@
   color: var(--wy-component-color);
   display: flex;
   flex-direction: column;
-  gap: var.wy-rem(.25);
-  padding: var.wy-rem(.25);
+  gap: var.wy-rem(0.25);
+  padding: var.wy-rem(0.25);
   position: relative;
 
   .wy-item {
-    padding-left: var.wy-rem(.75);
-    padding-right: var.wy-rem(.75);
+    padding-inline: var.wy-rem(0.5);
 
-    > .wy-avatar, > wy-icon, > .wy-icon-stack {
-      margin-left: var.wy-rem(-.25);
+    > .wy-avatar,
+    > wy-icon,
+    > .wy-icon-stack {
+      margin-left: var.wy-rem(-0.25);
     }
   }
 
   .wy-reactions-line {
     position: absolute;
     bottom: var.wy-rem(-1.125);
-    right: var.wy-rem(.25);
+    right: var.wy-rem(0.25);
   }
+
+  // adjust for padding
+  .wy-item-actions-top {
+    top:0;
+    right: 0;
+  }
+
 }
 
 .wy-comment-body {
   flex: 1 0 auto;
   z-index: 1;
 
-  .wy-image-grid, .wy-embed, .wy-content, .wy-list, .wy-poll {
+  .wy-image-grid,
+  .wy-embed,
+  .wy-content,
+  .wy-list,
+  .wy-poll {
     // spacing between content
     margin-bottom: var.wy-rem(1);
 
@@ -59,9 +78,7 @@
 }
 
 .wy-comment-content {
-  padding: 0 var.wy-rem(.5) var.wy-rem(.5);
+  padding: 0 var.wy-rem(0.5) var.wy-rem(0.5);
   display: flex;
   flex-direction: column;
 }
-
-

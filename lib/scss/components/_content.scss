@@ -1,19 +1,25 @@
 @use "base/color";
 @use "code";
 
-// user generated content. e.g. text in comments, messages etc.
+// user generated content, e.g. comments, messages etc.
 .wy-content {
   @include code.themes;
 
   overflow-wrap: break-word;
   min-width: 0;
+  
   // inline code
   :not(pre) > code {
     overflow-wrap: inherit;
   }
+  
   // code block
   pre, pre > code[class*=language-] {
     white-space: pre-wrap;
+  }
+
+  :first-child {
+    margin-top: 0;
   }
 
   :last-child {
@@ -32,5 +38,5 @@
 
 // mentions
 .wy-mention {
-  font-weight: 500;
+  font-weight: bold;
 }

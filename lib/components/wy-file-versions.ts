@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 
@@ -14,7 +14,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { repeat } from "lit/directives/repeat.js";
 import type { AppType } from "../types/app.types";
 import {
@@ -38,7 +38,7 @@ export class WyFileVersions extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   app!: AppType;
@@ -88,7 +88,7 @@ export class WyFileVersions extends LitElement {
     openUrl(file.download_url, "_top", file.name, true);
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if ((changedProperties.has("weavyContext") || changedProperties.has("file")) && this.weavyContext) {
       this.fileVersionsQuery.trackQuery(
         getApiOptions<FileType[]>(
@@ -111,7 +111,8 @@ export class WyFileVersions extends LitElement {
   }
 
   override render() {
-    const { data, isPending } = this.fileVersionsQuery.result;
+
+    const { data, isPending } = this.fileVersionsQuery.result ?? { isPending: true };
 
     if (isPending) {
       return html`<wy-spinner overlay></wy-spinner>`;

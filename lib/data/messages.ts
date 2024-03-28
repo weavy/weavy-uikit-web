@@ -6,13 +6,13 @@ import type {
   InfiniteData,
 } from "@tanstack/query-core";
 
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { MessageType, MutateMessageProps, type MessagesResultType, MessageMutationContextType } from "../types/messages.types";
 import { addCacheItem } from "../utils/query-cache";
 import { PollOptionType } from "../types/polls.types";
 
 export function getMessagesOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   appId: number | null,
   options: Object = {}
 ): InfiniteQueryObserverOptions<MessagesResultType, Error, InfiniteData<MessagesResultType>> {
@@ -47,7 +47,7 @@ export function getMessagesOptions(
   };
 }
 
-export function getAddMessageMutationOptions(weavyContext: WeavyContext, mutationKey: MutationKey) {
+export function getAddMessageMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
   const queryClient = weavyContext.queryClient;
 
   const options = {

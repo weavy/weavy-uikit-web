@@ -387,10 +387,6 @@
         <source>Messenger</source>
         <target>Meddelanden</target>
       </trans-unit>
-      <trans-unit id="s0fbf6dc6a1966408">
-        <source>Next</source>
-        <target>Nästa</target>
-      </trans-unit>
       <trans-unit id="sf9aee319a006c9b4">
         <source>Add</source>
         <target>Lägg till</target>
@@ -455,6 +451,14 @@
       <trans-unit id="sa51cfa5b38f02434">
         <source>Confluence Page Picker</source>
         <target>Confluence sidväljare</target>
+      </trans-unit>
+      <trans-unit id="s382a2aa3984474dd">
+        <source>Create</source>
+        <target>Skapa</target>
+      </trans-unit>
+      <trans-unit id="s0204546ecda4bd3f">
+        <source>Untitled conversation</source>
+        <target>Namnlös konversation</target>
       </trans-unit>
     </body>
   </file>

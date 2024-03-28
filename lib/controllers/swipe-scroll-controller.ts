@@ -93,7 +93,21 @@ export class SwipeScrollController implements ReactiveController {
     this.sleep = false;
   }
 
+  hostConnected() {
+    if (this.scrollObserver) {
+      if (this.prevElement) {
+        this.scrollObserver.observe(this.prevElement);
+      }
+  
+      if (this.nextElement) {
+        this.scrollObserver.observe(this.nextElement);
+      }
+      
+      this.sleep = false;
+    }
+  }
+
   hostDisconnected() {
-    this.clearObserver();
+    this.scrollObserver?.disconnect();
   }
 }

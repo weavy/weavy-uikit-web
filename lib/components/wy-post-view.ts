@@ -15,7 +15,7 @@ import { PollOptionType } from "../types/polls.types";
 import { localized, msg, str } from "@lit/localize";
 
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
 import chatCss from "../scss/all"
 
@@ -49,7 +49,7 @@ export default class WyPostView extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   app!: AppType;
@@ -165,7 +165,7 @@ export default class WyPostView extends LitElement {
     return this.temp
       ? html`<div class="wy-post">
           <div class="wy-item wy-item-lg">
-            <wy-avatar .src="${this.createdBy.avatar_url}" .size=${48} .name=${this.createdBy.display_name}></wy-avatar>
+            <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${this.createdBy.display_name}></wy-avatar>
             <div class="wy-item-body">
               <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
               <div class="wy-item-text">
@@ -180,9 +180,7 @@ export default class WyPostView extends LitElement {
       : html`
           <div class="wy-post">
             <div class="wy-item wy-item-lg">
-              <wy-avatar .src="${this.createdBy.avatar_url}" .size=${48} .name=${
-          this.createdBy.display_name
-        }></wy-avatar>
+              <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${this.createdBy.display_name}></wy-avatar>
               <div class="wy-item-body">
                 <div class="wy-item-row">
                   <div class="wy-item-title">${this.createdBy.display_name}</div>

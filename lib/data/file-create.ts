@@ -9,7 +9,7 @@ import {
 } from "../types/files.types";
 import { UserType } from "../types/users.types";
 import { type ServerErrorResponseType } from "../types/server.types";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { AppType } from "../types/app.types";
 import { removeSuccessfulUploadBlobMutations } from "./blob-upload";
 import { updateMutationContext } from "../utils/mutation-cache";
@@ -98,7 +98,7 @@ export function getFileMutationsByConflictOrError(
   );
 }
 
-/*export function useRemoveMutatingFileUpload(weavyContext: WeavyContext, filesKey: MutationKey) {
+/*export function useRemoveMutatingFileUpload(weavyContext: WeavyContextType, filesKey: MutationKey) {
     const queryClient = weavyContext.queryClient;
     const mutationKey: MutationKey = filesKey;
 
@@ -109,7 +109,7 @@ export function getFileMutationsByConflictOrError(
     }
 }*/
 
-/*export function useClearMutatingFileUpload(weavyContext: WeavyContext, filesKey: MutationKey) {
+/*export function useClearMutatingFileUpload(weavyContext: WeavyContextType, filesKey: MutationKey) {
     const queryClient = weavyContext.queryClient;
     const mutationKey: MutationKey = filesKey;
 
@@ -122,7 +122,7 @@ export function getFileMutationsByConflictOrError(
     }
 }*/
 
-export function removeSettledFileMutations(weavyContext: WeavyContext, app: AppType, name: string) {
+export function removeSettledFileMutations(weavyContext: WeavyContextType, app: AppType, name: string) {
   const queryClient = weavyContext.queryClient;
 
   // Remove any file create mutations
@@ -140,7 +140,7 @@ export function removeSettledFileMutations(weavyContext: WeavyContext, app: AppT
 }
 
 /// Mutation for adding a <BlobType> to a <FileType> query
-export function getCreateFileMutationOptions(weavyContext: WeavyContext, user: UserType, app: AppType) {
+export function getCreateFileMutationOptions(weavyContext: WeavyContextType, user: UserType, app: AppType) {
   const queryClient = weavyContext.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 

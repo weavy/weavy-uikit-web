@@ -13,11 +13,11 @@ import { classMap } from "lit/directives/class-map.js";
 //import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { localized, msg } from "@lit/localize";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all";
 
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { hasFeature } from "../utils/features";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import throttle from "lodash.throttle";
@@ -60,6 +60,7 @@ import "./wy-embed";
 import "./wy-dropdown";
 import "./wy-file-item";
 import "./wy-confluence";
+import { ConversationTypeGuid } from "../types/conversations.types";
 
 @customElement("wy-editor")
 @localized()
@@ -68,7 +69,7 @@ export default class WyEditor extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  protected weavyContext?: WeavyContext;
+  protected weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   app?: AppType;
@@ -172,8 +173,8 @@ export default class WyEditor extends LitElement {
 
   private throttledTyping = throttle(
     async () => {
-      if (this.weavyContext && this.app) {
-        const mutation = await typingMutation(this.weavyContext, this.app.id, this.editorLocation, this.editorType);
+      if (this.weavyContext && this.app && (this.app.type === ConversationTypeGuid.ChatRoom || this.app.type === ConversationTypeGuid.PrivateChat)) {
+        const mutation = await typingMutation(this.weavyContext, this.app.id);
         await mutation.mutate();
       }
     },
@@ -284,132 +285,143 @@ export default class WyEditor extends LitElement {
       this.editorRef.value
     ) {
       this.weavyContext.whenUrl().then(() => {
-        import("../utils/editor/editor").then(({ 
-          defaultHighlightStyle, 
-          syntaxHighlighting,
-          history,
-          dropCursor,
-          mentions,
-          autocompletion,
-          placeholder,
-          keymap, weavyKeymap, defaultKeymap, historyKeymap,
-          markdown, languages, 
-          EditorView,
-          EditorState,
-          weavyDesktopMessageKeymap
-        }) => {
-          const extraKeyMap = (this.editorType === "messages" && desktop && weavyDesktopMessageKeymap) ? [...weavyDesktopMessageKeymap] : [];
-  
-          this.editorExtensions = [
-            EditorView.contentAttributes.of({
-              spellcheck: "true",
-              autocorrect: "on",
-              autocapitalize: "on",
-            }),
-            history(),
-            dropCursor(),
+        import("../utils/editor/editor").then(
+          ({
+            defaultHighlightStyle,
+            syntaxHighlighting,
+            history,
+            dropCursor,
             mentions,
-            autocompletion({
-              override: hasFeature(this.availableFeatures, Feature.Mentions, this.features?.mentions)
-                ? [(context: CompletionContext) => this.autocomplete(context)]
-                : null, //showMention
-              closeOnBlur: false,
-              icons: false,
-              addToOptions: [
-                {
-                  render: function (completion: MentionsCompletion, _state: EditorState) {
-                    const div = document.createElement("div");
-                    div.classList.add("wy-item");
-                    div.classList.add("wy-item-hover");
-    
-                    if (!completion.item?.access || completion.item.access === AccessType.None) {
-                      div.classList.add("wy-disabled");
-                    }
-    
-                    const avatar = document.createElement("wy-avatar") as WeavyAvatar;
-                    avatar.src = completion.item?.avatar_url || "";
-                    avatar.name = completion.item?.display_name || "";
-    
-                    const name = document.createElement("div");
-                    name.classList.add("wy-item-body");
-                    name.innerText = completion.item?.display_name || "";
-    
-                    div.appendChild(avatar);
-                    div.appendChild(name);
-                    return div;
-                  },
-                  position: 10,
-                },
-              ],
-            }),
-            placeholder(this.placeholder),
-            syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-            EditorView.lineWrapping,
-            keymap.of([...extraKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap]),
-            markdown({ codeLanguages: languages }),
-            EditorView.domEventHandlers({
-              paste: (evt: ClipboardEvent, _view: EditorView): boolean | void => {
-                let files: File[] = [];
-                const items = evt.clipboardData?.items || [];
-    
-                for (const index in items) {
-                  const item = items[index];
-                  if (item.kind === "file") {
-                    const file = item.getAsFile();
-                    if (file) {
-                      files = [...files, file];
-                    }
-                  }
-                }
-    
-                if (
-                  files.length > 0 &&
-                  hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-                ) {
-                  for (let i = 0; i < files.length; i++) {
-                    this.handleUploadFiles(files);
-                  }
-                  return true;
-                }
-              },
-              keyup: (evt: KeyboardEvent, _view: EditorView) => {
-                if (
-                  this.typing &&
-                  _view.state.doc.toString() !== "" &&
-                  hasFeature(this.availableFeatures, Feature.Typing, this.features?.typing)
-                ) {
-                  this.throttledTyping();
-                }
-    
-                if (this.draft) {
-                  this.throttledDrafting();
-                }
-    
-                if (
-                  hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds) &&
-                  _view.state.doc.toString() !== ""
-                ) {
-                  this.handleEmbeds(_view.state.doc.toString());
-                }
-              },
-            }),
-            EditorView.updateListener.of((_v: ViewUpdate) => {}),
-          ];
-          
-          if (!this.editor) {
-            this.editor = new EditorView({
-              state: EditorState.create({
-                doc: this.text,
-                extensions: this.editorExtensions,
+            autocompletion,
+            placeholder,
+            keymap,
+            weavyKeymap,
+            defaultKeymap,
+            historyKeymap,
+            markdown,
+            languages,
+            EditorView,
+            EditorState,
+            weavyDesktopMessageKeymap,
+          }) => {
+            const extraKeyMap =
+              this.editorType === "messages" && desktop && weavyDesktopMessageKeymap
+                ? [...weavyDesktopMessageKeymap]
+                : [];
+
+            this.editorExtensions = [
+              EditorView.contentAttributes.of({
+                spellcheck: "true",
+                autocorrect: "on",
+                autocapitalize: "on",
               }),
-              parent: this.editorRef.value,
-            });
-    
-            // listen for custom event (ctrl+enter)
-            this.editorRef.value?.querySelector(".cm-editor")?.addEventListener("Weavy-SoftSubmit", this.submit.bind(this));
+              history(),
+              dropCursor(),
+              mentions,
+              autocompletion({
+                override: hasFeature(this.availableFeatures, Feature.Mentions, this.features?.mentions)
+                  ? [(context: CompletionContext) => this.autocomplete(context)]
+                  : null, //showMention
+                closeOnBlur: false,
+                icons: false,
+                addToOptions: [
+                  {
+                    render: function (completion: MentionsCompletion, _state: EditorState) {
+                      const div = document.createElement("div");
+                      div.classList.add("wy-item");
+                      div.classList.add("wy-item-hover");
+
+                      if (!completion.item?.access || completion.item.access === AccessType.None) {
+                        div.classList.add("wy-disabled");
+                      }
+
+                      const avatar = document.createElement("wy-avatar") as WeavyAvatar;
+                      avatar.src = completion.item?.avatar_url || "";
+                      avatar.name = completion.item?.display_name || "";
+
+                      const name = document.createElement("div");
+                      name.classList.add("wy-item-body");
+                      name.innerText = completion.item?.display_name || "";
+
+                      div.appendChild(avatar);
+                      div.appendChild(name);
+                      return div;
+                    },
+                    position: 10,
+                  },
+                ],
+              }),
+              placeholder(this.placeholder),
+              syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+              EditorView.lineWrapping,
+              keymap.of([...extraKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap]),
+              markdown({ codeLanguages: languages }),
+              EditorView.domEventHandlers({
+                paste: (evt: ClipboardEvent, _view: EditorView): boolean | void => {
+                  let files: File[] = [];
+                  const items = evt.clipboardData?.items || [];
+
+                  for (const index in items) {
+                    const item = items[index];
+                    if (item.kind === "file") {
+                      const file = item.getAsFile();
+                      if (file) {
+                        files = [...files, file];
+                      }
+                    }
+                  }
+
+                  if (
+                    files.length > 0 &&
+                    hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
+                  ) {
+                    for (let i = 0; i < files.length; i++) {
+                      this.handleUploadFiles(files);
+                    }
+                    return true;
+                  }
+                },
+                keyup: (evt: KeyboardEvent, _view: EditorView) => {
+                  if (
+                    this.typing &&
+                    _view.state.doc.toString() !== "" &&
+                    hasFeature(this.availableFeatures, Feature.Typing, this.features?.typing)
+                  ) {
+                    this.throttledTyping();
+                  }
+
+                  if (this.draft) {
+                    this.throttledDrafting();
+                  }
+
+                  if (
+                    hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds) &&
+                    _view.state.doc.toString() !== ""
+                  ) {
+                    this.handleEmbeds(_view.state.doc.toString());
+                  }
+                },
+              }),
+              EditorView.updateListener.of((_v: ViewUpdate) => {}),
+            ];
+
+            if (!this.editor) {
+              this.editor = new EditorView({
+                state: EditorState.create({
+                  doc: this.text,
+                  extensions: this.editorExtensions,
+                }),
+                parent: this.editorRef.value,
+              });
+
+              // listen for custom event (ctrl+enter)
+              this.editorRef.value
+                ?.querySelector(".cm-editor")
+                ?.addEventListener("Weavy-SoftSubmit", this.submit.bind(this));
+            }
           }
-        });
-      })
+        );
+      });
     }
 
     if (changedProperties.has("placeholder")) {
@@ -557,7 +569,8 @@ export default class WyEditor extends LitElement {
     removeMutation(
       this.weavyContext.queryClient,
       ["apps", this.app.id, "blobs", `${this.editorLocation}-${this.parentId || this.app.id}`],
-      (m) => (m as Mutation<BlobType, Error, MutateFileProps, FileMutationContextType>).state.data?.id === mutation.data?.id
+      (m) =>
+        (m as Mutation<BlobType, Error, MutateFileProps, FileMutationContextType>).state.data?.id === mutation.data?.id
     );
   }
 
@@ -725,7 +738,7 @@ export default class WyEditor extends LitElement {
       ></div>
       <div class="wy-post-editor-inputs">
         ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-          ? html`<wy-button kind="icon" @click=${this.openFileInput}>
+          ? html`<wy-button kind="icon" @click=${this.openFileInput} title=${msg("From device")}>
                 <wy-icon name="attachment"></wy-icon>
               </wy-button>
               <input
@@ -743,22 +756,26 @@ export default class WyEditor extends LitElement {
               />`
           : nothing}
         ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
-          ? html`<wy-button kind="icon" @click=${this.openCloudFiles}>
+          ? html`<wy-button kind="icon" @click=${this.openCloudFiles} title=${msg("From cloud")}>
               <wy-icon name="cloud"></wy-icon>
             </wy-button>`
           : nothing}
         ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
-            this.weavyContext?.confluenceAuthenticationUrl 
-              ? html`<wy-confluence @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}></wy-confluence>`
-              : nothing}
+        this.weavyContext?.confluenceAuthenticationUrl
+          ? html`<wy-confluence
+              @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
+            ></wy-confluence>`
+          : nothing}
         ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) &&
         this.weavyContext?.zoomAuthenticationUrl
-          ? html`<wy-button kind="icon" @click=${this.handleZoomClick}>
+          ? html`<wy-button kind="icon" @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
               <wy-icon name="zoom"></wy-icon>
             </wy-button>`
           : nothing}
         ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls)
-          ? html`<wy-button kind="icon" @click=${this.openPolls}><wy-icon name="poll"></wy-icon></wy-button>`
+          ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")}>
+              <wy-icon name="poll"></wy-icon>
+            </wy-button>`
           : nothing}
 
         <!-- Button -->
@@ -909,7 +926,6 @@ export default class WyEditor extends LitElement {
           "wy-dragging": isDragActive,
         })}
         data-drag-title=${msg("Drop files here to upload.")}
-        title=${msg("Drop files here to upload.")}
       >
         ${this.renderTopSlot()} ${this.renderMiddleSlot()} ${this.renderBottomSlot()}
       </div>

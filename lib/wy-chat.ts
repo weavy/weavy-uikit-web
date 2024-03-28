@@ -1,13 +1,15 @@
 import { customElement, property } from "lit/decorators.js";
-import WyConversation from "./components/wy-conversation";
 import { ThemeController } from "./controllers/theme-controller";
-import { PropertyValues } from "lit";
+import { PropertyValues, html } from "lit";
 import colorModes from "./scss/colormodes"
 import { QueryController } from "./controllers/query-controller";
-import { AppTypes, ConversationType } from "./types/app.types";
+import { AppTypes } from "./types/app.types";
+import { ConversationType } from "./types/conversations.types";
 import { WeavyContextProps } from "./types/weavy.types";
 import { RealtimeAppEventType, RealtimeMessageEventType, RealtimeReactionEventType } from "./types/realtime.types";
 import { getAppOptions } from "./data/app";
+
+import WyConversation from "./components/wy-conversation";
 
 @customElement("wy-chat")
 export class WyChat extends WyConversation {
@@ -83,6 +85,7 @@ export class WyChat extends WyConversation {
 
     if (!this.conversationQuery.result?.isPending) {
       this.conversation = this.conversationQuery.result?.data;
+      this.conversationId = this.conversation?.id; // TODO: use uid?
     }
 
     if ((changedProperties.has("weavyContext") || changedProperties.has("conversation"))  && this.weavyContext && this.conversation) {
@@ -105,6 +108,14 @@ export class WyChat extends WyConversation {
     this.weavyContext.unsubscribe(`a${conversation.id}`, "reaction_added", this.realtimeReactionAddedEvent);
     this.weavyContext.unsubscribe(`a${conversation.id}`, "reaction_removed", this.realtimeReactionRemovedEvent);
     this.weavyContext.unsubscribe(`a${conversation.id}`, "app_updated", this.realtimeAppUpdatedEvent);
+  }
+
+  override render() {
+      return html`
+      <div class="wy-messenger-conversation wy-scroll-y">
+        ${super.render()}
+      </div>
+      `
   }
 
   override disconnectedCallback(): void {

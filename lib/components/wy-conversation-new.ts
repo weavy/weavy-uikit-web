@@ -1,8 +1,8 @@
-import { LitElement, html, css, type PropertyValues } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { LitElement, html, css, type PropertyValueMap, nothing } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 import { portal } from "lit-modal-portal";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
 import allStyles from "../scss/all"
 import { MemberType } from "../types/members.types";
@@ -14,6 +14,7 @@ import "./wy-overlay";
 import "./wy-button";
 import "./wy-icon";
 import { WeavyContextProps } from "../types/weavy.types";
+import { ConversationTypeString } from "../types/conversations.types";
 
 @customElement("wy-conversation-new")
 @localized()
@@ -30,7 +31,10 @@ export default class WyConversationNew extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
+
+  @property()
+  bot?: string;
 
   @state()
   private show = false;
@@ -45,9 +49,12 @@ export default class WyConversationNew extends LitElement {
     this.show = false;
   }
 
-  private async submit(members: MemberType[]) {
+
+  private async submit(members: MemberType[] = []) {
+    const memberOptions = this.bot ? { members: [ this.bot ], type: ConversationTypeString.BotChat } : { members: members?.map((m) => m.id) };
+
     // create conversation
-    const conversation = await this.addConversationMutation?.mutate({ members: members.map((m) => m.id) });
+    const conversation = await this.addConversationMutation?.mutate(memberOptions);
 
     // close modal
     this.close();
@@ -60,7 +67,7 @@ export default class WyConversationNew extends LitElement {
     return this.dispatchEvent(eventSelect);
   }
 
-  protected override updated(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.addConversationMutation = getAddConversationMutation(this.weavyContext);
     }
@@ -68,9 +75,9 @@ export default class WyConversationNew extends LitElement {
 
   override render() {
     return html`
-      <wy-button kind="icon" @click=${this.open}><wy-icon name="plus"></wy-icon></wy-button>
+      <wy-button kind="icon" @click=${() => this.bot ? this.submit() : this.open()}><wy-icon name="plus"></wy-icon></wy-button>
 
-      ${portal(
+      ${!this.bot ? portal(
         this.show,
         html`<wy-overlay
           @release-focus=${() =>
@@ -87,7 +94,7 @@ export default class WyConversationNew extends LitElement {
           <wy-users-search @submit=${(e: CustomEvent) => this.submit(e.detail.members)}></wy-users-search>
         </wy-overlay>`,
         () => (this.show = false)
-      )}
+      ) : nothing }
     `;
   }
 }

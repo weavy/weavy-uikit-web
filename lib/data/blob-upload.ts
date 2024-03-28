@@ -1,6 +1,6 @@
 import { BlobType, FileMutationContextType, MutateFileProps } from "../types/files.types";
 import { type ServerErrorResponseType } from "../types/server.types";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { AppType } from "../types/app.types";
 import { UserType } from "../types/users.types";
 import { MutationKey } from "@tanstack/query-core";
@@ -18,7 +18,7 @@ export type UploadProgressProps = {
 };
 
 export function removeSuccessfulUploadBlobMutations(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   app: AppType,
   name: string,
   uniqueId?: string
@@ -40,7 +40,7 @@ export function removeSuccessfulUploadBlobMutations(
 }
 
 export async function uploadBlob(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   file: File,
   onProgress?: (variables: UploadProgressProps) => void
 ) {
@@ -62,7 +62,7 @@ export async function uploadBlob(
 }
 
 export function getUploadBlobMutationOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   user: UserType,
   app: AppType,
   uniqueId?: string

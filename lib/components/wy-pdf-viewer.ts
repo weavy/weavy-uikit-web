@@ -1,10 +1,10 @@
-import { LitElement, css, html, type PropertyValues } from "lit";
+import { LitElement, css, html, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import allCss from "../scss/all"
 
 import * as pdfjsLib from "pdfjs-dist";
@@ -30,7 +30,7 @@ export default class WyPdfViewer extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   DEFAULT_SCALE_DELTA = 1.1;
   MAX_SCALE = 3.0;
@@ -177,7 +177,7 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       if (!this.WORKER_URL) {
         this.WORKER_URL = new URL("/js/pdf.worker.min.js", this.weavyContext.url);
@@ -191,7 +191,7 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  override update(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override update(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     super.update(changedProperties);
 
     if (

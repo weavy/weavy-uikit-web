@@ -1,16 +1,17 @@
 import { MembersResultType } from "../types/members.types";
-import { type WeavyContext } from "../client/weavy-context";
-import {
+import { type WeavyContextType } from "../client/weavy-context";
+import type {
   InfiniteData,
   InfiniteQueryObserverOptions,
   QueryFunction,
   QueryFunctionContext,
   QueryKey,
+  QueryObserverOptions,
   QueryOptions,
 } from "@tanstack/query-core";
 
-export function getMemberOptions(weavyContext: WeavyContext, appId: number, options: QueryOptions<MembersResultType>) {
-  return {
+export function getMemberOptions(weavyContext: WeavyContextType, appId: number, options: QueryOptions<MembersResultType>) {
+  return <QueryObserverOptions<MembersResultType>> {
     queryKey: ["members", appId],
     queryFn: async () => {
       const response = await weavyContext.get("/api/apps/" + appId + "/members");
@@ -21,7 +22,7 @@ export function getMemberOptions(weavyContext: WeavyContext, appId: number, opti
   };
 }
 
-export function getSearchMemberOptions(weavyContext: WeavyContext, text: () => string) {
+export function getSearchMemberOptions(weavyContext: WeavyContextType, text: () => string) {
   const PAGE_SIZE = 25;
 
   return {
@@ -38,7 +39,7 @@ export function getSearchMemberOptions(weavyContext: WeavyContext, text: () => s
 }
 
 export function getInfiniteSearchMemberOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   text: () => string
 ): InfiniteQueryObserverOptions<MembersResultType, Error, InfiniteData<MembersResultType>> {
   const PAGE_SIZE = 25;

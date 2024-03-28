@@ -13,6 +13,10 @@ try {
 }
 const cache = new Map<PropertyKey, unknown>();
 
+export function resetPersistPropertiesCache() {
+  cache.clear();
+}
+
 export async function getStorageItem(prefix: string, property: PropertyKey) {
   const storageItem = storage?.getItem(`${prefix}-${property.toString()}`);
   if (storageItem) {

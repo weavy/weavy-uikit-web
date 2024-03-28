@@ -1,8 +1,8 @@
-import { LitElement, html, nothing, type PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
-import chatCss from "../scss/all"
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import chatCss from "../scss/all";
 import { QueryController } from "../controllers/query-controller";
 import { BadgeType } from "../types/badge.types";
 import { getApiOptions } from "../data/api";
@@ -15,7 +15,7 @@ export default class WyBadge extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false, type: Boolean })
   private: boolean = true;
@@ -23,14 +23,15 @@ export default class WyBadge extends LitElement {
   @property({ attribute: false, type: Boolean })
   rooms: boolean = true;
 
+  @property() 
+  bot?: string;
+
   badgeQuery = new QueryController<BadgeType>(this);
 
   private handleBadgeRefresh = () => {
-    setTimeout(() => {
-      if (!this.badgeQuery.result.isRefetching) {
-        this.badgeQuery.result.refetch();
-      }
-    }, 500);
+    if (!this.badgeQuery.result.isRefetching) {
+      this.badgeQuery.result.refetch();
+    }
   };
 
   handleRealtimeMessage = (_realtimeEvent: RealtimeMessageEventType) => {
@@ -40,7 +41,7 @@ export default class WyBadge extends LitElement {
     this.handleBadgeRefresh();
   };
 
-  override async updated(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.badgeQuery.trackQuery(getApiOptions(this.weavyContext, ["conversations", "badge"]));
 
@@ -51,7 +52,8 @@ export default class WyBadge extends LitElement {
 
   override render() {
     const { data, isPending } = this.badgeQuery.result ?? {};
-    const badge = data ? (this.private ? data.private : 0) + (this.rooms ? data.rooms : 0) : 0;
+    const conversationBadge = data ? (this.private ? data.private : 0) + (this.rooms ? data.rooms : 0) : 0;
+    const badge = this.bot ? (data ? data.bots : 0) : conversationBadge;  
 
     return html`
       ${!isPending && badge > 0 ? html` <span class="wy-badge wy-badge-danger">${badge}</span> ` : nothing}

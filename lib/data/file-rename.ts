@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
@@ -18,7 +18,7 @@ export type RenameFileMutationType = MutationObserver<
   FileMutationContextType
 >;
 
-export function getRenameFileMutationOptions(weavyContext: WeavyContext, app: AppType) {
+export function getRenameFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
   const queryClient = weavyContext.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
@@ -82,6 +82,6 @@ export function getRenameFileMutationOptions(weavyContext: WeavyContext, app: Ap
   return options;
 }
 
-export function getRenameFileMutation(weavyContext: WeavyContext, app: AppType): RenameFileMutationType {
+export function getRenameFileMutation(weavyContext: WeavyContextType, app: AppType): RenameFileMutationType {
   return new MutationObserver(weavyContext.queryClient, getRenameFileMutationOptions(weavyContext, app));
 }

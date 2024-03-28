@@ -9,12 +9,12 @@ import {
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
-import { WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { whenParentsDefined } from "../utils/dom";
 
 export class QueryController<TData = unknown> implements ReactiveController {
   host: ReactiveControllerHost;
-  context?: ContextConsumer<{ __context__: WeavyContext }, LitElement>;
+  context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
   whenContext?: Promise<void>;
   resolveContext?: (value: void | PromiseLike<void>) => void;
   observer?: QueryObserver<TData>;
@@ -27,7 +27,7 @@ export class QueryController<TData = unknown> implements ReactiveController {
     ) as QueryObserverResult<TData>;
   }
 
-  private observeUnsubscribe?: () => void;
+  private observerUnsubscribe?: () => void;
 
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
@@ -57,39 +57,51 @@ export class QueryController<TData = unknown> implements ReactiveController {
       throw new Error("No QueryClient provided");
     }
 
-    this.observeUnsubscribe?.();
+    this.observerUnsubscribe?.();
 
     const observer = new QueryObserver(queryClient, queryOptions);
     //console.log("trackQuery", queryOptions)
 
     this.observer = observer;
-    this._result = observer.getOptimisticResult(observer.options as DefaultedQueryObserverOptions<TData>);
+    this.observerSubscribe();
+  }
 
-    this.observeUnsubscribe = observer.subscribe(() => {
-      const nextResult = replaceEqualDeep(this.result, observer.getCurrentResult());
-      if (nextResult !== this._result) {
-        //console.log("update", queryOptions.queryKey, nextResult)
-        this._result = nextResult;
-        this.host.requestUpdate();
-      }
-    });
+  observerSubscribe() {
+    if (this.observer) {
+      this._result = this.observer.getOptimisticResult(this.observer.options as DefaultedQueryObserverOptions<TData>);
 
-    // Update result to make sure we did not miss any query updates
-    // between creating the observer and subscribing to it.
-    observer.updateResult();
-    this.host.requestUpdate();
+      this.observerUnsubscribe = this.observer.subscribe(() => {
+        if (this.observer) {
+          const nextResult = replaceEqualDeep(this.result, this.observer.getCurrentResult());
+          if (nextResult !== this._result) {
+            //console.log("update", queryOptions.queryKey, nextResult)
+            this._result = nextResult;
+            this.host.requestUpdate();
+          }
+        }
+      });
+  
+      // Update result to make sure we did not miss any query updates
+      // between creating the observer and subscribing to it.
+      this.observer.updateResult();
+      this.host.requestUpdate();
+    }
   }
 
   untrackQuery() {
-    this.observeUnsubscribe?.();
-    this.observeUnsubscribe = undefined;
+    this.observerUnsubscribe?.();
+    this.observerUnsubscribe = undefined;
     this._result = undefined;
     this.observer = undefined;
     this.host.requestUpdate();
   }
 
+  hostConnected() {
+    this.observerSubscribe();
+  }
+
   hostDisconnected() {
     // Clear the subscription when the host is disconnected
-    this.observeUnsubscribe?.();
+    this.observerUnsubscribe?.();
   }
 }

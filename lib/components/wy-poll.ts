@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import chatCss from "../scss/all"
 import { PollOptionType } from "../types/polls.types";
@@ -6,9 +6,15 @@ import "./wy-poll-option";
 
 @customElement("wy-poll")
 export default class WyPoll extends LitElement {
+  static override styles = [
+    chatCss,
+    css`
+      :host {
+        display: grid;
+      }
+    `,
+  ];
   
-  static override styles = chatCss;
-
   @property({ type: Array, attribute: false })
   pollOptions: PollOptionType[] = [];
 

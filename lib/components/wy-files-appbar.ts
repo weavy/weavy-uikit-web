@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { type FeaturesListType, Feature, type FeaturesConfigType } from "../types/features.types";
 import { hasFeature } from "../utils/features";
 import { AccessType, type AppType } from "../types/app.types";
@@ -9,9 +9,9 @@ import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
-import filesCss from "../scss/all"
+import filesCss from "../scss/all";
 
 import { type UserType } from "../types/users.types";
 import {
@@ -56,7 +56,7 @@ export class WyFilesAppbar extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ type: Object })
   app?: AppType;
@@ -156,7 +156,7 @@ export class WyFilesAppbar extends LitElement {
     return this.dispatchEvent(subscribeEvent);
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       this.mutatingFiles.trackMutationState(
         { filters: { mutationKey: ["apps", this.app.id], exact: false } },
@@ -232,39 +232,43 @@ export class WyFilesAppbar extends LitElement {
     return html`
       <nav class="wy-toolbar">
         <div class="wy-toolbar-buttons">
-          ${hasAccess(AccessType.Write, this.app?.access || AccessType.None, this.app?.permissions) ? html`
-          <wy-dropdown title=${msg("Add files")}>
-            <span slot="button">${msg("Add files")}</span>
-            <wy-icon slot="button" name="plus" last></wy-icon>
-            <wy-dropdown-item @click=${this.openFileInput}>
-              <wy-icon name="attachment"></wy-icon>
-              <span>${msg("From device")}</span>
-            </wy-dropdown-item>
-            <input
-              type="file"
-              ${ref(this.fileInputRef)}
-              @click=${(e: Event) => e.stopPropagation()}
-              @change=${(e: Event) =>
-                this.dispatchUploadFiles((e.target as HTMLInputElement).files, e.target as HTMLInputElement)}
-              multiple
-              hidden
-              tabindex="-1"
-            />
-            ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
-              ? html`
-                  <wy-dropdown-item @click=${this.openCloudFiles}>
-                    <wy-icon name="cloud"></wy-icon>
-                    <span>${msg("From cloud")}</span>
+          ${hasAccess(AccessType.Write, this.app?.access || AccessType.None, this.app?.permissions)
+            ? html`
+                <wy-dropdown title=${msg("Add files")}>
+                  <span slot="button">${msg("Add files")}</span>
+                  <wy-icon slot="button" name="plus" last></wy-icon>
+                  <wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
+                    <wy-icon name="attachment"></wy-icon>
+                    <span>${msg("From device")}</span>
                   </wy-dropdown-item>
-                `
-              : nothing}
-            ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
-            this.weavyContext?.confluenceAuthenticationUrl 
-              ? html`<wy-confluence dropdown @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}></wy-confluence>`
-              : nothing}
-          </wy-dropdown>
-          `: nothing}
-          
+                  <input
+                    type="file"
+                    ${ref(this.fileInputRef)}
+                    @click=${(e: Event) => e.stopPropagation()}
+                    @change=${(e: Event) =>
+                      this.dispatchUploadFiles((e.target as HTMLInputElement).files, e.target as HTMLInputElement)}
+                    multiple
+                    hidden
+                    tabindex="-1"
+                  />
+                  ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
+                    ? html`
+                        <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
+                          <wy-icon name="cloud"></wy-icon>
+                          <span>${msg("From cloud")}</span>
+                        </wy-dropdown-item>
+                      `
+                    : nothing}
+                  ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
+                  this.weavyContext?.confluenceAuthenticationUrl
+                    ? html`<wy-confluence
+                        dropdown
+                        @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}
+                      ></wy-confluence>`
+                    : nothing}
+                </wy-dropdown>
+              `
+            : nothing}
         </div>
         <div class="wy-toolbar-buttons wy-toolbar-buttons-last">
           ${fileMutationResults?.length
@@ -288,7 +292,7 @@ export class WyFilesAppbar extends LitElement {
                     ? html`<wy-icon name="alert-octagon" color="error" title=${msg("Upload error")}></wy-icon>`
                     : fileStatus === "pending"
                     ? html`<wy-spinner
-                        ?nospin=${fileProgress !== undefined}
+                        ?nospin=${fileProgress !== undefined && fileProgress.percent !== null}
                         progress=${ifDefined(fileProgress.percent !== null ? fileProgress.percent : undefined)}
                         title=${msg("Pending")}
                       ></wy-spinner>`

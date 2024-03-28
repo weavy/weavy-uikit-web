@@ -13,10 +13,10 @@ export default class WyIcon extends LitElement {
   static override styles = [
     allStyles,
     css`
-      :host {
-        display: contents;
-      }
-    `,
+    :host {
+      display: contents;
+    }
+  `,
   ];
 
   @property()

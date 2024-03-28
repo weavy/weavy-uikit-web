@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { PostMutationContextType, PostType } from "../types/posts.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItem, updateCacheItems } from "../utils/query-cache";
@@ -20,7 +20,7 @@ export type RemoveCommentMutationType = MutationObserver<
   CommentMutationContextType
 >;
 
-export function getTrashCommentMutationOptions(weavyContext: WeavyContext, parentId: number) {
+export function getTrashCommentMutationOptions(weavyContext: WeavyContextType, parentId: number) {
   const queryClient = weavyContext.queryClient;
   const commentsKey: MutationKey = ["comments", parentId];
 
@@ -58,11 +58,11 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContext, paren
   return options;
 }
 
-export function getTrashCommentMutation(weavyContext: WeavyContext, parentId: number): RemoveCommentMutationType {
+export function getTrashCommentMutation(weavyContext: WeavyContextType, parentId: number): RemoveCommentMutationType {
   return new MutationObserver(weavyContext.queryClient, getTrashCommentMutationOptions(weavyContext, parentId));
 }
 
-export function getRestoreCommentMutationOptions(weavyContext: WeavyContext, parentId: number) {
+export function getRestoreCommentMutationOptions(weavyContext: WeavyContextType, parentId: number) {
   const queryClient = weavyContext.queryClient;
   const postsKey: MutationKey = ["comments", parentId];
 
@@ -104,11 +104,11 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContext, par
   return options;
 }
 
-export function getRestoreCommentMutation(weavyContext: WeavyContext, parentId: number): RemoveCommentMutationType {
+export function getRestoreCommentMutation(weavyContext: WeavyContextType, parentId: number): RemoveCommentMutationType {
   return new MutationObserver(weavyContext.queryClient, getRestoreCommentMutationOptions(weavyContext, parentId));
 }
 
-// export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContext, app: AppType) {
+// export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
 //     const queryClient = weavyContext.queryClient
 //     const filesKey: MutationKey = ["apps", app.id, "files"]
 
@@ -144,6 +144,6 @@ export function getRestoreCommentMutation(weavyContext: WeavyContext, parentId: 
 //     return options
 // }
 
-// export function getDeleteForeverFileMutation(weavyContext: WeavyContext, app: AppType): DeleteForeverFileMutationType {
+// export function getDeleteForeverFileMutation(weavyContext: WeavyContextType, app: AppType): DeleteForeverFileMutationType {
 //     return new MutationObserver(weavyContext.queryClient, getDeleteForeverFileMutationOptions(weavyContext, app))
 // }

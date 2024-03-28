@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver, type QueryKey } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { AppType } from "../types/app.types";
 import { removeCacheItem, updateCacheItem, updateCacheItems } from "../utils/query-cache";
@@ -22,7 +22,7 @@ export function getFileVersionsKey(app: AppType, file: FileType): QueryKey {
   return ["apps", app.id, "file", file.id, "versions"];
 }
 
-export function getFileVersionRestoreMutationOptions(weavyContext: WeavyContext, app: AppType, file: FileType) {
+export function getFileVersionRestoreMutationOptions(weavyContext: WeavyContextType, app: AppType, file: FileType) {
   const queryClient = weavyContext.queryClient;
 
   const filesKey: MutationKey = ["apps", app.id, "files"];
@@ -87,14 +87,14 @@ export function getFileVersionRestoreMutationOptions(weavyContext: WeavyContext,
 }
 
 export function getFileVersionRestoreMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   app: AppType,
   file: FileType
 ): FileVersionMutationType {
   return new MutationObserver(weavyContext.queryClient, getFileVersionRestoreMutationOptions(weavyContext, app, file));
 }
 
-export function getFileVersionDeleteMutationOptions(weavyContext: WeavyContext, app: AppType, file: FileType) {
+export function getFileVersionDeleteMutationOptions(weavyContext: WeavyContextType, app: AppType, file: FileType) {
   const queryClient = weavyContext.queryClient;
 
   const fileVersionKey: QueryKey = getFileVersionsKey(app, file);
@@ -146,7 +146,7 @@ export function getFileVersionDeleteMutationOptions(weavyContext: WeavyContext, 
 }
 
 export function getFileVersionDeleteMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   app: AppType,
   file: FileType
 ): FileVersionDeleteMutationType {

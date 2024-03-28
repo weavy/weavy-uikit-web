@@ -34,7 +34,7 @@ export default class WyMessageEditor extends WyEditor {
         ? html`<wy-dropdown icon="plus" directionY="up">
             ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
               ? html`
-                  <wy-dropdown-item @click=${this.openFileInput}>
+                  <wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}> 
                     <wy-icon name="attachment"></wy-icon>
                     <span>${msg("From device")}</span>
                   </wy-dropdown-item>
@@ -55,7 +55,7 @@ export default class WyMessageEditor extends WyEditor {
               : nothing}
             ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
               ? html`
-                  <wy-dropdown-item @click=${this.openCloudFiles}>
+                  <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}> 
                     <wy-icon name="cloud"></wy-icon>
                     <span>${msg("From cloud")}</span>
                   </wy-dropdown-item>
@@ -71,7 +71,7 @@ export default class WyMessageEditor extends WyEditor {
               : nothing}
             ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls)
               ? html`
-                  <wy-dropdown-item @click=${this.openPolls}>
+                  <wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}> 
                     <wy-icon name="poll"></wy-icon>
                     <span>${msg("Poll")}</span>
                   </wy-dropdown-item>
@@ -80,7 +80,7 @@ export default class WyMessageEditor extends WyEditor {
             ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) &&
             this.weavyContext?.zoomAuthenticationUrl
               ? html`
-                  <wy-dropdown-item @click=${this.handleZoomClick}>
+                  <wy-dropdown-item @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
                     <wy-icon name="zoom"></wy-icon>
                     <span>${msg("Zoom meeting")}</span>
                   </wy-dropdown-item>

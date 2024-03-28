@@ -1,9 +1,9 @@
-import { QueryOptions, type QueryKey } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import type { QueryOptions, QueryKey, FetchQueryOptions, QueryObserverOptions } from "@tanstack/query-core";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { HttpMethodType } from "../types/http.types";
 
-export function getApiOptions<T>(weavyContext: WeavyContext, apiKey: QueryKey, apiPath?: string, options?: QueryOptions<T>, body?: BodyInit, method: HttpMethodType = "GET") {
-  return {
+export function getApiOptions<T>(weavyContext: WeavyContextType, apiKey: QueryKey, apiPath?: string, options?: QueryOptions<T>, body?: BodyInit, method: HttpMethodType = "GET") {
+  return <QueryObserverOptions<T>> {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: apiKey,
     queryFn: async () => {
@@ -21,9 +21,9 @@ export function getApiOptions<T>(weavyContext: WeavyContext, apiKey: QueryKey, a
 }
 
 // GET app
-export async function getApi<T>(weavyContext: WeavyContext, apiKey: QueryKey, apiPath?: string, options?: QueryOptions<T>, body?: BodyInit, method: HttpMethodType = "GET", noCache: boolean = false) {
+export async function getApi<T>(weavyContext: WeavyContextType, apiKey: QueryKey, apiPath?: string, options?: QueryOptions<T>, body?: BodyInit, method: HttpMethodType = "GET", noCache: boolean = false) {
   const queryClient = weavyContext.queryClient;
-  const apiOptions = getApiOptions(weavyContext, apiKey, apiPath, options, body, method);
+  const apiOptions = getApiOptions(weavyContext, apiKey, apiPath, options, body, method) as FetchQueryOptions<T>;
   
   if (noCache) {
     return await queryClient.fetchQuery<T>(apiOptions);

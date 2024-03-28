@@ -4,7 +4,7 @@ import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import WeavyPostal from "../utils/postal-parent";
 
 import cloudFilesCss from "../scss/all"
@@ -23,7 +23,7 @@ export default class WyCloudFiles extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @state()
   src?: URL;

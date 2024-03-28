@@ -1,4 +1,4 @@
-import allCss from "../scss/all"
+import allCss from "../scss/all";
 
 import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -19,7 +19,7 @@ import { repeat } from "lit/directives/repeat.js";
 import { PersistStateController } from "../controllers/persist-state-controller";
 import { HistoryController } from "../controllers/history-controller";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
 import "./wy-button";
 import "./wy-icon";
@@ -38,7 +38,7 @@ export default class WyPreview extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property()
   uid: string = "preview";
@@ -66,6 +66,9 @@ export default class WyPreview extends LitElement {
 
   @property({ type: Number })
   currentId: number = NaN;
+
+  @property({ type: Number })
+  commentCount: number = NaN;
 
   @property({ type: Boolean })
   isAttachment: boolean = false;
@@ -119,6 +122,7 @@ export default class WyPreview extends LitElement {
 
     if (file) {
       this.currentId = file.id;
+      this.commentCount = file.comment_count!;
     }
 
     if (uid) {
@@ -212,6 +216,11 @@ export default class WyPreview extends LitElement {
         ["commentsOpen", "versionsOpen"],
         `${this.app.type}-${this.app.id.toString()}-${this.uid}`
       );
+
+      if (this.commentsOpen && this.versionsOpen) {
+        this.versionsOpen = false;
+      }
+
       this.history.observe(
         ["showOverlay", "currentFile", "versionFile"],
         `${this.app.type}-${this.app.id.toString()}-${this.uid}}`
@@ -302,8 +311,11 @@ export default class WyPreview extends LitElement {
                         title=${msg("Comments")}
                       >
                         <div class="wy-icon-active-stack">
-                          <span class="wy-icon-stack-item"><wy-icon name="comment-outline"></wy-icon></span>
-                          <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>
+                          ${this.commentCount && this.commentCount > 0
+                            ? html` <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>
+                                <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>`
+                            : html` <span class="wy-icon-stack-item"><wy-icon name="comment-outline"></wy-icon></span>
+                                <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>`}
                         </div>
                       </wy-button>
                     `
@@ -347,6 +359,11 @@ export default class WyPreview extends LitElement {
 
     // Make a short list so we can use repeat
     const previewFiles = [this.previousFile, currentPreviewFile, this.nextFile].filter((x) => x);
+
+    if (this.commentsOpen && this.versionsOpen) {
+      // both can't be open
+      this.versionsOpen = false;
+    }
 
     const previewSwiperClasses = {
       "wy-preview-swiper-disabled": this.disableSwipeScroll,

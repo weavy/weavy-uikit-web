@@ -1,6 +1,6 @@
 import { LitElement, type PropertyValues, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
 import overlayStyles from "../scss/all"
 
@@ -15,7 +15,7 @@ export default class WySheet extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ type: Boolean })
   show = false;

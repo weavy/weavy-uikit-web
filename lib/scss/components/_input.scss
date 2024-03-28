@@ -99,15 +99,15 @@
   }
 }
 
-.wy-input-label {
-  @include type.label;
-  display: block;
+.wy-label {
+  display: inline-block; 
   margin-bottom: var.wy-rem(.5);
 }
 
 .wy-description {
-  margin-top: var.wy-rem(.25);
+  color: color.token(--wy-outline);
   font-size: var.default(--wy-font-size-sm);
+  margin-top: var.wy-rem(.25);  
 }
 
 .wy-is-invalid {
@@ -136,8 +136,6 @@
       padding-left: var.wy-rem(2.5);
     }
   }
-
- 
 }
 
 // Required trailing button
@@ -149,8 +147,8 @@
   border-radius: var.default(--wy-input-border-radius);
 }
 
-.wy-input-group-input-filled ~ .wy-button-icon {
-  border-radius: var.wy-rem(1.25);
+.wy-input-group > wy-button {
+  --wy-component-background-color: transparent;
 }
 
 .wy-input-group-input {

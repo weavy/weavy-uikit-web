@@ -11,9 +11,9 @@
     export const templates = {
       's0058d65423075c1c': `Ny konversation`,
 's00a84204340a1db4': `Valda`,
+'s0204546ecda4bd3f': `Namnlös konversation`,
 's0b3525368392bc8b': `Filkonflikt`,
 's0d7fcbf8f03c7116': `Avprenumerera`,
-'s0fbf6dc6a1966408': `Nästa`,
 's12b57a05d9905236': `Din sökning hade inga träffar.`,
 's15bdec250a4a55fb': `Fallande`,
 's16430e1864d70df9': `Skriv ett meddelande...`,
@@ -33,6 +33,7 @@
 's2ea30e6262e90c5b': `Fyll skärm`,
 's343f95633406dc81': `1 kommentar`,
 's355b21b89ce5d9c5': `Detaljer`,
+'s382a2aa3984474dd': `Skapa`,
 's3bdfdd0bd23b0c44': `Servern är offline, försök igen om några minuter...`,
 's3c1bff8f22445f9e': `Här finns inget att se ännu.`,
 's417b90913e05bc17': `Förhandsvisning`,

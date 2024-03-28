@@ -4,7 +4,7 @@ import type { MeetingType } from "../types/meetings.types";
 import chatCss from "../scss/all"
 import { localized, msg, str } from "@lit/localize";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { relativeTime } from "../utils/datetime";
 import "./wy-icon";
 import "./wy-button";
@@ -17,7 +17,7 @@ export default class WyMeetingCard extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   meeting!: MeetingType;

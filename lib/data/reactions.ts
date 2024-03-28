@@ -1,12 +1,12 @@
 import { MutationObserver } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { updateCacheItem } from "../utils/query-cache";
 import { MessageType } from "../types/messages.types";
 import { ReactableType } from "../types/reactions.types";
 
 /// POST to add a reaction to a message
 export function addReactionMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
@@ -39,7 +39,7 @@ export function addReactionMutation(
 
 /// DELETE to remove a reaction from a message
 export function removeReactionMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
@@ -65,7 +65,7 @@ export function removeReactionMutation(
 
 /// DELETE to remove a reaction from a message
 export function replaceReactionMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
@@ -98,7 +98,7 @@ export function replaceReactionMutation(
   });
 }
 
-export function getReactionListOptions(weavyContext: WeavyContext, type: string, entityId: number) {
+export function getReactionListOptions(weavyContext: WeavyContextType, type: string, entityId: number) {
   return {
     queryKey: ["reactions", type, entityId],
     enabled: false,

@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
 import { PollMutationContextType, PollOptionType } from "../types/polls.types";
@@ -13,7 +13,7 @@ export type MutatePollVariables = {
 
 export type PollMutationType = MutationObserver<PostType, Error, MutatePollVariables, PollMutationContextType>;
 
-export function getPollMutationOptions(weavyContext: WeavyContext, mutationKey: MutationKey) {
+export function getPollMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
   const queryClient = weavyContext.queryClient;
   const key: MutationKey = mutationKey;
 
@@ -62,11 +62,11 @@ export function getPollMutationOptions(weavyContext: WeavyContext, mutationKey: 
   return options;
 }
 
-export function getPollMutation(weavyContext: WeavyContext, mutationKey: MutationKey): PollMutationType {
+export function getPollMutation(weavyContext: WeavyContextType, mutationKey: MutationKey): PollMutationType {
   return new MutationObserver(weavyContext.queryClient, getPollMutationOptions(weavyContext, mutationKey));
 }
 
-export function getVotesOptions(weavyContext: WeavyContext, id: number) {
+export function getVotesOptions(weavyContext: WeavyContextType, id: number) {
   return {
     queryKey: ["votes", id],
     enabled: false,

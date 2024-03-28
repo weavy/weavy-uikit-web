@@ -38,6 +38,7 @@
   flex-direction: row;
   align-items: flex-start;
   margin-bottom: var.wy-rem(1);
+  scroll-margin-block: 6rem;
 
   .wy-image-grid,
   .wy-attachments {
@@ -196,7 +197,7 @@
 .wy-readby-status {
   display: flex;
   gap: var.wy-rem(.25);
-  height: var.wy-rem(18px); // same height as avatar (prevents layout change when readby indicators are updated)
+  height: var.wy-rem(1.125); // same height as avatar (prevents layout change when readby indicators are updated)
   justify-content: flex-end;
   margin-top: var.wy-rem(-.125);
 }

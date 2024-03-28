@@ -9,11 +9,6 @@ const PREFIX = process.env.PREFIX || "uikit-web";
 
 const PORT = process.env.PORT || 3001;
 
-const users = {
-  developer: `${PREFIX}-dev`,
-  tester: `${PREFIX}-test`,
-};
-
 if (!process.env.WEAVY_URL) {
   throw new Error("No WEAVY_URL defined in ENV.");
 }
@@ -26,7 +21,7 @@ if (!process.env.WEAVY_APIKEY) {
 
 const apiKey = process.env.WEAVY_APIKEY;
 
-const currentUser = users[process.env.CURRENT_USER || "developer"];
+const currentUser = process.env.WEAVY_USER_UID || `${PREFIX}-dev`;
 
 if (!currentUser) {
   throw new Error("No valid CURRENT_USER provided in ENV.");
@@ -41,7 +36,7 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 process.on("uncaughtException", function (err) {
   console.log(err);
-  var stack = err.stack;
+  //let stack = err.stack;
   //you can also notify the err/stack to support via email or other APIs
 });
 
@@ -60,6 +55,25 @@ app.get("/api/contextual/:id", async (req, res) => {
     body: JSON.stringify({
       app: { uid: req.params.id, name: req.params.id, type: req.query.type },
       user: { uid: currentUser },
+    }),
+  });
+
+  res.end(await response.text());
+});
+
+app.get("/api/chatbot/:family", async (req, res) => {
+  const bot = `${PREFIX}-${ req.params.family }`;
+  // setup contextual app
+  let response = await fetch(new URL(`/api/users/${bot}`, weavyUrl), {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      name: req.params.name,
+      is_bot: true,
+      metadata: { family: req.params.family },
     }),
   });
 

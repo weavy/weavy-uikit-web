@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import type { ExternalBlobType } from "../types/files.types";
 
 import chatCss from "../scss/all";
@@ -24,7 +24,7 @@ export default class WyConfluence extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({
     attribute: false,
@@ -88,12 +88,12 @@ export default class WyConfluence extends LitElement {
     return html`
       ${this.dropdown
         ? html`
-            <wy-dropdown-item @click=${() => this.open()}>
+            <wy-dropdown-item @click=${() => this.open()} title=${msg("Confluence Page Picker")}>
               <wy-icon name="confluence" color="native"></wy-icon> Confluence
             </wy-dropdown-item>
           `
         : html`
-            <wy-button @click=${() => this.open()} title="Confluence" kind="icon"
+            <wy-button @click=${() => this.open()} title=${msg("Confluence Page Picker")} kind="icon"
               ><wy-icon name="confluence" color="native"></wy-icon
             ></wy-button>
           `}

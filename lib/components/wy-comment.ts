@@ -147,7 +147,8 @@ export default class WyComment extends LitElement {
             .createdAt=${this.createdAt}
             .modifiedAt=${this.modifiedAt}
             .isTrashed=${this.isTrashed}
-            .html=${this.html}
+            .text=${this.text}
+            .html=${this.html}            
             .attachments=${this.attachments}
             .embed=${this.embed}
             .meeting=${this.meeting}

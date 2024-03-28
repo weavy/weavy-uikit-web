@@ -1,9 +1,9 @@
-import { LitElement, PropertyValues, css, html, nothing } from "lit";
+import { LitElement, css, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import chatCss from "../scss/all"
+import chatCss from "../scss/all";
 import throttle from "lodash.throttle";
 import type { MemberType, MembersResultType } from "../types/members.types";
 import { getInfiniteSearchMemberOptions } from "../data/members";
@@ -15,13 +15,12 @@ import "./wy-button";
 import "./wy-icon";
 import "./wy-avatar";
 import "./wy-spinner";
-import {  inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
+import { inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-users-search")
 @localized()
 export default class WyUsersSearch extends LitElement {
-  
   static override styles = [
     chatCss,
     css`
@@ -33,7 +32,7 @@ export default class WyUsersSearch extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   existingMembers?: MembersResultType = { data: [], count: 0 };
@@ -52,18 +51,6 @@ export default class WyUsersSearch extends LitElement {
 
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<Element> = createRef();
-
-  protected override async updated(changedProperties: PropertyValues<this & WeavyContextProps>): Promise<void> {
-    this.infiniteScroll.observe(this.peopleQuery.result, this.pagerRef.value);
-
-    if (changedProperties.has("weavyContext") && this.weavyContext) {     
-      this.peopleQuery.trackInfiniteQuery(getInfiniteSearchMemberOptions(this.weavyContext, () => this.text!));     
-    }
-
-    if (changedProperties.has("text")) {
-      await this.peopleQuery.result?.refetch();
-    }
-  }
 
   private dispatchSubmit() {
     const event = new CustomEvent("submit", { detail: { members: this.selected } });
@@ -104,7 +91,6 @@ export default class WyUsersSearch extends LitElement {
     const { data: peopleData, isPending } = this.peopleQuery.result ?? { data: [] };
 
     const flattenedPeoplePages = peopleData?.pages?.flatMap((peopleResult) => peopleResult.data) || [];
-
     const hasPeopleResult = Boolean(flattenedPeoplePages.length);
     const hasSelectedMembers = this.selected.length > 0;
     const hasUnselectedPeople = Boolean(
@@ -113,23 +99,25 @@ export default class WyUsersSearch extends LitElement {
       ).length
     );
 
-    return html`<div class="wy-search wy-scroll-y">
+    return html`<div class="wy-scroll-y">
       <div class="wy-pane-group">
-        <div class="wy-search-form wy-input-group">
+        <div class="wy-input-group">
           <input
-            class="wy-search-input wy-input wy-input-group-input wy-input-filled"
+            class="wy-input wy-input-group-input wy-input-filled"
             name="search"
-            .value=${this.text || ''}
+            .value=${this.text || ""}
             ${ref(this.inputRef)}
             @input=${() => this.throttledSearch()}
             @keyup=${inputConsumeWithClearAndBlurOnEscape}
-            placeholder=${msg("Search for people...")} />
+            placeholder=${msg("Search for people...")}
+          />
           <wy-button
             type="reset"
             @click=${this.clear}
             kind="icon"
             class="wy-input-group-button-icon"
-            buttonClass="wy-button-icon">
+            buttonClass="wy-button-icon"
+          >
             <wy-icon name="close-circle"></wy-icon>
           </wy-button>
           <wy-button kind="icon" class="wy-input-group-button-icon" buttonClass="wy-button-icon">
@@ -140,7 +128,7 @@ export default class WyUsersSearch extends LitElement {
       ${hasSelectedMembers
         ? html`
             <div class="wy-pane-group">
-              <label class="wy-input-label">${msg("Selected")}</label>
+              <label class="wy-label">${msg("Selected")}</label>
               ${this.selected.map((member: MemberType) => {
                 return html`
                   <div class="wy-item">
@@ -149,14 +137,16 @@ export default class WyUsersSearch extends LitElement {
                       .src=${member.avatar_url}
                       .name=${member.display_name}
                       .presence=${member.presence}
+                      .isBot=${member.is_bot}
                       size=${32}
-                      ></wy-avatar>
+                    ></wy-avatar>
 
                     <div class="wy-item-body"> ${member.display_name} </div>
                     <wy-button
                       @click=${() => this.handleSelected(member, !this.isChecked(member.id))}
                       kind="icon"
-                      title=${msg("Remove", { desc: "Button action to remove" })}>
+                      title=${msg("Remove", { desc: "Button action to remove" })}
+                    >
                       <wy-icon name="account-minus"></wy-icon>
                     </wy-button>
                   </div>
@@ -168,7 +158,7 @@ export default class WyUsersSearch extends LitElement {
       ${hasPeopleResult && hasUnselectedPeople
         ? html`
             <div class="wy-pane-group">
-              <label class="wy-input-label">${msg("People")}</label>
+              <label class="wy-label">${msg("People")}</label>
               ${flattenedPeoplePages
                 .filter(
                   (m: MemberType) =>
@@ -182,8 +172,9 @@ export default class WyUsersSearch extends LitElement {
                       .src=${member.avatar_url}
                       .name=${member.display_name}
                       .presence=${member.presence}
+                      .isBot=${member.is_bot}
                       size=${32}
-                      ></wy-avatar>
+                    ></wy-avatar>
 
                     <div class="wy-item-body"> ${member.display_name} </div>
                     <wy-button @click=${() => this.handleSelected(member, !this.isChecked(member.id))} kind="icon">
@@ -212,12 +203,26 @@ export default class WyUsersSearch extends LitElement {
                 buttonClass="wy-button-primary"
                 @click=${this.dispatchSubmit}
                 ?disabled=${this.selected.length === 0 ? true : undefined}
-                >${this.buttonTitle ?? msg("Next")}</wy-button
+                >${this.buttonTitle ?? msg("Create")}</wy-button
               >
             </div>
           </div>
         </div>
       </div>
     </div>`;
+  }
+
+  protected override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): Promise<void> {
+    this.infiniteScroll.observe(this.peopleQuery.result, this.pagerRef.value);
+
+    if (changedProperties.has("weavyContext") && this.weavyContext) {
+      this.peopleQuery.trackInfiniteQuery(getInfiniteSearchMemberOptions(this.weavyContext, () => this.text!));
+    }
+
+    if (changedProperties.has("text")) {
+      await this.peopleQuery.result?.refetch();
+    }
+
+    this.inputRef.value?.focus();
   }
 }

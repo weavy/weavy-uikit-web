@@ -19,7 +19,7 @@ export type UserType = {
   presence?: PresenceType;
   directory?: DirectoryType;
   directory_id?: number;
-  metadata?: PlainObjectType;
+  metadata?: PlainObjectType | PlainObjectType & BotMetadataType;
   tags?: string[];
   created_at?: string;
   modified_at?: string
@@ -48,4 +48,19 @@ export type DirectoryType = {
   id: number;
   name: string;
   members?: UserType[];
+}
+
+export type BotType = UserType & {
+  metadata: PlainObjectType & BotMetadataType;
+  is_bot: true;
+}
+
+export enum BotFamilyType {
+  ChatGPT = "chatgpt", // Deprecated alias for OpenAI
+  OpenAI = "openai",
+  Gemini = "gemini",
+}
+
+export type BotMetadataType = {
+  family: BotFamilyType
 }

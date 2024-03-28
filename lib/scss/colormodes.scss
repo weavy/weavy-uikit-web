@@ -4,6 +4,7 @@
 
 .wy-light {
   & :where(wy-chat),
+  & :where(wy-comments),
   & :where(wy-files),
   & :where(wy-messenger),
   & :where(wy-posts),
@@ -18,6 +19,7 @@
 
 .wy-dark:not(.wy-light) {
   & :where(wy-chat),
+  & :where(wy-comments),
   & :where(wy-files),
   & :where(wy-messenger),
   & :where(wy-posts),

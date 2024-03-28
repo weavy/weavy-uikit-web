@@ -7,6 +7,7 @@ export class InfiniteScrollController implements ReactiveController {
   reverse: boolean = false;
 
   scroller?: IntersectionObserver;
+  loadMoreRefElement?: Element;
 
   private isObservePending = false;
 
@@ -22,6 +23,7 @@ export class InfiniteScrollController implements ReactiveController {
         this.isObservePending = true;
 
         requestAnimationFrame(() => {
+          this.loadMoreRefElement = loadMoreRefElement;
           this.scroller?.disconnect();
           this.scroller = createScroller(
             loadMoreRefElement,
@@ -43,6 +45,12 @@ export class InfiniteScrollController implements ReactiveController {
           this.isObservePending = false;
         });
       }
+    }
+  }
+
+  hostConnected() {
+    if (this.loadMoreRefElement) {
+      this.scroller?.observe(this.loadMoreRefElement);
     }
   }
 

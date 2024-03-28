@@ -1,6 +1,11 @@
 @use "base/color";
 @use "base/var";
 
+wy-avatar {
+  position: relative;
+  display: block;
+}
+
 .wy-avatar {
   border-radius: 50%;
 }
@@ -27,6 +32,17 @@
     font-weight: var.default(--wy-avatar-font-weight);
     line-height: 1;
   }
+}
+
+.wy-avatar-type {
+  display: flex;
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  right: calc(-100%/12);
+  border-radius: 50%;
+  background-color: #{color.token(--wy-primary)};
+  color: #{color.token(--wy-on-primary)};
 }
 
 .wy-avatar-header {

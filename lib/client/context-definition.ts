@@ -1,11 +1,11 @@
 import { createContext } from "@lit/context";
-import { type WeavyContext } from "./weavy-context";
+import { type WeavyContextType } from "./weavy-context";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 
-export { type WeavyContext } from "./weavy-context";
-export const weavyContextDefinition = createContext<WeavyContext>(Symbol.for("weavy-context"));
+export { type WeavyContextType } from "./weavy-context";
+export const weavyContextDefinition = createContext<WeavyContextType>(Symbol.for("weavy-context"));
 
-export function createWeavyContextProvider(host: HTMLElement, initialValue?: WeavyContext) {
+export function createWeavyContextProvider(host: HTMLElement, initialValue?: WeavyContextType) {
     return new ContextProvider(host, { context: weavyContextDefinition, initialValue });
 }
 

@@ -1,4 +1,4 @@
-import { LitElement, css, html, type PropertyValues } from "lit";
+import { LitElement, css, html, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
@@ -7,9 +7,10 @@ import { getTextStreamFromResponse } from "../utils/data";
 import "./wy-empty";
 import "./wy-spinner";
 
+import colorModeCss from "../scss/colormodes"
 import allCss from "../scss/all"
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-preview-text")
@@ -17,6 +18,7 @@ export class WyPreviewText extends LitElement {
   
   static override styles = [
     allCss,
+    colorModeCss,
     css`
       :host {
         display: contents;
@@ -26,7 +28,7 @@ export class WyPreviewText extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property()
   src!: string;
@@ -43,7 +45,7 @@ export class WyPreviewText extends LitElement {
   @state()
   loading = true;
 
-  override async updated(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if ((changedProperties.has("weavyContext") || changedProperties.has("src")) && this.weavyContext) {
       this.loading = true;
       fetch(this.src, await this.weavyContext.fetchOptions())
@@ -67,7 +69,7 @@ export class WyPreviewText extends LitElement {
       ? this.code
         ? html` <div class="wy-content-code wy-code">${unsafeHTML(this.textOrHtmlContent)}</div> `
         : html`
-            <div class="wy-document">
+            <div class="wy-document wy-light">
               <div class="wy-content-html">${unsafeHTML(this.textOrHtmlContent)}</div>
             </div>
           `

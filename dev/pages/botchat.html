@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="modulepreload" href="%WEAVY_URL%/uikit-web/es/locales/sv-SE.js" />
+  <script type="module" src="/lib"></script>
+  <script type="module" src="/dev/tools/tanstack-dev-tools.ts" async defer></script>
+  <script>
+    fetch(`/api/chatbot/openai?name=Open+AI`);
+    fetch(`/api/chatbot/gemini?name=Gemini`);
+  </script>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      position: relative;
+    }
+
+    header {
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      padding-inline: 1rem;
+      gap: 1rem;
+    }
+
+    wy-messenger {
+      height: calc(100vh - 3rem);      
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <select id="bot-selector">
+      <option value="uikit-web-openai">uikit-web-openai</option>
+      <option value="uikit-web-gemini">uikit-web-gemini</option>
+    </select>
+  </header>
+  <wy-context 
+      url="%WEAVY_URL%" 
+      reactions='["👍", "❤️", "😂", "😒", "😁"]'
+      zoomAuthenticationUrl="%WEAVY_ZOOM_AUTH_URL%"
+      confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
+      confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"
+      locale="sv-SE" 
+      tokenFactory="async (refresh) => {
+        let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
+
+        if (response.ok) {          
+          let data = await response.json();
+          return data.access_token
+        } else {
+          throw new Error('Could not get access token from server!')
+        }
+      }">
+      <tanstack-dev-tools buttonposition="top-right" position="top"></tanstack-dev-tools>
+      <wy-messenger bot="uikit-web-openai" features='{"receipts": true}'></wy-messenger>
+      
+  </wy-context>
+  <script>
+    const botSelector = document.getElementById("bot-selector");
+    const messenger = document.querySelector("wy-messenger")
+
+    botSelector.addEventListener("change", () => {
+      console.log("change bot", botSelector.value)
+      messenger.setAttribute("bot", botSelector.value);
+      //messenger.setAttribute("name", botSelector.value);
+      sessionStorage.setItem("wy-bot-selector",  botSelector.value);
+    })
+
+    botSelector.value = sessionStorage.getItem("wy-bot-selector") || botSelector.querySelector("option:first-of-type").value;
+
+  </script>
+</body>

@@ -14,7 +14,7 @@ import { renderFileTable } from "./wy-file-table";
 import { repeat } from "lit/directives/repeat.js";
 
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 
 @customElement("wy-files-list")
@@ -25,7 +25,7 @@ export class WyFilesList extends LitElement {
   // Used in renderFileTable & renderFileCard
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   files?: FileType[];

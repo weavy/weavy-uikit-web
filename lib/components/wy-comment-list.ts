@@ -1,9 +1,9 @@
-import { LitElement, type PropertyValues, html, nothing } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import {
@@ -40,7 +40,7 @@ export default class WyCommentList extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   app!: AppType;
@@ -75,7 +75,7 @@ export default class WyCommentList extends LitElement {
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<Element> = createRef();
 
-  override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (
       (changedProperties.has("parentId") || changedProperties.has("weavyContext")) &&
       this.parentId &&
@@ -98,7 +98,7 @@ export default class WyCommentList extends LitElement {
     }
   }
 
-  protected override update(changedProperties: PropertyValues<this>): void {
+  protected override update(changedProperties: PropertyValueMap<this>): void {
     super.update(changedProperties);
     this.infiniteScroll.observe(this.commentsQuery.result, this.pagerRef.value);
   }
@@ -182,7 +182,7 @@ export default class WyCommentList extends LitElement {
               .user=${this.user}
               .commentId=${comment.id}
               .parentId=${this.parentId}
-              .temp=${false}
+              .temp=${comment.temp || false}
               .createdBy=${comment.created_by}
               .createdAt=${comment.created_at}
               .modifiedAt=${comment.modified_at}
@@ -224,14 +224,13 @@ export default class WyCommentList extends LitElement {
         }
       );
     }
-
     return nothing;
   }
 
   override render() {
     const { data: infiniteData, isPending } = this.commentsQuery.result ?? {};
 
-    return html` <div>
+    return html`<div>
       <div class="wy-comments">
         ${!isPending && this.app && infiniteData && this.availableFeatures
           ? this.renderComments(infiniteData)

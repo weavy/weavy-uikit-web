@@ -6,6 +6,7 @@ export function inputConsume(e: KeyboardEvent) {
 export function inputClearOnEscape(e: KeyboardEvent) {
   if (e.key === "Escape") {
     (e.target as HTMLInputElement).value = "";
+    (e.target as HTMLInputElement).dispatchEvent(new InputEvent("input", { data: '', inputType: 'deleteContent' }));
   }
 }
 

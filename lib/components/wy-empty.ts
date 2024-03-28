@@ -1,7 +1,7 @@
-import { LitElement, html, css, type PropertyValues } from "lit";
+import { LitElement, html, css, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import chatCss from "../scss/all"
 import { localized, msg } from "@lit/localize";
 
@@ -24,16 +24,16 @@ export default class WyEmpty extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ type: Boolean })
   noNetwork: boolean = false;
 
   protected handleUpdate = () => this.requestUpdate();
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext")) {
-      const lastContext = changedProperties.get("weavyContext") as WeavyContext | undefined;
+      const lastContext = changedProperties.get("weavyContext") as WeavyContextType | undefined;
       if (lastContext && lastContext !== this.weavyContext) {
         lastContext.removeNetworkListener(this.handleUpdate);
       }

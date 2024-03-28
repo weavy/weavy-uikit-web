@@ -1,4 +1,4 @@
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { BlobType, ExternalBlobType, FileMutationContextType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import type { AppType } from "../types/app.types";
@@ -18,7 +18,7 @@ export type ExternalBlobMutationType = MutationObserver<
   FileMutationContextType
 >;
 
-export function removeSuccessfulExternalBlobMutations(weavyContext: WeavyContext, app: AppType, name: string) {
+export function removeSuccessfulExternalBlobMutations(weavyContext: WeavyContextType, app: AppType, name: string) {
   const queryClient = weavyContext.queryClient;
 
   // Remove successful blobs
@@ -35,7 +35,7 @@ export function removeSuccessfulExternalBlobMutations(weavyContext: WeavyContext
     });
 }
 
-export async function externalBlob(weavyContext: WeavyContext, externalBlob: ExternalBlobType) {
+export async function externalBlob(weavyContext: WeavyContextType, externalBlob: ExternalBlobType) {
   const response = await weavyContext.post("/api/blobs/external", "POST", JSON.stringify(externalBlob));
 
   if (!response.ok) {
@@ -47,7 +47,7 @@ export async function externalBlob(weavyContext: WeavyContext, externalBlob: Ext
 }
 
 export function getExternalBlobMutationOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   user: UserType,
   app: AppType,
   uniqueId?: string
@@ -109,7 +109,7 @@ export function getExternalBlobMutationOptions(
 }
 
 export function getExternalBlobMutation(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   user: UserType,
   app: AppType,
   uniqueId?: string

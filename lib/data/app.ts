@@ -1,13 +1,13 @@
 import { MutationKey } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { type AppType, AppTypes } from "../types/app.types";
 import { getApi, getApiOptions } from "./api";
 
-export function getAppOptions<T = AppType>(weavyContext: WeavyContext, uid: string, type: AppTypes) {
+export function getAppOptions<T = AppType>(weavyContext: WeavyContextType, uid: string, type: AppTypes) {
   return getApiOptions<T>(weavyContext, ["apps", uid], undefined, undefined, JSON.stringify({ type }), "PUT");
 }
 
-export function getApp<T = AppType>(weavyContext: WeavyContext, uid: string, type: AppTypes) {
+export function getApp<T = AppType>(weavyContext: WeavyContextType, uid: string, type: AppTypes) {
   return getApi<T>(weavyContext, ["apps", uid], undefined, undefined, JSON.stringify({ type }), "PUT");
 }
 
@@ -17,7 +17,7 @@ export type MutateAppSubscribeProps = {
 
 export type MutateAppSubscribeContextType = { previousSubscribe: boolean | undefined; subscribe: boolean } | undefined;
 
-export function getAppSubscribeMutationOptions(weavyContext: WeavyContext, app: AppType) {
+export function getAppSubscribeMutationOptions(weavyContext: WeavyContextType, app: AppType) {
   const queryClient = weavyContext.queryClient;
 
   const mutationKey: MutationKey = ["apps", app.uid];

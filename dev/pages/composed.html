@@ -22,48 +22,49 @@
         height: 100%;
       }
 
-      wy-chat {
-        display: flex;
+      .grid {
         height: 100vh;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 0.5rem;
+        background: #fff;
       }
     </style>
-        <script type="module">
-          import * as svSE from "/locales/sv-SE.ts";
-          import { Weavy } from "/lib";
-    
-          const weavy = new Weavy({
-            url: "%WEAVY_URL%",
-            reactions: ["👍", "❤️", "😂", "😒", "😁"],
-            zoomAuthenticationUrl: "%WEAVY_ZOOM_AUTH_URL%",
-            confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
-            confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
-          });
-    
-          weavy.locales = [
-            ["sv-SE", svSE]
-          ];
-          weavy.locale = "sv-SE";
-          weavy.tokenFactory = async (refresh) => {
-            let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);
-    
-            if (response.ok) {
-              let data = await response.json();
-              return data.access_token;
-            } else {
-              throw new Error("Could not get access token from server!");
-            }
-          };
-        </script>
+    <script type="module">
+      import * as svSE from "/locales/sv-SE.ts";
+      import { Weavy } from "/lib";
+
+      const weavy = new Weavy({
+        url: "%WEAVY_URL%",
+        reactions: ["👍", "❤️", "😂", "😒", "😁"],
+        zoomAuthenticationUrl: "%WEAVY_ZOOM_AUTH_URL%",
+        confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
+        confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
+      });
+
+      weavy.locales = [["sv-SE", svSE]];
+      weavy.locale = "sv-SE";
+      weavy.tokenFactory = async (refresh) => {
+        let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);
+
+        if (response.ok) {
+          let data = await response.json();
+          return data.access_token;
+        } else {
+          throw new Error("Could not get access token from server!");
+        }
+      };
+    </script>
   </head>
   <body>
+    <div class="grid">
+      <wy-chat uid="acme-chat-2" features='{"reactions": true}'></wy-chat>
 
+      <wy-posts uid="acme-feed-2" features='{"reactions": true}' style="max-width: 33vw"></wy-posts>
 
-    <div style="flex: 1; display: flex">
-      <wy-chat style="flex: 1" uid="acme-chat-2" features='{"reactions": true}'></wy-chat>
-      <wy-posts style="flex: 1" uid="acme-feed-2" features='{"reactions": true}'></wy-posts>
-      <wy-files style="flex: 1" uid="acme-files-2" features='{"reactions": true}'></wy-files>
+      <wy-files uid="acme-files-2" features='{"reactions": true}' style="max-width: 33vw"></wy-files>
     </div>
-
-    <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
+    <tanstack-dev-tools buttonPosition="bottom-right"></tanstack-dev-tools>
   </body>
 </html>

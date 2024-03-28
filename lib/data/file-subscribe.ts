@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
@@ -18,7 +18,7 @@ export type SubscribeFileMutationType = MutationObserver<
   FileMutationContextType
 >;
 
-export function getSubscribeFileMutationOptions(weavyContext: WeavyContext, app: AppType) {
+export function getSubscribeFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
   const queryClient = weavyContext.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
@@ -72,6 +72,6 @@ export function getSubscribeFileMutationOptions(weavyContext: WeavyContext, app:
   return options;
 }
 
-export function getSubscribeFileMutation(weavyContext: WeavyContext, app: AppType): SubscribeFileMutationType {
+export function getSubscribeFileMutation(weavyContext: WeavyContextType, app: AppType): SubscribeFileMutationType {
   return new MutationObserver(weavyContext.queryClient, getSubscribeFileMutationOptions(weavyContext, app));
 }

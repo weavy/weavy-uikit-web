@@ -1,20 +1,23 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
-import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../../lib/client/context-definition";
+import { ContextConsumer } from "@lit/context";
+import { type WeavyContextType, weavyContextDefinition } from "../../lib/client/context-definition";
 
 import { onlineManager } from "@tanstack/query-core";
 import * as TanstackQueryDevtools from "@tanstack/query-devtools";
 import type { DevToolsErrorType, DevtoolsButtonPosition, DevtoolsPosition } from "@tanstack/query-devtools";
 import { falsyBoolean } from "../../lib/converters/falsy-boolean";
+import { whenParentsDefined } from "../../lib/utils/dom";
 
 @customElement("tanstack-dev-tools")
 export default class TanstackDevTools extends LitElement {
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @property({ attribute: false })
-  context?: WeavyContext;
+  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
+
+  // Manually consumed in scheduleUpdate()
+  @state()
+  protected weavyContext?: WeavyContextType;
 
   /**
    * Set this true if you want the dev tools to default to being open
@@ -50,14 +53,25 @@ export default class TanstackDevTools extends LitElement {
 
   private devtools?: TanstackQueryDevtools.TanstackQueryDevtools;
 
+  override async scheduleUpdate() {
+    await whenParentsDefined(this);
+    this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
+
+    if (this.weavyContextConsumer?.value && this.weavyContext !== this.weavyContextConsumer?.value) {
+      this.weavyContext = this.weavyContextConsumer?.value;
+    }
+
+    await super.scheduleUpdate();
+  }
+
   override createRenderRoot() {
     return this;
   }
 
   override updated() {
-    if (!this.devtools && this.containerRef.value && this.context) {
+    if (!this.devtools && this.containerRef.value && this.weavyContext) {
       this.devtools = new TanstackQueryDevtools.TanstackQueryDevtools({
-        client: this.context.queryClient,
+        client: this.weavyContext.queryClient,
         queryFlavor: "Lit Query",
         version: "5",
         onlineManager,

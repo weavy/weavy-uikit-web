@@ -23,10 +23,10 @@ export async function whenParentsDefined(element: Element, prefix: string = "wy-
   for (let parent: Element | null = element; (parent = parent.parentElement); ) {
     if (parent.matches(":not(:defined)") && parent.localName.startsWith(prefix)) {
       console.log("Waiting for defining", parent.localName);
-      whenParentElementsDefined.push(customElements.whenDefined(parent.localName))
+      whenParentElementsDefined.push(customElements.whenDefined(parent.localName));
     }
   }
-  
+
   await Promise.all(whenParentElementsDefined);
 }
 
@@ -43,4 +43,20 @@ export const observeConnected = (target: Element, callback: (isConnected: boolea
   connectObserver.observe(target);
 
   return connectObserver;
+};
+
+export async function whenVisible() {
+  if (document.hidden) {
+    await new Promise((resolve) => {
+      window.addEventListener(
+        "visibilitychange",
+        () => {
+          if (!document.hidden) {
+            resolve(true);
+          }
+        },
+        { once: true }
+      );
+    });
+  }
 }

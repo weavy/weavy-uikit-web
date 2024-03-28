@@ -21,6 +21,7 @@
 }
 
 .wy-poll-option {
+  overflow: hidden;
   position: relative;
   background-color: #{color.token(--wy-background)};
   border: 1px solid #{color.token(--wy-outline-variant)};
@@ -35,7 +36,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    background-color: #{color.token(--wy-primary-container)};
+    background-color: #{color.token(--wy-surface-5)};
   }
 
   > :not(.wy-progress) {

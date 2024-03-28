@@ -69,6 +69,7 @@
 .wy-appbar-text {
   @include text.truncate;
   max-width: 100%;
+  display: block;
   
   color: inherit !important;
   user-select: none;

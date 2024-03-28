@@ -1,10 +1,22 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { persistProperties } from "../utils/persist-properties";
+import { persistProperties, resetPersistPropertiesCache } from "../utils/persist-properties";
 
 export class PersistStateController<T = ReactiveControllerHost> implements ReactiveController {
   host: ReactiveControllerHost;
-  prefixKey: string = "";
+  #prefixKey: string = "";
   properties: Array<keyof T> = [];
+
+  get prefixKey() {
+    return this.#prefixKey;
+  }
+
+  set prefixKey(prefixKey) {
+    if (prefixKey !== this.#prefixKey) {
+      resetPersistPropertiesCache();
+      this.#prefixKey = prefixKey;
+      this.host.requestUpdate();
+    }
+  }
 
   constructor(host: ReactiveControllerHost, prefixKey?: string, properties?: Array<keyof T>) {
     host.addController(this);
@@ -15,7 +27,7 @@ export class PersistStateController<T = ReactiveControllerHost> implements React
     }
 
     if (prefixKey) {
-      this.prefixKey = prefixKey;
+      this.#prefixKey = prefixKey;
     }
   }
 

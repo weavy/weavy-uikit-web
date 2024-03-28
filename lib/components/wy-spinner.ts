@@ -24,9 +24,12 @@ export default class WySpinner extends LitElement {
   }
 
   override render() {
-    const strokeDashoffset = (this.nospin && this.progress && 100 - this.progress) || undefined;
+    const remaining = (this.nospin && this.progress && 100 - this.progress) || undefined;
 
-    if (strokeDashoffset !== undefined) {
+    if (remaining !== undefined) {
+      const radius = 10;
+      const circumReference = Math.PI*(radius*2);
+
       return html`<svg
         viewBox="0 0 24 24"
         width=${this.size}
@@ -34,18 +37,18 @@ export default class WySpinner extends LitElement {
         transform="rotate(-90)"
         data-icon="progress"
         class="wy-icon wy-icon-primary">
-        <circle cx="12" cy="12" r="10" stroke-linecap="butt" stroke-width="2" fill="none" stroke="#eee"></circle>
+        <circle cx="12" cy="12" r=${radius} stroke-linecap="butt" stroke-width="2" fill="none" stroke="#eee"></circle>
         <circle
           cx="12"
           cy="12"
-          r="10"
-          stroke-dasharray="100"
-          stroke-dashoffset=${strokeDashoffset}
+          r=${radius}
+          stroke-dasharray=${circumReference}
+          stroke-dashoffset=${circumReference * remaining/100}
           stroke-linecap="butt"
           stroke-width="2"
           fill="none"
           stroke="currentColor"
-          path-length="100"></circle>
+          path-length="200"></circle>
       </svg>`;
     } else {
       const spinnerClassNames = {

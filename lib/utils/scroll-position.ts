@@ -31,7 +31,13 @@ export function getScrollParent(element: Element, includeHidden: boolean = false
       return document.scrollingElement as HTMLElement;
     }
 
-    for (let parent: Element | null = element; (parent = parent.parentElement); ) {
+    // Check parentElement for normal DOM traversing
+    // Check parentNode and/or host to get passed a shadow DOM
+    for (let parent: Element | ParentNode | null = element; (parent = (parent.parentElement || parent.parentNode || (parent as unknown as ShadowRoot).host)); ) {
+      if(!(parent instanceof Element)) {
+        continue;
+      }
+
       style = getComputedStyle(parent);
 
       if (excludeStaticParent && style.position === "static") {

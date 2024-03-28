@@ -13,9 +13,9 @@ import { Feature, type FeaturesConfigType, type FeaturesListType } from "../type
 import { PollOptionType } from "../types/polls.types";
 
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all";
 
 import type { AppType } from "../types/app.types";
 import type { UserType } from "../types/users.types";
@@ -35,16 +35,16 @@ import "./wy-comment-list";
 import "./wy-dropdown";
 import "./wy-icon";
 import "./wy-preview";
+import "./wy-skeleton";
 
 @customElement("wy-comment-view")
 @localized()
 export default class WyCommentView extends LitElement {
-  
   static override styles = chatCss;
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   app!: AppType;
@@ -72,6 +72,9 @@ export default class WyCommentView extends LitElement {
 
   @property({ type: Boolean })
   isTrashed: boolean = false;
+
+  @property()
+  text: string = "";
 
   @property()
   html: string = "";
@@ -128,97 +131,111 @@ export default class WyCommentView extends LitElement {
     }).format(new Date(this.createdAt));
     const dateFromNow = relativeTime(this.weavyContext?.locale, new Date(this.createdAt));
 
-    return html`
-      <div class="wy-item wy-item-sm wy-comment-header">
-        <wy-avatar .src=${this.createdBy.avatar_url} .size=${32} .name=${this.createdBy.display_name}></wy-avatar>
-        <div class="wy-item-body">
-          <div class="wy-item-title">${this.createdBy.display_name}</div>
-          <div class="wy-item-text">
-            <time datetime=${this.createdAt} title=${dateFull}>${dateFromNow}</time>
-            ${this.modifiedAt ? html`<time datetime=${this.modifiedAt}> · ${msg("edited")}</time>` : nothing}
-          </div>
-        </div>
-
-        ${this.user.id === this.createdBy.id
-          ? html`
-              <div class="wy-item-actions wy-item-actions-top">
-                <wy-dropdown>
-                  ${this.user.id === this.createdBy.id
-                    ? html`<wy-dropdown-item @click=${() => this.dispatchEdit(true)}>
-                        <wy-icon name="pencil"></wy-icon>
-                        ${msg("Edit")}
-                      </wy-dropdown-item>`
-                    : nothing}
-                  ${this.user.id === this.createdBy.id
-                    ? html`<wy-dropdown-item @click=${() => this.dispatchTrash()}>
-                        <wy-icon name="trashcan"></wy-icon>
-                        ${msg("Trash")}
-                      </wy-dropdown-item>`
-                    : nothing}
-                </wy-dropdown>
+    return this.temp
+      ? html`<div class="wy-item wy-item-sm wy-comment-header">
+            <wy-avatar .src="${this.createdBy.avatar_url}" .size=${32} .name=${this.createdBy.display_name} .isBot=${this.createdBy.is_bot}></wy-avatar>
+            <div class="wy-item-body">
+              <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
+              <div class="wy-item-text">
+                <time class="wy-placeholder">${dateFromNow}</time>
               </div>
-            `
-          : nothing}
-      </div>
-      <div class="wy-comment-body">
-        <div class="wy-comment-content">
-          <!-- image grid -->
-          ${images && !!images.length
-            ? html`<wy-image-grid
-                .images=${images}
-                @file-open=${(e: CustomEvent) => {
-                  this.previewRef.value?.open(e.detail.file);
-                }}></wy-image-grid>`
-            : ``}
+            </div>
+          </div>
+          <div class="wy-comment-body">
+            <div class="wy-comment-content">
+              ${this.html ? html`<div class="wy-content"><wy-skeleton .text=${this.text}></wy-skeleton></div>` : ``}
+            </div>
+          </div>`
+      : html`<div class="wy-item wy-item-sm wy-comment-header">
+            <wy-avatar .src=${this.createdBy.avatar_url} .size=${32} .name=${this.createdBy.display_name} .isBot=${this.createdBy.is_bot}></wy-avatar>
+            <div class="wy-item-body">
+              <div class="wy-item-title">${this.createdBy.display_name}</div>
+              <div class="wy-item-text">
+                <time datetime=${this.createdAt} title=${dateFull}>${dateFromNow}</time>
+                ${this.modifiedAt ? html`<time datetime=${this.modifiedAt}> · ${msg("edited")}</time>` : nothing}
+              </div>
+            </div>
 
-          <!-- embeds -->
-          ${this.embed && hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds)
-            ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
-            : nothing}
-          ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
+            ${this.user.id === this.createdBy.id
+              ? html`
+                  <div class="wy-item-actions wy-item-actions-top">
+                    <wy-dropdown>
+                      ${this.user.id === this.createdBy.id
+                        ? html`<wy-dropdown-item @click=${() => this.dispatchEdit(true)}>
+                            <wy-icon name="pencil"></wy-icon>
+                            ${msg("Edit")}
+                          </wy-dropdown-item>`
+                        : nothing}
+                      ${this.user.id === this.createdBy.id
+                        ? html`<wy-dropdown-item @click=${() => this.dispatchTrash()}>
+                            <wy-icon name="trashcan"></wy-icon>
+                            ${msg("Trash")}
+                          </wy-dropdown-item>`
+                        : nothing}
+                    </wy-dropdown>
+                  </div>
+                `
+              : nothing}
+          </div>
+          <div class="wy-comment-body">
+            <div class="wy-comment-content">
+              <!-- image grid -->
+              ${images && !!images.length
+                ? html`<wy-image-grid
+                    .images=${images}
+                    @file-open=${(e: CustomEvent) => {
+                      this.previewRef.value?.open(e.detail.file);
+                    }}></wy-image-grid>`
+                : ``}
 
-          <!-- poll -->
-          ${this.pollOptions && this.pollOptions.length > 0
-            ? html`
-                <wy-poll
-                  .pollOptions=${this.pollOptions}
-                  @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}></wy-poll>
-              `
-            : nothing}
+              <!-- embeds -->
+              ${this.embed && hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds)
+                ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
+                : nothing}
+              ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
 
-          <!-- files -->
-          ${files && !!files.length
-            ? html`<wy-attachments-list
-                .files=${files}
-                @file-open=${(e: CustomEvent) => {
-                  this.previewRef.value?.open(e.detail.file);
-                }}></wy-attachments-list>`
-            : ``}
+              <!-- poll -->
+              ${this.pollOptions && this.pollOptions.length > 0
+                ? html`
+                    <wy-poll
+                      .pollOptions=${this.pollOptions}
+                      @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}></wy-poll>
+                  `
+                : nothing}
 
-          <!-- meeting -->
-          ${this.meeting ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>` : ``}
-        </div>
-      </div>
+              <!-- files -->
+              ${files && !!files.length
+                ? html`<wy-attachments-list
+                    .files=${files}
+                    @file-open=${(e: CustomEvent) => {
+                      this.previewRef.value?.open(e.detail.file);
+                    }}></wy-attachments-list>`
+                : ``}
 
-      ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
-      <div class="wy-reactions-line">
-        <wy-reactions
-          small          
-          .reactions=${this.reactions}
-          parentId=${this.parentId}
-          entityId=${this.commentId}
-          messageType="comments"
-          .userId=${this.user.id}></wy-reactions>
-      </div>` : nothing}
+              <!-- meeting -->
+              ${this.meeting ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>` : ``}
+            </div>
+          </div>
 
-      <wy-preview
-        ${ref(this.previewRef)}
-        .app=${this.app}
-        .uid=${`comment-${this.parentId}-${this.commentId.toString()}`}
-        .files=${this.attachments}
-        .isAttachment=${true}
-        .availableFeatures=${this.availableFeatures}
-        .features=${this.features}></wy-preview>
-    `;
+          ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
+          <div class="wy-reactions-line">
+                <wy-reactions
+                  small
+                  .reactions=${this.reactions}
+                  parentId=${this.parentId}
+                  entityId=${this.commentId}
+                  messageType="comments"
+                  .userId=${this.user.id}></wy-reactions>
+              </div>` : nothing}
+
+          <wy-preview
+            ${ref(this.previewRef)}
+            .app=${this.app}
+            .uid=${`comment-${this.parentId}-${this.commentId.toString()}`}
+            .files=${this.attachments}
+            .isAttachment=${true}
+            .availableFeatures=${this.availableFeatures}
+            .features=${this.features}></wy-preview>
+      `;
   }
 }

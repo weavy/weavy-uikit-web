@@ -1,7 +1,7 @@
-import { LitElement, html, PropertyValues } from "lit";
+import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { localized, msg, str } from "@lit/localize";
 
 import chatCss from "../scss/all"
@@ -17,7 +17,7 @@ export default class WyTyping extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({ attribute: true, type: Number })
   appId!: number;
@@ -128,7 +128,7 @@ export default class WyTyping extends LitElement {
     typers.push(trackedActor);
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if ((changedProperties.has("weavyContext") || changedProperties.has("appId") || changedProperties.has("userId")) && this.weavyContext) {
       this.activeTypers = [];
 

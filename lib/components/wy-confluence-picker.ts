@@ -1,8 +1,8 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
+import { LitElement, type PropertyValueMap, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 
-import { type WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 
 import chatCss from "../scss/all";
 import { consume } from "@lit/context";
@@ -31,7 +31,7 @@ export default class WyConfluencePicker extends LitElement {
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
-  private weavyContext?: WeavyContext;
+  private weavyContext?: WeavyContextType;
 
   @property({
     attribute: false,
@@ -106,7 +106,7 @@ export default class WyConfluencePicker extends LitElement {
     window.addEventListener("message", this.onMessage);
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.confluenceResourceQuery.trackQuery(
         getApiOptions<ConfluenceResourceResultType>(
@@ -144,7 +144,7 @@ export default class WyConfluencePicker extends LitElement {
       return html`<wy-empty><button class="wy-button wy-button-primary" @click=${this.dispatchUnauthorized}>Sign in</button></wy-empty>`;
     } else {
       return html`
-      <div class="wy-search wy-scroll-y">
+      <div class="wy-scroll-y">
         <div class="wy-pane-group">
           ${this.spaceKey
             ? html`
@@ -233,7 +233,7 @@ export default class WyConfluencePicker extends LitElement {
   
   }
 
-  protected override updated(_changedProperties: PropertyValues<this & WeavyContextProps>): void {    
+  protected override updated(_changedProperties: PropertyValueMap<this & WeavyContextProps>): void {    
     if (!this.unauthorized &&  this.confluenceResourceQuery.result && !this.confluenceResourceQuery.result.isPending && this.confluenceResourceQuery.result.data?.resources == undefined) {      
         this.unauthorized = true;              
     }

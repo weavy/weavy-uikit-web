@@ -15,7 +15,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContext, weavyContextDefinition } from "./client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "./client/context-definition";
 
 import { getApiOptions } from "./data/api";
 import { AppTypes, type AppType } from "./types/app.types";
@@ -85,11 +85,11 @@ export class WyFiles extends LitElement {
     `,
   ];
 
-  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContext }, this>;
+  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
 
   // Manually consumed in scheduleUpdate()
   @state()
-  protected weavyContext?: WeavyContext;
+  protected weavyContext?: WeavyContextType;
 
   /**
    * Unique identifier for your app component.
@@ -325,7 +325,7 @@ export class WyFiles extends LitElement {
     await super.scheduleUpdate();
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType, weavyContext: WeavyContext, user: UserType }>) {
+  protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType, weavyContext: WeavyContextType, user: UserType }>) {
     if (changedProperties.has("app")) {
       const lastApp = changedProperties.get("app");
 
@@ -441,7 +441,6 @@ export class WyFiles extends LitElement {
       <div
         class="wy-files ${classMap({ "wy-dragging": isDragActive })}"
         data-drag-title=${msg("Drop files here to upload.")}
-        title=${msg("Drop files here to upload.")}
       >
         ${!isPending
           ? files.length

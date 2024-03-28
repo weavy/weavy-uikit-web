@@ -4,13 +4,13 @@ import type {
   InfiniteData,
 } from "@tanstack/query-core";
 
-import { type WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { MutatePostProps, PostType, PostsResultType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";
 
 export function getPostsOptions(
-  weavyContext: WeavyContext,
+  weavyContext: WeavyContextType,
   appId: number | null
 ): InfiniteQueryObserverOptions<PostsResultType, Error, InfiniteData<PostsResultType>> {
   const PAGE_SIZE = 25;
@@ -36,7 +36,7 @@ export function getPostsOptions(
   };
 }
 
-export function getUpdatePostMutationOptions(weavyContext: WeavyContext, mutationKey: MutationKey) {
+export function getUpdatePostMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
   const options = {
     mutationFn: async (variables: MutatePostProps) => {
       const response = await weavyContext.post(
@@ -86,7 +86,7 @@ export function getUpdatePostMutationOptions(weavyContext: WeavyContext, mutatio
 }
 export type MutatePostContextType = { tempId: number };
 
-export function getAddPostMutationOptions(weavyContext: WeavyContext, mutationKey: MutationKey) {
+export function getAddPostMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
   const queryClient = weavyContext.queryClient;
 
   const options = {

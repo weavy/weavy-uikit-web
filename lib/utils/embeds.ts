@@ -1,4 +1,4 @@
-import { WeavyContext } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy-context";
 
 const regexp = /(((https?|ftp):\/\/|(www|ftp)\.)[\w]+(.[\w]+)([\w\-.,@?^=%&amp;:/~+#]*[\w\-@?^=%&amp;/~+#]))/gim;
 
@@ -10,7 +10,7 @@ let candidates: { [string: string]: number } = {};
 
 const arrayEquals = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
-async function fetchEmbed(url: string, callback: Function, weavyContext: WeavyContext) {
+async function fetchEmbed(url: string, callback: Function, weavyContext: WeavyContextType) {
   const data = new FormData();
   data.append("url", url);
 
@@ -44,7 +44,7 @@ export const initEmbeds = (urls: string[]) => {
   embeds = urls;
 };
 
-export const getEmbeds = async (content: string, callback: Function, weavyContext: WeavyContext) => {
+export const getEmbeds = async (content: string, callback: Function, weavyContext: WeavyContextType) => {
   let matches = content.match(regexp)?.map((match) => match) || null;
 
   if (matches !== null) {

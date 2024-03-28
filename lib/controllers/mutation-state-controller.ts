@@ -10,7 +10,7 @@ import {
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
-import { WeavyContext, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { whenParentsDefined } from "../utils/dom";
 import { eqObjects } from "../utils/objects";
 import type { PlainObjectType } from "../types/generic.types";
@@ -36,12 +36,14 @@ function getResult<TResult = MutationState>(
 
 export class MutationStateController<TData, TError, TVariables, TContext> implements ReactiveController {
   host: ReactiveControllerHost;
-  context?: ContextConsumer<{ __context__: WeavyContext }, LitElement>;
+  context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
   whenContext?: Promise<void>;
   resolveContext?: (value: void | PromiseLike<void>) => void;
   result?: MutationState<TData, TError, TVariables, TContext>[];
+  mutationCache?: MutationCache;
   mutationCacheUnsubscribe?: () => void;
   alwaysUpdate: boolean = false;
+  options?: MutationStateOptions<MutationState<TData, TError, TVariables, TContext>>;
 
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
@@ -76,27 +78,47 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
 
     this.mutationCacheUnsubscribe?.();
 
-    const mutationCache = queryClient.getMutationCache();
+    this.options = options;
     
-    this.result = getResult(mutationCache, options);
-    //console.log("track mutations", options.filters?.mutationKey, this.result)
-
-    this.mutationCacheUnsubscribe = mutationCache.subscribe((event) => {
-      if (/added|removed|updated/.test(event.type)) {
-        //const nextResult = replaceEqualDeep(this.result, getResult(mutationCache, options));
-        const nextResult = getResult(mutationCache, options);
-        if (this.result !== nextResult || eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)) {
-          //console.log("trackMutationState update", this.result, nextResult)
-
-          this.result = nextResult;
-          this.host.requestUpdate();
-        }
-      }
-    });
-
-    this.host.requestUpdate();
+    this.mutationCache = queryClient.getMutationCache();
+    this.mutationCacheSubscribe();
     
     return this.result;
+  }
+
+  mutationCacheSubscribe() {
+    if (this.mutationCache && this.options) {
+      this.result = getResult(this.mutationCache, this.options);
+      //console.log("track mutations", options.filters?.mutationKey, this.result)
+  
+      this.mutationCacheUnsubscribe = this.mutationCache.subscribe((event) => {
+        if (this.mutationCache && this.options && /added|removed|updated/.test(event.type)) {
+          //const nextResult = replaceEqualDeep(this.result, getResult(mutationCache, options));
+          const nextResult = getResult(this.mutationCache, this.options);
+          if (this.result !== nextResult || eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)) {
+            //console.log("trackMutationState update", this.result, nextResult)
+  
+            this.result = nextResult;
+            this.host.requestUpdate();
+          }
+        }
+      });
+  
+      this.host.requestUpdate();
+    }
+  }
+
+  untrackMutationState() {
+    this.mutationCacheUnsubscribe?.();
+    this.mutationCacheUnsubscribe = undefined;
+    this.result = undefined;
+    this.options = undefined;
+    this.mutationCache = undefined;
+    this.host.requestUpdate();
+  }
+
+  hostConnected() {
+    this.mutationCacheSubscribe();
   }
 
   hostDisconnected() {
