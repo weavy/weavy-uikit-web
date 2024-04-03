@@ -28,18 +28,20 @@ export function getConversationsOptions(
   options: Object = {},
   searchText?: () => string | undefined,
   types: ConversationTypeGuid[] | null = [ConversationTypeGuid.ChatRoom, ConversationTypeGuid.PrivateChat],
+  member?: string,
 ): InfiniteQueryObserverOptions<ConversationsResultType, Error, InfiniteData<ConversationsResultType>> {
   const PAGE_SIZE = 25;
   return {
     ...options,
     initialPageParam: 0,
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
-    queryKey: ["conversations", types],
+    queryKey: ["conversations", types, member],
     queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const queryParams = new URLSearchParams({
         q: searchText?.() || '',
         skip: opt.pageParam?.toString() || '0',
-        top: PAGE_SIZE.toString()
+        top: PAGE_SIZE.toString(),
+        member: member || '',
       });
       types?.forEach((type) => queryParams.append(`type`, type));
 

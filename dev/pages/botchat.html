@@ -73,6 +73,6 @@
     })
 
     botSelector.value = sessionStorage.getItem("wy-bot-selector") || botSelector.querySelector("option:first-of-type").value;
-
+    messenger.setAttribute("bot", botSelector.value);
   </script>
 </body>

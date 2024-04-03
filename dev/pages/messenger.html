@@ -30,6 +30,7 @@
       zoomAuthenticationUrl="%WEAVY_ZOOM_AUTH_URL%"
       confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
       confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"
+      modalParent="html"
       tokenFactory="async (refresh) => {
         let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
 

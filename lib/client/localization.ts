@@ -15,7 +15,7 @@ export interface WeavyLocalizationProps {
 }
 
 // WeavyLocalization mixin/decorator
-export const WeavyLocalization = (base: typeof WeavyContext) => {
+export const WeavyLocalizationMixin = (base: typeof WeavyContext) => {
   return class WeavyLocalization extends base implements WeavyLocalizationProps {
     /**
      * The locale used in the Weavy source.
@@ -24,12 +24,12 @@ export const WeavyLocalization = (base: typeof WeavyContext) => {
 
     //#locales = WeavyContext.defaults.locales;
 
-    #locales: Map<string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)> = new Map([
+    _locales: Map<string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)> = new Map([
       ["sv-SE", () => import("../../locales/sv-SE")],
     ]);
 
     get locales() {
-      return Array.from(this.#locales.entries());
+      return Array.from(this._locales.entries());
     }
 
     set locales(locales) {
@@ -49,19 +49,19 @@ export const WeavyLocalization = (base: typeof WeavyContext) => {
         if (!Array.isArray(locale) || locale.length !== 2 || typeof locale[0] !== "string") {
           throw new TypeError("Invalid locale provided: " + locale[0]);
         }
-        this.#locales.set(...locale);
+        this._locales.set(...locale);
       });
       this.configureLocalization();
     }
 
-    #locale = WeavyLocalization.sourceLocale;
+    _locale = WeavyLocalization.sourceLocale;
     localization?: ReturnType<typeof configureLocalization>;
 
     /**
      * Selected locale. The locale must be pre configured in `.locales`.
      */
     get locale() {
-      return this.#locale;
+      return this._locale;
     }
 
     set locale(newLocale) {
@@ -73,7 +73,7 @@ export const WeavyLocalization = (base: typeof WeavyContext) => {
         return;
       }
 
-      this.#locale = newLocale;
+      this._locale = newLocale;
       if (this.localization) {
         this.localization.setLocale(this.locale);
       } else {
@@ -81,7 +81,7 @@ export const WeavyLocalization = (base: typeof WeavyContext) => {
           if (this.localization) {
             this.localization.setLocale(this.locale);
           } else if (this.locale !== WeavyLocalization.sourceLocale) {
-            if (this.#locales.has(this.locale)) {
+            if (this._locales.has(this.locale)) {
               this.configureLocalization();
             }
             if (this.localization) {
@@ -102,8 +102,8 @@ export const WeavyLocalization = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      if (this.#locales?.has(newLocale)) {
-        const localizedTemplate = this.#locales.get(newLocale);
+      if (this._locales?.has(newLocale)) {
+        const localizedTemplate = this._locales.get(newLocale);
         console.log(
           this.weavyId,
           typeof localizedTemplate === "function" ? "loading locale" : "preloaded locale",
@@ -122,9 +122,9 @@ export const WeavyLocalization = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      if (this.#locales?.size) {
+      if (this._locales?.size) {
         if (!this.localization) {
-          const targetLocales = this.#locales.keys();
+          const targetLocales = this._locales.keys();
           console.log(this.weavyId, "Configuring locales", targetLocales);
 
           const { getLocale, setLocale } = configureLocalization({

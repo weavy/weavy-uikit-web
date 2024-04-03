@@ -18,7 +18,7 @@ export interface WeavyQueryProps {
 }
 
 // WeavyQuery mixin/decorator
-export const WeavyQuery = (base: typeof WeavyContext) => {
+export const WeavyQueryMixin = (base: typeof WeavyContext) => {
   return class WeavyQuery extends base implements WeavyQueryProps {
     // QUERY CLIENT
 
@@ -28,32 +28,32 @@ export const WeavyQuery = (base: typeof WeavyContext) => {
       this.createQueryClient();
 
       if (this.host.isConnected) {
-        this.#queryClient.mount();
+        this._queryClient.mount();
       }
 
-      this.#hostIsConnectedObserver = observeConnected(this.host, (isConnected) => {
+      this._hostIsConnectedObserver = observeConnected(this.host, (isConnected) => {
         if (this.isDestroyed) {
           return;
         }
 
         if (isConnected) {
           console.log(this.weavyId, "Query client mounted");
-          this.#queryClient.mount();
+          this._queryClient.mount();
         } else {
           console.log(this.weavyId, "Query client unmounted");
-          this.#queryClient.unmount();
+          this._queryClient.unmount();
         }
       });
     }
 
-    #hostIsConnectedObserver: ResizeObserver;
+    _hostIsConnectedObserver: ResizeObserver;
 
-    #queryClient!: QueryClient;
-    #unsubscribeQueryClient?: () => void;
-    #sessionStoragePersister?: Persister;
+    _queryClient!: QueryClient;
+    _unsubscribeQueryClient?: () => void;
+    _sessionStoragePersister?: Persister;
 
     get queryClient() {
-      return this.#queryClient;
+      return this._queryClient;
     }
 
     async createQueryClient() {
@@ -61,7 +61,7 @@ export const WeavyQuery = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      this.#queryClient = new QueryClient({
+      this._queryClient = new QueryClient({
         defaultOptions: {
           queries: {
             staleTime: this.staleTime,
@@ -72,7 +72,7 @@ export const WeavyQuery = (base: typeof WeavyContext) => {
 
       //const localStoragePersister = createSyncStoragePersister({ storage: window.localStorage })
       try {
-        this.#sessionStoragePersister = createSyncStoragePersister({
+        this._sessionStoragePersister = createSyncStoragePersister({
           key: "WEAVY_QUERY_OFFLINE_CACHE",
           storage: window.sessionStorage,
           throttleTime: this.staleTime,
@@ -80,8 +80,8 @@ export const WeavyQuery = (base: typeof WeavyContext) => {
 
         // TODO: Move to "modern" persistQueryClient?
         const persistQueryClientOptions = {
-          queryClient: this.#queryClient,
-          persister: this.#sessionStoragePersister,
+          queryClient: this._queryClient,
+          persister: this._sessionStoragePersister,
           maxAge: this.gcTime, // 24h - should match gcTime
           buster: WeavyContext.version, // Cache busting parameter (build hash or similar)
           hydrateOptions: undefined,
@@ -94,7 +94,7 @@ export const WeavyQuery = (base: typeof WeavyContext) => {
         };
 
         await persistQueryClientRestore(persistQueryClientOptions);
-        this.#unsubscribeQueryClient = persistQueryClientSubscribe(persistQueryClientOptions);
+        this._unsubscribeQueryClient = persistQueryClientSubscribe(persistQueryClientOptions);
       } catch (e) {
         console.warn(this.weavyId, "Query cache persister not available.");
       }
@@ -104,19 +104,19 @@ export const WeavyQuery = (base: typeof WeavyContext) => {
 
     async disconnectQueryClient() {
       console.log(this.weavyId, "Query client disconnected");
-      await this.#queryClient.cancelQueries();
+      await this._queryClient.cancelQueries();
       this.queryClient.setQueriesData({}, undefined);
       this.queryClient.resetQueries();
-      this.#sessionStoragePersister?.removeClient();
-      this.#unsubscribeQueryClient?.();
-      this.#queryClient.unmount();
-      this.#queryClient.clear();
+      this._sessionStoragePersister?.removeClient();
+      this._unsubscribeQueryClient?.();
+      this._queryClient.unmount();
+      this._queryClient.clear();
     }
 
     override destroy() {
       super.destroy();
 
-      this.#hostIsConnectedObserver.disconnect();
+      this._hostIsConnectedObserver.disconnect();
       this.disconnectQueryClient();
     }
   };

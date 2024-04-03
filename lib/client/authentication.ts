@@ -12,7 +12,7 @@ export interface WeavyAuthenticationProps {
 }
 
 // WeavyAuthentication mixin/decorator
-export const WeavyAuthentication = (base: typeof WeavyContext) => {
+export const WeavyAuthenticationMixin = (base: typeof WeavyContext) => {
   return class WeavyAuthentication extends base implements WeavyAuthenticationProps {
     // AUTHENTICATION
 
@@ -21,40 +21,40 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
 
       this.whenUrl().then(() => {
         if (this.url && this.tokenFactory) {
-          this.#resolveUrlAndTokenFactory?.(true);
+          this._resolveUrlAndTokenFactory?.(true);
         }
       });
     }
 
     // whenUrlAndTokenFactory
-    #resolveUrlAndTokenFactory?: (value: unknown) => void;
+    _resolveUrlAndTokenFactory?: (value: unknown) => void;
 
-    #whenUrlAndTokenFactory = new Promise((r) => {
-      this.#resolveUrlAndTokenFactory = r;
+    _whenUrlAndTokenFactory = new Promise((r) => {
+      this._resolveUrlAndTokenFactory = r;
     });
 
     async whenUrlAndTokenFactory() {
-      await this.#whenUrlAndTokenFactory;
+      await this._whenUrlAndTokenFactory;
     }
 
     // whenTokenIsValid
-    #resolveTokenIsValid?: (value: unknown) => void;
+    _resolveTokenIsValid?: (value: unknown) => void;
 
-    #whenTokenIsValid = new Promise((r) => {
-      this.#resolveTokenIsValid = r;
+    _whenTokenIsValid = new Promise((r) => {
+      this._resolveTokenIsValid = r;
     });
 
     async whenTokenIsValid() {
-      await this.#whenTokenIsValid;
+      await this._whenTokenIsValid;
     }
 
-    #tokenFactory?: WeavyTokenFactory;
+    _tokenFactory?: WeavyTokenFactory;
 
     /**
      * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
      */
     get tokenFactory() {
-      return this.#tokenFactory;
+      return this._tokenFactory;
     }
 
     set tokenFactory(tokenFactory) {
@@ -62,26 +62,26 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      if (this.#tokenFactory && this.#tokenFactory !== tokenFactory) {
+      if (this._tokenFactory && this._tokenFactory !== tokenFactory) {
         this.whenUrlAndTokenFactory().then(() => {
           (this as this & WeavyContextType).queryClient.refetchQueries({ stale: true });
         });
       }
 
-      this.#tokenFactory = tokenFactory;
+      this._tokenFactory = tokenFactory;
 
-      if (this.url && this.#tokenFactory) {
-        this.#resolveUrlAndTokenFactory?.(true);
+      if (this.url && this._tokenFactory) {
+        this._resolveUrlAndTokenFactory?.(true);
       }
     }
 
-    #tokenUrl?: URL;
+    _tokenUrl?: URL;
 
     /**
      * An URL to an endpoint returning an JSON data containing an `access_token` string property for _your_ authenticated user. A boolean `refresh=true` query parameter is provided in the request to let you now if when a fresh token is needed from Weavy.
      */
     get tokenUrl() {
-      return this.#tokenUrl;
+      return this._tokenUrl;
     }
 
     set tokenUrl(tokenUrl: string | URL | undefined) {
@@ -91,17 +91,17 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
 
       try {
         if (typeof tokenUrl === "string") {
-          this.#tokenUrl = toUrl(tokenUrl);
+          this._tokenUrl = toUrl(tokenUrl);
         } else if (tokenUrl instanceof URL) {
-          this.#tokenUrl = tokenUrl;
+          this._tokenUrl = tokenUrl;
         } else if (tokenUrl !== undefined) {
           throw -1;
         }
       } catch (e) {
-        throw new Error("Invalid url");
+        throw new Error("Invalid url", (e as Error));
       }
 
-      if (this.#tokenUrl && !this.tokenFactory) {
+      if (this._tokenUrl && !this.tokenFactory) {
         // Set default tokenFactory
         this.tokenFactory = async (refresh) => {
           if (!this.tokenUrl) {
@@ -133,10 +133,10 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
       }
     }
 
-    #tokenPromise: Promise<string> | null = null;
-    #token: string = "";
+    _tokenPromise: Promise<string> | null = null;
+    _token: string = "";
 
-    #validateToken(token: unknown) {
+    _validateToken(token: unknown) {
       if (!token) {
         return false;
       }
@@ -151,12 +151,12 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
         }
       }
 
-      this.#resolveTokenIsValid?.(token);
+      this._resolveTokenIsValid?.(token);
 
       return true;
     }
 
-    #validTokenFromFactory: WeavyTokenFactory = async (refresh: boolean = false) => {
+    _validTokenFromFactory: WeavyTokenFactory = async (refresh: boolean = false) => {
       const racePromises = [this.whenUrlAndTokenFactory()];
 
       if (this.tokenFactoryRetryDelay !== Infinity) {
@@ -167,14 +167,14 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
 
       const token = await this.tokenFactory?.(refresh);
 
-      if (!this.#validateToken(token)) {
+      if (!this._validateToken(token)) {
         // Reset token promise and wait for a more valid token
-        this.#whenUrlAndTokenFactory = new Promise((r) => {
-          this.#resolveUrlAndTokenFactory = r;
+        this._whenUrlAndTokenFactory = new Promise((r) => {
+          this._resolveUrlAndTokenFactory = r;
         });
 
         if (!refresh) {
-          return await this.#validTokenFromFactory(false);
+          return await this._validTokenFromFactory(false);
         }
       }
 
@@ -182,7 +182,7 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
         throw new TypeError("Could not get a valid token from tokenFactory.");
       }
 
-      this.#resolveUrlAndTokenFactory?.(true);
+      this._resolveUrlAndTokenFactory?.(true);
 
       return token;
     };
@@ -192,16 +192,16 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      if (this.#token && !refresh) {
-        return this.#token;
+      if (this._token && !refresh) {
+        return this._token;
       }
 
       await this.whenUrlAndTokenFactory();
 
-      if (!this.#tokenPromise) {
-        this.#tokenPromise = new Promise((resolve, reject) => {
+      if (!this._tokenPromise) {
+        this._tokenPromise = new Promise((resolve, reject) => {
           // Try getting a valid token
-          this.#validTokenFromFactory(refresh).then(resolve).catch(reject);
+          this._validTokenFromFactory(refresh).then(resolve).catch(reject);
 
           if (this.tokenFactoryTimeout !== Infinity) {
             setTimeout(() => reject(new Error("Token factory timeout.")), this.tokenFactoryTimeout);
@@ -211,19 +211,19 @@ export const WeavyAuthentication = (base: typeof WeavyContext) => {
           window.addEventListener("online", () => reject(new Error("Network changed.")), { once: true });
         });
         try {
-          const token = await this.#tokenPromise;
+          const token = await this._tokenPromise;
 
-          this.#tokenPromise = null;
-          this.#token = token;
-          return this.#token;
+          this._tokenPromise = null;
+          this._token = token;
+          return this._token;
         } catch (e) {
-          this.#tokenPromise = null;
+          this._tokenPromise = null;
           console.error(e);
           throw e;
         }
       } else {
         //console.log(this.weavyId, "Already a promise in action, wait for it to resolve...")
-        return await this.#tokenPromise;
+        return await this._tokenPromise;
       }
     }
   };

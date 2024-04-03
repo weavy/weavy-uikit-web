@@ -33,8 +33,6 @@ import "./wy-skeleton";
 import "./wy-preview";
 import "./wy-poll";
 
-
-
 @customElement("wy-message")
 @localized()
 export default class WyMessage extends LitElement {
@@ -58,7 +56,7 @@ export default class WyMessage extends LitElement {
   isBot: boolean = false;
 
   @property({ type: Boolean })
-  chatRoom: boolean = false;
+  isPrivateChat: boolean = false;
 
   @property({ type: Boolean })
   temp: boolean = false;
@@ -144,7 +142,7 @@ export default class WyMessage extends LitElement {
 
         <div class="wy-message-content">
           <div class="wy-message-meta">
-            ${this.chatRoom && !this.me ? html` <span>${this.displayName} · </span> ` : ""}
+            ${!this.isPrivateChat && !this.me ? html` <span>${this.displayName} · </span> ` : ""}
             <time datetime=${this.createdAt} title=${dateFull}>${timeShort}</time>
           </div>
 

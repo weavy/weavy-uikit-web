@@ -4,8 +4,6 @@ import { customElement, property, state } from "lit/decorators.js";
 import { PersistStateController } from "./controllers/persist-state-controller";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type { FeaturesConfigType, FeaturesListType } from "./types/features.types";
-import { ResizeController } from "./controllers/resize-controller";
-import { classMap } from "lit/directives/class-map.js";
 import { ThemeController } from "./controllers/theme-controller";
 import { localized, msg } from "@lit/localize";
 import { ContextConsumer } from "@lit/context";
@@ -52,7 +50,8 @@ export class WyMessenger extends LitElement {
         align-items: stretch;
         position: relative;
         flex: 1;
-        min-width: 0;
+        min-width: 16rem;
+        container-type: inline-size;
       }
 
       wy-conversation-list {
@@ -74,27 +73,29 @@ export class WyMessenger extends LitElement {
         display: none;
       }
 
-      wy-conversation-list.overlay-mode {
-        flex: 0 1 100%;
-        min-width: 0;
-        max-width: none;
-        border-right: none;
-      }
-
-      wy-conversation-list[conversationid].overlay-mode {
-        display: none;
-      }
-
-      .wy-messenger-conversation[data-conversation-id=""].overlay-mode {
-        display: none;
-      }
-
-      .overlay-mode .wy-close-conversation {
-        display: unset;
-      }
-
-      wy-empty.overlay-mode {
-        display: none;
+      @container (max-width: 768px) {
+        wy-conversation-list {
+          flex: 0 1 100%;
+          min-width: 0;
+          max-width: none;
+          border-right: none;
+        }
+  
+        wy-conversation-list[conversationid] {
+          display: none;
+        }
+  
+        .wy-messenger-conversation[data-conversation-id=""] {
+          display: none;
+        }
+  
+        .wy-close-conversation {
+          display: unset;
+        }
+  
+        wy-empty {
+          display: none;
+        }
       }
     `,
   ];
@@ -140,7 +141,6 @@ export class WyMessenger extends LitElement {
 
   //history = new HistoryController<this>(this, 'messenger', ['conversationId'])
   protected persistState = new PersistStateController<this>(this, this.bot || "messenger", ["conversationId"]);
-  protected resizer = new ResizeController(this);
 
   @state()
   hasEventListener: { [key: string]: boolean } = {
@@ -300,18 +300,6 @@ export class WyMessenger extends LitElement {
     new ThemeController(this, WyMessenger.styles);
   }
 
-  override connectedCallback(): void {
-    super.connectedCallback();
-
-    if (this.parentElement) {
-      this.resizer.observe({
-        name: "overlay-mode",
-        target: this,
-        condition: (entry) => entry.contentRect.width <= 768,
-      });
-    }
-  }
-
   protected override async scheduleUpdate() {
     await whenParentsDefined(this);
     this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
@@ -406,13 +394,12 @@ export class WyMessenger extends LitElement {
   }
 
   override render() {
-    const overlayModeClasses = this.resizer.conditions;
     const { isPending: networkIsPending } = this.weavyContext?.network ?? { isPending: true };
     const { data: conversation, isPending } = this.conversationQuery.result ?? { isPending: networkIsPending };
 
     return html`
       <wy-conversation-list
-        class="wy-scroll-y ${classMap(overlayModeClasses)}"
+        class="wy-scroll-y"
         .types=${this.types}
         .bot=${this.bot}
         .avatarUser=${this.botUser}
@@ -422,7 +409,7 @@ export class WyMessenger extends LitElement {
       ></wy-conversation-list>
 
       <div
-        class="wy-messenger-conversation wy-scroll-y ${classMap(overlayModeClasses)}"
+        class="wy-messenger-conversation wy-scroll-y"
         data-conversation-id=${this.conversationId !== null ? this.conversationId : ""}
       >
         <wy-conversation-appbar
@@ -455,9 +442,9 @@ export class WyMessenger extends LitElement {
                     .availableFeatures=${this.availableFeatures}
                     .features=${this.features}
                   ></wy-conversation-extended>`
-              : html` <wy-empty class=${classMap(overlayModeClasses)}><wy-spinner></wy-spinner></wy-empty> `
+              : html` <wy-empty><wy-spinner></wy-spinner></wy-empty> `
             : html`
-                <wy-empty class=${classMap(overlayModeClasses)} noNetwork>${msg("Select a conversation")}</wy-empty>
+                <wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>
               `
         )}
       </div>

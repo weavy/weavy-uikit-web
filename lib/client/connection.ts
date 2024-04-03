@@ -23,7 +23,7 @@ export interface WeavyConnectionProps {
 }
 
 // WeavyConnection mixin/decorator
-export const WeavyConnection = (base: typeof WeavyContext) => {
+export const WeavyConnectionMixin = (base: typeof WeavyContext) => {
   return class WeavyConnection extends base implements WeavyConnectionProps {
     constructor(options: WeavyContextOptionsType) {
       super(options);
@@ -37,36 +37,36 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
     }
 
     // whenConnectionRequested
-    #resolveConnectionRequested?: (value: unknown) => void;
+    _resolveConnectionRequested?: (value: unknown) => void;
 
-    #whenConnectionRequested = new Promise((r) => {
-      this.#resolveConnectionRequested = r;
+    _whenConnectionRequested = new Promise((r) => {
+      this._resolveConnectionRequested = r;
     });
 
     async whenConnectionRequested() {
-      await this.#whenConnectionRequested;
+      await this._whenConnectionRequested;
     }
 
     // RTM CONNECTION
 
-    #connection?: HubConnection;
-    #connectionEventListeners: Array<{ name: string; callback: Function }> = [];
+    _connection?: HubConnection;
+    _connectionEventListeners: Array<{ name: string; callback: Function }> = [];
 
     signalRAccessTokenRefresh = false;
 
-    #whenConnectionStartedResolve?: (value: unknown) => void;
-    #whenConnectionStartedReject?: (reason: unknown) => void;
-    #whenConnectionStarted = new Promise((resolve, reject) => {
-      this.#whenConnectionStartedResolve = resolve;
-      this.#whenConnectionStartedReject = reject;
+    _whenConnectionStartedResolve?: (value: unknown) => void;
+    _whenConnectionStartedReject?: (reason: unknown) => void;
+    _whenConnectionStarted = new Promise((resolve, reject) => {
+      this._whenConnectionStartedResolve = resolve;
+      this._whenConnectionStartedReject = reject;
     });
 
     get rtmConnection() {
-      return this.#connection;
+      return this._connection;
     }
 
     async whenConnectionStarted() {
-      await this.#whenConnectionStarted;
+      await this._whenConnectionStarted;
     }
 
     async createConnection(this: this & WeavyContextType) {
@@ -77,26 +77,26 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
       if (this.url && this.tokenFactory) {
         this.networkStateIsPending = true;
 
-        if (this.#connection) {
+        if (this._connection) {
           const connectionUrl = new URL("/hubs/rtm", this.url);
-          if (this.#connection.baseUrl !== connectionUrl.toString()) {
+          if (this._connection.baseUrl !== connectionUrl.toString()) {
             this.connectionState = "reconnecting";
             console.log(
               this.weavyId,
               "Reconnecting due to changed url.",
-              this.#connection.baseUrl,
+              this._connection.baseUrl,
               "=>",
               connectionUrl.toString()
             );
             await this.disconnect();
-            this.#connection.baseUrl = connectionUrl.toString();
+            this._connection.baseUrl = connectionUrl.toString();
             this.connect();
           }
         } else {
           this.connectionState = "connecting";
           //console.log(this.weavyId, "Creating connection");
           const connectionUrl = new URL("/hubs/rtm", this.url);
-          this.#connection = new HubConnectionBuilder()
+          this._connection = new HubConnectionBuilder()
             .configureLogging(LogLevel.None)
             .withUrl(connectionUrl.toString(), {
               accessTokenFactory: async () => {
@@ -131,7 +131,7 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
             })
             .build();
 
-          this.#connection.onclose(async (_error) => {
+          this._connection.onclose(async (_error) => {
             console.info(this.weavyId, "SignalR closed.");
             this.connectionState = "disconnected";
 
@@ -140,23 +140,23 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
             }
 
             this.networkStateIsPending = true;
-            this.#whenConnectionStarted = new Promise((resolve, reject) => {
-              this.#whenConnectionStartedResolve = resolve;
-              this.#whenConnectionStartedReject = reject;
+            this._whenConnectionStarted = new Promise((resolve, reject) => {
+              this._whenConnectionStartedResolve = resolve;
+              this._whenConnectionStartedReject = reject;
             });
             this.connect();
           });
-          this.#connection.onreconnecting((_error) => {
+          this._connection.onreconnecting((_error) => {
             console.log(this.weavyId, "SignalR reconnecting...");
             this.connectionState = "reconnecting";
             //this.networkStateIsPending = true;
           });
-          this.#connection.onreconnected((_connectionId) => {
+          this._connection.onreconnected((_connectionId) => {
             console.info(this.weavyId, "SignalR reconnected.");
             this.connectionState = "connected";
             this.networkStateIsPending = false;
-            for (let i = 0; i < this.#connectionEventListeners.length; i++) {
-              this.#connection?.invoke("Subscribe", this.#connectionEventListeners[i].name);
+            for (let i = 0; i < this._connectionEventListeners.length; i++) {
+              this._connection?.invoke("Subscribe", this._connectionEventListeners[i].name);
             }
           });
           this.connect();
@@ -165,8 +165,8 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
     }
 
     async disconnect(this: this & WeavyContextType) {
-      if (this.#connection) {
-        await this.#connection.stop();
+      if (this._connection) {
+        await this._connection.stop();
         this.connectionState = "disconnected";
       }
     }
@@ -176,7 +176,7 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      if (this.#connection) {
+      if (this._connection) {
         console.log(this.weavyId, "Connecting SignalR...");
         //this.networkStateIsPending = true;
 
@@ -185,11 +185,11 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
             throw new Error();
           }
 
-          await Promise.race([this.#connection.start(), this.whenConnectionStarted()]);
+          await Promise.race([this._connection.start(), this.whenConnectionStarted()]);
           this.signalRAccessTokenRefresh = false;
           this.networkStateIsPending = false;
           this.connectionState = "connected";
-          this.#whenConnectionStartedResolve?.(undefined);
+          this._whenConnectionStartedResolve?.(undefined);
           console.info(this.weavyId, "SignalR connected.");
         } catch (e: unknown) {
           if (e instanceof DestroyError) {
@@ -250,24 +250,24 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
         throw new DestroyError();
       }
 
-      this.#resolveConnectionRequested?.(true);
+      this._resolveConnectionRequested?.(true);
 
       try {
         const name = group ? group + ":" + event : event;
 
-        if (this.#connectionEventListeners.some((el) => el.name === name && el.callback === callback)) {
+        if (this._connectionEventListeners.some((el) => el.name === name && el.callback === callback)) {
           throw new Error("Duplicate subscribe: " + name);
         }
 
-        this.#connectionEventListeners.push({ name, callback });
+        this._connectionEventListeners.push({ name, callback });
 
         //console.log(this.weavyId, "Subscribing", name);
         await this.whenConnectionStarted();
-        if (!this.#connection) {
+        if (!this._connection) {
           throw new Error("Connection not created");
         }
-        this.#connection.on(name, callback);
-        await this.#connection.invoke("Subscribe", name);
+        this._connection.on(name, callback);
+        await this._connection.invoke("Subscribe", name);
       } catch (e: unknown) {
         if (!(e instanceof DestroyError)) {
           console.error(this.weavyId, "Error in Subscribe:", e);
@@ -288,20 +288,20 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
         const name = group ? group + ":" + event : event;
 
         // get first occurrence of group name and remove it
-        const index = this.#connectionEventListeners.findIndex((el) => el.name === name && el.callback === callback);
+        const index = this._connectionEventListeners.findIndex((el) => el.name === name && el.callback === callback);
 
         if (index !== -1) {
-          this.#connectionEventListeners.splice(index, 1);
+          this._connectionEventListeners.splice(index, 1);
 
           await this.whenConnectionStarted();
-          if (!this.#connection) {
+          if (!this._connection) {
             throw new Error("Connection not created");
           }
-          this.#connection?.off(name, callback);
+          this._connection?.off(name, callback);
 
           // if no more groups, remove from server
-          if (!this.#connectionEventListeners.some((el) => el.name === name)) {
-            await this.#connection.invoke("Unsubscribe", name);
+          if (!this._connectionEventListeners.some((el) => el.name === name)) {
+            await this._connection.invoke("Unsubscribe", name);
           }
         }
       } catch (e: unknown) {
@@ -316,10 +316,10 @@ export const WeavyConnection = (base: typeof WeavyContext) => {
 
       this.disconnect();
 
-      if (this.#whenConnectionStartedReject) {
+      if (this._whenConnectionStartedReject) {
         // add default catch
-        this.#whenConnectionStarted.catch(() => {});
-        this.#whenConnectionStartedReject(new DestroyError());
+        this._whenConnectionStarted.catch(() => {});
+        this._whenConnectionStartedReject(new DestroyError());
       }
     }
   };

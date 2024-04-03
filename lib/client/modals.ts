@@ -10,36 +10,42 @@ import WeavyPortal from "../components/wy-portal";
 export interface WeavyModalsProps {}
 
 // WeavyModals mixin/decorator
-export const WeavyModals = (base: typeof WeavyContext) => {
+export const WeavyModalsMixin = (base: typeof WeavyContext) => {
   return class WeavyModals extends base implements WeavyModalsProps {
     // MODALS
+
+    _modalPortal?: WeavyPortal;
+    _modalContextProvider?: ContextProvider<typeof weavyContextDefinition>;
+
     constructor(options: WeavyContextOptionsType) {
       super(options);
 
       // Root node for modal portal
 
       defer(async () => {
+        await this.whenUrl();
+
         if (this.isDestroyed) {
           return;
         }
 
         if (modalController.host && modalController.host instanceof WeavyPortal) {
-          this.#modalPortal = modalController.host as WeavyPortal;
+          this._modalPortal = modalController.host as WeavyPortal;
         } else {
-          this.#modalPortal = new WeavyPortal();
+          this._modalPortal = new WeavyPortal();
         }
 
-        this.#modalPortal.connectedContexts.add(this);
+        this._modalPortal.connectedContexts.add(this);
 
         if (document) {
           const modalRoot: HTMLElement =
             (this.modalParent && document.querySelector(this.modalParent)) || document.documentElement;
 
-          if (!modalRoot.contains(this.#modalPortal)) {
-            modalRoot.append(this.#modalPortal);
+          if (!modalRoot.contains(this._modalPortal)) {
+            modalRoot.append(this._modalPortal);
             if (!this.host.contains(modalRoot)) {
               // Make the modal root a provider as well if needed
-              this.#modalContextProvider = new ContextProvider(modalRoot, {
+              this._modalContextProvider = new ContextProvider(modalRoot, {
                 context: weavyContextDefinition,
                 initialValue: this as unknown as WeavyContextType,
               });
@@ -49,18 +55,15 @@ export const WeavyModals = (base: typeof WeavyContext) => {
       });
     }
 
-    #modalPortal?: WeavyPortal;
-    #modalContextProvider?: ContextProvider<typeof weavyContextDefinition>;
-
     override destroy() {
       super.destroy();
 
-      this.#modalContextProvider?.detachListeners();
+      this._modalContextProvider?.detachListeners();
 
-      if (this.#modalPortal) {
-        this.#modalPortal.connectedContexts.delete(this);
-        if (!this.#modalPortal.connectedContexts.size) {
-          this.#modalPortal?.remove();
+      if (this._modalPortal) {
+        this._modalPortal.connectedContexts.delete(this);
+        if (!this._modalPortal.connectedContexts.size) {
+          this._modalPortal?.remove();
         }
       }
     }

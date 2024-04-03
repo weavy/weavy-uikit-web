@@ -7,7 +7,7 @@ export interface WeavyVersionProps {
 }
 
 // WeavyVersion mixin/decorator
-export const WeavyVersion = (base: typeof WeavyContext) => {
+export const WeavyVersionMixin = (base: typeof WeavyContext) => {
   return class WeavyVersion extends base implements WeavyVersionProps {
     constructor(options: WeavyContextOptionsType) {
       super(options);

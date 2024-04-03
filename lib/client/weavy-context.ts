@@ -8,15 +8,15 @@ import type { WeavyOptions, Destructable, WeavyContextOptionsType } from "../typ
 import { DestroyError } from "../utils/errors";
 import { toUrl } from "../converters/url";
 
-import { SOURCE_LOCALE, WeavyLocalization, type WeavyLocalizationProps } from "./localization";
-import { WeavyNetwork, type WeavyNetworkProps } from "./network";
-import { WeavyAuthentication, type WeavyAuthenticationProps } from "./authentication";
-import { WeavyConnection, type WeavyConnectionProps } from "./connection";
-import { WeavyQuery, type WeavyQueryProps } from "./query";
-import { WeavyVersion, type WeavyVersionProps } from "./version";
-import { WeavyModals, type WeavyModalsProps } from "./modals";
-import { WeavyFetch, type WeavyFetchProps } from "./fetch";
-import { WeavyStyles, type WeavyStylesProps } from "./styles";
+import { SOURCE_LOCALE, WeavyLocalizationMixin, type WeavyLocalizationProps } from "./localization";
+import { WeavyNetworkMixin, type WeavyNetworkProps } from "./network";
+import { WeavyAuthenticationMixin, type WeavyAuthenticationProps } from "./authentication";
+import { WeavyConnectionMixin, type WeavyConnectionProps } from "./connection";
+import { WeavyQueryMixin, type WeavyQueryProps } from "./query";
+import { WeavyVersionMixin, type WeavyVersionProps } from "./version";
+import { WeavyModalsMixin, type WeavyModalsProps } from "./modals";
+import { WeavyFetchMixin, type WeavyFetchProps } from "./fetch";
+import { WeavyStylesMixin, type WeavyStylesProps } from "./styles";
 
 export type WeavyContextType = WeavyContext &
   WeavyLocalizationProps &
@@ -33,16 +33,16 @@ export type WeavyContextType = WeavyContext &
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
  */
-@WeavyLocalization
-@WeavyNetwork
-@WeavyAuthentication
-@WeavyConnection
-@WeavyQuery
-@WeavyVersion
-@WeavyModals
-@WeavyFetch
-@WeavyStyles
-export class WeavyContext implements WeavyOptions, Destructable {
+@WeavyLocalizationMixin
+@WeavyNetworkMixin
+@WeavyAuthenticationMixin
+@WeavyConnectionMixin
+@WeavyQueryMixin
+@WeavyVersionMixin
+@WeavyModalsMixin
+@WeavyFetchMixin
+@WeavyStylesMixin
+export class WeavyContextBase implements WeavyOptions, Destructable {
   /**
    * The semver version of the package.
    */
@@ -156,7 +156,7 @@ export class WeavyContext implements WeavyOptions, Destructable {
   // CONSTRUCTOR
 
   constructor(options: WeavyContextOptionsType) {
-    console.info(`${WeavyContext.sourceName}@${WeavyContext.version} #${this.weavySid}`);
+    console.info(`${WeavyContextBase.sourceName}@${WeavyContextBase.version} #${this.weavySid}`);
 
     const validOptions: typeof options = {};
 
@@ -202,4 +202,6 @@ export class WeavyContext implements WeavyOptions, Destructable {
     console.info(this.weavyId, "was destroyed");
   }
 }
+
+export class WeavyContext extends WeavyContextBase {}
 export const Weavy = WeavyContext;

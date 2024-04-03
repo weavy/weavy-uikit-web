@@ -144,7 +144,7 @@ export default class WyMessages extends LitElement {
                       .messageId=${message.id}
                       .me=${message.created_by.id === this.user.id}
                       .isBot=${message.created_by.is_bot || false}
-                      .chatRoom=${this.app?.type === ConversationTypeGuid.ChatRoom}
+                      .isPrivateChat=${this.app?.type === ConversationTypeGuid.PrivateChat || this.app?.type === ConversationTypeGuid.BotChat}
                       .temp=${message.temp}
                       .displayName=${message.created_by.display_name}
                       .avatar=${message.created_by.avatar_url}

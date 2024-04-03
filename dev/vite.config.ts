@@ -4,7 +4,7 @@ import packageJson from "../package.json" assert { type: "json" };
 import dts from "vite-plugin-dts";
 import fs from "fs";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
-import VitePluginCustomElementsManifest from 'vite-plugin-cem';
+import VitePluginCustomElementsManifest from "vite-plugin-cem";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -90,23 +90,23 @@ function weavyChunkNames(chunkInfo) {
   return `[format]/${name}.${chunkInfo.format === "cjs" ? "cjs" : "js"}`;
 }
 
-function utf8BomPlugin(){
+function utf8BomPlugin() {
   const options: PluginOption = {
     name: "utf-8-bom",
     generateBundle(options, bundle, _isWrite) {
-      Object.keys(bundle).forEach(chunkId => {
-        const chunk = bundle[chunkId]
+      Object.keys(bundle).forEach((chunkId) => {
+        const chunk = bundle[chunkId];
         // @ts-expect-error chunk type
-        if (typeof chunk.code === "string") { 
+        if (typeof chunk.code === "string") {
           // @ts-expect-error chunk type
           if (!chunk.code.startsWith("\ufeff")) {
             // @ts-expect-error chunk type
             chunk.code = "\ufeff" + chunk.code;
           }
         }
-      })
-    }
-  }
+      });
+    },
+  };
 
   return options;
 }
@@ -124,7 +124,7 @@ export default defineConfig({
       entryRoot: "lib",
     }),
     VitePluginCustomElementsManifest({
-      files: ['./lib/**/wy-*.ts'],
+      files: ["./lib/**/wy-*.ts"],
       lit: true,
     }),
     weavyImportUrlPlugin(),
@@ -134,6 +134,11 @@ export default defineConfig({
     WEAVY_VERSION: JSON.stringify(version),
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
   },
+  resolve: {
+    alias: {
+      "@microsoft/signalr": "@microsoft/signalr/dist/browser/signalr.min.js"
+    }
+  },
   server: {
     proxy: {
       "/api": "http://localhost:3001/",
@@ -142,7 +147,7 @@ export default defineConfig({
   },
   esbuild: {
     legalComments: "none",
-    charset: 'utf8',
+    charset: "utf8",
     //banner: "\ufeff", // UTF-8 BOM
   },
   build: {
@@ -159,7 +164,7 @@ export default defineConfig({
       // into your library
       //external: ["react", "react-dom"],
 
-      plugins:[
+      plugins: [
         // @ ts-expect-error wrong type
         //minifyHTMLLiterals.default()
         utf8BomPlugin(),

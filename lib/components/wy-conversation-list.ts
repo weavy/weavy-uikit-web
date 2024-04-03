@@ -4,7 +4,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
 import { repeat } from "lit/directives/repeat.js";
-import chatCss from "../scss/all"
+import chatCss from "../scss/all";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { ConversationTypeGuid, ConversationsResultType } from "../types/conversations.types";
@@ -44,14 +44,13 @@ import { WeavyContextProps } from "../types/weavy.types";
 @customElement("wy-conversation-list")
 @localized()
 export default class WeavyConversationList extends LitElement {
-  
   static override styles = [
     chatCss,
     css`
-      :host{
+      :host {
         position: relative;
       }
-    `
+    `,
   ];
 
   @consume({ context: weavyContextDefinition, subscribe: true })
@@ -171,7 +170,9 @@ export default class WeavyConversationList extends LitElement {
     if ((changedProperties.has("weavyContext") || changedProperties.has("types")) && this.weavyContext) {
       this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
 
-      this.conversationsQuery.trackInfiniteQuery(getConversationsOptions(this.weavyContext, {}, () => this.searchText, this.types));
+      this.conversationsQuery.trackInfiniteQuery(
+        getConversationsOptions(this.weavyContext, {}, () => this.searchText, this.types, this.bot)
+      );
 
       this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
       this.starConversationMutation = getStarConversationMutation(this.weavyContext);
@@ -192,7 +193,7 @@ export default class WeavyConversationList extends LitElement {
       }
     }
   }
-  
+
   protected override update(changedProperties: PropertyValueMap<this>): void {
     super.update(changedProperties);
     this.infiniteScroll.observe(this.conversationsQuery.result, this.pagerRef.value);
@@ -254,7 +255,9 @@ export default class WeavyConversationList extends LitElement {
                   .name=${this.avatarUser?.display_name}
                   .size=${24}
                 ></wy-avatar>
-                <div class="wy-appbar-text">${this.name ?? (this.bot ? this.avatarUser?.display_name : msg("Messenger"))}</div>
+                <div class="wy-appbar-text"
+                  >${this.name ?? (this.bot ? this.avatarUser?.display_name : msg("Messenger"))}</div
+                >
                 <wy-conversation-new
                   .bot=${this.bot}
                   @refetch=${() => this.conversationsQuery.result.refetch()}
@@ -262,37 +265,48 @@ export default class WeavyConversationList extends LitElement {
                 ></wy-conversation-new>
               </nav>
             </header>
-            ${!this.bot ? html`
-              <div class="wy-pane-body">
-                <div class="wy-pane-group">
-                  <div class="wy-input-group">
-                    <input
-                      class="wy-input wy-input-group-input wy-input-filled"
-                      name="text"
-                      .value=${this.searchText || ""}
-                      ${ref(this.inputRef)}
-                      @input=${() => this.throttledSearch()}
-                      @keyup=${inputConsumeWithClearAndBlurOnEscape}
-                      placeholder=${msg("Search for conversations...")}
-                    />
-                    <wy-button
-                      type="reset"
-                      @click=${this.clear}
-                      kind="icon"
-                      class="wy-input-group-button-icon"
-                      buttonClass="wy-button-icon">
-                      <wy-icon name="close-circle"></wy-icon>
-                    </wy-button>
-                    <wy-button kind="icon" class="wy-input-group-button-icon" buttonClass="wy-button-icon">
-                      <wy-icon name="magnify"></wy-icon>
-                    </wy-button>
+            ${!this.bot
+              ? html`
+                  <div class="wy-pane-body">
+                    <div class="wy-pane-group">
+                      <div class="wy-input-group">
+                        <input
+                          class="wy-input wy-input-group-input wy-input-filled"
+                          name="text"
+                          .value=${this.searchText || ""}
+                          ${ref(this.inputRef)}
+                          @input=${() => this.throttledSearch()}
+                          @keyup=${inputConsumeWithClearAndBlurOnEscape}
+                          placeholder=${msg("Search for conversations...")}
+                        />
+                        <wy-button
+                          type="reset"
+                          @click=${this.clear}
+                          kind="icon"
+                          class="wy-input-group-button-icon"
+                          buttonClass="wy-button-icon"
+                        >
+                          <wy-icon name="close-circle"></wy-icon>
+                        </wy-button>
+                        <wy-button kind="icon" class="wy-input-group-button-icon" buttonClass="wy-button-icon">
+                          <wy-icon name="magnify"></wy-icon>
+                        </wy-button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ` : nothing}
+                `
+              : nothing}
             <div class="wy-conversations">
               ${!isPending && this.user && infiniteData
-                ? this.renderConversations(this.user, infiniteData)
+                ? infiniteData.pages[0]?.count || this.searchText
+                  ? this.renderConversations(this.user, infiniteData)
+                  : html`
+                      <div class="wy-pane-body">
+                        <div class="wy-pane-group">
+                          <wy-empty noNetwork>${msg("Create a conversation to get started.")}</wy-empty>
+                        </div>
+                      </div>
+                    `
                 : html`<wy-spinner class="wy-content-icon"></wy-spinner>`}
               <div ${ref(this.pagerRef)} class="wy-pager"></div>
             </div>

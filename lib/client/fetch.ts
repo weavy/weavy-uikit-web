@@ -26,7 +26,7 @@ export interface WeavyFetchProps {
 }
 
 // WeavyFetch mixin/decorator
-export const WeavyFetch = (base: typeof WeavyContext) => {
+export const WeavyFetchMixin = (base: typeof WeavyContext) => {
   return class WeavyFetch extends base implements WeavyFetchProps {
     // FETCH
 

@@ -14,7 +14,7 @@ export interface WeavyNetworkProps {
 }
 
 // WeavyNetwork mixin/decorator
-export const WeavyNetwork = (base: typeof WeavyContext) => {
+export const WeavyNetworkMixin = (base: typeof WeavyContext) => {
   return class WeavyNetwork extends base implements WeavyNetworkProps {
     constructor(options: WeavyContextOptionsType) {
       super(options);
@@ -30,74 +30,74 @@ export const WeavyNetwork = (base: typeof WeavyContext) => {
     }
     // NETWORK
 
-    #networkEvents = new Set<(status: NetworkStatus) => void>();
-    #connectionState: ConnectionState = "connecting";
-    #serverState: ServerState = "ok";
-    #networkState: NetworkState = window.navigator.onLine ? "online" : "offline";
-    #networkStateIsPending: boolean = false;
+    _networkEvents = new Set<(status: NetworkStatus) => void>();
+    _connectionState: ConnectionState = "connecting";
+    _serverState: ServerState = "ok";
+    _networkState: NetworkState = window.navigator.onLine ? "online" : "offline";
+    _networkStateIsPending: boolean = false;
 
     get networkState() {
-      return this.#networkState;
+      return this._networkState;
     }
 
     set networkState(state: NetworkState) {
-      this.#networkState = state;
+      this._networkState = state;
       this.triggerNetworkChange();
     }
 
     get serverState() {
-      return this.#serverState;
+      return this._serverState;
     }
 
     set serverState(state: ServerState) {
-      this.#serverState = state;
+      this._serverState = state;
       this.triggerNetworkChange();
     }
 
     get connectionState() {
-      return this.#connectionState;
+      return this._connectionState;
     }
 
     set connectionState(state: ConnectionState) {
-      this.#connectionState = state;
+      this._connectionState = state;
       this.triggerNetworkChange();
     }
 
     get networkStateIsPending() {
-      return this.#networkStateIsPending;
+      return this._networkStateIsPending;
     }
 
     set networkStateIsPending(isPending: boolean) {
-      this.#networkStateIsPending = isPending;
+      this._networkStateIsPending = isPending;
       this.triggerNetworkChange();
     }
 
     get network(): NetworkStatus {
       return {
         state:
-          this.#networkState === "online"
-            ? this.#connectionState === "connected" || this.#serverState === "ok"
+          this._networkState === "online"
+            ? this._connectionState === "connected" || this._serverState === "ok"
               ? "online"
               : "unreachable"
             : "offline",
-        isPending: this.#networkStateIsPending,
+        isPending: this._networkStateIsPending,
       };
     }
 
     triggerNetworkChange() {
       const networkStatus = this.network;
       //console.log(this.weavyId, "network status changed", networkStatus);
-      this.#networkEvents.forEach((eventHandler) => {
+      this._networkEvents.forEach((eventHandler) => {
         eventHandler(networkStatus);
       });
     }
 
     addNetworkListener(callback: (state: NetworkStatus) => void) {
-      this.#networkEvents.add(callback);
+      this._networkEvents.add(callback);
     }
 
     removeNetworkListener(callback: (state: NetworkStatus) => void) {
-      this.#networkEvents.delete(callback);
+      this._networkEvents.delete(callback);
     }
   };
 };

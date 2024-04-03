@@ -7,7 +7,7 @@ import { adoptGlobalStyles } from "../utils/styles";
 export interface WeavyStylesProps {}
 
 // WeavyStyles mixin/decorator
-export const WeavyStyles = (base: typeof WeavyContext) => {
+export const WeavyStylesMixin = (base: typeof WeavyContext) => {
   return class WeavyStyles extends base implements WeavyStylesProps {
     constructor(options: WeavyContextOptionsType) {
       super(options);

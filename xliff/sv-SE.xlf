@@ -460,6 +460,10 @@
         <source>Untitled conversation</source>
         <target>Namnlös konversation</target>
       </trans-unit>
+      <trans-unit id="s2662796b3275bb5b">
+        <source>Create a conversation to get started.</source>
+        <target>Skapa en konversation för att komma igång.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

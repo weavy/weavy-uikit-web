@@ -24,6 +24,7 @@
 's2359515613fb2d9a': `Kommentaren togs bort.`,
 's236ae937cbcd6a39': `Zooma in`,
 's251a18781c6a3625': `+ lägg till alternativ`,
+'s2662796b3275bb5b': `Skapa en konversation för att komma igång.`,
 's26f91b6796e33111': `Återställ`,
 's275e39c24f663f7e': `Starta en konversation!`,
 's2a200f62cfdb269c': `Molnlagring`,
