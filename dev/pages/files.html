@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <script>
-      fetch("/api/contextual/acme-files?type=files")
+      //fetch("/api/contextual/acme-files?type=files")
     </script>
-    <link rel="modulepreload" href="/locales/sv-SE.js" />
+    <link rel="modulepreload" href="%WEAVY_URL%/uikit-web/es/locales/sv-SE.js" />
     <script type="module" src="/lib"></script>
     <script type="module" src="/dev/tools/tanstack-dev-tools.ts" async defer></script>
   
@@ -24,10 +24,9 @@
   </head>
   <body>
     <wy-context id="wy-provider" url="%WEAVY_URL%" confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
-    confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%">
+    confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%" modalParent=""></wy-context>
       <wy-files uid="acme-files"></wy-files>
       <tanstack-dev-tools></tanstack-dev-tools>
-    </wy-context>
   
     <script>
       const weavy = document.getElementById("wy-provider");

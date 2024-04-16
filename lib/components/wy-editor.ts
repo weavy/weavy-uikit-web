@@ -17,7 +17,7 @@ import chatCss from "../scss/all";
 
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { hasFeature } from "../utils/features";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import throttle from "lodash.throttle";
@@ -44,7 +44,7 @@ import { removeMutation, removeMutations } from "../utils/mutation-cache";
 import WeavyCloudFiles from "./wy-cloud-files";
 import { ExternalBlobMutationType, getExternalBlobMutation } from "../data/blob-external";
 import { PollOptionType } from "../types/polls.types";
-import { clearEmbeds, getEmbeds, initEmbeds } from "../utils/embeds";
+import { clearEmbeds, getEmbeds, initEmbeds, isFetchingEmbeds } from "../utils/embeds";
 import type { EmbedType } from "../types/embeds.types";
 import { DropZoneController } from "../controllers/dropzone-controller";
 
@@ -607,6 +607,8 @@ export default class WyEditor extends LitElement {
   protected async submit() {
     const fileMutationResults = this.mutatingFiles.result;
 
+    const currentlyUploading = fileMutationResults?.some((upload) => upload.status === "pending");
+
     const text = this.editor?.state.doc.toString().trim();
     const meetingId = this.meeting?.id;
     const blobs = fileMutationResults?.map((mutation) => mutation.data?.id);
@@ -614,6 +616,8 @@ export default class WyEditor extends LitElement {
     const pollOptions = this.pollOptions.filter((p) => p.text.trim() !== "");
 
     if (
+      isFetchingEmbeds() ||
+      currentlyUploading ||
       !text &&
       !meetingId &&
       blobs?.length == 0 &&

@@ -51,13 +51,14 @@
     "lib/**/*.ts",
     "locales/**/*.ts",
     "lib/scss/**/*.scss",
-    "dev/tools/**/*.ts", "index.ts",
-    //"test/**/*.ts"
+    "dev/tools/**/*.ts", 
+    "index.ts",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dev/**/*.[mc]js",
     "cli/**/*.[mc]js",
     "**/dist/*"
-  ]
+  ],
 }

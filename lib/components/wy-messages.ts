@@ -17,7 +17,7 @@ import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
 
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import "./wy-message";
 

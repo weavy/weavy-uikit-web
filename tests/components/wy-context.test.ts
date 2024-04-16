@@ -1,16 +1,9 @@
-import "../dist/weavy";
-
 import { expect, fixture, html } from "@open-wc/testing";
-import type WyContext from "../lib/wy-context";
+import { LocaleModule } from "@lit/localize";
 
-function testReadOnly(obj: any, property: any) {
-  return () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // eslint-disable-next-line no-self-assign
-    obj[property] = obj[property];
-  };
-}
+import "../utils/version";
+import "../../lib";
+import { type WyContext } from "../../lib";
 
 describe("wy-context", () => {
   it("has a shadowDom and a slot", async () => {
@@ -45,15 +38,14 @@ describe("wy-context", () => {
       html` <wy-context tokenUrl="/not/valid/token-url"></wy-context> `
     );
     await el.updateComplete;
-    expect(el).to.respondTo("tokenFactory");
-    expect(await el.tokenFactory?.(false)).to.throw("Could not get access token from server!"); 
-    //expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
+    expect(el).to.have.property("weavyContext").that.respondTo("tokenFactory");
   });
 
   it('has a "tokenFactory" attribute with unreflected property that can be invoked', async () => {
     const el = await fixture<WyContext>(
-      html` <wy-context tokenfactory="async () =&gt; 'token-factory-result'"></wy-context> `
+      html` <wy-context></wy-context> `
     );
+    el.tokenFactory = async () => 'token-factory-result'
     await el.updateComplete;
     expect(el).to.respondTo("tokenFactory");
     expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
@@ -102,7 +94,7 @@ describe("wy-context", () => {
 
   it('has a "locale" attribute with unreflected property that sets locale', async () => {
     const el = await fixture<WyContext>(html` <wy-context locale="en"></wy-context> `);
-    expect(() => (el.locales = ["en-PI"])).to.not.throw;
+    expect(() => (el.locales = [["en-PI", {} as LocaleModule]])).to.not.throw;
     await el.updateComplete;
 
     expect(el).to.have.property("locale").that.equals("en");

@@ -1,7 +1,7 @@
 import { LitElement, css, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import chatCss from "../scss/all";
 import throttle from "lodash.throttle";

@@ -1,5 +1,5 @@
 import { MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 
 /// POST to add a meeting
 export function addMeetingMutation(weavyContext: WeavyContextType, provider: "zoom" | "teams") {

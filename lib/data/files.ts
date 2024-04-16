@@ -1,5 +1,5 @@
 import { QueryFunctionContext, QueryKey, InfiniteQueryObserverOptions, InfiniteData } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { FileOrderType, FilesResultType } from "../types/files.types";
 //import { addToQueryData, findAnyExistingItem, updateQueryData } from "../utils/query-cache";
 

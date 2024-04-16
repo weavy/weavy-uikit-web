@@ -4,7 +4,7 @@ import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import allCss from "../scss/all"
 
 import * as pdfjsLib from "pdfjs-dist";

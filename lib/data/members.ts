@@ -1,5 +1,5 @@
 import { MembersResultType } from "../types/members.types";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import type {
   InfiniteData,
   InfiniteQueryObserverOptions,

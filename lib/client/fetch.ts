@@ -1,8 +1,8 @@
 import { DestroyError } from "../utils/errors";
-import { WeavyContext, type WeavyContextType } from "./weavy-context";
+import { WeavyContextBase, WeavyContextMixins } from "./weavy";
 import { assign } from "../utils/objects";
 import { defaultFetchSettings } from "../utils/data";
-import type { PlainObjectType } from "../types/generic.types";
+import type { Constructor, PlainObjectType } from "../types/generic.types";
 import { HeaderContentType, type HttpMethodType, type HttpUploadMethodType } from "../types/http.types";
 
 export interface WeavyFetchProps {
@@ -26,17 +26,17 @@ export interface WeavyFetchProps {
 }
 
 // WeavyFetch mixin/decorator
-export const WeavyFetchMixin = (base: typeof WeavyContext) => {
-  return class WeavyFetch extends base implements WeavyFetchProps {
+export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyFetch extends Base implements WeavyFetchProps {
     // FETCH
 
-    async fetchOptions(this: this & WeavyContextType, authorized: boolean = true): Promise<RequestInit> {
+    async fetchOptions(this: this & WeavyContextMixins, authorized: boolean = true): Promise<RequestInit> {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
 
       const headers: PlainObjectType = {
-        "X-Weavy-Source": `${WeavyContext.sourceName}@${WeavyContext.version}`,
+        "X-Weavy-Source": `${WeavyContextBase.sourceName}@${WeavyContextBase.version}`,
       };
 
       if (authorized) {
@@ -52,12 +52,12 @@ export const WeavyFetchMixin = (base: typeof WeavyContext) => {
       );
     }
 
-    async get(this: this & WeavyContextType, url: string): Promise<Response> {
+    async get(this: this & WeavyContextMixins, url: string): Promise<Response> {
       return await this.post(url, "GET");
     }
 
     async post(
-      this: this & WeavyContextType,
+      this: this & WeavyContextMixins,
       url: string,
       method: HttpMethodType,
       body?: BodyInit,
@@ -105,7 +105,7 @@ export const WeavyFetchMixin = (base: typeof WeavyContext) => {
     }
 
     async upload(
-      this: this & WeavyContextType,
+      this: this & WeavyContextMixins,
       url: string,
       method: HttpUploadMethodType,
       body: string | FormData,
@@ -124,7 +124,7 @@ export const WeavyFetchMixin = (base: typeof WeavyContext) => {
         const xhr = new XMLHttpRequest();
         xhr.open(method, new URL(url, this.url), true);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
-        xhr.setRequestHeader("X-Weavy-Source", `${WeavyContext.sourceName}@${WeavyContext.version}`);
+        xhr.setRequestHeader("X-Weavy-Source", `${WeavyContextBase.sourceName}@${WeavyContextBase.version}`);
         if (contentType) {
           xhr.setRequestHeader("content-type", contentType);
         }

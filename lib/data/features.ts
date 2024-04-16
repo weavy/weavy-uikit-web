@@ -1,4 +1,4 @@
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 
 /// GET chat app
 export async function getFeatures<T>(weavyContext: WeavyContextType, type: string) {

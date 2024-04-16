@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import {

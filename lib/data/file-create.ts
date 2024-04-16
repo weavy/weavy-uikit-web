@@ -9,7 +9,7 @@ import {
 } from "../types/files.types";
 import { UserType } from "../types/users.types";
 import { type ServerErrorResponseType } from "../types/server.types";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { AppType } from "../types/app.types";
 import { removeSuccessfulUploadBlobMutations } from "./blob-upload";
 import { updateMutationContext } from "../utils/mutation-cache";

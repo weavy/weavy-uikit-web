@@ -1,6 +1,6 @@
 import { LitElement, type PropertyValues, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
 import overlayStyles from "../scss/all"
 

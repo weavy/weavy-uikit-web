@@ -8,7 +8,7 @@ import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilen
 import type { FileType } from "../types/files.types";
 
 import { WyFilesList } from "./wy-files-list";
-import { type WeavyContextType } from "../client/context-definition";
+import { type WeavyContextType } from "../contexts/weavy-context";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";

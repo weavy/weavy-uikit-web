@@ -1,18 +1,13 @@
 import { customElement } from "lit/decorators.js";
-import { ModalPortal, modalController } from "lit-modal-portal";
 
-import portalStyles from "../scss/portal"
+import portalStyles from "../scss/portal";
+import { LitElement, html } from "lit";
 
 @customElement("wy-portal")
-export default class WyPortal extends ModalPortal {
-  static override styles = portalStyles as unknown as typeof ModalPortal.styles;
-
-  connectedContexts = new Set();
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    modalController.removeAll();
-    modalController.host = undefined;
-    this.connectedContexts.clear();
+export default class WyPortal extends LitElement {
+  static override styles = portalStyles;
+  
+  protected override render() {
+      return html``;
   }
 }

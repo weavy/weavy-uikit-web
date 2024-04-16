@@ -1,5 +1,5 @@
 import { MutationKey } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { type AppType, AppTypes } from "../types/app.types";
 import { getApi, getApiOptions } from "./api";
 

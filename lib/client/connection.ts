@@ -1,8 +1,9 @@
-import { WeavyContext, WeavyContextType } from "./weavy-context";
+import { WeavyContextBase, WeavyContextMixins } from "./weavy";
 import type { RealtimeDataType, RealtimeEventType } from "../types/realtime.types";
 import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
 import { DestroyError } from "../utils/errors";
-import type { WeavyContextOptionsType } from "../types/weavy.types";
+import type { Destructable } from "../types/weavy.types";
+import { Constructor } from "../types/generic.types";
 
 export interface WeavyConnectionProps {
   whenConnectionRequested: () => Promise<void>;
@@ -23,15 +24,17 @@ export interface WeavyConnectionProps {
 }
 
 // WeavyConnection mixin/decorator
-export const WeavyConnectionMixin = (base: typeof WeavyContext) => {
-  return class WeavyConnection extends base implements WeavyConnectionProps {
-    constructor(options: WeavyContextOptionsType) {
-      super(options);
+export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyConnection extends Base implements WeavyConnectionProps, Destructable {
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      super(...args);
 
       this.whenConnectionRequested().then(() => {
         if (!this.isDestroyed) {
           //console.log(this.weavyId, "Weavy url and tokenFactory configured.");
-          (this as this & WeavyContextType).createConnection();
+          (this as this & WeavyContextMixins).createConnection();
         }
       });
     }
@@ -69,7 +72,7 @@ export const WeavyConnectionMixin = (base: typeof WeavyContext) => {
       await this._whenConnectionStarted;
     }
 
-    async createConnection(this: this & WeavyContextType) {
+    async createConnection(this: this & WeavyContextMixins) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -164,14 +167,14 @@ export const WeavyConnectionMixin = (base: typeof WeavyContext) => {
       }
     }
 
-    async disconnect(this: this & WeavyContextType) {
+    async disconnect(this: this & WeavyContextMixins) {
       if (this._connection) {
         await this._connection.stop();
         this.connectionState = "disconnected";
       }
     }
 
-    async connect(this: this & WeavyContextType) {
+    async connect(this: this & WeavyContextMixins) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -311,7 +314,7 @@ export const WeavyConnectionMixin = (base: typeof WeavyContext) => {
       }
     }
 
-    override destroy(this: this & WeavyContextType) {
+    override destroy(this: this & WeavyContextMixins) {
       super.destroy();
 
       this.disconnect();

@@ -7,7 +7,7 @@ import type { FeaturesConfigType, FeaturesListType } from "./types/features.type
 import { ThemeController } from "./controllers/theme-controller";
 import { localized, msg } from "@lit/localize";
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
 import {
   RealtimeAppEventType,
   RealtimeConversationDeliveredEventType,
@@ -37,10 +37,12 @@ import "./components/wy-button";
 import "./components/wy-icon";
 import "./components/wy-badge";
 import "./components/wy-spinner";
+import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { Constructor } from "./types/generic.types";
 
 @customElement("wy-messenger")
 @localized()
-export class WyMessenger extends LitElement {
+export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     chatCss,
@@ -48,9 +50,15 @@ export class WyMessenger extends LitElement {
       :host(wy-messenger) {
         display: flex;
         align-items: stretch;
-        position: relative;
         flex: 1;
         min-width: 16rem;
+      }
+
+      .wy-messenger-layout {
+        display: flex;
+        flex: 1;
+        align-items: stretch;
+        position: relative;
         container-type: inline-size;
       }
 
@@ -158,13 +166,15 @@ export class WyMessenger extends LitElement {
   override addEventListener(type: any, listener: any, options?: any): void {
     // Check if any event is listened to
 
-    const propertyName = type as keyof typeof this.hasEventListener;
-    if (Object.prototype.hasOwnProperty.call(this.hasEventListener, propertyName)) {
-      //console.log(`Setting ${propertyName} to true`)
-      this.hasEventListener = {
-        ...this.hasEventListener,
-        [propertyName]: true,
-      };
+    if (this.hasEventListener) {
+      const propertyName = type as keyof typeof this.hasEventListener;
+      if (Object.prototype.hasOwnProperty.call(this.hasEventListener, propertyName)) {
+        //console.log(`Setting ${propertyName} to true`)
+        this.hasEventListener = {
+          ...this.hasEventListener,
+          [propertyName]: true,
+        };
+      }
     }
     super.addEventListener(type, listener, options);
   }
@@ -312,6 +322,8 @@ export class WyMessenger extends LitElement {
   }
 
   protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
       this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "messenger"]));
@@ -398,55 +410,58 @@ export class WyMessenger extends LitElement {
     const { data: conversation, isPending } = this.conversationQuery.result ?? { isPending: networkIsPending };
 
     return html`
-      <wy-conversation-list
-        class="wy-scroll-y"
-        .types=${this.types}
-        .bot=${this.bot}
-        .avatarUser=${this.botUser}
-        .name=${this.name}
-        conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
-        @conversation-selected=${(e: CustomEvent) => this.selectConversation(e.detail.id)}
-      ></wy-conversation-list>
-
-      <div
-        class="wy-messenger-conversation wy-scroll-y"
-        data-conversation-id=${this.conversationId !== null ? this.conversationId : ""}
-      >
-        <wy-conversation-appbar
-          .conversationId=${this.conversationId || undefined}
-          .conversation=${conversation}
-          .user=${this.user}
-          @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
+      <div class="wy-messenger-layout">
+        
+        <wy-conversation-list
+          class="wy-scroll-y"
+          .types=${this.types}
+          .bot=${this.bot}
+          .avatarUser=${this.botUser}
+          .name=${this.name}
+          conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
+          @conversation-selected=${(e: CustomEvent) => this.selectConversation(e.detail.id)}
+        ></wy-conversation-list>
+  
+        <div
+          class="wy-messenger-conversation wy-scroll-y"
+          data-conversation-id=${this.conversationId !== null ? this.conversationId : ""}
         >
-          <span slot="action" class="wy-close-conversation">
-            <wy-button kind="icon" @click=${() => this.clearConversation()}>
-              <wy-icon name="back"></wy-icon>
-            </wy-button>
-            <wy-badge slot="badge" .bot=${this.bot}></wy-badge>
-          </span>
-        </wy-conversation-appbar>
-
-        ${cache(
-          this.conversationId
-            ? !isPending
-              ? this.bot
-                ? html` <wy-conversation
-                    .conversationId=${this.conversationId}
-                    .conversation=${conversation}
-                    .availableFeatures=${this.availableFeatures}
-                    .features=${this.features}
-                  ></wy-conversation>`
-                : html` <wy-conversation-extended
-                    .conversationId=${this.conversationId}
-                    .conversation=${conversation}
-                    .availableFeatures=${this.availableFeatures}
-                    .features=${this.features}
-                  ></wy-conversation-extended>`
-              : html` <wy-empty><wy-spinner></wy-spinner></wy-empty> `
-            : html`
-                <wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>
-              `
-        )}
+          <wy-conversation-appbar
+            .conversationId=${this.conversationId || undefined}
+            .conversation=${conversation}
+            .user=${this.user}
+            @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
+          >
+            <span slot="action" class="wy-close-conversation">
+              <wy-button kind="icon" @click=${() => this.clearConversation()}>
+                <wy-icon name="back"></wy-icon>
+              </wy-button>
+              <wy-badge slot="badge" .bot=${this.bot}></wy-badge>
+            </span>
+          </wy-conversation-appbar>
+  
+          ${cache(
+            this.conversationId
+              ? !isPending
+                ? this.bot
+                  ? html` <wy-conversation
+                      .conversationId=${this.conversationId}
+                      .conversation=${conversation}
+                      .availableFeatures=${this.availableFeatures}
+                      .features=${this.features}
+                    ></wy-conversation>`
+                  : html` <wy-conversation-extended
+                      .conversationId=${this.conversationId}
+                      .conversation=${conversation}
+                      .availableFeatures=${this.availableFeatures}
+                      .features=${this.features}
+                    ></wy-conversation-extended>`
+                : html` <wy-empty><wy-spinner></wy-spinner></wy-empty> `
+              : html`
+                  <wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>
+                `
+          )}
+        </div>
       </div>
     `;
   }
@@ -464,3 +479,5 @@ export class WyMessenger extends LitElement {
     super.disconnectedCallback();
   }
 }
+
+export type WyMessengerType = Constructor<WyMessenger>;

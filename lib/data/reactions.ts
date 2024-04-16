@@ -1,5 +1,5 @@
 import { MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { updateCacheItem } from "../utils/query-cache";
 import { MessageType } from "../types/messages.types";
 import { ReactableType } from "../types/reactions.types";

@@ -1,8 +1,8 @@
 import { createContext } from "@lit/context";
-import { type WeavyContextType } from "./weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 
-export { type WeavyContextType } from "./weavy-context";
+export { type WeavyContextType } from "../client/weavy";
 export const weavyContextDefinition = createContext<WeavyContextType>(Symbol.for("weavy-context"));
 
 export function createWeavyContextProvider(host: HTMLElement, initialValue?: WeavyContextType) {

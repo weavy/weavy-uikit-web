@@ -1,7 +1,8 @@
 import { LitElement, html, type PropertyValues, nothing, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { ContextConsumer, consume } from "@lit/context";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 import { portal } from "lit-modal-portal";
 import { ConversationTypeGuid, type ConversationType } from "../types/conversations.types";
 
@@ -52,6 +53,10 @@ export default class WyConversationAppbar extends LitElement {
   // Manually consumed in scheduleUpdate()
   @state()
   protected weavyContext?: WeavyContextType;
+
+  @consume({ context: appSettingsContext, subscribe: true })
+  @state()
+  private settings?: AppSettingsType;
 
   @property({ attribute: false })
   user?: UserType;
@@ -271,8 +276,8 @@ export default class WyConversationAppbar extends LitElement {
       </header>
 
       <!-- add members modal -->
-      ${portal(
-        this.showAddMembers,
+      ${this.weavyContext && this.settings ? portal(
+        this.showAddMembers ?
         html`
           <wy-overlay @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}>
             <header class="wy-appbars">
@@ -290,13 +295,15 @@ export default class WyConversationAppbar extends LitElement {
               @submit=${(e: CustomEvent) => this.addMembers(e.detail.members)}
             ></wy-users-search>
           </wy-overlay>
-        `,
-        () => (this.showAddMembers = false)
-      )}
+        ` : nothing,
+        this.settings.submodals || this.weavyContext.modalRoot === undefined
+        ? this.settings.component.renderRoot
+        : this.weavyContext.modalRoot
+      ) : nothing }
 
       <!-- details modal -->
-      ${portal(
-        this.showDetails,
+      ${this.weavyContext && this.settings ? portal(
+        this.showDetails ?
         html`
           <wy-overlay @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}>
             <header class="wy-appbars">
@@ -431,9 +438,11 @@ export default class WyConversationAppbar extends LitElement {
                 : nothing}
             </div>
           </wy-overlay>
-        `,
-        () => (this.showDetails = false)
-      )}
+        ` : nothing,
+        this.settings.submodals || this.weavyContext.modalRoot === undefined
+        ? this.settings.component.renderRoot
+        : this.weavyContext.modalRoot
+      ) : nothing }
     `;
   }
 

@@ -9,7 +9,8 @@ import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 
 import filesCss from "../scss/all";
 
@@ -57,6 +58,10 @@ export class WyFilesAppbar extends LitElement {
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
   private weavyContext?: WeavyContextType;
+
+  @consume({ context: appSettingsContext, subscribe: true })
+  @state()
+  private settings?: AppSettingsType;
 
   @property({ type: Object })
   app?: AppType;
@@ -243,6 +248,7 @@ export class WyFilesAppbar extends LitElement {
                   </wy-dropdown-item>
                   <input
                     type="file"
+                    data-testid="uploadFile"
                     ${ref(this.fileInputRef)}
                     @click=${(e: Event) => e.stopPropagation()}
                     @change=${(e: Event) =>
@@ -377,48 +383,53 @@ export class WyFilesAppbar extends LitElement {
         </div>
       </nav>
 
-      ${portal(
-        this.showUploadSheet && Boolean(fileMutationResults?.length),
-        html`
-          <wy-sheet
-            .show=${this.showUploadSheet}
-            @release-focus=${() =>
-              this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-          >
-            <wy-button
-              kind="icon"
-              slot="appbar-buttons"
-              @click=${() => {
-                fileMutationResults?.forEach((mutation) => this.handleRemoveMutation(mutation));
-              }}
-              title=${msg("Remove all", { desc: "Button action to remove all" })}
-            >
-              <wy-icon name="trashcan"></wy-icon>
-            </wy-button>
-            <span slot="appbar-text">${msg("File actions")}</span>
-            ${failedFileMutations.length
+      ${this.weavyContext && this.settings
+        ? portal(
+            this.showUploadSheet && Boolean(fileMutationResults?.length)
               ? html`
-                  ${repeat(
-                    failedFileMutations,
-                    (mutation) => "mutation" + mutation.submittedAt,
-                    (mutation) => this.renderFileMutation(mutation)
-                  )}
-                  ${fileMutations.length ? html`<hr />` : nothing}
+                  <wy-sheet
+                    .show=${this.showUploadSheet}
+                    @release-focus=${() =>
+                      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+                  >
+                    <wy-button
+                      kind="icon"
+                      slot="appbar-buttons"
+                      @click=${() => {
+                        fileMutationResults?.forEach((mutation) => this.handleRemoveMutation(mutation));
+                      }}
+                      title=${msg("Remove all", { desc: "Button action to remove all" })}
+                    >
+                      <wy-icon name="trashcan"></wy-icon>
+                    </wy-button>
+                    <span slot="appbar-text">${msg("File actions")}</span>
+                    ${failedFileMutations.length
+                      ? html`
+                          ${repeat(
+                            failedFileMutations,
+                            (mutation) => "mutation" + mutation.submittedAt,
+                            (mutation) => this.renderFileMutation(mutation)
+                          )}
+                          ${fileMutations.length ? html`<hr />` : nothing}
+                        `
+                      : nothing}
+                    ${fileMutations.length
+                      ? html`
+                          ${repeat(
+                            fileMutations,
+                            (mutation) => "mutation" + mutation.submittedAt,
+                            (mutation) => this.renderFileMutation(mutation)
+                          )}
+                        `
+                      : nothing}
+                  </wy-sheet>
                 `
-              : nothing}
-            ${fileMutations.length
-              ? html`
-                  ${repeat(
-                    fileMutations,
-                    (mutation) => "mutation" + mutation.submittedAt,
-                    (mutation) => this.renderFileMutation(mutation)
-                  )}
-                `
-              : nothing}
-          </wy-sheet>
-        `,
-        () => (this.showUploadSheet = false)
-      )}
+              : nothing,
+              this.settings.submodals || this.weavyContext.modalRoot === undefined
+              ? this.settings.component.renderRoot
+              : this.weavyContext.modalRoot
+          )
+        : nothing}
 
       <wy-cloud-files
         ${ref(this.cloudFilesRef)}

@@ -12,7 +12,7 @@ import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
 import chatCss from "../scss/all"
 import type { AppType } from "../types/app.types";

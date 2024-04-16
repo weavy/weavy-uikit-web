@@ -2,6 +2,7 @@
   "extends": "../tsconfig.json",
   
   "compilerOptions": {
+    "rootDir": "../",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "emitDeclarationOnly": true,
@@ -13,16 +14,16 @@
     "noEmit": false,
     "outDir": "../dist",
     "declarationDir": "../dist/types",
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
   "include": [
     "../lib/**/*.ts",
-    "../lib/scss/**/*.scss"
+    "../lib/scss/**/*.scss",
+    "../locales/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "../dev",
-    "../locales",
     "../dist"
   ]
 }

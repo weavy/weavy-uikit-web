@@ -39,3 +39,9 @@ lerna-debug.log*
 
 # vite
 *.timestamp-*.mjs
+
+# tests
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

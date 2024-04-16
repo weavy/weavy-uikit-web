@@ -1,4 +1,4 @@
-import { WeavyContext } from "./weavy-context";
+import { WeavyContextBase } from "./weavy";
 import { QueryClient, type Mutation } from "@tanstack/query-core";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
@@ -9,7 +9,7 @@ import {
 import { DestroyError } from "../utils/errors";
 import { observeConnected } from "../utils/dom";
 import type { FileMutationContextType } from "../types/files.types";
-import { type WeavyContextOptionsType } from "../types/weavy.types";
+import { Constructor } from "../types/generic.types";
 
 export interface WeavyQueryProps {
   queryClient: QueryClient;
@@ -18,12 +18,13 @@ export interface WeavyQueryProps {
 }
 
 // WeavyQuery mixin/decorator
-export const WeavyQueryMixin = (base: typeof WeavyContext) => {
-  return class WeavyQuery extends base implements WeavyQueryProps {
+export const WeavyQueryMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyQuery extends Base implements WeavyQueryProps {
     // QUERY CLIENT
 
-    constructor(options: WeavyContextOptionsType) {
-      super(options);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      super(...args);
 
       this.createQueryClient();
 
@@ -83,7 +84,7 @@ export const WeavyQueryMixin = (base: typeof WeavyContext) => {
           queryClient: this._queryClient,
           persister: this._sessionStoragePersister,
           maxAge: this.gcTime, // 24h - should match gcTime
-          buster: WeavyContext.version, // Cache busting parameter (build hash or similar)
+          buster: WeavyContextBase.version, // Cache busting parameter (build hash or similar)
           hydrateOptions: undefined,
           dehydrateOptions: {
             shouldDehydrateMutation: (mutation: Mutation) => {

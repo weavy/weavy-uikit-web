@@ -1,4 +1,5 @@
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
+import { EmbedType } from "../types/embeds.types";
 
 const regexp = /(((https?|ftp):\/\/|(www|ftp)\.)[\w]+(.[\w]+)([\w\-.,@?^=%&amp;:/~+#]*[\w\-@?^=%&amp;/~+#]))/gim;
 
@@ -10,9 +11,15 @@ let candidates: { [string: string]: number } = {};
 
 const arrayEquals = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
-async function fetchEmbed(url: string, callback: Function, weavyContext: WeavyContextType) {
+export function isFetchingEmbeds() {
+  return Boolean(Object.keys(candidates).length);
+}
+
+async function fetchEmbed(url: string, weavyContext: WeavyContextType) {
   const data = new FormData();
   data.append("url", url);
+
+  let embed: EmbedType | undefined = undefined;
 
   try {
     const response = await weavyContext.post("/api/embeds", "POST", JSON.stringify({ url: url }));
@@ -21,15 +28,16 @@ async function fetchEmbed(url: string, callback: Function, weavyContext: WeavyCo
       throw new Error();
     }
 
-    const json = await response.json();
+    embed = await response.json();
     delete candidates[url];
     embeds = [...embeds, url];
-    callback(json);
   } catch (error) {
     // error, add to failed so that we don't fetch again
     failed = [...failed, url];
     delete candidates[url];
   }
+
+  return embed;
 }
 
 export const clearEmbeds = () => {
@@ -44,7 +52,7 @@ export const initEmbeds = (urls: string[]) => {
   embeds = urls;
 };
 
-export const getEmbeds = async (content: string, callback: Function, weavyContext: WeavyContextType) => {
+export const getEmbeds = async (content: string, callback: (embed: EmbedType) => void, weavyContext: WeavyContextType) => {
   let matches = content.match(regexp)?.map((match) => match) || null;
 
   if (matches !== null) {
@@ -58,6 +66,8 @@ export const getEmbeds = async (content: string, callback: Function, weavyContex
       }
     });
   }
+
+  // TODO: Make use of tanstack instead?
 
   if (matches === null || matches.length === 0) {
     // no matches
@@ -75,8 +85,11 @@ export const getEmbeds = async (content: string, callback: Function, weavyContex
         !rejected.includes(match) &&
         typeof candidates[match] === "undefined"
       ) {
-        candidates[match] = window.setTimeout(() => {
-          fetchEmbed(match, callback, weavyContext);
+        candidates[match] = window.setTimeout(async () => {
+          const embed = await fetchEmbed(match, weavyContext);
+          if (embed) {
+            callback(embed);
+          }
         }, 500);
         // setCandidates((prev) => {
         //     prev[match] = setTimeout(() => { fetchEmbed(match); }, 500);

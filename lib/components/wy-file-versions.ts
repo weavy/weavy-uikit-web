@@ -14,7 +14,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { repeat } from "lit/directives/repeat.js";
 import type { AppType } from "../types/app.types";
 import {

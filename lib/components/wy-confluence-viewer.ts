@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 
 import allCss from "../scss/all";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { consume } from "@lit/context";
 
 import { WeavyContextProps } from "../types/weavy.types";

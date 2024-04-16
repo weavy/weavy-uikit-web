@@ -10,7 +10,7 @@ import type { FileOrderByType, FileOrderType, FileType } from "../types/files.ty
 import { WyFilesList } from "./wy-files-list";
 
 import { repeat } from "lit/directives/repeat.js";
-import { type WeavyContextType } from "../client/context-definition";
+import { type WeavyContextType } from "../contexts/weavy-context";
 import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";

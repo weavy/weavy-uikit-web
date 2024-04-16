@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../../lib/client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../../lib/contexts/weavy-context";
 
 import { onlineManager } from "@tanstack/query-core";
 import * as TanstackQueryDevtools from "@tanstack/query-devtools";

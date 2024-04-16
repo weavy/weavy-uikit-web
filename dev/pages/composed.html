@@ -2,12 +2,12 @@
 <html style="--wy-theme-color: #61afef">
   <head>
     <script>
-      fetch("/api/contextual/acme-chat-2?type=chat");
-      fetch("/api/contextual/acme-feed-2?type=posts");
-      fetch("/api/contextual/acme-files-2?type=files");
+      //fetch("/api/contextual/acme-chat-2?type=chat");
+      //fetch("/api/contextual/acme-feed-2?type=posts");
+      //fetch("/api/contextual/acme-files-2?type=files");
     </script>
     <!--script src="./weavy.js"></script-->
-    <link rel="modulepreload" href="/locales/sv-SE.ts" />
+    <link rel="modulepreload" href="%WEAVY_URL%/uikit-web/es/locales/sv-SE.js" />
     <script type="module" src="/dev/tools/tanstack-dev-tools.ts" async defer></script>
     <style>
       :root {
@@ -41,6 +41,7 @@
         zoomAuthenticationUrl: "%WEAVY_ZOOM_AUTH_URL%",
         confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
         confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
+        modalParent: ""
       });
 
       weavy.locales = [["sv-SE", svSE]];
@@ -55,7 +56,7 @@
           throw new Error("Could not get access token from server!");
         }
       };
-      weavy.modalParent = "html";
+      //weavy.modalParent = "html";
     </script>
   </head>
   <body>

@@ -1,5 +1,5 @@
 import type { QueryOptions, QueryKey, FetchQueryOptions, QueryObserverOptions } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import type { HttpMethodType } from "../types/http.types";
 
 export function getApiOptions<T>(weavyContext: WeavyContextType, apiKey: QueryKey, apiPath?: string, options?: QueryOptions<T>, body?: BodyInit, method: HttpMethodType = "GET") {

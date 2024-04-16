@@ -1,6 +1,6 @@
-import { WeavyContext } from "./weavy-context";
+import { WeavyContextBase } from "./weavy";
 import type { ConnectionState, NetworkState, NetworkStatus, ServerState } from "../types/server.types";
-import { WeavyContextOptionsType } from "../types/weavy.types";
+import { Constructor } from "../types/generic.types";
 
 export interface WeavyNetworkProps {
   networkState: NetworkState;
@@ -14,10 +14,12 @@ export interface WeavyNetworkProps {
 }
 
 // WeavyNetwork mixin/decorator
-export const WeavyNetworkMixin = (base: typeof WeavyContext) => {
-  return class WeavyNetwork extends base implements WeavyNetworkProps {
-    constructor(options: WeavyContextOptionsType) {
-      super(options);
+export const WeavyNetworkMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyNetwork extends Base implements WeavyNetworkProps {
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      super(...args);
 
       window.addEventListener("online", () => {
         this.networkState = "online";

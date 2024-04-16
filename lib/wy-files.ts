@@ -15,7 +15,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
 
 import { getApiOptions } from "./data/api";
 import { AppTypes, type AppType } from "./types/app.types";
@@ -62,6 +62,8 @@ import { ThemeController } from "./controllers/theme-controller";
 import { RealtimeFileEventType } from "./types/realtime.types";
 import "./components/wy-empty";
 import { whenParentsDefined } from "./utils/dom";
+import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { Constructor } from "./types/generic.types";
 
 /**
  * Files component to render a list of uploaded files and linked files from cloud providers.
@@ -71,7 +73,7 @@ import { whenParentsDefined } from "./utils/dom";
  */
 @customElement("wy-files")
 @localized()
-export class WyFiles extends LitElement {
+export class WyFiles extends AppSettingsProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     filesCss,
@@ -326,6 +328,8 @@ export class WyFiles extends LitElement {
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType, weavyContext: WeavyContextType, user: UserType }>) {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("app")) {
       const lastApp = changedProperties.get("app");
 
@@ -517,3 +521,5 @@ export class WyFiles extends LitElement {
     super.disconnectedCallback();
   }
 }
+
+export type WyFilesType = Constructor<WyFiles>;

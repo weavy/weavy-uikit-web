@@ -1,4 +1,4 @@
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import type { BlobType, ExternalBlobType, FileMutationContextType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import type { AppType } from "../types/app.types";

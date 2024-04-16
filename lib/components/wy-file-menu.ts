@@ -43,12 +43,14 @@ export default class WyFileMenu extends LitElement {
   override addEventListener(type: any, listener: any, options?: any): void {
     // Check if any event is listened to
 
-    const propertyName = type as keyof typeof this.hasEventListener;
-    if (Object.prototype.hasOwnProperty.call(this.hasEventListener, propertyName)) {
-      //console.log(`Setting ${propertyName} to true`)
-      Object.assign(this.hasEventListener, {
-        [propertyName]: true,
-      });
+    if (this.hasEventListener) {
+      const propertyName = type as keyof typeof this.hasEventListener;
+      if (Object.prototype.hasOwnProperty.call(this.hasEventListener, propertyName)) {
+        //console.log(`Setting ${propertyName} to true`)
+        Object.assign(this.hasEventListener, {
+          [propertyName]: true,
+        });
+      }
     }
     super.addEventListener(type, listener, options);
   }

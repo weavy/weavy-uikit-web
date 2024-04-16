@@ -10,9 +10,11 @@ import { RealtimeAppEventType, RealtimeMessageEventType, RealtimeReactionEventTy
 import { getAppOptions } from "./data/app";
 
 import WyConversation from "./components/wy-conversation";
+import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { Constructor } from "./types/generic.types";
 
 @customElement("wy-chat")
-export class WyChat extends WyConversation {
+export class WyChat extends AppSettingsProviderMixin(WyConversation) {
   static override styles = [...WyConversation.styles, colorModes];
 
   @property()
@@ -125,3 +127,5 @@ export class WyChat extends WyConversation {
     super.disconnectedCallback();
   }
 }
+
+export type WyChatType = Constructor<WyChat>;

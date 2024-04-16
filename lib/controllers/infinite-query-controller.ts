@@ -10,7 +10,7 @@ import {
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { whenParentsDefined } from "../utils/dom";
 
 export class InfiniteQueryController<TData = unknown> implements ReactiveController {

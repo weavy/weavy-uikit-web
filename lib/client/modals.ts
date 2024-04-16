@@ -1,24 +1,38 @@
-import { WeavyContext, type WeavyContextType } from "./weavy-context";
-import { WeavyContextOptionsType } from "../types/weavy.types";
+import { WeavyContextBase, type WeavyContextType } from "./weavy";
 import { defer } from "../utils/dom";
-import { modalController } from "lit-modal-portal";
-import { weavyContextDefinition } from "./context-definition";
+import { weavyContextDefinition } from "../contexts/weavy-context";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
+import { LitElement } from "lit";
 
-import WeavyPortal from "../components/wy-portal";
+import WyPortal from "../components/wy-portal";
 
-export interface WeavyModalsProps {}
+import { Constructor } from "../types/generic.types";
+import type { WeavyOptions } from "../types/weavy.types";
+
+export interface WeavyModalsProps extends WeavyOptions {
+  modalParent: WeavyOptions["modalParent"];
+  modalRoot: HTMLElement | DocumentFragment | undefined;
+}
 
 // WeavyModals mixin/decorator
-export const WeavyModalsMixin = (base: typeof WeavyContext) => {
-  return class WeavyModals extends base implements WeavyModalsProps {
+export const WeavyModalsMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyModals extends Base implements WeavyModalsProps {
     // MODALS
 
-    _modalPortal?: WeavyPortal;
+    modalParent = WeavyContextBase.defaults.modalParent;
+
+    _modalPortal?: WyPortal;
     _modalContextProvider?: ContextProvider<typeof weavyContextDefinition>;
 
-    constructor(options: WeavyContextOptionsType) {
-      super(options);
+    get modalRoot() {
+      return this.host !== document.documentElement
+        ? (this.host as LitElement).renderRoot || this.host
+        : this._modalPortal?.renderRoot;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      super(...args);
 
       // Root node for modal portal
 
@@ -29,23 +43,21 @@ export const WeavyModalsMixin = (base: typeof WeavyContext) => {
           return;
         }
 
-        if (modalController.host && modalController.host instanceof WeavyPortal) {
-          this._modalPortal = modalController.host as WeavyPortal;
+        if (this.modalParent && !this._modalPortal) {
+          // Make a wy-portal with styles and context
+          this._modalPortal = new WyPortal();
         } else {
-          this._modalPortal = new WeavyPortal();
+          console.info(this.weavyId, "Modal parent is disabled");
         }
 
-        this._modalPortal.connectedContexts.add(this);
+        if (document && this._modalPortal) {
+          const modalParentElement = this.modalParent && document.querySelector(this.modalParent);
 
-        if (document) {
-          const modalRoot: HTMLElement =
-            (this.modalParent && document.querySelector(this.modalParent)) || document.documentElement;
-
-          if (!modalRoot.contains(this._modalPortal)) {
-            modalRoot.append(this._modalPortal);
-            if (!this.host.contains(modalRoot)) {
-              // Make the modal root a provider as well if needed
-              this._modalContextProvider = new ContextProvider(modalRoot, {
+          if (modalParentElement && !modalParentElement.contains(this._modalPortal)) {
+            modalParentElement.append(this._modalPortal);
+            if (this.host !== modalParentElement && !this.host.contains(modalParentElement)) {
+              // Make the modalParent a context provider as well if needed
+              this._modalContextProvider = new ContextProvider(this._modalPortal, {
                 context: weavyContextDefinition,
                 initialValue: this as unknown as WeavyContextType,
               });
@@ -59,13 +71,7 @@ export const WeavyModalsMixin = (base: typeof WeavyContext) => {
       super.destroy();
 
       this._modalContextProvider?.detachListeners();
-
-      if (this._modalPortal) {
-        this._modalPortal.connectedContexts.delete(this);
-        if (!this._modalPortal.connectedContexts.size) {
-          this._modalPortal?.remove();
-        }
-      }
+      this._modalPortal?.remove();
     }
   };
 };

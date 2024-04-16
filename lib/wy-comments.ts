@@ -1,7 +1,7 @@
 import { LitElement, html, type PropertyValues, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
 import { localized } from "@lit/localize";
 
 import { AppTypes, type AppType } from "./types/app.types";
@@ -23,10 +23,12 @@ import { QueryController } from "./controllers/query-controller";
 import { whenParentsDefined } from "./utils/dom";
 import { WeavyContextProps } from "./types/weavy.types";
 import { getAppOptions } from "./data/app";
+import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { Constructor } from "./types/generic.types";
 
 @customElement("wy-comments")
 @localized()
-export class WyComments extends LitElement {
+export class WyComments extends AppSettingsProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     postsCss,
@@ -166,6 +168,8 @@ export class WyComments extends LitElement {
   }
 
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps & { app: AppType }>) {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("app")) {
       const lastApp = changedProperties.get("app");
 
@@ -232,3 +236,5 @@ export class WyComments extends LitElement {
     super.disconnectedCallback();
   }
 }
+
+export type WyCommentsType = Constructor<WyComments>;

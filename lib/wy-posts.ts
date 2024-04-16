@@ -2,7 +2,7 @@ import { LitElement, html, type PropertyValues, nothing, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 
@@ -38,10 +38,12 @@ import { whenParentsDefined } from "./utils/dom";
 import { WeavyContextProps } from "./types/weavy.types";
 import { getAppOptions } from "./data/app";
 import { hasAccess } from "./utils/access";
+import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { Constructor } from "./types/generic.types";
 
 @customElement("wy-posts")
 @localized()
-export class WyPosts extends LitElement {
+export class WyPosts extends AppSettingsProviderMixin(LitElement) {
   static override styles = [
     colorModes, 
     postsCss,
@@ -230,6 +232,8 @@ export class WyPosts extends LitElement {
   }
 
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps & { app: AppType }>) {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("app")) {
       const lastApp = changedProperties.get("app");
 
@@ -392,3 +396,5 @@ export class WyPosts extends LitElement {
     super.disconnectedCallback();
   }
 }
+
+export type WyPostsType = Constructor<WyPosts>;

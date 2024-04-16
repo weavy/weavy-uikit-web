@@ -4,7 +4,7 @@ import type { MeetingType } from "../types/meetings.types";
 import chatCss from "../scss/all"
 import { localized, msg, str } from "@lit/localize";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { relativeTime } from "../utils/datetime";
 import "./wy-icon";
 import "./wy-button";

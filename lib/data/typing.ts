@@ -1,5 +1,5 @@
 import { MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 
 /// POST to indicate typing
 export function typingMutation(

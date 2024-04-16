@@ -6,7 +6,7 @@ import {
   MutationObserver,
 } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 
 import { ConversationMutationContextType, ConversationTypeGuid, ConversationTypeString, ConversationsResultType } from "../types/conversations.types";
 import { ConversationType } from "../types/conversations.types";

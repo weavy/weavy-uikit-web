@@ -1,7 +1,8 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 import type { ExternalBlobType } from "../types/files.types";
 
 import chatCss from "../scss/all";
@@ -26,9 +27,13 @@ export default class WyConfluence extends LitElement {
   @state()
   private weavyContext?: WeavyContextType;
 
+  @consume({ context: appSettingsContext, subscribe: true })
+  @state()
+  private settings?: AppSettingsType;
+
   @property({
     attribute: false,
-    type: Object
+    type: Object,
   })
   user?: UserType;
 
@@ -53,7 +58,7 @@ export default class WyConfluence extends LitElement {
 
   private handleUnauthorized() {
     if (!this.user) {
-      return
+      return;
     }
 
     window.open(
@@ -63,7 +68,7 @@ export default class WyConfluence extends LitElement {
     );
   }
 
-  private async handleAddPage({url, id, title, hostname, spaceKey} : ConfluencePageProps) {
+  private async handleAddPage({ url, id, title, hostname, spaceKey }: ConfluencePageProps) {
     const blob: ExternalBlobType = {
       provider: "Confluence",
       link: "https://" + hostname + "/wiki" + url,
@@ -97,34 +102,39 @@ export default class WyConfluence extends LitElement {
               ><wy-icon name="confluence" color="native"></wy-icon
             ></wy-button>
           `}
-      ${portal(
-        this.showPicker,
-        html`
-          <wy-overlay
-            @release-focus=${() =>
-              this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-          >
-            <slot name="header">
-              <header class="wy-appbars">
-                <nav class="wy-appbar">
-                  <slot name="appbar-buttons" class="wy-appbar-buttons"></slot>
-                  <slot name="appbar-text" class="wy-appbar-text">${msg("Confluence Page Picker")}</slot>
-                  <wy-button kind="icon" @click=${() => this.close()}>
-                    <wy-icon name="close"></wy-icon>
-                  </wy-button>
-                </nav>
-              </header>
-            </slot>
+      ${this.weavyContext && this.settings
+        ? portal(
+            this.showPicker
+              ? html`
+                  <wy-overlay
+                    @release-focus=${() =>
+                      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+                  >
+                    <slot name="header">
+                      <header class="wy-appbars">
+                        <nav class="wy-appbar">
+                          <slot name="appbar-buttons" class="wy-appbar-buttons"></slot>
+                          <slot name="appbar-text" class="wy-appbar-text">${msg("Confluence Page Picker")}</slot>
+                          <wy-button kind="icon" @click=${() => this.close()}>
+                            <wy-icon name="close"></wy-icon>
+                          </wy-button>
+                        </nav>
+                      </header>
+                    </slot>
 
-            <wy-confluence-picker
-              @submit=${(e: CustomEvent) => this.handleAddPage(e.detail)}
-              @close=${() => this.close()}
-              @unauthorized=${() => this.handleUnauthorized()}
-            ></wy-confluence-picker>
-          </wy-overlay>
-        `,
-        () => this.close()
-      )}
+                    <wy-confluence-picker
+                      @submit=${(e: CustomEvent) => this.handleAddPage(e.detail)}
+                      @close=${() => this.close()}
+                      @unauthorized=${() => this.handleUnauthorized()}
+                    ></wy-confluence-picker>
+                  </wy-overlay>
+                `
+              : nothing,
+              this.settings.submodals || this.weavyContext.modalRoot === undefined
+              ? this.settings.component.renderRoot
+              : this.weavyContext.modalRoot
+          )
+        : nothing}
     `;
   }
 }

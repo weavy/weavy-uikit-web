@@ -1,5 +1,5 @@
 import { LocaleModule } from "@lit/localize";
-import { WeavyContextType } from "../client/weavy-context";
+import { WeavyContextType } from "../client/weavy";
 /**
  * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
  */

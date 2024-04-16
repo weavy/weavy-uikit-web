@@ -1,5 +1,5 @@
-import { WeavyContext, type WeavyContextType } from "./weavy-context";
-import { WeavyContextOptionsType } from "../types/weavy.types";
+import { WeavyContextBase, WeavyContextMixins } from "./weavy";
+import { Constructor } from "../types/generic.types";
 
 export interface WeavyVersionProps {
   readonly version: string;
@@ -7,26 +7,28 @@ export interface WeavyVersionProps {
 }
 
 // WeavyVersion mixin/decorator
-export const WeavyVersionMixin = (base: typeof WeavyContext) => {
-  return class WeavyVersion extends base implements WeavyVersionProps {
-    constructor(options: WeavyContextOptionsType) {
-      super(options);
+export const WeavyVersionMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyVersion extends Base implements WeavyVersionProps {
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      super(...args);
 
       this.whenUrl().then(() => {
         if (!this.isDestroyed) {
-          (this as this & WeavyContextType).checkVersion();
+          (this as this & WeavyContextMixins).checkVersion();
         }
       });
     }
 
-    readonly version: string = WeavyContext.version;
+    readonly version: string = WeavyContextBase.version;
 
     /**
      * Checks the version of the Weavy Context against the Weavy Environment version.
      *
      * @param {string} [version] - Optional version to check against the environment version.
      */
-    async checkVersion(this: this & WeavyContextType, version: string = this.version) {
+    async checkVersion(this: this & WeavyContextMixins, version: string = this.version) {
       await this.whenUrl();
       this.networkStateIsPending = true;
 
@@ -56,14 +58,14 @@ export const WeavyVersionMixin = (base: typeof WeavyContext) => {
             throw new Error();
           } else if (semverVersion[1] !== semverEnvironmentVersion[1]) {
             console.warn(
-              `Version inconsistency: ${WeavyContext.sourceName}@${this.version} ≠ ${
+              `Version inconsistency: ${WeavyContextBase.sourceName}@${this.version} ≠ ${
                 (this.url as URL)?.hostname
               }@${environmentVersion}`
             );
           }
         } catch (e) {
           throw new Error(
-            `Version mismatch! ${WeavyContext.sourceName}@${this.version} ≠ ${
+            `Version mismatch! ${WeavyContextBase.sourceName}@${this.version} ≠ ${
               (this.url as URL)?.hostname
             }@${environmentVersion}`
           );

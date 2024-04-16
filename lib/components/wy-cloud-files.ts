@@ -1,20 +1,21 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
-
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
-import WeavyPostal from "../utils/postal-parent";
-
-import cloudFilesCss from "../scss/all"
+import { ifDefined } from "lit/directives/if-defined.js";
 import { portal } from "lit-modal-portal";
+
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
+import WeavyPostal from "../utils/postal-parent";
+import type { ExternalBlobType } from "../types/files.types";
+import type WeavyOverlay from "./wy-overlay";
+
+import cloudFilesCss from "../scss/all";
 
 import "./wy-overlay";
 import "./wy-spinner";
-import { ExternalBlobType } from "../types/files.types";
-import type WeavyOverlay from "./wy-overlay";
-import { ifDefined } from "lit/directives/if-defined.js";
 
 @customElement("wy-cloud-files")
 @localized()
@@ -25,6 +26,10 @@ export default class WyCloudFiles extends LitElement {
   @state()
   private weavyContext?: WeavyContextType;
 
+  @consume({ context: appSettingsContext, subscribe: true })
+  @state()
+  private settings?: AppSettingsType;
+  
   @state()
   src?: URL;
 
@@ -150,25 +155,34 @@ export default class WyCloudFiles extends LitElement {
   }
 
   override render() {
+    if (!this.weavyContext || !this.settings) {
+      return nothing;
+    }
+
     return portal(
-      this.showOverlay,
-      html`
-        <wy-overlay
-          ${ref(this.overlayRef)}
-          @release-focus=${() =>
-            this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}>
-          <wy-spinner overlay ?hidden=${this.iframeVisible}></wy-spinner>
-          <iframe
-            ${ref(this.iframeElementRef)}
-            @load=${() => (this.iframeVisible = true)}
-            src=${ifDefined(this.src?.toString())}
-            style="flex: 1 1 100%; border: 0;"
-            id="weavy-filebrowser"
-            name="weavy-filebrowser"
-            title=${msg("Cloud File Browser")}></iframe>
-        </wy-overlay>
-      `,
-      () => (this.showOverlay = false)
-    );
+          this.showOverlay
+            ? html`
+                <wy-overlay
+                  ${ref(this.overlayRef)}
+                  @release-focus=${() =>
+                    this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+                >
+                  <wy-spinner overlay ?hidden=${this.iframeVisible}></wy-spinner>
+                  <iframe
+                    ${ref(this.iframeElementRef)}
+                    @load=${() => (this.iframeVisible = true)}
+                    src=${ifDefined(this.src?.toString())}
+                    style="flex: 1 1 100%; border: 0;"
+                    id="weavy-filebrowser"
+                    name="weavy-filebrowser"
+                    title=${msg("Cloud File Browser")}
+                  ></iframe>
+                </wy-overlay>
+              `
+            : nothing,
+            this.settings.submodals || this.weavyContext.modalRoot === undefined
+            ? this.settings.component.renderRoot
+            : this.weavyContext.modalRoot
+        )
   }
 }

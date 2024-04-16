@@ -1,7 +1,7 @@
 import { LitElement, html, type PropertyValues, nothing, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { AccessType } from "../types/app.types";
 import { type ConversationType } from "../types/conversations.types";
 import type {

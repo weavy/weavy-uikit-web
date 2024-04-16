@@ -1,6 +1,6 @@
 import { BlobType, FileMutationContextType, MutateFileProps } from "../types/files.types";
 import { type ServerErrorResponseType } from "../types/server.types";
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { AppType } from "../types/app.types";
 import { UserType } from "../types/users.types";
 import { MutationKey } from "@tanstack/query-core";

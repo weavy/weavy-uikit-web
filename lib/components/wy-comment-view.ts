@@ -13,7 +13,7 @@ import { Feature, type FeaturesConfigType, type FeaturesListType } from "../type
 import { PollOptionType } from "../types/polls.types";
 
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
 import chatCss from "../scss/all";
 

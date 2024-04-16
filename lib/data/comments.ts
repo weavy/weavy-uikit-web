@@ -6,7 +6,7 @@ import type {
   InfiniteData,
 } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy-context";
+import { type WeavyContextType } from "../client/weavy";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { PostType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";

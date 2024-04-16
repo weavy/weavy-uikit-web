@@ -1,7 +1,7 @@
-import { WeavyContext, type WeavyContextType } from "./weavy-context";
-import type { WeavyTokenFactory, WeavyContextOptionsType } from "../types/weavy.types";
+import { WeavyContextBase, WeavyContextMixins } from "./weavy";
+import type { WeavyTokenFactory } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
-import { toUrl } from "../converters/url";
+import { Constructor } from "../types/generic.types";
 
 export interface WeavyAuthenticationProps {
   whenUrlAndTokenFactory: () => Promise<void>;
@@ -12,12 +12,13 @@ export interface WeavyAuthenticationProps {
 }
 
 // WeavyAuthentication mixin/decorator
-export const WeavyAuthenticationMixin = (base: typeof WeavyContext) => {
-  return class WeavyAuthentication extends base implements WeavyAuthenticationProps {
+export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+  return class WeavyAuthentication extends Base implements WeavyAuthenticationProps {
     // AUTHENTICATION
 
-    constructor(options: WeavyContextOptionsType) {
-      super(options);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      super(...args);
 
       this.whenUrl().then(() => {
         if (this.url && this.tokenFactory) {
@@ -64,7 +65,7 @@ export const WeavyAuthenticationMixin = (base: typeof WeavyContext) => {
 
       if (this._tokenFactory && this._tokenFactory !== tokenFactory) {
         this.whenUrlAndTokenFactory().then(() => {
-          (this as this & WeavyContextType).queryClient.refetchQueries({ stale: true });
+          (this as unknown as WeavyContextMixins).queryClient.refetchQueries({ stale: true });
         });
       }
 
@@ -91,7 +92,9 @@ export const WeavyAuthenticationMixin = (base: typeof WeavyContext) => {
 
       try {
         if (typeof tokenUrl === "string") {
-          this._tokenUrl = toUrl(tokenUrl);
+          if (tokenUrl) {
+            this._tokenUrl = new URL(tokenUrl, window.location.toString());
+          }
         } else if (tokenUrl instanceof URL) {
           this._tokenUrl = tokenUrl;
         } else if (tokenUrl !== undefined) {

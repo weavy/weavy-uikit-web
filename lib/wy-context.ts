@@ -1,16 +1,24 @@
 import { css, html, LitElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { WeavyContext } from "./client/weavy-context";
+import { WeavyContext } from "./client/weavy";
 import type { WeavyTokenFactory, WeavyOptions } from "./types/weavy.types";
 
 import { indirectEvalObject } from "./converters/indirect-eval-object";
 import { toUrl } from "./converters/url";
 import { LocaleModule } from "@lit/localize";
 
+import portalStyles from "./scss/portal";
+import { Constructor } from "./types/generic.types";
+
+function acceptedValue(value: unknown) {
+  return value !== undefined && value !== null && value !== false;
+}
+
 @customElement("wy-context")
 export class WyContext extends LitElement implements WeavyOptions {
   static override styles = [
+    portalStyles,
     css`
       :host {
         display: contents;
@@ -19,8 +27,8 @@ export class WyContext extends LitElement implements WeavyOptions {
   ];
 
   /**
-   * Enables context provider mode. 
-   * This means only children elements of this element can use this context. 
+   * Enables context provider mode.
+   * This means only children elements of this element can use this context.
    * This is enabled automatically on initialization when any children elements are present.
    */
   @property({ attribute: true, type: Boolean })
@@ -72,7 +80,7 @@ export class WyContext extends LitElement implements WeavyOptions {
   @property({
     attribute: true,
     converter: {
-      fromAttribute: (value) => indirectEvalObject<WeavyTokenFactory>(value!),
+      fromAttribute: (value) => indirectEvalObject<WeavyTokenFactory>(value),
     },
   })
   tokenFactory?: WeavyTokenFactory;
@@ -113,12 +121,16 @@ export class WyContext extends LitElement implements WeavyOptions {
   /**
    * The semver version of the package.
    */
-  readonly version: string = WeavyContext.version;
+  get version() {
+    return WeavyContext.version;
+  }
 
   /**
    * The Weavy source name; package name.
    */
-  readonly sourceName: string = WeavyContext.sourceName;
+  get sourceName() {
+    return WeavyContext.sourceName;
+  }
 
   constructor() {
     super();
@@ -130,15 +142,17 @@ export class WyContext extends LitElement implements WeavyOptions {
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+    
     if (this.weavyContext) {
       const validProperties = {} as WeavyOptions;
-      
+
       Array.from(changedProperties.keys()).forEach((key) => {
-        if (key !== "weavyContext" && this[key as keyof this & WeavyOptions]) {
+        if (key !== "weavyContext" && acceptedValue(this[key as keyof this & WeavyOptions])) {
           Object.assign(validProperties, { [key as string]: this[key as keyof WeavyOptions] });
         }
       });
-      //console.log("wy-context props", validProperties)
+      //console.log("wy-context props", validProperties);
 
       Object.assign(this.weavyContext, validProperties);
     }
@@ -148,3 +162,5 @@ export class WyContext extends LitElement implements WeavyOptions {
     return html` <slot></slot> `;
   }
 }
+
+export type WyContextType = Constructor<WyContext>;

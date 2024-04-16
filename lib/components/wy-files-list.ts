@@ -14,7 +14,7 @@ import { renderFileTable } from "./wy-file-table";
 import { repeat } from "lit/directives/repeat.js";
 
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 
 @customElement("wy-files-list")

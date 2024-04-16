@@ -2,7 +2,7 @@ import { LitElement, type PropertyValueMap, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
 import chatCss from "../scss/all";
 import { consume } from "@lit/context";

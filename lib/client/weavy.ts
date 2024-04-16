@@ -1,27 +1,25 @@
-
 import { S4 } from "../utils/data";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
-import { globalContextProvider, weavyContextDefinition } from "./context-definition";
+import { globalContextProvider, weavyContextDefinition } from "../contexts/weavy-context";
 
 import { chrome } from "../utils/browser";
 import type { WeavyOptions, Destructable, WeavyContextOptionsType } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
-import { toUrl } from "../converters/url";
 
-import { SOURCE_LOCALE, WeavyLocalizationMixin, type WeavyLocalizationProps } from "./localization";
-import { WeavyNetworkMixin, type WeavyNetworkProps } from "./network";
-import { WeavyAuthenticationMixin, type WeavyAuthenticationProps } from "./authentication";
-import { WeavyConnectionMixin, type WeavyConnectionProps } from "./connection";
-import { WeavyQueryMixin, type WeavyQueryProps } from "./query";
-import { WeavyVersionMixin, type WeavyVersionProps } from "./version";
-import { WeavyModalsMixin, type WeavyModalsProps } from "./modals";
-import { WeavyFetchMixin, type WeavyFetchProps } from "./fetch";
-import { WeavyStylesMixin, type WeavyStylesProps } from "./styles";
+import { SOURCE_LOCALE, WeavyLocalizationMixin, WeavyLocalizationProps } from "./localization";
+import { WeavyNetworkMixin, WeavyNetworkProps } from "./network";
+import { WeavyAuthenticationMixin, WeavyAuthenticationProps } from "./authentication";
+import { WeavyConnectionMixin, WeavyConnectionProps } from "./connection";
+import { WeavyQueryMixin, WeavyQueryProps } from "./query";
+import { WeavyVersionMixin, WeavyVersionProps } from "./version";
+import { WeavyModalsMixin, WeavyModalsProps } from "./modals";
+import { WeavyFetchMixin, WeavyFetchProps } from "./fetch";
+import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
 
-export type WeavyContextType = WeavyContext &
-  WeavyLocalizationProps &
+export type WeavyContextMixins = WeavyContextBase &
   WeavyNetworkProps &
   WeavyAuthenticationProps &
+  WeavyLocalizationProps &
   WeavyConnectionProps &
   WeavyQueryProps &
   WeavyVersionProps &
@@ -33,25 +31,16 @@ export type WeavyContextType = WeavyContext &
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
  */
-@WeavyLocalizationMixin
-@WeavyNetworkMixin
-@WeavyAuthenticationMixin
-@WeavyConnectionMixin
-@WeavyQueryMixin
-@WeavyVersionMixin
-@WeavyModalsMixin
-@WeavyFetchMixin
-@WeavyStylesMixin
 export class WeavyContextBase implements WeavyOptions, Destructable {
   /**
    * The semver version of the package.
    */
-  static readonly version: string = WEAVY_VERSION;
+  static readonly version = WEAVY_VERSION ?? "";
 
   /**
    * The Weavy source name; package name.
    */
-  static readonly sourceName: string = WEAVY_SOURCE_NAME;
+  static readonly sourceName = WEAVY_SOURCE_NAME ?? "Weavy";
 
   // CONFIG
 
@@ -72,7 +61,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   };
 
   readonly weavySid: string = S4();
-  readonly weavyId: string = `${WeavyContext.sourceName}#${this.weavySid}`;
+  readonly weavyId: string = `${WeavyContextBase.sourceName}#${this.weavySid}`;
 
   /**
    * The host where the Weavy context is provided.
@@ -81,21 +70,19 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 
   #hostContextProvider?: ContextProvider<typeof weavyContextDefinition>;
 
-
   // OPTIONS
 
-  cloudFilePickerUrl = WeavyContext.defaults.cloudFilePickerUrl;
-  confluenceAuthenticationUrl = WeavyContext.defaults.confluenceAuthenticationUrl;
-  confluenceProductName = WeavyContext.defaults.confluenceProductName;
-  disableEnvironmentImports = WeavyContext.defaults.disableEnvironmentImports;
-  gcTime = WeavyContext.defaults.gcTime;
-  modalParent = WeavyContext.defaults.modalParent;
-  reactions = WeavyContext.defaults.reactions;
-  scrollBehavior = WeavyContext.defaults.scrollBehavior;
-  staleTime = WeavyContext.defaults.staleTime;
-  tokenFactoryRetryDelay = WeavyContext.defaults.tokenFactoryRetryDelay;
-  tokenFactoryTimeout = WeavyContext.defaults.tokenFactoryTimeout;
-  zoomAuthenticationUrl = WeavyContext.defaults.zoomAuthenticationUrl;
+  cloudFilePickerUrl = WeavyContextBase.defaults.cloudFilePickerUrl;
+  confluenceAuthenticationUrl = WeavyContextBase.defaults.confluenceAuthenticationUrl;
+  confluenceProductName = WeavyContextBase.defaults.confluenceProductName;
+  disableEnvironmentImports = WeavyContextBase.defaults.disableEnvironmentImports;
+  gcTime = WeavyContextBase.defaults.gcTime;
+  reactions = WeavyContextBase.defaults.reactions;
+  scrollBehavior = WeavyContextBase.defaults.scrollBehavior;
+  staleTime = WeavyContextBase.defaults.staleTime;
+  tokenFactoryRetryDelay = WeavyContextBase.defaults.tokenFactoryRetryDelay;
+  tokenFactoryTimeout = WeavyContextBase.defaults.tokenFactoryTimeout;
+  zoomAuthenticationUrl = WeavyContextBase.defaults.zoomAuthenticationUrl;
 
   // Promises
 
@@ -128,14 +115,16 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 
     try {
       if (typeof url === "string") {
-        this.#url = toUrl(url);
+        if (url) {
+          this.#url = new URL(url, window.location.toString());
+        }
       } else if (url instanceof URL) {
         this.#url = url;
       } else {
         throw -1;
       }
     } catch (e) {
-      throw new Error("Invalid url");
+      throw new TypeError("Invalid url");
     }
 
     if (
@@ -155,7 +144,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 
   // CONSTRUCTOR
 
-  constructor(options: WeavyContextOptionsType) {
+  constructor(options?: WeavyContextOptionsType) {
     console.info(`${WeavyContextBase.sourceName}@${WeavyContextBase.version} #${this.weavySid}`);
 
     const validOptions: typeof options = {};
@@ -183,10 +172,10 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
       globalContextProvider.detachListeners();
       this.#hostContextProvider = new ContextProvider(this.host, {
         context: weavyContextDefinition,
-        initialValue: this as unknown as WeavyContextType,
+        initialValue: this as unknown as WeavyContext,
       });
     } else {
-      globalContextProvider.setValue(this as unknown as WeavyContextType);
+      globalContextProvider.setValue(this as unknown as WeavyContext);
     }
   }
 
@@ -195,7 +184,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   get isDestroyed() {
     return this.#isDestroyed;
   }
-  
+
   destroy() {
     this.#isDestroyed = true;
     this.#hostContextProvider?.detachListeners();
@@ -203,5 +192,17 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   }
 }
 
-export class WeavyContext extends WeavyContextBase {}
-export const Weavy = WeavyContext;
+export class WeavyContext
+  extends WeavyLocalizationMixin(
+    WeavyConnectionMixin(
+      WeavyNetworkMixin(
+        WeavyAuthenticationMixin(
+          WeavyQueryMixin(WeavyVersionMixin(WeavyModalsMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyContextBase)))))
+        )
+      )
+    )
+  )
+  implements WeavyContextMixins {}
+
+export class Weavy extends WeavyContext {}
+export type WeavyContextType = WeavyContext;

@@ -2,9 +2,10 @@ import { LitElement, html, css, type PropertyValueMap, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { portal } from "lit-modal-portal";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 
-import allStyles from "../scss/all"
+import allStyles from "../scss/all";
 import { MemberType } from "../types/members.types";
 import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
 import { localized, msg } from "@lit/localize";
@@ -19,7 +20,6 @@ import { ConversationTypeString } from "../types/conversations.types";
 @customElement("wy-conversation-new")
 @localized()
 export default class WyConversationNew extends LitElement {
-  
   static override styles = [
     allStyles,
     css`
@@ -32,6 +32,10 @@ export default class WyConversationNew extends LitElement {
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
   private weavyContext?: WeavyContextType;
+
+  @consume({ context: appSettingsContext, subscribe: true })
+  @state()
+  private settings?: AppSettingsType;
 
   @property()
   bot?: string;
@@ -49,9 +53,10 @@ export default class WyConversationNew extends LitElement {
     this.show = false;
   }
 
-
   private async submit(members: MemberType[] = []) {
-    const memberOptions = this.bot ? { members: [ this.bot ], type: ConversationTypeString.BotChat } : { members: members?.map((m) => m.id) };
+    const memberOptions = this.bot
+      ? { members: [this.bot], type: ConversationTypeString.BotChat }
+      : { members: members?.map((m) => m.id) };
 
     // create conversation
     const conversation = await this.addConversationMutation?.mutate(memberOptions);
@@ -75,26 +80,34 @@ export default class WyConversationNew extends LitElement {
 
   override render() {
     return html`
-      <wy-button kind="icon" @click=${() => this.bot ? this.submit() : this.open()}><wy-icon name="plus"></wy-icon></wy-button>
+      <wy-button kind="icon" @click=${() => (this.bot ? this.submit() : this.open())}>
+        <wy-icon name="plus"></wy-icon>
+      </wy-button>
 
-      ${!this.bot ? portal(
-        this.show,
-        html`<wy-overlay
-          @release-focus=${() =>
-            this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}>
-          <header class="wy-appbars">
-            <nav class="wy-appbar">
-              <wy-button kind="icon" @click=${() => this.close()}>
-                <wy-icon name="close"></wy-icon>
-              </wy-button>
-              <div class="wy-appbar-text">${msg("New conversation")}</div>
-            </nav>
-          </header>
+      ${!this.bot && this.weavyContext && this.settings
+        ? portal(
+            this.show
+              ? html`<wy-overlay
+                  @release-focus=${() =>
+                    this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+                >
+                  <header class="wy-appbars">
+                    <nav class="wy-appbar">
+                      <wy-button kind="icon" @click=${() => this.close()}>
+                        <wy-icon name="close"></wy-icon>
+                      </wy-button>
+                      <div class="wy-appbar-text">${msg("New conversation")}</div>
+                    </nav>
+                  </header>
 
-          <wy-users-search @submit=${(e: CustomEvent) => this.submit(e.detail.members)}></wy-users-search>
-        </wy-overlay>`,
-        () => (this.show = false)
-      ) : nothing }
+                  <wy-users-search @submit=${(e: CustomEvent) => this.submit(e.detail.members)}></wy-users-search>
+                </wy-overlay>`
+              : nothing,
+              this.settings.submodals || this.weavyContext.modalRoot === undefined
+              ? this.settings.component.renderRoot
+              : this.weavyContext.modalRoot
+          )
+        : nothing}
     `;
   }
 }

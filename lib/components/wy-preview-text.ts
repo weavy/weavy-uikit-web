@@ -10,7 +10,7 @@ import "./wy-spinner";
 import colorModeCss from "../scss/colormodes"
 import allCss from "../scss/all"
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../client/context-definition";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-preview-text")
