@@ -92,7 +92,6 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
           }
         } else {
           this.networkStateIsPending = false;
-          this.serverState = "unreachable";
         }
 
         //console.error(this.weavyId, `Error calling endpoint ${url}`, response)
