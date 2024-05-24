@@ -1,0 +1,39 @@
+@use "base/color";
+@use "base/var";
+
+[part~=wy-progress] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    position: relative;
+  
+    &:not([width]), &[width="24"] {
+      width: var(--wy-component-icon-width, var.wy-rem(1.5));
+    }
+  
+    &:not([height]), &[height="24"] {
+      height: var(--wy-component-icon-height, var.wy-rem(1.5));
+    }
+  
+    width: var(--wy-component-icon-width);
+    height: var(--wy-component-icon-height);
+}
+
+[part~=wy-progress-padded] {
+  margin: var.wy-rem(1) var.wy-rem(2);
+}
+
+[part~=wy-progress][part~=wy-primary] {
+  color: color.token(--wy-primary);
+}
+
+[part~=wy-progress-remaining] {
+  fill: none;
+  stroke: color.token(--wy-surface-variant);
+}
+
+[part~=wy-progress-done] {
+  fill: none;
+  stroke: currentColor;
+}

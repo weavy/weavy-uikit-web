@@ -1,6 +1,7 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
 import {
   getBrowserStateProperty,
+  itemHasChanged,
   pushHistoryProperties,
   restoreHistoryProperties,
   setBrowserState,
@@ -72,18 +73,21 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
 
   private updatePrevPropertyValues() {
     if (this.properties) {
-      this.prevPropertyValues ??= {};
-
+      
       this.properties.forEach((property) => {
-        //console.log("updating prev value", property, (this.host as T)[property as (keyof T)])
-        this.prevPropertyValues![property] = (this.host as T)[property as keyof T];
+        this.prevPropertyValues ??= {};
+        const currentValue = (this.host as T)[property as keyof T];
+        if (this.prevPropertyValues[property] !== currentValue) {
+          //console.log("updating prev value", this.prefixKey, property, currentValue)
+          this.prevPropertyValues[property] = currentValue ? JSON.parse(JSON.stringify(currentValue)) : currentValue;
+        }
       });
     }
   }
 
-  private restoreHistory = () => {
+  private restoreHistory = (_e: PopStateEvent) => {
     if (this.prefixKey && this.properties) {
-      //console.log("restore history state", this.prefixKey)
+      //console.log("restore history state", this.prefixKey, _e.state, window.history.state, itemHasChanged(e.state, window.history.state))
       restoreHistoryProperties<T>(this.host as T, this.prefixKey, this.properties as (keyof T)[]);
       try {
         this._backCount = getBrowserStateProperty(this.prefixKey, "_backCount") || 0;
@@ -102,7 +106,11 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
     if (this.prefixKey && this.properties) {
       if (this.prevPropertyValues) {
         const anyPropertyHasChanged = this.properties.some(
-          (property) => this.prevPropertyValues![property] !== (this.host as T)[property as keyof T]
+          (property) => {
+            const prevValue = this.prevPropertyValues?.[property]
+            const hostValue = (this.host as T)[property as keyof T];
+            return itemHasChanged(prevValue, hostValue);
+          }
         );
 
         if (anyPropertyHasChanged) {
@@ -119,7 +127,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
         this.prevPropertyValues = {};
       }
 
-      //console.log("update history state")
+      //console.log("update history state", this.prefixKey)
       updateHistoryProperties(this.host as T, this.prefixKey, this.properties as (keyof T)[]);
       this.updatePrevPropertyValues();
     }

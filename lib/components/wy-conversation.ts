@@ -1,8 +1,5 @@
 import { LitElement, html, type PropertyValues, nothing, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { AccessType } from "../types/app.types";
 import { type ConversationType } from "../types/conversations.types";
 import type {
   MessageMutationContextType,
@@ -10,10 +7,6 @@ import type {
   MessagesResultType,
   MutateMessageProps,
 } from "../types/messages.types";
-import type { UserType } from "../types/users.types";
-import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-
-import { getApiOptions } from "../data/api";
 import { getMessagesOptions, getAddMessageMutationOptions } from "../data/messages";
 
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
@@ -21,37 +14,40 @@ import { InfiniteQueryController } from "../controllers/infinite-query-controlle
 import { ReverseInfiniteScrollController } from "../controllers/infinite-scroll-controller";
 
 import { MutationController } from "../controllers/mutation-controller";
-import { QueryController } from "../controllers/query-controller";
 
 import { hasScroll, isParentAtBottom, scrollParentToBottom } from "../utils/scroll-position";
 import { addCacheItem, keepFirstPage, updateCacheItem, updateCacheItems } from "../utils/query-cache";
-
-import chatCss from "../scss/all";
-
-import "./wy-empty";
-import "./wy-messages";
-import "./wy-message-editor";
-import "./wy-spinner";
 
 import { localized, msg } from "@lit/localize";
 import { Ref, createRef } from "lit/directives/ref.js";
 
 import type { RealtimeMessageEventType, RealtimeReactionEventType } from "../types/realtime.types";
-import { whenParentsDefined, whenVisible } from "../utils/dom";
-import { WeavyContextProps } from "../types/weavy.types";
+import { whenVisible } from "../utils/dom";
 import { ReactableType } from "../types/reactions.types";
 import { PollMutationType, getPollMutation } from "../data/poll";
-import { hasAccess } from "../utils/access";
+import { hasPermission } from "../utils/permission";
 import {
   MarkConversationMutationType,
   UpdateConversationMutationType,
   getMarkConversationMutation,
   getUpdateConversationMutation,
 } from "../data/conversation";
+import { WeavyContextProps } from "../types/weavy.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { appContext } from "../contexts/app-context";
+import { provide } from "@lit/context";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { PermissionType } from "../types/app.types";
+
+import chatCss from "../scss/all";
+import "./wy-empty";
+import "./wy-messages";
+import "./wy-message-editor";
+import "./wy-spinner";
 
 @customElement("wy-conversation")
 @localized()
-export default class WyConversation extends LitElement {
+export default class WyConversation extends AppConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -70,29 +66,18 @@ export default class WyConversation extends LitElement {
     `,
   ];
 
-  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
+  protected exportParts = new ShadowPartsController(this);
 
-  // Manually consumed in scheduleUpdate()
-  @state()
-  protected weavyContext?: WeavyContextType;
-
+  // Override app context
+  @provide({ context: appContext })
   @property({ attribute: false })
-  user?: UserType;
+  conversation?: ConversationType;
 
   @property({ type: Number })
   conversationId?: number;
 
-  @property({ attribute: false })
-  conversation?: ConversationType;
-
   @property()
   cssClass?: string;
-
-  @state()
-  availableFeatures?: FeaturesListType;
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
 
   @state()
   lastReadMessagePosition: "above" | "below" = "below";
@@ -112,8 +97,6 @@ export default class WyConversation extends LitElement {
   protected markConversationMutation?: MarkConversationMutationType;
 
   messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
-  userQuery = new QueryController<UserType>(this);
-  featuresQuery = new QueryController<FeaturesListType>(this);
   private updateConversationMutation?: UpdateConversationMutationType;
 
   protected pollMutation?: PollMutationType;
@@ -176,17 +159,18 @@ export default class WyConversation extends LitElement {
       : undefined;
     addCacheItem(
       this.weavyContext.queryClient,
-      ["messages", realtimeEvent.message.app_id],
+      ["messages", realtimeEvent.message.app.id],
       realtimeEvent.message,
       tempId
     );
-    updateCacheItem(this.weavyContext.queryClient,
+    updateCacheItem(
+      this.weavyContext.queryClient,
       ["conversations"],
       this.conversationId,
-      (conversation: ConversationType) => conversation.last_message = realtimeEvent.message
-      )
+      (conversation: ConversationType) => (conversation.last_message = realtimeEvent.message)
+    );
 
-    if (realtimeEvent.message.app_id === this.conversation.id) {
+    if (realtimeEvent.message.app.id === this.conversation.id) {
       if (!this.conversation.display_name && realtimeEvent.message.plain) {
         this.setEmptyConversationTitle(realtimeEvent.message.plain);
       }
@@ -210,6 +194,7 @@ export default class WyConversation extends LitElement {
   };
 
   private handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
+
     if (!this.weavyContext || !this.user || !this.conversation) {
       return;
     }
@@ -219,9 +204,12 @@ export default class WyConversation extends LitElement {
       { queryKey: ["messages"], exact: false },
       realtimeEvent.entity.id,
       (item: MessageType) => {
-        item.reactions = [
-          ...(item.reactions || []).filter((r: ReactableType) => r.created_by_id !== realtimeEvent.actor.id),
-          { content: realtimeEvent.reaction, created_by_id: realtimeEvent.actor.id },
+        if (!item.reactions) {
+          item.reactions = { count: 0 };
+        }
+        item.reactions.data = [
+          ...(item.reactions.data || []).filter((r: ReactableType) => r.created_by?.id !== realtimeEvent.actor.id),
+          { content: realtimeEvent.reaction, created_by: realtimeEvent.actor },
         ];
       }
     );
@@ -236,7 +224,11 @@ export default class WyConversation extends LitElement {
       { queryKey: ["messages"], exact: false },
       realtimeEvent.entity.id,
       (item: MessageType) => {
-        item.reactions = item.reactions.filter((item) => item.created_by_id !== realtimeEvent.actor.id);
+        if (item.reactions) {
+          if (item.reactions.data) {
+            item.reactions.data = item.reactions.data.filter((item) => item.created_by?.id !== realtimeEvent.actor.id);
+          }
+        }
       }
     );
   };
@@ -292,7 +284,7 @@ export default class WyConversation extends LitElement {
       }
     }
 
-    if (this.conversation) {
+    if (this.conversation && this.conversation.last_message) {
       this.markConversationMutation?.mutate({
         id: this.conversation.id,
         markAsRead: true,
@@ -307,23 +299,12 @@ export default class WyConversation extends LitElement {
     }
   };
 
-  override async scheduleUpdate() {
-    await whenParentsDefined(this);
-    this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
-
-    if (this.weavyContextConsumer?.value && this.weavyContext !== this.weavyContextConsumer?.value) {
-      this.weavyContext = this.weavyContextConsumer?.value;
-    }
-
-    await super.scheduleUpdate();
-  }
-
   protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+    super.willUpdate(changedProperties);
+
     // if context updated
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       //console.log("conversation context changed")
-      this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
-      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "chat"]));
       this.updateConversationMutation = getUpdateConversationMutation(this.weavyContext);
       this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
     }
@@ -373,14 +354,6 @@ export default class WyConversation extends LitElement {
       this.shouldBeAtBottom = this.isAtBottom;
     }
 
-    if (!this.userQuery.result?.isPending) {
-      this.user = this.userQuery.result?.data;
-    }
-
-    if (!this.availableFeatures && !this.featuresQuery.result?.isPending) {
-      this.availableFeatures = this.featuresQuery.result?.data;
-    }
-
     // if conversation is updated
     if (changedProperties.has("conversation") && this.conversation) {
       //console.log("conversation updated", this.conversation.id);
@@ -388,16 +361,17 @@ export default class WyConversation extends LitElement {
 
       // Check unread status
       if (this.conversation && this.conversation.is_unread && this.conversation.last_message) {
-        const unreadId = this.conversation.members.data.find((member) => member.id === this.user?.id)?.marked_id;
-        if (unreadId) {
+        const unreadId = this.conversation.members.data?.find((member) => member.id === this.user?.id)?.marked_id;
+        // prevent new message toast if all messages are read
+        if (unreadId && unreadId < this.conversation.last_message.id) {
           // display toast
           //console.log("conversation updated, show unread, mark as read", unreadId);
           this.showUnread(
             "below",
-            this.conversation.members.data.find((member) => member.id === this.user?.id)?.marked_id
+            this.conversation.members.data?.find((member) => member.id === this.user?.id)?.marked_id
           );
-          this.markAsRead();
         }
+        this.markAsRead();
       } else {
         //console.log("conversation updated hideUnread?")
         //this.hideUnread();
@@ -419,11 +393,8 @@ export default class WyConversation extends LitElement {
         ? html`
             ${!hasNextPage && !isPending ? html` <!-- Top of the conversation --> ` : nothing}
             <wy-messages
-              .app=${this.conversation}
-              .user=${this.user}
+              .conversation=${this.conversation}
               .infiniteMessages=${infiniteData}
-              .availableFeatures=${this.availableFeatures}
-              .features=${this.features}
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
               .unreadMarkerShow=${this.lastReadMessageShow}
@@ -446,14 +417,10 @@ export default class WyConversation extends LitElement {
               </wy-empty>
             </div>
           `}
-      ${this.conversation && hasAccess(AccessType.Write, this.conversation?.access, this.conversation?.permissions)
+      ${this.conversation && hasPermission(PermissionType.Create, this.conversation?.permissions)
         ? html`
             <div class="wy-footerbar wy-footerbar-sticky">
               <wy-message-editor
-                .app=${this.conversation}
-                .user=${this.user}
-                .availableFeatures=${this.availableFeatures}
-                .features=${this.features}
                 .draft=${true}
                 placeholder=${msg("Type a message...")}
                 @submit=${(e: CustomEvent) => this.handleSubmit(e)}

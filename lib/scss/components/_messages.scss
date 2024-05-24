@@ -2,7 +2,7 @@
 @use "base/color";
 
 .wy-messages {
-  padding: var.wy-rem(1) var.wy-rem(1) var.wy-rem(1) var.wy-rem(.75);
+  padding: var.default(--wy-message-padding);
   flex: 1 1 100%;
 }
 
@@ -13,42 +13,37 @@
 .wy-date-separator {
   font-size: var.default(--wy-font-size-xs);
   pointer-events: none;
-  margin: var.wy-rem(.5);
+  margin: var.default(--wy-padding);
   text-align: center;
   position: sticky;
-  top: var.wy-rem(1.5);
+  top: var.default(--wy-padding-lg);
   z-index: 10;
 
   time {
     background: color.token(--wy-surface-3);
     color: color.token(--wy-on-surface);
-    padding: var.wy-rem(.25) var.wy-rem(.5);
+    padding: var.default(--wy-padding-sm);
     border-radius: var.default(--wy-border-radius-sm);
     display: inline-block;
   }
 }
 
-.wy-appbars + .wy-pane-body .wy-date-separator {
-  top: calc(#{var.default(--wy-appbar-height)} + var.wy-rem(1.5));
-}
-
-
 .wy-message {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin-bottom: var.wy-rem(1);
+  margin-bottom: calc(var.default(--wy-padding) + .5 * var.default(--wy-button-size)); // Account for reaction button
   scroll-margin-block: 6rem;
 
   .wy-image-grid,
   .wy-attachments {
-    border-radius: var.default(--wy-border-radius);
+    border-radius: var.default(--wy-border-radius-sm);
   }
 }
 
 .wy-message-meta {
   font-size: var.default(--wy-font-size-xs);
-  margin: 0 0 var.wy-rem(.25) var.wy-rem(.25);
+  margin: 0 0 calc(.5 * var.default(--wy-gap)) calc(.5 * var.default(--wy-gap));
   color: color.token(--wy-on-surface-variant);
 }
 
@@ -61,37 +56,16 @@
   color: var(--wy-component-color);
   //border-radius: var(--wy-component-border-radius);
 
-  border-radius: calc(#{var.default(--wy-border-radius)} + var.wy-rem(.5));
+  border-radius: #{var.default(--wy-border-radius)};
   display: flex; //inline-block;
   flex-direction: column;
-  padding: var.wy-rem(.75);
-  gap: var.wy-rem(.75);
-  max-width: min(var.wy-rem(32), calc(100% - var.wy-rem(2)));
+  padding: var.default(--wy-message-padding);
+  gap: var.default(--wy-gap);
+  max-width: min(var.wy-rem(32), calc(100% - 2 * var.default(--wy-message-padding)));
 
   > div {
     // message section (images, attachments, embeds etc.)
     flex: 1 1 100%;
-  }
-
-  .wy-likes, .wy-reactions-line {
-    position: relative;
-    height: 0;
-    min-height: 0;
-    max-height: 0;
-    margin: 0 var.wy-rem(-.75) var.wy-rem(-.75);
-    flex: 0 0 0;
-  }
-
-  .wy-like-count {
-    background: var(--wy-component-background-color);
-    border-radius: var.default(--wy-border-radius-pill);
-    color: currentColor;
-  }
-
-  .wy-reactions-line, wy-reactions {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
   }
 }
 
@@ -137,7 +111,7 @@
   align-items: flex-end;
 
   .wy-message-meta {
-    margin: 0 var.wy-rem(.25) var.wy-rem(.25) 0;
+    margin: 0 calc(.5 * var.default(--wy-gap)) calc(.5 * var.default(--wy-gap)) 0;
   }
 
   .wy-message-content {
@@ -157,26 +131,12 @@
     color: var(--wy-component-color);
     //border-radius: var(--wy-component-border-radius);
   }
-
-
-  .wy-likes {
-    flex-direction: row-reverse;
-  }
-
-  .wy-reactions-line, wy-reactions {
-    display: flex;
-    flex-direction: row;
-
-    .wy-dropdown-menu {
-      right: 0;
-    }
-  }
-}
+}ß
 // override some styles for message that contains only emoji
 .wy-message-emoji {
   .wy-message-bubble {
     background: none;
-    padding: 0 0 var.wy-rem(.75);
+    padding: 0 0 var.default(--wy-message-padding);
   }
 
   .wy-content {
@@ -196,7 +156,7 @@
 // message status indicator (sending, sent, delivered, read)
 .wy-readby-status {
   display: flex;
-  gap: var.wy-rem(.25);
+  gap: var.default(--wy-gap-sm);
   height: var.wy-rem(1.125); // same height as avatar (prevents layout change when readby indicators are updated)
   justify-content: flex-end;
   margin-top: var.wy-rem(-.125);

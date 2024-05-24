@@ -45,7 +45,7 @@ export async function uploadBlob(
   onProgress?: (variables: UploadProgressProps) => void
 ) {
   const formData = new FormData();
-  formData.append("blob", file);
+  formData.append("blob", file);  
 
   const response = await weavyContext.upload("/api/blobs", "POST", formData, HeaderContentType.Auto, (progress) => {
     if (onProgress) {
@@ -59,6 +59,20 @@ export async function uploadBlob(
   }
   const blob: BlobType = await response.json();
   return blob;
+}
+
+export function getSimpleUploadBlobMutationOptions(
+  weavyContext: WeavyContextType
+) {
+  const options = {
+    mutationFn: async (variables: MutateFileProps) => {
+      const uploadedFile = await uploadBlob(weavyContext, variables.file, variables.onProgress);
+      return uploadedFile;
+    }
+    // TODO: implement onmutate, onsuccess, onerror...    
+  };
+
+  return options;
 }
 
 export function getUploadBlobMutationOptions(

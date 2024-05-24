@@ -9,7 +9,7 @@
 
   box-sizing: border-box;
   text-align: initial;
-  font-size: var.default(--wy-font-size-base);
+  font-size: var.default(--wy-font-size);
 
   // See https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/
   *::before, *::after {

@@ -3,7 +3,7 @@ import { type WeavyContextType } from "../client/weavy";
 import { FileOrderType, FilesResultType } from "../types/files.types";
 //import { addToQueryData, findAnyExistingItem, updateQueryData } from "../utils/query-cache";
 
-/// GET all posts in an app
+/// GET all files in an app
 export function getInfiniteFileListOptions(
   weavyContext: WeavyContextType,
   appId: number | null,
@@ -27,7 +27,7 @@ export function getInfiniteFileListOptions(
       const skip = opt.pageParam;
       const trashed: boolean = !!filters?.trashed;
       const orderParam = filters.order ? filters.order.by + (filters.order.descending ? "+desc" : "") : "";
-      let url = "/api/apps/" + appId + "/files?skip=" + skip + "&top=" + PAGE_SIZE + "&orderby=" + orderParam;
+      let url = "/api/apps/" + appId + "/files?skip=" + skip + "&take=" + PAGE_SIZE + "&orderby=" + orderParam;
       if (trashed) {
         url += "&trashed=null";
       }

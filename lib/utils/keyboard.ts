@@ -13,6 +13,14 @@ export function inputClearOnEscape(e: KeyboardEvent) {
 export function inputBlurOnEscape(e: KeyboardEvent) {
   if (e.key === "Escape") {
     (e.target as HTMLElement).blur();
+    (e.target as HTMLElement).dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
+    //console.log("I got my head checked. By a jumbo jet.");
+  }
+}
+
+export function inputBlurOnEnter(e: KeyboardEvent) {
+  if (e.key === "Enter") {
+    (e.target as HTMLElement).blur();
     //console.log("I got my head checked. By a jumbo jet.");
   }
 }

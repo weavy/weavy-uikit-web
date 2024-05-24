@@ -1,12 +1,8 @@
 import { MsgType } from "./msg.types";
 import { PollOptionType } from "./polls.types";
+import { InfiniteQueryResultType } from "./query.types";
 
-export type MessagesResultType = {
-  data: MessageType[];
-  start: number;
-  end: number;
-  count: number;
-};
+export type MessagesResultType = InfiniteQueryResultType<MessageType>;
 
 export type MutateMessageProps = {
   app_id: number;

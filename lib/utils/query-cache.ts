@@ -17,7 +17,7 @@ import { InfiniteQueryResultType, QueryResultType } from "../types/query.types";
 //     return null;
 // }
 
-export function findAnyExistingItem<TDataItem>(
+export function findAnyExistingItem<TDataItem extends PlainObjectType>(
   queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined,
   propertyName: string,
   value: string,
@@ -36,8 +36,8 @@ export function findAnyExistingItem<TDataItem>(
           return false;
         });
       });
-    } else if ((queryData as QueryResultType<TDataItem>).length) {
-      return (queryData as QueryResultType<TDataItem>).some((item) => {
+    } else if ((queryData as QueryResultType<TDataItem>).data?.length) {
+      return (queryData as QueryResultType<TDataItem>).data?.some((item) => {
         if (item[propertyName] === value) {
           existingItem = item;
           return true;
@@ -50,7 +50,7 @@ export function findAnyExistingItem<TDataItem>(
   return existingItem && copy ? <TDataItem>{ ...existingItem } : existingItem;
 }
 
-export function addToQueryData<TDataItem>(
+export function addToQueryData<TDataItem extends PlainObjectType>(
   queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined,
   item: TDataItem,
   sorting: { by?: string; descending?: boolean } = {},
@@ -72,7 +72,10 @@ export function addToQueryData<TDataItem>(
           const pageData = page.data || [];
 
           // remove any previous item or tempId
-          const newData = pageData.filter((pageItem) => pageItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || pageItem.id !== previousId));
+          const newData = pageData.filter(
+            (pageItem) =>
+              pageItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || pageItem.id !== previousId)
+          );
 
           if (sorting && sorting.by) {
             // Use sorting
@@ -80,8 +83,8 @@ export function addToQueryData<TDataItem>(
               let pageItemValue = pageItem[sorting.by!];
               let itemValue = (item as TDataItem & PlainObjectType)[sorting.by!];
 
-              // modified_at should fallback to created_at
-              if (sorting.by === "modified_at") {
+              // updated_at should fallback to created_at
+              if (sorting.by === "updated_at") {
                 pageItemValue ??= pageItem["created_at"];
                 itemValue ??= (item as TDataItem & PlainObjectType)["created_at"];
               }
@@ -102,7 +105,7 @@ export function addToQueryData<TDataItem>(
             });
 
             if (foundIndex >= 0) {
-              newData.splice(foundIndex, 0, (item as TDataItem & PlainObjectType));
+              newData.splice(foundIndex, 0, item as TDataItem & PlainObjectType);
               page.data = [...newData];
               if (page.end) {
                 page.end += 1 + newData.length - pageData.length;
@@ -113,7 +116,7 @@ export function addToQueryData<TDataItem>(
               page.end === page.count
             ) {
               // end of the list
-              page.data = [...newData, (item as TDataItem & PlainObjectType)];
+              page.data = [...newData, item as TDataItem & PlainObjectType];
 
               if (page.end) {
                 page.end += 1 + newData.length - pageData.length;
@@ -125,9 +128,9 @@ export function addToQueryData<TDataItem>(
             // add new item to first page
             if (i === 0) {
               if (sorting.descending) {
-                page.data = [(item as TDataItem & PlainObjectType), ...newData];
+                page.data = [item as TDataItem & PlainObjectType, ...newData];
               } else {
-                page.data = [...newData, (item as TDataItem & PlainObjectType)];
+                page.data = [...newData, item as TDataItem & PlainObjectType];
               }
 
               if (page.end) {
@@ -143,15 +146,18 @@ export function addToQueryData<TDataItem>(
         pages: [...newPagesArray],
         pageParams: [...(queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pageParams],
       };
-    } else if ((queryData as QueryResultType<TDataItem>)?.length) {
+    } else if ((queryData as QueryResultType<TDataItem>)?.data?.length) {
       // not paged data...
       let foundIndex = -1;
       // remove any previous item or tempId
       const newData = [
-        ...(queryData as QueryResultType<TDataItem>).filter(
-          (dataItem) => dataItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || dataItem.id !== previousId)
-        ),
+        ...((queryData as QueryResultType<TDataItem>).data?.filter(
+          (dataItem) =>
+            dataItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || dataItem.id !== previousId)
+        ) || []),
       ];
+
+      let count = (queryData as QueryResultType<TDataItem>).count;
 
       if (sorting && sorting.by) {
         // Use sorting
@@ -159,8 +165,8 @@ export function addToQueryData<TDataItem>(
           let dataItemValue = dataItem[sorting.by!];
           let itemValue = (item as TDataItem & PlainObjectType)[sorting.by!];
 
-          // modified_at should fallback to created_at
-          if (sorting.by === "modified_at") {
+          // updated_at should fallback to created_at
+          if (sorting.by === "updated_at") {
             dataItemValue ??= dataItem["created_at"];
             itemValue ??= (item as TDataItem & PlainObjectType)["created_at"];
           }
@@ -179,27 +185,36 @@ export function addToQueryData<TDataItem>(
         });
 
         if (foundIndex >= 0) {
-          newData.splice(foundIndex, 0, (item as TDataItem & PlainObjectType));
+          newData.splice(foundIndex, 0, item as TDataItem & PlainObjectType);
         } else {
           // end of the list
-          newData.push((item as TDataItem & PlainObjectType));
+          newData.push(item as TDataItem & PlainObjectType);
+          count++;
         }
       } else {
         // no specific sorting
         if (sorting.descending) {
-          newData.unshift((item as TDataItem & PlainObjectType));
+          newData.unshift(item as TDataItem & PlainObjectType);
         } else {
-          newData.push((item as TDataItem & PlainObjectType));
+          newData.push(item as TDataItem & PlainObjectType);
         }
+        count++;
       }
-      return newData;
+      return {
+        data: newData,
+        count,
+      };
     }
   }
   return queryData;
 }
 
-export function updateQueryData<TDataItem>(
-  queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | InfiniteQueryResultType<TDataItem> | QueryResultType<TDataItem> | undefined,
+export function updateQueryData<TDataItem extends PlainObjectType>(
+  queryData:
+    | InfiniteData<InfiniteQueryResultType<TDataItem>>
+    | InfiniteQueryResultType<TDataItem>
+    | QueryResultType<TDataItem>
+    | undefined,
   select: number | ((item: TDataItem & PlainObjectType) => boolean),
   fnUpdater: Function
 ) {
@@ -212,7 +227,7 @@ export function updateQueryData<TDataItem>(
 
       if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages) {
         const newPagesArray =
-        (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages.map((page) => {
+          (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages.map((page) => {
             // update item
             if (page.data) {
               page.data = [
@@ -233,16 +248,19 @@ export function updateQueryData<TDataItem>(
           pages: newPagesArray,
           pageParams: (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pageParams,
         };
-      } else if ((queryData as QueryResultType<TDataItem>).length) {
-        return [
-          ...(queryData as QueryResultType<TDataItem>).map((item) => {
-            if (predicate(item)) {
-              item = { ...item }; // Immutable copy
-              fnUpdater(item);
-            }
-            return item;
-          }),
-        ];
+      } else if ((queryData as QueryResultType<TDataItem>).data?.length) {
+        return {
+          ...queryData,
+          data: [
+            ...((queryData as QueryResultType<TDataItem>).data?.map((item) => {
+              if (predicate(item)) {
+                item = { ...item }; // Immutable copy
+                fnUpdater(item);
+              }
+              return item;
+            }) || []),
+          ],
+        };
       } else if ((queryData as InfiniteQueryResultType<TDataItem>).data) {
         const newData = [
           ...(queryData as InfiniteQueryResultType<TDataItem> & { data: [] }).data.map((item) => {
@@ -268,9 +286,10 @@ export function updateQueryData<TDataItem>(
   return queryData;
 }
 
-export function removeQueryData<TDataItem>(
-  queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined, 
-  select: number | ((item: TDataItem & PlainObjectType) => boolean)) {
+export function removeQueryData<TDataItem extends PlainObjectType>(
+  queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined,
+  select: number | ((item: TDataItem & PlainObjectType) => boolean)
+) {
   if (select !== undefined) {
     const predicate = select instanceof Function ? select : (item: TDataItem & PlainObjectType) => item.id === select;
 
@@ -280,7 +299,7 @@ export function removeQueryData<TDataItem>(
 
       if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages) {
         const newPagesArray =
-        (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages.map((page) => {
+          (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages.map((page) => {
             // update item
             if (page.data) {
               page.data = [...page.data.filter((item) => !predicate(item))];
@@ -292,15 +311,27 @@ export function removeQueryData<TDataItem>(
           pages: newPagesArray,
           pageParams: (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pageParams,
         };
-      } else if ((queryData as QueryResultType<TDataItem>).length) {
-        return [...(queryData as QueryResultType<TDataItem>).filter((item) => !predicate(item))];
+      } else if ((queryData as QueryResultType<TDataItem>).data?.length) {
+        const previousLength = (queryData as QueryResultType<TDataItem>).data?.length;
+        let count = (queryData as QueryResultType<TDataItem>).count;
+
+        const newData = [...((queryData as QueryResultType<TDataItem>).data?.filter((item) => !predicate(item)) || [])];
+
+        if (previousLength !== newData.length) {
+          count--;
+        }
+
+        return {
+          data: newData,
+          count,
+        };
       }
     }
   }
   return queryData;
 }
 
-export const addCacheItem = <T>(
+export const addCacheItem = <T extends PlainObjectType>(
   queryClient: QueryClient,
   key: QueryKey,
   item: T,
@@ -308,59 +339,80 @@ export const addCacheItem = <T>(
   sorting?: { by?: string; descending?: boolean }
 ): T | void => {
   return queryClient.setQueryData(key, (data: unknown) => {
-    return addToQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> | undefined, item, sorting, tempId) as NoInfer<void | T> | undefined
+    return addToQueryData(
+      data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> | undefined,
+      item,
+      sorting,
+      tempId
+    ) as NoInfer<void | T> | undefined;
   });
 };
 
-export const addCacheItems = <T>(
+export const addCacheItems = <T extends PlainObjectType>(
   queryClient: QueryClient,
   filters: QueryFilters,
   item: T,
   tempId?: number,
   sorting?: { by?: string; descending?: boolean }
 ): T | void => {
-  queryClient.setQueriesData<InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>>(filters, (data) => addToQueryData<T>(data, item, sorting, tempId));
+  queryClient.setQueriesData<InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>>(filters, (data) =>
+    addToQueryData<T>(data, item, sorting, tempId)
+  );
 };
 
-export const updateCacheItem = <T>(
+export const updateCacheItem = <T extends PlainObjectType>(
   queryClient: QueryClient,
   key: QueryKey,
   select: number | ((item: T) => boolean),
   fnUpdater: Function
 ): T | void => {
   return queryClient.setQueryData(key, (data: unknown) => {
-    return updateQueryData(data as InfiniteQueryResultType<T> | InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> | undefined, select, fnUpdater) as NoInfer<void | T> | undefined
+    return updateQueryData(
+      data as
+        | InfiniteQueryResultType<T>
+        | InfiniteData<InfiniteQueryResultType<T>, unknown>
+        | QueryResultType<T>
+        | undefined,
+      select,
+      fnUpdater
+    ) as NoInfer<void | T> | undefined;
   });
 };
 
-export const updateCacheItems = <T>(
+export const updateCacheItems = <T extends PlainObjectType>(
   queryClient: QueryClient,
   filters: QueryFilters,
   select: number | ((item: T) => boolean),
   fnUpdater: Function
 ): T | void => {
-  queryClient.setQueriesData(filters, (data: unknown) => { 
-    return updateQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select, fnUpdater) as NoInfer<void | T> | undefined 
+  queryClient.setQueriesData(filters, (data: unknown) => {
+    return updateQueryData(
+      data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>,
+      select,
+      fnUpdater
+    ) as NoInfer<void | T> | undefined;
   });
 };
 
-export const removeCacheItem = <T>(
+export const removeCacheItem = <T extends PlainObjectType>(
   queryClient: QueryClient,
   key: QueryKey,
   select: number | ((item: T) => boolean)
 ): T | void => {
   return queryClient.setQueryData(key, (data: unknown) => {
-    return removeQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select) as NoInfer<void | T> | undefined 
+    return removeQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select) as
+      | NoInfer<void | T>
+      | undefined;
   });
 };
 
-export const removeCacheItems = <T>(
+export const removeCacheItems = <T extends PlainObjectType>(
   queryClient: QueryClient,
   filters: QueryFilters,
   select: number | ((item: T) => boolean)
 ): T | void => {
   queryClient.setQueriesData(filters, (data: unknown) => {
-    return removeQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select)
+    return removeQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select);
   });
 };
 

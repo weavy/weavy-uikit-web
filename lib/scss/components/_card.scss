@@ -5,7 +5,7 @@
 .wy-card {
   --wy-component-background-color: #{color.token(--wy-surface-1)};
   --wy-component-color: #{color.token(--wy-on-surface)};
-  --wy-component-border-radius: #{var.default(--wy-border-radius-lg)};
+  --wy-component-border-radius: #{var.default(--wy-border-radius)};
   
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
@@ -17,11 +17,6 @@
   min-width: 0;
   word-wrap: break-word;
   background-clip: border-box;
-
-  > hr {
-    margin-right: 0;
-    margin-left: 0;
-  }
 }
 
 .wy-card-primary {
@@ -65,26 +60,22 @@
 
 .wy-card-actions {
   position: absolute;
-  top: min(var.wy-rem(.25), calc(100% - var.wy-rem(2.5))); // Account for small heights
-  right: var.wy-rem(.25);
+  top: calc(var.default(--wy-padding) + .5 * var.default(--wy-gap));
+  right: calc(var.default(--wy-padding) + .5 * var.default(--wy-gap));
   align-items: center;
   display: flex;
-  
-  > .wy-button-icon, > .wy-dropdown > .wy-button-icon {
-    background-clip: content-box;
-  }
 }
 
 .wy-card-content {
   flex: 1 0 auto;
 
   &:first-child, .wy-card-actions + &:nth-child(2) {
-    padding-block-start: var.wy-rem(.5);
+    padding-block-start: var.default(--wy-padding);
   }
 
-  padding-block-end: var.wy-rem(.5);
-  padding-inline-start: var.wy-rem(.5);
-  padding-inline-end: var.wy-rem(.5);
+  padding-block-end: var.default(--wy-padding);
+  padding-inline-start: var.default(--wy-padding);
+  padding-inline-end: var.default(--wy-padding);
 }
 
 .wy-card-top {
@@ -93,6 +84,39 @@
   object-position: top center;
   flex: 1 1 100%;
   max-height: var.wy-rem(10);
+}
+
+.wy-card-icon {
+  --wy-component-icon-width: #{var.wy-rem(6)};
+  --wy-component-icon-height: #{var.wy-rem(6)};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: var.wy-rem(1) var.wy-rem(2);
+  margin: auto;
+}
+
+.wy-card-image {
+  width: auto;
+  height: auto;
+
+  &.wy-loading {
+    transition: opacity 0.15s ease-out;
+    opacity: 0;
+   
+    &.wy-loaded {
+      opacity: 1;
+      transition: opacity 0.15s ease-out;
+   
+      ~ img {
+        // hide any previous images/thumbs, wait for loaded image transition
+        transition-delay: 0.15s;
+        opacity: 0;
+      }
+    }
+   }
 }
 
 .wy-card-top-image {
@@ -105,3 +129,4 @@
   }
   text-decoration: line-through;
 }
+

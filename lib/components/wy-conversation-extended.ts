@@ -1,13 +1,10 @@
 import { html, type PropertyValues, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { AccessType } from "../types/app.types";
 import { ConversationTypeGuid, type ConversationType } from "../types/conversations.types";
-import { Feature } from "../types/features.types";
 import type { MemberType, MembersResultType } from "../types/members.types";
 import { getMemberOptions } from "../data/members";
 import { updateCacheItem } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
-import { hasFeature } from "../utils/features";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type {
   RealtimeAppEventType,
@@ -15,7 +12,7 @@ import type {
   RealtimeConversationMarkedEventType,
 } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
-import { hasAccess } from "../utils/access";
+import { hasPermission } from "../utils/permission";
 
 import WyConversation from "./wy-conversation";
 import "./wy-empty";
@@ -23,6 +20,7 @@ import "./wy-messages";
 import "./wy-message-editor";
 import "./wy-spinner";
 import { QueryController } from "../controllers/query-controller";
+import { PermissionType } from "../types/app.types";
 
 @customElement("wy-conversation-extended")
 @localized()
@@ -117,7 +115,7 @@ export default class WyConversationExtended extends WyConversation {
       this.weavyContext &&
       this.conversationId !== changedProperties.get("conversationId")
     ) {
-      if (this.conversationId && hasFeature(this.availableFeatures, Feature.Receipts, this.features?.receipts)) {
+      if (this.conversationId && this.hasFeatures?.receipts) {
         this.membersQuery.trackQuery(
           getMemberOptions(this.weavyContext, this.conversationId, {
             initialData: () => {
@@ -151,26 +149,25 @@ export default class WyConversationExtended extends WyConversation {
 
     const otherMember =
       this.user && this.isPrivateChat()
-        ? (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0]
+        ? (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user
         : null;
 
     return html`
-      ${this.conversation && this.user && infiniteData
+      ${this.conversation && infiniteData
         ? html`
             ${!hasNextPage && !isPending
               ? html`
-                  <div class="wy-avatar-header">
-                    ${this.isChatRoom() && !this.conversation.avatar_url
-                      ? html`
-                          <wy-avatar-group
-                            .members=${membersData}
-                            .user=${this.user}
-                            .name=${this.conversation.display_name}
-                            .size=${96}
-                          ></wy-avatar-group>
-                        `
-                      : this.conversation.display_name || this.conversation.avatar_url
-                      ? html`
+                  <wy-avatar-header>
+                    ${this.conversation.avatar_url
+                      ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
+                      : this.isChatRoom() ? html`
+                        <wy-avatar-group
+                          .members=${membersData}
+                          title=${this.conversation.display_name}
+                          .size=${96}
+                        ></wy-avatar-group>`
+                        : otherMember?.avatar_url ? 
+                        html`
                           <wy-avatar
                             src=${ifDefined(otherMember?.avatar_url)}
                             name=${this.conversation.display_name}
@@ -178,17 +175,14 @@ export default class WyConversationExtended extends WyConversation {
                             size=${96}
                           ></wy-avatar>
                         `
-                      : nothing}
-                    ${this.conversationTitle ? html` <h3 class="wy-title">${this.conversationTitle}</h3> ` : nothing}
-                  </div>
+                        : nothing
+                    }
+                  </wy-avatar-header>
                 `
               : nothing}
             <wy-messages
-              .app=${this.conversation}
-              .user=${this.user}
+              .conversation=${this.conversation}
               .infiniteMessages=${infiniteData}
-              .availableFeatures=${this.availableFeatures}
-              .features=${this.features}
               .members=${membersData}
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
@@ -206,20 +200,17 @@ export default class WyConversationExtended extends WyConversation {
         : html`
             <div class="wy-messages">
               <wy-empty class="wy-pane">
-                ${isPending || membersIsPending || !this.user || !this.conversation
+                ${isPending || membersIsPending || !this.conversation
                   ? html`<wy-spinner overlay></wy-spinner>`
                   : msg("Start the conversation!")}
               </wy-empty>
             </div>
           `}
-      ${this.conversation && hasAccess(AccessType.Write, this.conversation?.access, this.conversation?.permissions)
+      ${this.conversation && hasPermission(PermissionType.Create, this.conversation?.permissions)
         ? html`
             <div class="wy-footerbar wy-footerbar-sticky">
               <wy-message-editor
                 .app=${this.conversation}
-                .user=${this.user}
-                .availableFeatures=${this.availableFeatures}
-                .features=${this.features}
                 .draft=${true}
                 placeholder=${msg("Type a message...")}
                 @submit=${(e: CustomEvent) => this.handleSubmit(e)}

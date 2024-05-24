@@ -9,7 +9,7 @@ export type MutatePostVariables = {
   id: number;
 };
 
-export type RemovePostMutationType = MutationObserver<PostType, Error, MutatePostVariables, PostMutationContextType>;
+export type RemovePostMutationType = MutationObserver<void, Error, MutatePostVariables, PostMutationContextType>;
 export type DeleteForeverPostMutationType = MutationObserver<void, Error, MutatePostVariables, PostMutationContextType>;
 
 export function getTrashPostMutationOptions(weavyContext: WeavyContextType, app: AppType) {
@@ -20,7 +20,9 @@ export function getTrashPostMutationOptions(weavyContext: WeavyContextType, app:
     mutationKey: postsKey,
     mutationFn: async ({ id }: MutatePostVariables) => {
       const response = await weavyContext.post("/api/posts/" + id + "/trash", "POST", "");
-      return response.json();
+      if (!response.ok) {
+        throw new Error();
+      }
     },
     onMutate: async (variables: MutatePostVariables) => {
       updateCacheItems(
@@ -31,7 +33,7 @@ export function getTrashPostMutationOptions(weavyContext: WeavyContextType, app:
       );
       return <PostMutationContextType>{ type: "trash", id: variables.id };
     },
-    onSuccess: (data: PostType, variables: MutatePostVariables) => {
+    onSuccess: (data: void, variables: MutatePostVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -63,7 +65,6 @@ export function getRestorePostMutationOptions(weavyContext: WeavyContextType, ap
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
-      return response.json();
     },
     onMutate: async (variables: MutatePostVariables) => {
       updateCacheItems(
@@ -74,12 +75,12 @@ export function getRestorePostMutationOptions(weavyContext: WeavyContextType, ap
       );
       return <PostMutationContextType>{ type: "restore", file: variables.id };
     },
-    onSuccess: (data: PostType, variables: MutatePostVariables) => {
+    onSuccess: (data: void, variables: MutatePostVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.id,
-        (existingPost: PostType) => Object.assign(existingPost, data)
+        (existingPost: PostType) => Object.assign(existingPost, { is_trashed: false })
       );
     },
     /*onError(error: Error, variables: MutatePostVariables, _context: any) {

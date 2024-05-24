@@ -1,14 +1,14 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { msg, localized, str } from "@lit/localize";
+import { consume } from "@lit/context";
 
 import { getIcon } from "../utils/files";
 import { type FileType } from "../types/files.types";
-import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { hasFeature } from "../utils/features";
 import { openUrl } from "../utils/urls";
 import { toKebabCase } from "../utils/strings";
-import { falsyBoolean } from "../converters/falsy-boolean";
+import { type FeaturesType, featuresContext } from "../contexts/features-context";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-icon";
 import "./wy-dropdown";
@@ -17,18 +17,20 @@ import "./wy-dropdown";
 @localized()
 export default class WyFileMenu extends LitElement {
   
+  protected exportParts = new ShadowPartsController(this);
+
+  @consume({ context: featuresContext, subscribe: true })
+  @state()
+  protected hasFeatures?: FeaturesType;
 
   @property({ type: Object })
-  file?: FileType;
+  file!: FileType;
 
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType = [];
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @property({ converter: falsyBoolean })
+  @property({ type: Boolean })
   noWrapper: boolean = false;
+
+  @property({ type: Boolean })
+  small: boolean = false;
 
   @property({ type: Object })
   hasEventListener: { [key: string]: boolean } = {
@@ -119,7 +121,7 @@ export default class WyFileMenu extends LitElement {
     const fileAppProvider = this.file.provider || "app";
 
     return html`
-      <wy-dropdown directionX="left" ?noWrapper=${this.noWrapper}>
+      <wy-dropdown directionX="left" ?noWrapper=${this.noWrapper} ?small=${this.small}>
         ${isNotTemp && this.file.is_trashed
           ? html`
               ${this.hasEventListener["restore"]
@@ -153,7 +155,7 @@ export default class WyFileMenu extends LitElement {
                     </wy-dropdown-item>
                   `
                 : html`
-                    ${this.file.application_url && hasFeature(this.availableFeatures, Feature.WebDAV, this.features?.webDAV)
+                    ${this.file.application_url && this.hasFeatures?.webDAV
                       ? html`
                           <wy-dropdown-item @click=${() => this.triggerApplication()}>
                             <wy-icon name=${this.file.provider ? toKebabCase(this.file.provider) : icon}></wy-icon>

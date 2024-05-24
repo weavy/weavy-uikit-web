@@ -303,17 +303,9 @@
         <source>Edit comment...</source>
         <target>Redigera kommentar...</target>
       </trans-unit>
-      <trans-unit id="s6f8a74d96705c80d">
-        <source>Search for people...</source>
-        <target>Sök efter personer...</target>
-      </trans-unit>
       <trans-unit id="s12b57a05d9905236">
         <source>Your search did not match any people.</source>
         <target>Din sökning hade inga träffar.</target>
-      </trans-unit>
-      <trans-unit id="s00a84204340a1db4">
-        <source>Selected</source>
-        <target>Valda</target>
       </trans-unit>
       <trans-unit id="s4854cd48f30ff8ee">
         <source>People</source>
@@ -327,13 +319,9 @@
         <source>Details</source>
         <target>Detaljer</target>
       </trans-unit>
-      <trans-unit id="s7e1dcfc0a1c85479">
-        <source>Conversation name</source>
-        <target>Konversationens namn</target>
-      </trans-unit>
       <trans-unit id="s49360e6ce199180f">
         <source>Changing the name of a group chat changes it for everyone.</source>
-        <target>Ändring av namnet på en grupp ändrar det för alla.</target>
+        <target>Ändring av namnet på ett chattrum ändrar det för alla.</target>
       </trans-unit>
       <trans-unit id="s9f5a5f23312798f0">
         <source>Members</source>
@@ -386,10 +374,6 @@
       <trans-unit id="sf001ba58cf846564">
         <source>Messenger</source>
         <target>Meddelanden</target>
-      </trans-unit>
-      <trans-unit id="sf9aee319a006c9b4">
-        <source>Add</source>
-        <target>Lägg till</target>
       </trans-unit>
       <trans-unit id="se323ece17b96a4df">
         <source>No more users found.</source>
@@ -463,6 +447,38 @@
       <trans-unit id="s2662796b3275bb5b">
         <source>Create a conversation to get started.</source>
         <target>Skapa en konversation för att komma igång.</target>
+      </trans-unit>
+      <trans-unit id="sffa721bb6aa3128d">
+        <source>Search...</source>
+        <target>Sök...</target>
+      </trans-unit>
+      <trans-unit id="sf993bb199fefbe04">
+        <source>All</source>
+        <target>Alla</target>
+      </trans-unit>
+      <trans-unit id="sf7a5eea7c80c2137">
+        <source>Bots</source>
+        <target>Bottar</target>
+      </trans-unit>
+      <trans-unit id="s08313776ae04f67f">
+        <source>Remove picture</source>
+        <target>Ta bort bild</target>
+      </trans-unit>
+      <trans-unit id="se2afa9653ced894f">
+        <source>Select picture</source>
+        <target>Välj bild</target>
+      </trans-unit>
+      <trans-unit id="s4020ae71422bf3cd">
+        <source>Room name</source>
+        <target>Namn</target>
+      </trans-unit>
+      <trans-unit id="s03844c0e2397a948">
+        <source>Remove as admin</source>
+        <target>Ta bort som admin</target>
+      </trans-unit>
+      <trans-unit id="sbcf612e1db77bcec">
+        <source>Make admin</source>
+        <target>Sätt som admin</target>
       </trans-unit>
     </body>
   </file>

@@ -10,6 +10,8 @@ import "./wy-icon";
 export default class WyAttachmentsList extends LitElement {
   static override styles = chatCss;
 
+  //protected exportParts = new ShadowPartsController(this);
+
   override createRenderRoot() {
     return this;
   }
@@ -51,7 +53,7 @@ export default class WyAttachmentsList extends LitElement {
               <wy-icon name=${icon} size="48" kind=${kind} ext=${ext}></wy-icon>
               <div class="wy-item-body ">
                 <div class="wy-item-title">${a.name}</div>
-                ${fileSize ? html`<div class="wy-item-text" title="{fileSize}">${fileSize}</div>` : ``}
+                ${fileSize ? html`<div class="wy-item-text" title="${fileSize}">${fileSize}</div>` : ``}
               </div>
             </a>
           `;

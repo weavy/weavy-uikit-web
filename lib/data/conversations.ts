@@ -35,7 +35,7 @@ export function getConversationsOptions(
     ...options,
     initialPageParam: 0,
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
-    queryKey: ["conversations", types, member],
+    queryKey: ["conversations", "list", types, member],
     queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const queryParams = new URLSearchParams({
         q: searchText?.() || '',
@@ -53,7 +53,7 @@ export function getConversationsOptions(
       return result;
     },
     getNextPageParam: (lastPage, pages) => {
-      if (lastPage?.end < lastPage?.count) {
+      if (lastPage.end && lastPage?.end < lastPage?.count) {
         return pages.length * PAGE_SIZE;
       }
       return undefined;

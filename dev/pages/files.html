@@ -2,9 +2,6 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <script>
-      //fetch("/api/contextual/acme-files?type=files")
-    </script>
     <link rel="modulepreload" href="%WEAVY_URL%/uikit-web/es/locales/sv-SE.js" />
     <script type="module" src="/lib"></script>
     <script type="module" src="/dev/tools/tanstack-dev-tools.ts" async defer></script>
@@ -24,11 +21,18 @@
   </head>
   <body>
     <wy-context id="wy-provider" url="%WEAVY_URL%" confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
-    confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%" modalParent=""></wy-context>
-      <wy-files uid="acme-files"></wy-files>
-      <tanstack-dev-tools></tanstack-dev-tools>
-  
+    confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"></wy-context>
+    <wy-files uid="acme-files"></wy-files>
+    <tanstack-dev-tools></tanstack-dev-tools>
+    
     <script>
+      const files = document.querySelector("wy-files");
+      const appUID = new URLSearchParams(window.location.search).get("appUID");
+      if (appUID != null) {
+        files.setAttribute("uid", appUID);
+      }
+      files.themeColor = "#e5c07b";
+
       const weavy = document.getElementById("wy-provider");
       weavy.tokenFactory = async (refresh) => {
         let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
@@ -40,9 +44,6 @@
           throw new Error('Could not get access token from server!')
         }
       }
-
-      const files = document.querySelector("wy-files");
-      files.themeColor = "#e5c07b";
     </script>
 
   </body>

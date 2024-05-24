@@ -1,4 +1,6 @@
 import { MsgType } from "./msg.types";
+import { QueryResultType } from "./query.types";
+import { UsersResultType } from "./users.types";
 
 export type PollMutationContextType = {};
 
@@ -8,5 +10,7 @@ export type PollOptionType = {
   id: number | null;
   text: string;
   has_voted?: boolean;
-  vote_count?: number;
+  votes?: UsersResultType;
 };
+
+export type PollOptionsResultType = QueryResultType<PollOptionType>;

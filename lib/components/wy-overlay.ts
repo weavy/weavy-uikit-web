@@ -3,22 +3,27 @@ import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import overlayStyles from "../scss/all"
-import { falsyBoolean } from "../converters/falsy-boolean";
+import { createRef, ref } from "lit/directives/ref.js";
+import { AppContextProps } from "../mixins/app-mixin";
+import { AppContextProviderMixin } from "../mixins/app-provider-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-button";
 import "./wy-icon";
-import { createRef, ref } from "lit/directives/ref.js";
 
 /**
  * Overlay wrapper for displaying in portal.
  *
  */
 @customElement("wy-overlay")
-export default class WyOverlay extends LitElement {
+export default class WyOverlay extends AppContextProviderMixin(LitElement) implements AppContextProps {
   
   static override styles = overlayStyles;
 
-  @property({ converter: falsyBoolean })
+  protected exportParts = new ShadowPartsController(this);
+
+  // PROPERTIES
+  @property({ type: Boolean })
   open: boolean = true;
 
   @property({ type: Boolean })
@@ -27,30 +32,22 @@ export default class WyOverlay extends LitElement {
   @property({ type: Boolean })
   header: boolean = false;
 
+  override tabIndex: number = 0;
+
   private viewportRef = createRef<HTMLDivElement>();
-
-  /**
-   * A keyboard-consuming element releases focus.
-   * @event release-focus
-   */
-  releaseFocusEvent = () => new CustomEvent<undefined>("release-focus", { bubbles: true, composed: true });
-
-  /**
-   * A modal should be closed.
-   * @event removeModal
-   */
-  removeModalEvent = () => new Event("removeModal", { bubbles: true, composed: true });
 
   close() {
     this.open = false;
 
-    this.dispatchEvent(this.removeModalEvent());
-    this.dispatchEvent(this.releaseFocusEvent());
+    this.dispatchEvent(new CustomEvent("close"));
+    this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
   }
 
   handleKeys = (e: KeyboardEvent) => {
+    //console.log("key", e.key);
     if (this.open) {
       if (e.key === "Escape") {
+
         e.stopImmediatePropagation();
         this.close();
       }
@@ -58,6 +55,7 @@ export default class WyOverlay extends LitElement {
   };
 
   regainFocus(e: Event) {
+    //console.log("regain focus?");
     if (this.open && e.composedPath()[0] !== this) {
       e.stopImmediatePropagation();
       //console.log("Time to focus!");
@@ -65,14 +63,27 @@ export default class WyOverlay extends LitElement {
     }
   }
 
+  checkFocus(e: FocusEvent) {
+    const target = e.target as HTMLElement;
+    requestAnimationFrame(() => {
+      if (!target || !target.isConnected) {
+        this.regainFocus(e);
+      }
+    })
+  }
+
   override willUpdate(changedProperties: PropertyValues<this>) {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("open")) {
       if (this.open) {
         this.addEventListener("keyup", this.handleKeys);
         this.addEventListener("release-focus", this.regainFocus);
+        this.addEventListener("focusout", this.checkFocus);
       } else {
         this.removeEventListener("keyup", this.handleKeys);
         this.removeEventListener("release-focus", this.regainFocus);
+        this.removeEventListener("focusout", this.checkFocus);
       }
     }
   }

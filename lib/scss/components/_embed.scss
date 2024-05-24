@@ -7,6 +7,9 @@
   display: flex;
   flex-direction: column;
   word-wrap: break-word;
+  border-radius: var.default(--wy-border-radius-sm);
+  clip-path: border-box;
+  overflow: hidden;
 }
 
 // responsive image
@@ -102,8 +105,8 @@
       display: block;
     }
 
-    margin: var.wy-rem(.75);
-    border: 1px solid color.token(--wy-outline-variant);
+    //margin: var.wy-rem(.75);
+    border: var.default(--wy-border) solid color.token(--wy-outline-variant);
     border-radius: var.default(--wy-border-radius);
   }
 

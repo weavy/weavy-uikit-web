@@ -7,31 +7,28 @@ import filesCss from "../scss/all"
 import { getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
 import type { FileActionType, FileStatusType, FileType } from "../types/files.types";
 
-import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { inputConsume } from "../utils/keyboard";
 import { getFileActionIconMapping } from "../utils/icons";
 import { ref } from "lit/directives/ref.js";
+import { autofocusRef } from "../utils/dom";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-icon";
 import "./wy-file-menu";
 import "./wy-spinner";
-import { autofocusRef } from "../utils/dom";
 
 @customElement("wy-file-item")
 export class WyFileItem extends LitElement {
   
   static override styles = filesCss;
+
+  protected exportParts = new ShadowPartsController(this);
+
   //export const renderFileItem = (file: FileType, isRenaming: boolean, status?: FileStatusType, statusText?: string, hasHover = true, features, appFeatures) => {
 
   @property({ type: Object })
   file?: FileType;
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType = [];
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
 
   @property({ type: Object })
   status: FileStatusType = {
@@ -168,9 +165,7 @@ export class WyFileItem extends LitElement {
         <div class="wy-item-actions">
           <slot name="actions">
             <wy-file-menu
-              .file=${this.file}
-              .features=${this.features}
-              .availableFeatures=${this.availableFeatures}
+              .file=${file}
               @edit-name=${(e: CustomEvent) => this.dispatchEditName(e.detail.file)}
               @trash=${(e: CustomEvent) => this.dispatchTrash(e.detail.file)}
               @restore=${(e: CustomEvent) => this.dispatchRestore(e.detail.file)}

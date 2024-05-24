@@ -1,4 +1,3 @@
-import dropdownStyles from "../scss/all"
 
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { customElement, property, queryAssignedElements, state } from "lit/decorators.js";
@@ -7,22 +6,27 @@ import { styleMap } from "lit/directives/style-map.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import { type Placement as PopperPlacement, type Instance as PopperInstance, createPopper } from "@popperjs/core";
-import { falsyBoolean } from "../converters/falsy-boolean";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
+import rebootStyles from "../scss/wrappers/base/reboot";
+import dropdownStyles from "../scss/wrappers/dropdown";
 import WeavyIcon from "./wy-icon";
 import "./wy-button";
-import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 
 @customElement("wy-dropdown")
 export default class WyDropdown extends LitElement {
   static override styles = [
+    rebootStyles,
+    dropdownStyles,
     css`
       /*:host {
         position: relative;
       }*/
     `,
-    dropdownStyles,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   directionX: "left" | "right" = "right";
@@ -32,6 +36,9 @@ export default class WyDropdown extends LitElement {
 
   @property()
   icon: string = "dots-vertical";
+
+  @property({ type: Boolean })
+  small: boolean = false;
 
   @property({ type: Boolean })
   noWrapper: boolean = false;
@@ -66,8 +73,10 @@ export default class WyDropdown extends LitElement {
   private _documentClickHandler = (e: Event) => {
     this.wasVisible = this.visible;
 
-    e.preventDefault();
-    this.visible = false;
+    if (this.visible) {
+      e.preventDefault();
+      this.visible = false;
+    } 
   };
 
   private handleClickToggle(e: Event) {
@@ -94,7 +103,9 @@ export default class WyDropdown extends LitElement {
           document.addEventListener("click", this._documentClickHandler, { once: true, capture: true });
         });
       } else {
-        document.removeEventListener("click", this._documentClickHandler, { capture: true });
+        requestAnimationFrame(() => {
+          this.wasVisible = false;
+        });
       }
 
       if (this.visible && !this._popper && this.popperReferenceRef.value && this.popperElementRef.value) {
@@ -130,23 +141,20 @@ export default class WyDropdown extends LitElement {
       this._slotButton.length === 0 || (this._slotButton.length === 1 && this._slotButton[0] instanceof WeavyIcon);
 
     return html`
-      <span
-        tabindex="0"
-        @click=${this.handleClickToggle}
-        @keydown=${clickOnEnterAndConsumeOnSpace}
-        @keyup=${clickOnSpace}
-      >
-        <wy-button
-          .kind=${isIcon ? "icon" : undefined}
-          ${ref(this.popperReferenceRef)}
-          class=${classMap({ "wy-active": this.visible })}
-          title=${this.title}
-          ?disabled=${this.disabled}
-        >
-          <slot name="button" @slotchange=${() => this.requestUpdate()}>
-            <wy-icon name=${this.icon}></wy-icon>
-          </slot>
-        </wy-button>
+      <span @click=${this.handleClickToggle} @keydown=${clickOnEnterAndConsumeOnSpace} @keyup=${clickOnSpace}>
+        <span ${ref(this.popperReferenceRef)}>
+          <wy-button
+            .kind=${isIcon ? "icon" : undefined}
+            ?small=${this.small}
+            title=${this.title}
+            ?active=${this.visible}
+            ?disabled=${this.disabled}
+          >
+            <slot name="button" @slotchange=${() => this.requestUpdate()}>
+              <wy-icon name=${this.icon}></wy-icon>
+            </slot>
+          </wy-button>
+        </span>
 
         <div ${ref(this.popperElementRef)} class="wy-dropdown-menu" ?hidden=${!this.visible}>
           <slot></slot>
@@ -159,6 +167,7 @@ export default class WyDropdown extends LitElement {
 @customElement("wy-dropdown-item")
 export class WyDropdownItem extends LitElement {
   static override styles = [
+    rebootStyles,
     dropdownStyles,
     css`
       :host {
@@ -167,17 +176,22 @@ export class WyDropdownItem extends LitElement {
     `,
   ];
 
-  @property({ converter: falsyBoolean })
+  protected exportParts = new ShadowPartsController(this);
+
+  @property({ type: Boolean })
   active: boolean = false;
 
   override render() {
-    return html`<div class="wy-dropdown-item ${classMap({ "wy-active": this.active })}"><slot></slot></div>`;
+    return html`<div class="wy-dropdown-item ${classMap({ "wy-active": this.active })}" tabindex="0"
+      ><slot></slot
+    ></div>`;
   }
 }
 
 @customElement("wy-dropdown-option")
 export class WyDropdownOption extends LitElement {
   static override styles = [
+    rebootStyles,
     dropdownStyles,
     css`
       :host {
@@ -186,7 +200,9 @@ export class WyDropdownOption extends LitElement {
     `,
   ];
 
-  @property({ converter: falsyBoolean })
+  protected exportParts = new ShadowPartsController(this);
+
+  @property({ type: Boolean })
   active: boolean = false;
 
   @property({ type: Boolean })
@@ -208,6 +224,7 @@ export class WyDropdownOption extends LitElement {
 @customElement("wy-dropdown-divider")
 export class WyDropdownDivider extends LitElement {
   static override styles = [
+    rebootStyles,
     dropdownStyles,
     css`
       :host {
@@ -215,6 +232,8 @@ export class WyDropdownDivider extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   override render() {
     return html`<hr class="wy-dropdown-divider" />`;

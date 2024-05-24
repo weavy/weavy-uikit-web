@@ -1,13 +1,11 @@
-import { LitElement, html, css, type PropertyValues, PropertyValueMap } from "lit";
+import { LitElement, html, type PropertyValues, PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 //import { HistoryController } from './controllers/history-controller'
 import { PersistStateController } from "./controllers/persist-state-controller";
 import { ifDefined } from "lit/directives/if-defined.js";
-import type { FeaturesConfigType, FeaturesListType } from "./types/features.types";
 import { ThemeController } from "./controllers/theme-controller";
 import { localized, msg } from "@lit/localize";
-import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
+
 import {
   RealtimeAppEventType,
   RealtimeConversationDeliveredEventType,
@@ -15,18 +13,18 @@ import {
   RealtimeMemberEventType,
   RealtimeMessageEventType,
 } from "./types/realtime.types";
-import { AppType, EntityTypes } from "./types/app.types";
+import { AppType, AppTypes } from "./types/app.types";
 import { ConversationTypeGuid, type ConversationType } from "./types/conversations.types";
 import { QueryController } from "./controllers/query-controller";
 import { getApi, getApiOptions } from "./data/api";
-import type { BotType, UserType } from "./types/users.types";
-import { whenParentsDefined } from "./utils/dom";
-import { WeavyContextProps } from "./types/weavy.types";
+import type { BotType } from "./types/users.types";
 import { InfiniteData } from "@tanstack/query-core";
 import { ConversationsResultType } from "./types/conversations.types";
 import { cache } from "lit/directives/cache.js";
+import { AppProviderMixin } from "./mixins/app-mixin";
+import { Constructor } from "./types/generic.types";
 
-import chatCss from "./scss/all";
+import messengerCss from "./scss/all";
 import colorModes from "./scss/colormodes";
 
 import "./components/wy-empty";
@@ -37,82 +35,16 @@ import "./components/wy-button";
 import "./components/wy-icon";
 import "./components/wy-badge";
 import "./components/wy-spinner";
-import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
-import { Constructor } from "./types/generic.types";
 
 @customElement("wy-messenger")
 @localized()
-export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
+export class WyMessenger extends AppProviderMixin(LitElement) {
   static override styles = [
     colorModes,
-    chatCss,
-    css`
-      :host(wy-messenger) {
-        display: flex;
-        align-items: stretch;
-        flex: 1;
-        min-width: 16rem;
-      }
-
-      .wy-messenger-layout {
-        display: flex;
-        flex: 1;
-        align-items: stretch;
-        position: relative;
-        container-type: inline-size;
-      }
-
-      wy-conversation-list {
-        flex: 0 1 50%;
-        min-width: 0;
-        max-width: 24rem;
-        border-right: 1px solid var(--wy-outline-variant, var(--wy-neutral-variant-80, #c1c7ce));
-      }
-
-      .wy-messenger-conversation {
-        flex: 0 1 100%;
-        min-width: max(50%, 16rem);
-        min-height: min-content;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .wy-close-conversation {
-        display: none;
-      }
-
-      @container (max-width: 768px) {
-        wy-conversation-list {
-          flex: 0 1 100%;
-          min-width: 0;
-          max-width: none;
-          border-right: none;
-        }
-  
-        wy-conversation-list[conversationid] {
-          display: none;
-        }
-  
-        .wy-messenger-conversation[data-conversation-id=""] {
-          display: none;
-        }
-  
-        .wy-close-conversation {
-          display: unset;
-        }
-  
-        wy-empty {
-          display: none;
-        }
-      }
-    `,
+    messengerCss,
   ];
 
-  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
-
-  // Manually consumed in scheduleUpdate()
-  @state()
-  protected weavyContext?: WeavyContextType;
+  override appType = AppTypes.Messenger;
 
   @property()
   name?: string;
@@ -127,24 +59,13 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
   botUser?: BotType;
 
   @state()
-  user?: UserType;
-
-  @state()
   conversationId: number | null = null;
 
   @state()
   protected conversation?: ConversationType;
 
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
-
-  @state()
-  availableFeatures?: FeaturesListType;
-
   protected conversationQuery = new QueryController<ConversationType>(this);
-  protected userQuery = new QueryController<UserType>(this);
-  protected featuresQuery = new QueryController<FeaturesListType>(this);
-
+ 
   protected botQuery = new QueryController<BotType>(this);
 
   //history = new HistoryController<this>(this, 'messenger', ['conversationId'])
@@ -190,10 +111,7 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
    * @event wy:message_created
    */
   protected realtimeMessageCreatedEvent = async (realtimeEvent: RealtimeMessageEventType) => {
-    if (
-      realtimeEvent.message.parent?.type === EntityTypes.App &&
-      (await this.conversationBelongsToMessenger(realtimeEvent.message.app_id))
-    ) {
+    if (await this.conversationBelongsToMessenger(realtimeEvent.message.app.id)) {
       this.dispatchEvent(
         new CustomEvent("wy:message_created", { bubbles: true, composed: false, detail: realtimeEvent })
       );
@@ -268,7 +186,7 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
             return this.weavyContext?.queryClient
               .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
               ?.pages.flatMap((cPage) => cPage.data)
-              .find((c) => c.id === conversation);
+              .find((c) => c?.id === conversation);
           },
         }
       );
@@ -310,32 +228,8 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
     new ThemeController(this, WyMessenger.styles);
   }
 
-  protected override async scheduleUpdate() {
-    await whenParentsDefined(this);
-    this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
-
-    if (this.weavyContextConsumer?.value && this.weavyContext !== this.weavyContextConsumer?.value) {
-      this.weavyContext = this.weavyContextConsumer?.value;
-    }
-
-    await super.scheduleUpdate();
-  }
-
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override async willUpdate(changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties);
-
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
-      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "messenger"]));
-    }
-
-    if (!this.userQuery.result?.isPending) {
-      this.user = this.userQuery.result?.data;
-    }
-
-    if (!this.featuresQuery.result?.isPending) {
-      this.availableFeatures = this.featuresQuery.result?.data;
-    }
 
     if ((changedProperties.has("weavyContext") || changedProperties.has("bot")) && this.weavyContext && this.bot) {
       this.persistState.prefixKey = this.bot || "messenger";
@@ -383,7 +277,7 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
     }
   }
 
-  protected override update(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  protected override update(changedProperties: PropertyValueMap<this>) {
       super.update(changedProperties);
 
       if ((changedProperties.has("conversationId") || changedProperties.has("weavyContext")) && this.weavyContext) {
@@ -395,7 +289,7 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
                 return this.weavyContext?.queryClient
                   .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
                   ?.pages.flatMap((cPage) => cPage.data)
-                  .find((c) => c.id === this.conversationId);
+                  .find((c) => c?.id === this.conversationId);
               },
             })
           );
@@ -429,7 +323,6 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
           <wy-conversation-appbar
             .conversationId=${this.conversationId || undefined}
             .conversation=${conversation}
-            .user=${this.user}
             @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
           >
             <span slot="action" class="wy-close-conversation">
@@ -447,14 +340,10 @@ export class WyMessenger extends AppSettingsProviderMixin(LitElement) {
                   ? html` <wy-conversation
                       .conversationId=${this.conversationId}
                       .conversation=${conversation}
-                      .availableFeatures=${this.availableFeatures}
-                      .features=${this.features}
                     ></wy-conversation>`
                   : html` <wy-conversation-extended
                       .conversationId=${this.conversationId}
                       .conversation=${conversation}
-                      .availableFeatures=${this.availableFeatures}
-                      .features=${this.features}
                     ></wy-conversation-extended>`
                 : html` <wy-empty><wy-spinner></wy-spinner></wy-empty> `
               : html`

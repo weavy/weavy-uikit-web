@@ -1,21 +1,19 @@
 import { LitElement, type PropertyValues, html } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { customElement, property } from "lit/decorators.js";
+import { createRef, ref } from "lit/directives/ref.js";
+import { AppContextProviderMixin } from "../mixins/app-provider-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import overlayStyles from "../scss/all"
 
 import "./wy-button";
 import "./wy-icon";
-import { consume } from "@lit/context";
-import { createRef, ref } from "lit/directives/ref.js";
 
 @customElement("wy-sheet")
-export default class WySheet extends LitElement {
+export default class WySheet extends AppContextProviderMixin(LitElement) {
   static override styles = overlayStyles;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Boolean })
   show = false;
@@ -27,7 +25,7 @@ export default class WySheet extends LitElement {
 
   close() {
     this.show = false;
-    this.dispatchEvent(new Event("removeModal", { bubbles: true, composed: true }));
+    this.dispatchEvent(new CustomEvent("close"));
     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
   }
 
@@ -40,7 +38,7 @@ export default class WySheet extends LitElement {
         const sheet = (e as CustomEvent).detail?.sheet;
 
         if (sheet instanceof WySheet && sheet !== this) {
-          //console.log('global removemodal', sheet, sheet instanceof WeavySheet, sheet !== this)
+          //console.log('global removemodal', sheet, sheet instanceof WySheet, sheet !== this)
           this.close();
         }
       }
@@ -65,12 +63,25 @@ export default class WySheet extends LitElement {
     }
   }
 
+  checkFocus(e: FocusEvent) {
+    const target = e.target as HTMLElement;
+    requestAnimationFrame(() => {
+      if (!target || !target.isConnected) {
+        this.regainFocus(e);
+      }
+    })
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
-    this.weavyContext?.host.addEventListener("wy-sheets-close", this.handleGlobalClose);
+    this.whenWeavyContext().then(() => {
+      this.weavyContext?.host.addEventListener("wy-sheets-close", this.handleGlobalClose);
+    })
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("show")) {
       if (this.show) {
         this.weavyContext?.host.dispatchEvent(
@@ -78,9 +89,11 @@ export default class WySheet extends LitElement {
         );
         this.addEventListener("keyup", this.handleKeys);
         this.addEventListener("release-focus", this.regainFocus);
+        this.addEventListener("focusout", this.checkFocus);
       } else {
         this.removeEventListener("keyup", this.handleKeys);
         this.removeEventListener("release-focus", this.regainFocus);
+        this.removeEventListener("focusout", this.checkFocus);
       }
     }
   }
@@ -109,6 +122,8 @@ export default class WySheet extends LitElement {
   }
 
   override updated(changedProperties: PropertyValues<this>) {
+    this.exportParts.addPartsFrom(this.viewportRef.value);
+
     if (changedProperties.has("show") && this.show) {
       this.viewportRef.value?.focus();
     }

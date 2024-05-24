@@ -23,7 +23,7 @@
     bottom: 0;
     left: 0;
     pointer-events: none;
-    overflow: hidden;
+    //overflow: hidden; // Causes rendering issue in Chrome
     background-color: var(--wy-component-background-color);
     color: var(--wy-component-color);
     display: flex;
@@ -93,7 +93,7 @@
             color: color.token(--wy-on-surface);
             box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
 
-            @include backdrop.filter;
+            //@include backdrop.filter;
         }
 
         &::after {

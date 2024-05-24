@@ -28,20 +28,26 @@ export function getPollMutationOptions(weavyContext: WeavyContextType, mutationK
       return response.json();
     },
     onMutate: async (variables: MutatePollVariables) => {
-      updateCacheItems(queryClient, { queryKey: key }, variables.parentId, (item: PostType) => {
-        item.options = item.options?.map((o: PollOptionType) => {
-          if (o.has_voted) {
-            o.has_voted = false;
-            const count = o.vote_count || 1;
-            o.vote_count = count - 1;
-          } else if (!o.has_voted && o.id === variables.optionId) {
-            o.has_voted = true;
-            const count = o.vote_count || 0;
-            o.vote_count = count + 1;
-          }
+      updateCacheItems(queryClient, { queryKey: key }, variables.parentId, (item: PostType) => {        
+        if (item.options?.data) {
+          item.options.data = item.options.data?.map((o: PollOptionType) => {            
+            if (o.has_voted) {
+              o.has_voted = false;
+              const count = o.votes?.count || 1;
+              o.votes!.count = count - 1;
+            } else if (!o.has_voted && o.id === variables.optionId) {
+              o.has_voted = true;
+              const count = o.votes?.count || 0;
+              if (o.votes) {
+                o.votes.count = count + 1;
+              } else {
+                o.votes = { count: count + 1 };
+              }
+            }
 
-          return o;
-        });
+            return o;
+          });
+        }
       });
       //updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.appId, (existingPost: PostType) => Object.assign(existingPost, { is_subscribed: variables.subscribe }));
       return <PollMutationContextType>{ id: variables.optionId };
@@ -71,7 +77,7 @@ export function getVotesOptions(weavyContext: WeavyContextType, id: number) {
     queryKey: ["votes", id],
     enabled: false,
     queryFn: async () => {
-      const response = await weavyContext.get(`/api/options/${id}/voters`);
+      const response = await weavyContext.get(`/api/options/${id}`);
       return await response.json();
     },
   };

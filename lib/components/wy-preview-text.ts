@@ -3,15 +3,16 @@ import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 import { getTextStreamFromResponse } from "../utils/data";
+import { consume } from "@lit/context";
+import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { WeavyContextProps } from "../types/weavy.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-empty";
 import "./wy-spinner";
 
 import colorModeCss from "../scss/colormodes"
 import allCss from "../scss/all"
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-preview-text")
 export class WyPreviewText extends LitElement {
@@ -25,6 +26,8 @@ export class WyPreviewText extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()

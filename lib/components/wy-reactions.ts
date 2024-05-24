@@ -1,14 +1,12 @@
 import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { consume } from "@lit/context";
+import { classMap } from "lit/directives/class-map.js";
 import { portal } from "lit-modal-portal";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 import { localized, msg } from "@lit/localize";
 
 import { type Placement as PopperPlacement, type Instance as PopperInstance, createPopper } from "@popperjs/core";
-import type { ReactableType, ReactionsResult } from "../types/reactions.types";
+import type { ReactableType, ReactionsResultType } from "../types/reactions.types";
 import {
   addReactionMutation,
   getReactionListOptions,
@@ -16,21 +14,30 @@ import {
   replaceReactionMutation,
 } from "../data/reactions";
 
-import chatCss from "../scss/all";
 import { QueryController } from "../controllers/query-controller";
+import { WeavyContextProps } from "../types/weavy.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { shadowPartMap } from "../utils/directives/shadow-part-map";
 
 import "./wy-spinner";
-import "./wy-reaction-item";
 import "./wy-button";
 import "./wy-sheet";
 import "./wy-icon";
-import { WeavyContextProps } from "../types/weavy.types";
+import "./wy-avatar";
+
+import rebootCss from "../scss/wrappers/base/reboot";
+import reactionCss from "../scss/wrappers/reactions";
+import itemCss from "../scss/wrappers/item";
+import emojiCss from "../scss/wrappers/emoji";
 
 @customElement("wy-reactions")
 @localized()
-export default class WyReactions extends LitElement {
+export default class WyReactions extends AppConsumerMixin(LitElement) {
   static override styles = [
-    chatCss,
+    rebootCss,
+    reactionCss,
+    emojiCss,
     css`
       :host {
         display: contents;
@@ -38,13 +45,7 @@ export default class WyReactions extends LitElement {
     `,
   ];
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   directionX: "left" | "right" = "left";
@@ -56,7 +57,7 @@ export default class WyReactions extends LitElement {
   small = false;
 
   @property({ attribute: false })
-  reactions: ReactableType[] = [];
+  reactions?: ReactableType[] = [];
 
   @property({ attribute: false })
   emojis: string[] = [];
@@ -73,12 +74,21 @@ export default class WyReactions extends LitElement {
   @property({ attribute: true, type: Number })
   entityId!: number;
 
-  @property({ attribute: false, type: Number })
-  userId: number = -1;
-  
+  @property({ type: Boolean })
+  line = false;
+
+  @property({ type: Boolean })
+  lineReverse = false;
+
+  @property({ type: Boolean })
+  lineBottom = false;
+
+  @property({ type: Boolean })
+  lineBelow = false;
+
   @state()
   private _placement: PopperPlacement = "bottom-start";
-  
+
   @state()
   reactedEmoji: string | undefined;
 
@@ -88,23 +98,19 @@ export default class WyReactions extends LitElement {
   @state()
   private sheetId: string = "";
 
-  /*override createRenderRoot() {
-        return this
-    }*/
-
   private popperReferenceRef: Ref<Element> = createRef();
   private popperElementRef: Ref<HTMLSlotElement> = createRef();
 
   private _popper?: PopperInstance;
 
-  reactionListQuery = new QueryController<ReactionsResult>(this);
+  reactionListQuery = new QueryController<ReactionsResultType>(this);
 
   private _documentClickHandler = () => {
     this.visible = false;
   };
 
   private handleReaction = async (emoji: string) => {
-    if (!this.weavyContext || !this.parentId) {
+    if (!this.weavyContext || !this.parentId || !this.user) {
       return;
     }
 
@@ -115,7 +121,7 @@ export default class WyReactions extends LitElement {
         this.parentId,
         this.entityId,
         this.messageType,
-        this.userId
+        this.user
       );
       await mutation.mutate();
       this.reactionListQuery.observer?.refetch();
@@ -127,7 +133,7 @@ export default class WyReactions extends LitElement {
         this.entityId,
         this.messageType,
         emoji,
-        this.userId
+        this.user
       );
       await mutation.mutate();
       this.reactionListQuery.observer?.refetch();
@@ -139,7 +145,7 @@ export default class WyReactions extends LitElement {
         this.entityId,
         this.messageType,
         emoji,
-        this.userId
+        this.user
       );
       await mutation.mutate();
       this.reactionListQuery.observer?.refetch();
@@ -152,8 +158,10 @@ export default class WyReactions extends LitElement {
   }
 
   protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if (changedProperties.has("reactions")) {
-      this.reactedEmoji = this.reactions?.find((r) => r.created_by_id === this.userId)?.content;
+    super.willUpdate(changedProperties);
+
+    if ((changedProperties.has("reactions") || changedProperties.has("user")) && this.user) {
+      this.reactedEmoji = this.reactions?.find((r) => r.created_by?.id === this.user?.id)?.content;
     }
 
     if (changedProperties.has("directionX") || changedProperties.has("directionY")) {
@@ -218,57 +226,69 @@ export default class WyReactions extends LitElement {
       ...new Map<string, ReactableType>(this.reactions?.map((item: ReactableType) => [item.content, item])).values(),
     ];
 
-    return html`
+    const reactionButtons = html`
       ${group.length
         ? html`
             <wy-button
-              class="wy-reaction-lineup"
               kind="icon-inline"
               ?active=${this.showSheet}
+              ?small=${this.small}
               @click=${this.handleReactionsClick}
-              buttonClass="wy-reactions ${this.small ? "wy-reactions-small" : nothing}"
             >
-              ${group.map((r) => html`<span class="wy-emoji" title="">${r.content}</span>`)}
-              ${this.reactions?.length > 1
-                ? html`<small class="wy-reaction-count">${this.reactions.length}</small>`
-                : nothing}
+              <div part="wy-reactions">
+                ${group.map((r) => {
+                  const emojiClasses = {
+                    "wy-emoji-icon": true,
+                    "wy-emoji-icon-sm": !this.small,
+                    "wy-emoji-icon-xs" : this.small,
+                  }
+                  return html`<span class=${classMap(emojiClasses)} title="">${r.content}</span>`
+              })}
+                ${this.reactions && this.reactions?.length > 1
+                  ? html`<small part="wy-reaction-count">${this.reactions.length}</small>`
+                  : nothing}
+              </div>
             </wy-button>
           `
         : nothing}
 
-      <wy-button
-        ${ref(this.popperReferenceRef)}
-        kind="icon"
-        ?active=${this.visible}
-        buttonClass="wy-reaction-menu-button"
-        @click=${() => {
-          this.visible = !this.visible;
-        }}
-        title=${msg("React", { desc: "Button action to react" })}
-      >
-        <wy-icon name="emoticon-plus" size=${this.small ? 18 : 20}></wy-icon>
-      </wy-button>
+      <div ${ref(this.popperReferenceRef)}>
+        <wy-button
+          part="wy-reaction-menu-button"
+          kind="icon"
+          ?active=${this.visible}
+          small
+          @click=${() => {
+            this.visible = !this.visible;
+          }}
+          title=${msg("React", { desc: "Button action to react" })}
+        >
+          <wy-icon name="emoticon-plus" size=${this.small ? 18 : 20}></wy-icon>
+        </wy-button>
+      </div>
 
-      <div ${ref(this.popperElementRef)} class="wy-reaction-menu wy-dropdown-menu" ?hidden=${!this.visible}>
-        <div class="wy-reaction-picker">
+      <div ${ref(this.popperElementRef)} part="wy-reaction-menu" ?hidden=${!this.visible}>
+        <div part="wy-reaction-picker">
           ${this.emojis.map(
             (emoji) =>
               html`
                 <wy-button
                   kind="icon"
-                  buttonClass=${"wy-reaction-button"}
+                  color="none"
                   ?active=${this.reactedEmoji === emoji}
                   @click=${() => {
                     this.handleReaction(emoji);
                   }}
                 >
-                  <span class="wy-emoji">${emoji}</span>
+                  <span class="wy-emoji-icon">${emoji}</span>
                 </wy-button>
               `
           )}
         </div>
       </div>
+    `;
 
+    const reactionSheet = html`
       ${this.weavyContext && this.settings
         ? portal(
             this.showSheet
@@ -276,6 +296,8 @@ export default class WyReactions extends LitElement {
                   <wy-sheet
                     .show=${this.showSheet}
                     .sheetId="${this.sheetId}"
+                    .contexts=${this.contexts}
+                    @close=${() => (this.showSheet = false)}
                     @release-focus=${() =>
                       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
                   >
@@ -291,12 +313,24 @@ export default class WyReactions extends LitElement {
                   </wy-sheet>
                 `
               : nothing,
-              this.settings.submodals || this.weavyContext.modalRoot === undefined
+            this.settings.submodals || this.weavyContext.modalRoot === undefined
               ? this.settings.component.renderRoot
               : this.weavyContext.modalRoot
           )
         : nothing}
     `;
+    const lineParts = {
+      "wy-reactions-line": true,
+      "wy-reactions-line-reverse": this.lineReverse,
+      "wy-reactions-line-bottom": this.lineBottom,
+      "wy-reactions-line-below": this.lineBelow,
+    };
+    return this.line || this.lineReverse || this.lineBottom || this.lineBelow
+      ? html`
+          <div part=${shadowPartMap(lineParts)}>${reactionButtons}</div>
+          ${reactionSheet}
+        `
+      : [reactionButtons, reactionSheet];
   }
 
   protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
@@ -308,5 +342,31 @@ export default class WyReactions extends LitElement {
       this.reactionListQuery.trackQuery(getReactionListOptions(this.weavyContext, this.messageType, this.entityId));
       this.sheetId = "sheet-" + this.messageType + "-" + this.entityId;
     }
+  }
+}
+
+@customElement("wy-reaction-item")
+export class WyReactionItem extends LitElement {
+  static override styles = [
+    rebootCss,
+    itemCss,
+    emojiCss,
+  ];
+  protected exportParts = new ShadowPartsController(this);
+
+  @property({ attribute: false })
+  reaction!: ReactableType;
+
+  override render() {
+    return html`
+      <div class="wy-item">
+        <wy-avatar
+          .src=${this.reaction.created_by?.avatar_url}
+          .name=${this.reaction.created_by?.display_name}
+        ></wy-avatar>
+        <div class="wy-item-body">${this.reaction.created_by?.display_name}</div>
+        <span class="wy-emoji-icon">${this.reaction.content}</span>
+      </div>
+    `;
   }
 }

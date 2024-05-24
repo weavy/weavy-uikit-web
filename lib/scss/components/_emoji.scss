@@ -1,16 +1,25 @@
-.wy-emoji {
-  font-size: 1.25em;
-  width: 1em;
-  height: 1em;
-  vertical-align: -.125em; 
-  line-height: 1;
+@use "base/var";
+
+// Note: content emojis should be treated as normal text (unstyled) to avoid cross-browser/platform issues.
+
+.wy-emoji-icon {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  line-height: 1;
+  width: 1em;
+  height: 1em;
+  font-size: 1.25em;
 }
 
-img, svg {
-  &.wy-emoji {
-    vertical-align: -.25em;
-  }
+.wy-emoji-icon-sm {
+  width: var.wy-rem(1.125);
+  height: var.wy-rem(1.125);
+  font-size: var.wy-rem(1.125);
+}
+
+.wy-emoji-icon-xs {
+  width: var.wy-rem(1.125);
+  height: var.wy-rem(1.125);
+  font-size: var.wy-rem(1);
 }

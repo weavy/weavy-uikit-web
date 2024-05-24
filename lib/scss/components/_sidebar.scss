@@ -46,16 +46,16 @@
 
   @include breakpoints.media-breakpoint-down(md) {
     transition: flex-basis #{var.default(--wy-transition)}, margin-top #{var.default(--wy-transition)};
-    border-top-left-radius: var.default(--wy-border-radius-lg);
-    border-top-right-radius: var.default(--wy-border-radius-lg);
+    border-top-left-radius: var.default(--wy-border-radius);
+    border-top-right-radius: var.default(--wy-border-radius);
     flex-basis: 50vh;
 
     &:not([hidden]) {
-      margin-top: calc(-1 * #{var.default(--wy-border-radius-lg)});
+      margin-top: calc(-1 * #{var.default(--wy-border-radius)});
 
       &.wy-maximized {
         flex-basis: calc(100% - #{var.default(--wy-appbar-height)} * .5);
-        margin-top: calc(-50% + #{var.default(--wy-appbar-height)} * 2.5 - #{var.default(--wy-border-radius-lg)});
+        margin-top: calc(-50% + #{var.default(--wy-appbar-height)} * 2.5 - #{var.default(--wy-border-radius)});
 
         ~ * .wy-nav-prev,
         ~ * .wy-nav-next {

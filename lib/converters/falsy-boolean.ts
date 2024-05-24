@@ -1,5 +1,6 @@
 /**
  * Parses a falsy string value or falsy value to Boolean
+ * Normally you should try using type: Boolean instead.
  */
 export function falsyBoolean(value?: unknown): boolean {
   const isEmptyString = typeof value === "string" && value.length <= 0;

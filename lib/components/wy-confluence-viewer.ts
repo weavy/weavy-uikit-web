@@ -7,10 +7,11 @@ import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy
 import { consume } from "@lit/context";
 
 import { WeavyContextProps } from "../types/weavy.types";
+import { ifDefined } from "lit/directives/if-defined.js";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
-import { ifDefined } from "lit/directives/if-defined.js";
 
 //import type { Page } from "@atlaskit/embedded-confluence";
 
@@ -33,6 +34,8 @@ export class WyConfluenceViewer extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()

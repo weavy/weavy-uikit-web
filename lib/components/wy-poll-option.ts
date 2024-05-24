@@ -1,14 +1,10 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { consume } from "@lit/context";
 import { portal } from "lit-modal-portal";
 import chatCss from "../scss/all";
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 import { getVotesOptions } from "../data/poll";
-import { UserType } from "../types/users.types";
 import { localized, msg, str } from "@lit/localize";
 
 import "./wy-sheet";
@@ -16,19 +12,15 @@ import "./wy-avatar";
 import "./wy-icon";
 import { WeavyContextProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-poll-option")
 @localized()
-export default class WyPollOption extends LitElement {
+export default class WyPollOption extends AppConsumerMixin(LitElement) {
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number, attribute: false })
   totalVotes!: number;
@@ -42,7 +34,7 @@ export default class WyPollOption extends LitElement {
   @state()
   private sheetId: string = "";
 
-  getVotesQuery = new QueryController<UserType[]>(this);
+  getVotesQuery = new QueryController<PollOptionType>(this);
 
   protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if (changedProperties.has("weavyContext") && this.weavyContext && this.option) {
@@ -65,7 +57,8 @@ export default class WyPollOption extends LitElement {
 
   override render() {
     const { data, isLoading } = this.getVotesQuery.result ?? {};
-    const ratio = this.totalVotes > 0 ? Math.round(((this.option.vote_count || 0) / this.totalVotes) * 100) : 0;
+    const ratio = this.totalVotes > 0 ? Math.round(((this.option.votes?.count || 0) / this.totalVotes) * 100) : 0;
+
     return html`
       <div
         class="wy-item wy-poll-option"
@@ -99,6 +92,8 @@ export default class WyPollOption extends LitElement {
                   <wy-sheet
                     .show=${this.showSheet}
                     .sheetId="${this.sheetId}"
+                    .contexts=${this.contexts}
+                    @close=${() => this.showSheet = false}
                     @release-focus=${() =>
                       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
                   >
@@ -106,7 +101,7 @@ export default class WyPollOption extends LitElement {
                     <!-- <wy-spinner></wy-spinner> -->
                     ${data && !isLoading
                       ? html`
-                          ${data.map(
+                          ${data.votes?.data!.map(
                             (vote) => html`
                               <div class="wy-item">
                                 <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.display_name}></wy-avatar>

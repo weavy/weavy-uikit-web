@@ -58,6 +58,7 @@ export const iconMapping: { [index: string]: string } = {
   "send": mdi.mdiSend,
   "server-network-off": mdi.mdiServerNetworkOff,
   "shield-star": mdi.mdiShieldStar,
+  "shield-star-outline": mdi.mdiShieldStarOutline,
   "sort": mdi.mdiSort,
   "star": mdi.mdiStar,
   "unstar": mdi.mdiStarOff,

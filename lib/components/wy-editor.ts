@@ -1,25 +1,10 @@
 import { LitElement, html, nothing, type TemplateResult, type PropertyValues } from "lit";
-import { consume } from "@lit/context";
 import { customElement, property, state } from "lit/decorators.js";
-//import { EditorView, keymap, placeholder, dropCursor, ViewUpdate, KeyBinding } from "@codemirror/view";
-//import { EditorState, type Extension } from "@codemirror/state";
-//import { markdown } from "@codemirror/lang-markdown";
-//import { languages } from "@codemirror/language-data";
-//import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
-//import { Completion, CompletionContext, CompletionResult, autocompletion } from "@codemirror/autocomplete";
 import { classMap } from "lit/directives/class-map.js";
-//import { weavyKeymap } from "../utils/editor/commands";
-//import { mentions } from "../utils/editor/mentions";
-//import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { localized, msg } from "@lit/localize";
-
-import chatCss from "../scss/all";
-
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { hasFeature } from "../utils/features";
-import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
+import { ConversationTypeGuid } from "../types/conversations.types";
 import throttle from "lodash.throttle";
 import { typingMutation } from "../data/typing";
 import { type MeetingType } from "../types/meetings.types";
@@ -35,8 +20,8 @@ import {
 } from "../types/files.types";
 import { toUpperCaseFirst } from "../utils/strings";
 import { getUploadBlobMutationOptions } from "../data/blob-upload";
-import { AccessType, type AppType } from "../types/app.types";
-import type { AutocompleteUserType, UserType, UsersAutocompleteResultType } from "../types/users.types";
+import { AccessType } from "../types/app.types";
+import type { UsersResultType, UserType } from "../types/users.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { repeat } from "lit/directives/repeat.js";
 import { Mutation, MutationState } from "@tanstack/query-core";
@@ -54,31 +39,26 @@ import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
 import type { EditorState, Extension } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { desktop } from "../utils/browser";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import WeavyAvatar from "./wy-avatar";
 import "./wy-embed";
 import "./wy-dropdown";
 import "./wy-file-item";
 import "./wy-confluence";
-import { ConversationTypeGuid } from "../types/conversations.types";
+
+import chatCss from "../scss/all";
 
 @customElement("wy-editor")
 @localized()
-export default class WyEditor extends LitElement {
+export default class WyEditor extends AppConsumerMixin(LitElement) {
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  protected weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app?: AppType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })
   parentId?: number;
-
-  @property({ attribute: false })
-  user?: UserType;
 
   private _placeholder: string = "";
 
@@ -120,12 +100,6 @@ export default class WyEditor extends LitElement {
 
   @property()
   editorLocation: "messages" | "posts" | "apps" | "files" = "apps";
-
-  @property({ attribute: false })
-  availableFeatures?: FeaturesListType = [];
-
-  @property({ attribute: false })
-  features?: FeaturesConfigType = {};
 
   @state()
   protected meeting?: MeetingType;
@@ -173,7 +147,11 @@ export default class WyEditor extends LitElement {
 
   private throttledTyping = throttle(
     async () => {
-      if (this.weavyContext && this.app && (this.app.type === ConversationTypeGuid.ChatRoom || this.app.type === ConversationTypeGuid.PrivateChat)) {
+      if (
+        this.weavyContext &&
+        this.app &&
+        (this.app.type === ConversationTypeGuid.ChatRoom || this.app.type === ConversationTypeGuid.PrivateChat)
+      ) {
         const mutation = await typingMutation(this.weavyContext, this.app.id);
         await mutation.mutate();
       }
@@ -198,6 +176,8 @@ export default class WyEditor extends LitElement {
   }
 
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+    super.willUpdate(changedProperties);
+
     if (
       (changedProperties.has("weavyContext") ||
         changedProperties.has("app") ||
@@ -319,9 +299,7 @@ export default class WyEditor extends LitElement {
               dropCursor(),
               mentions,
               autocompletion({
-                override: hasFeature(this.availableFeatures, Feature.Mentions, this.features?.mentions)
-                  ? [(context: CompletionContext) => this.autocomplete(context)]
-                  : null, //showMention
+                override: this.hasFeatures?.mentions ? [(context: CompletionContext) => this.autocomplete(context)] : null, //showMention
                 closeOnBlur: false,
                 icons: false,
                 addToOptions: [
@@ -371,10 +349,7 @@ export default class WyEditor extends LitElement {
                     }
                   }
 
-                  if (
-                    files.length > 0 &&
-                    hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-                  ) {
+                  if (files.length > 0 && this.hasFeatures?.attachments) {
                     for (let i = 0; i < files.length; i++) {
                       this.handleUploadFiles(files);
                     }
@@ -382,11 +357,7 @@ export default class WyEditor extends LitElement {
                   }
                 },
                 keyup: (evt: KeyboardEvent, _view: EditorView) => {
-                  if (
-                    this.typing &&
-                    _view.state.doc.toString() !== "" &&
-                    hasFeature(this.availableFeatures, Feature.Typing, this.features?.typing)
-                  ) {
+                  if (this.typing && _view.state.doc.toString() !== "" && this.hasFeatures?.typing) {
                     this.throttledTyping();
                   }
 
@@ -394,10 +365,7 @@ export default class WyEditor extends LitElement {
                     this.throttledDrafting();
                   }
 
-                  if (
-                    hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds) &&
-                    _view.state.doc.toString() !== ""
-                  ) {
+                  if (this.hasFeatures?.embeds && _view.state.doc.toString() !== "") {
                     this.handleEmbeds(_view.state.doc.toString());
                   }
                 },
@@ -485,12 +453,11 @@ export default class WyEditor extends LitElement {
     before = context.matchBefore(/@[^@]+/);
 
     const typed = before?.text.substring(1);
-
-    const response = await this.weavyContext.get("/api/users/autocomplete?id=" + this.app.id + "&q=" + typed);
-    const result: UsersAutocompleteResultType = await response?.json();
+    const response = await this.weavyContext.get(`/api/apps/${this.app.id}/members?member=null&q=${typed}`);
+    const result: UsersResultType = await response?.json();
 
     let completions: {
-      item: AutocompleteUserType;
+      item: UserType;
       label: string;
       apply: (view: EditorView, _completion: Completion, from: number, to: number) => void;
     }[] = [];
@@ -618,12 +585,12 @@ export default class WyEditor extends LitElement {
     if (
       isFetchingEmbeds() ||
       currentlyUploading ||
-      !text &&
-      !meetingId &&
-      blobs?.length == 0 &&
-      pollOptions.length == 0 &&
-      attachments.length == 0 &&
-      this.embeds.length == 0
+      (!text &&
+        !meetingId &&
+        blobs?.length == 0 &&
+        pollOptions.length == 0 &&
+        attachments.length == 0 &&
+        this.embeds.length == 0)
     ) {
       return;
     }
@@ -664,12 +631,12 @@ export default class WyEditor extends LitElement {
   }
 
   protected handleZoomClick() {
-    if (!this.weavyContext || !this.user) {
+    if (!this.weavyContext || !this.user || !this.configuration?.zoom_authentication_url) {
       return;
     }
 
     window.open(
-      `${this.weavyContext.zoomAuthenticationUrl}&state=${this.user.id}`,
+      `${this.configuration.zoom_authentication_url}&state=${this.user.id}`,
       "zoomAuthWin",
       "height=640,width=480"
     );
@@ -741,49 +708,49 @@ export default class WyEditor extends LitElement {
         ${ref(this.editorRef)}
       ></div>
       <div class="wy-post-editor-inputs">
-        ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
-          ? html`<wy-button kind="icon" @click=${this.openFileInput} title=${msg("From device")}>
-                <wy-icon name="attachment"></wy-icon>
-              </wy-button>
-              <input
-                type="file"
-                ${ref(this.fileInputRef)}
-                @click=${(e: Event) => e.stopPropagation()}
-                @change=${(e: Event) =>
-                  this.handleUploadFiles(
-                    Array.from((e.target as HTMLInputElement).files || []),
-                    e.target as HTMLInputElement
-                  )}
-                multiple
-                hidden
-                tabindex="-1"
-              />`
-          : nothing}
-        ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
-          ? html`<wy-button kind="icon" @click=${this.openCloudFiles} title=${msg("From cloud")}>
-              <wy-icon name="cloud"></wy-icon>
-            </wy-button>`
-          : nothing}
-        ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
-        this.weavyContext?.confluenceAuthenticationUrl
-          ? html`<wy-confluence
-              @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
-            ></wy-confluence>`
-          : nothing}
-        ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) &&
-        this.weavyContext?.zoomAuthenticationUrl
-          ? html`<wy-button kind="icon" @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
-              <wy-icon name="zoom"></wy-icon>
-            </wy-button>`
-          : nothing}
-        ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls)
-          ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")}>
-              <wy-icon name="poll"></wy-icon>
-            </wy-button>`
-          : nothing}
+        <div class="wy-post-editor-buttons">
+          ${this.hasFeatures?.attachments
+            ? html`<wy-button kind="icon" @click=${this.openFileInput} title=${msg("From device")}>
+                  <wy-icon name="attachment"></wy-icon>
+                </wy-button>
+                <input
+                  type="file"
+                  ${ref(this.fileInputRef)}
+                  @click=${(e: Event) => e.stopPropagation()}
+                  @change=${(e: Event) =>
+                    this.handleUploadFiles(
+                      Array.from((e.target as HTMLInputElement).files || []),
+                      e.target as HTMLInputElement
+                    )}
+                  multiple
+                  hidden
+                  tabindex="-1"
+                />`
+            : nothing}
+          ${this.hasFeatures?.cloudFiles
+            ? html`<wy-button kind="icon" @click=${this.openCloudFiles} title=${msg("From cloud")}>
+                <wy-icon name="cloud"></wy-icon>
+              </wy-button>`
+            : nothing}
+          ${this.hasFeatures?.confluence && this.weavyContext?.confluenceAuthenticationUrl
+            ? html`<wy-confluence
+                @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
+              ></wy-confluence>`
+            : nothing}
+          ${this.hasFeatures?.meetings && this.configuration?.zoom_authentication_url
+            ? html`<wy-button kind="icon" @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
+                <wy-icon name="zoom"></wy-icon>
+              </wy-button>`
+            : nothing}
+          ${this.hasFeatures?.polls
+            ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")}>
+                <wy-icon name="poll"></wy-icon>
+              </wy-button>`
+            : nothing}
+        </div>
 
         <!-- Button -->
-        <wy-button @click="${this.submit}" buttonClass="wy-button-primary" title=${this.buttonText}>
+        <wy-button @click="${this.submit}" color="primary" title=${this.buttonText}>
           ${this.buttonText}
         </wy-button>
       </div>
@@ -799,9 +766,7 @@ export default class WyEditor extends LitElement {
 
     return html`
       <!-- polls -->
-      ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls) &&
-      this.showPolls &&
-      this.pollOptions.length > 0
+      ${this.hasFeatures?.polls && this.showPolls && this.pollOptions.length > 0
         ? html`
             <div class="wy-poll-form">
               ${this.pollOptions.map((p: PollOptionType, index: number) => {
@@ -820,7 +785,7 @@ export default class WyEditor extends LitElement {
         : nothing}
 
       <!-- meetings -->
-      ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) && this.meeting
+      ${this.hasFeatures?.meetings && this.meeting
         ? html`<div class="wy-item">
             <wy-icon name="zoom"></wy-icon>
             <div class="wy-item-body">${msg("Zoom meeting")}</div>
@@ -843,8 +808,6 @@ export default class WyEditor extends LitElement {
                 };
                 return html`
                   <wy-file-item
-                    .availableFeatures=${this.availableFeatures}
-                    .features=${this.features}
                     .file=${mutation.context?.file}
                     .status=${fileStatus}
                     title="${toUpperCaseFirst(mutation.context.type)}: ${file.name +
@@ -874,12 +837,7 @@ export default class WyEditor extends LitElement {
       <!-- attachments -->
       ${this.attachments &&
       this.attachments.map(
-        (attachment) => html`<wy-file-item
-          .file=${attachment}
-          .availableFeatures=${this.availableFeatures}
-          .features=${this.features}
-          title="${attachment.name}"
-        >
+        (attachment) => html`<wy-file-item .file=${attachment} title="${attachment.name}">
           <span slot="title">${attachment.name}</span>
           <wy-button
             slot="actions"
@@ -893,7 +851,7 @@ export default class WyEditor extends LitElement {
       )}
 
       <!-- embeds -->
-      ${hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds) && this.embeds.length > 0
+      ${this.hasFeatures?.embeds && this.embeds.length > 0
         ? html`<div class="wy-embed-preview">
             ${this.embeds.map(
               (embed: EmbedType) => html`

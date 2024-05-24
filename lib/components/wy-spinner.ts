@@ -1,16 +1,37 @@
-import { LitElement, html } from "lit";
+import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { shadowPartMap } from "../utils/directives/shadow-part-map";
+
+import rebootCss from "../scss/wrappers/base/reboot";
+import spinnerCss from "../scss/wrappers/spinner";
+import progressCss from "../scss/wrappers/progress";
 
 @customElement("wy-spinner")
 export default class WySpinner extends LitElement {
+  static override styles = [
+    rebootCss,
+    spinnerCss,
+    progressCss,
+    css`
+      :host {
+        display: contents;
+      }
+    `,
+  ];
+
+  protected shadowParts = new ShadowPartsController(this);
+
   @property({ type: Number })
   size: number = 24;
 
   @property({
-    type: Boolean
+    type: Boolean,
   })
-  nospin: boolean = false;
+  noSpin: boolean = false;
+
+  @property({ type: Boolean })
+  padded: boolean = false;
 
   @property({ type: Boolean })
   overlay: boolean = false;
@@ -18,51 +39,79 @@ export default class WySpinner extends LitElement {
   @property({ type: Number })
   progress?: number = NaN;
 
-  protected override createRenderRoot(): HTMLElement | DocumentFragment {
-    // Review: needed?
-    return this;
-  }
-
   override render() {
-    const remaining = (this.nospin && this.progress && 100 - this.progress) || undefined;
+    const remaining = (this.noSpin && this.progress && 100 - this.progress) || undefined;
 
     if (remaining !== undefined) {
       const radius = 10;
-      const circumReference = Math.PI*(radius*2);
+      const circumReference = Math.PI * (radius * 2);
+
+      const progressParts = {
+        "wy-progress": true,
+        "wy-primary": true,
+        "wy-progress-padded": this.padded,
+      };
 
       return html`<svg
+        part="${shadowPartMap(progressParts)}"
         viewBox="0 0 24 24"
         width=${this.size}
         height=${this.size}
         transform="rotate(-90)"
-        data-icon="progress"
-        class="wy-icon wy-icon-primary">
-        <circle cx="12" cy="12" r=${radius} stroke-linecap="butt" stroke-width="2" fill="none" stroke="#eee"></circle>
+      >
         <circle
+          part="wy-progress-circle wy-progress-remaining"
+          cx="12"
+          cy="12"
+          r=${radius}
+          stroke-linecap="butt"
+          stroke-width="2"
+          fill="none"
+          stroke="#eee"
+        ></circle>
+        <circle
+          part="wy-progress-circle wy-progress-done"
           cx="12"
           cy="12"
           r=${radius}
           stroke-dasharray=${circumReference}
-          stroke-dashoffset=${circumReference * remaining/100}
+          stroke-dashoffset=${(circumReference * remaining) / 100}
           stroke-linecap="butt"
           stroke-width="2"
           fill="none"
           stroke="currentColor"
-          path-length="200"></circle>
+          path-length="200"
+        ></circle>
       </svg>`;
     } else {
-      const spinnerClassNames = {
-        "wy-spin": !this.nospin,
+      const spinnerParts = {
+        "wy-spinner": true,
+        "wy-spin": !this.noSpin,
         "wy-spinner-overlay": this.overlay,
+        "wy-spinner-padded": this.padded,
       };
 
+      const spinnerCircleParts = {
+        "wy-spinner-circle": true,
+        "wy-spin": !this.noSpin
+      }
+
       return html`<svg
-        class="wy-spinner ${classMap(spinnerClassNames)}"
+        part="${shadowPartMap(spinnerParts)}"
         width=${this.size}
         height=${this.size}
         viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg">
-        <circle fill="none" cx="12" cy="12" r="11" stroke-linecap="butt" stroke-width="2" />
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          part="${shadowPartMap(spinnerCircleParts)}"
+          fill="none"
+          cx="12"
+          cy="12"
+          r="11"
+          stroke-linecap="butt"
+          stroke-width="2"
+        />
       </svg>`;
     }
   }

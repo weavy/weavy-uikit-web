@@ -41,7 +41,7 @@
   }
 
   .wy-picker-list:not(:empty) {
-    border-top: 1px solid #{color.token(--wy-outline-variant)};
+    border-top: #{var.default(--wy-border)} solid #{color.token(--wy-outline-variant)};
   }
 }
 
@@ -50,12 +50,9 @@
   flex-direction: row;
   align-items: flex-end;
   //border-top: 1px solid #{color.token(--wy-outline-variant)};
-  padding: var.wy-rem(.5) var.wy-rem(.25);
+  padding: var.default(--wy-padding) var.default(--wy-padding-sm);
   min-height: var.wy-rem(3.5);
-
-  > :not(:last-child) {
-    margin-right: var.wy-rem(.25);
-  }
+  gap: var.default(--wy-gap-sm);
 }
 
 .wy-message-editor-buttons {
@@ -81,10 +78,10 @@
 %message-editor-textfield,
 .wy-message-editor-textfield {
   flex: 1 1 100%;
-  max-height: var.wy-rem(11.25);
+  max-height: 11.25em;
   background-color: color.token(--wy-background);
   color: color.token(--wy-on-background);
-  border-radius: var.wy-rem(1.25);
+  border-radius: var.default(--wy-input-filled-border-radius);
   border: var.default(--wy-input-border-width) solid #{color.token(--wy-background)};
 
   &:focus {
@@ -95,7 +92,7 @@
 %message-editor-textcontent,
 .wy-message-editor-textcontent {
   font-family: #{var.default(--wy-input-font-family)}, inherit;
-  font-size: var.default(--wy-font-size-base);
+  font-size: var.default(--wy-input-font-size);
   padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
   min-height: calc(#{var.wy-rem(2.5)} - #{var.default(--wy-input-border-width)});
   line-height: var.wy-rem(1.5);

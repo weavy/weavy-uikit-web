@@ -7,7 +7,7 @@ $toast-max-width: var.wy-rem(16) !default;
 $toast-padding-x: var.wy-rem(.75) !default;
 $toast-padding-y: var.wy-rem(.5) !default;
 
-.wy-toasts {
+/*.wy-toasts {
   position: fixed;
   left: 0;
   bottom: var.wy-rem(3.5);
@@ -19,7 +19,7 @@ $toast-padding-y: var.wy-rem(.5) !default;
   justify-content: center;
   z-index: const.$zindex-fixed;
   gap: var.wy-rem(1);
-}
+}*/
 
 .wy-toast {
   background: color.token(--wy-on-surface);

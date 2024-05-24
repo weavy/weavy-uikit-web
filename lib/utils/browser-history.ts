@@ -1,5 +1,5 @@
 import { PlainObjectType } from "../types/generic.types";
-import { assign } from "./objects";
+import { assign, eqObjects, isPlainObject } from "./objects";
 
 /**
  * Gets the global state for all weavy instances combined, stored in the browser history state.
@@ -62,7 +62,11 @@ export function restoreHistoryProperties<T = PlainObjectType>(parent: T, key: st
     try {
       const item = getBrowserStateProperty(prefix, property);
       //console.log('Restoring history property', property, item)
-      (parent[property] as unknown) = item;
+      const currentValue = parent[property];
+      
+      if (itemHasChanged(currentValue, item)) {
+        (parent[property] as unknown) = item;
+      }
     } catch (e) {
       /* no worries */
     }
@@ -88,4 +92,16 @@ export function pushHistoryProperties<T = object>(
 
 export function updateHistoryProperties<T = object>(parent: T, key: string, properties: Array<keyof T>) {
   pushHistoryProperties(parent, key, properties, "replace");
+}
+
+export function itemHasChanged(a: unknown, b: unknown) {
+  if (a && b && (isPlainObject(a) || isPlainObject(b))) {
+    if (a && Object.hasOwn(a as object, "id") || b && Object.hasOwn(b as object, "id")) {
+      return (a as unknown as { id: unknown }).id !== (b as unknown as { id: unknown }).id;
+    } else {
+      return !eqObjects(a as PlainObjectType, b as PlainObjectType);
+    }
+  } else {
+    return a !== b;
+  }
 }

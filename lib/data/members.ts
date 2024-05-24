@@ -31,7 +31,7 @@ export function getSearchMemberOptions(weavyContext: WeavyContextType, text: () 
     enabled: false,
     queryFn: async () => {
       const query = text() || "*";
-      const response = await weavyContext.get(`/api/users/autocomplete?q=${query}&skip=0&top=${PAGE_SIZE}`);
+      const response = await weavyContext.get(`/api/users/autocomplete?q=${query}&skip=0&take=${PAGE_SIZE}`);
       const result: MembersResultType = await response.json();
       return result;
     },
@@ -40,7 +40,9 @@ export function getSearchMemberOptions(weavyContext: WeavyContextType, text: () 
 
 export function getInfiniteSearchMemberOptions(
   weavyContext: WeavyContextType,
-  text: () => string
+  text: () => string,
+  appId: Number | undefined,
+  bot: () => Boolean | undefined  
 ): InfiniteQueryObserverOptions<MembersResultType, Error, InfiniteData<MembersResultType>> {
   const PAGE_SIZE = 25;
 
@@ -54,9 +56,14 @@ export function getInfiniteSearchMemberOptions(
       const inputText = text();
       const query = inputText || "*";
       const skip = opt.pageParam;
-      const response = await weavyContext.get(
-        `/api/users/autocomplete?q=${query}&skip=${skip}&top=${PAGE_SIZE}&count=${Boolean(!inputText)}`
-      );
+      let response;
+      
+      if (appId) {
+        response = await weavyContext.get(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+      } else {
+        response = await weavyContext.get(`/api/users?q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+      }          
+
       const result = await response.json();
       result.data = result.data || [];
       return result;

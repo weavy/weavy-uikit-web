@@ -1,14 +1,8 @@
 import { LitElement, html, type PropertyValues, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
+import { customElement, property } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 
 import { AppTypes, type AppType } from "./types/app.types";
-import type { UserType } from "./types/users.types";
-import type { FeaturesConfigType, FeaturesListType } from "./types/features.types";
-
-import { getApiOptions } from "./data/api";
 
 import colorModes from "./scss/colormodes";
 import postsCss from "./scss/all";
@@ -19,16 +13,13 @@ import "./components/wy-spinner";
 
 import { ThemeController } from "./controllers/theme-controller";
 import { RealtimeCommentEventType, RealtimeReactionEventType } from "./types/realtime.types";
-import { QueryController } from "./controllers/query-controller";
-import { whenParentsDefined } from "./utils/dom";
 import { WeavyContextProps } from "./types/weavy.types";
-import { getAppOptions } from "./data/app";
-import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
 
 @customElement("wy-comments")
 @localized()
-export class WyComments extends AppSettingsProviderMixin(LitElement) {
+export class WyComments extends AppProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     postsCss,
@@ -39,26 +30,10 @@ export class WyComments extends AppSettingsProviderMixin(LitElement) {
     `,
   ];
 
-  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
-
-  // Manually consumed in scheduleUpdate()
-  @state()
-  protected weavyContext?: WeavyContextType;
-
-  @state()
-  user?: UserType;
-
-  @property()
-  uid?: string;
+  override appType = AppTypes.Comments;
 
   @property()
   cssClass?: string;
-
-  @state()
-  availableFeatures?: FeaturesListType;
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
 
   /**
    * Event: New comment created.
@@ -81,27 +56,9 @@ export class WyComments extends AppSettingsProviderMixin(LitElement) {
   realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
     new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });
 
-  @state()
-  protected app?: AppType;
-
-  protected appQuery = new QueryController<AppType>(this);
-  protected userQuery = new QueryController<UserType>(this);
-  protected featuresQuery = new QueryController<FeaturesListType>(this);
-
   constructor() {
     super();
     new ThemeController(this, WyComments.styles);
-  }
-
-  override async scheduleUpdate() {
-    await whenParentsDefined(this);
-    this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
-
-    if (this.weavyContextConsumer?.value && this.weavyContext !== this.weavyContextConsumer?.value) {
-      this.weavyContext = this.weavyContextConsumer?.value;
-    }
-
-    await super.scheduleUpdate();
   }
 
   handleRealtimeCommentCreated = (realtimeEvent: RealtimeCommentEventType) => {
@@ -178,24 +135,6 @@ export class WyComments extends AppSettingsProviderMixin(LitElement) {
       }
     }
 
-    if ((changedProperties.has("uid") || changedProperties.has("weavyContext")) && this.uid && this.weavyContext) {
-      this.appQuery.trackQuery(getAppOptions(this.weavyContext, this.uid, AppTypes.Comments));
-      this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
-      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "comments"]));
-    }
-
-    if (!this.appQuery.result?.isPending) {
-      this.app = this.appQuery.result?.data;
-    }
-
-    if (!this.userQuery.result?.isPending) {
-      this.user = this.userQuery.result?.data;
-    }
-
-    if (!this.featuresQuery.result?.isPending) {
-      this.availableFeatures = this.featuresQuery.result?.data;
-    }
-
     if (
       (changedProperties.has("weavyContext") || changedProperties.has("app") || changedProperties.has("user")) &&
       this.weavyContext &&
@@ -214,16 +153,12 @@ export class WyComments extends AppSettingsProviderMixin(LitElement) {
       ? html`
           <wy-comment-list
             parentId=${this.app?.id}
-            .app=${this.app}
-            .user=${this.user}
-            .features=${this.features}
-            .availableFeatures=${this.availableFeatures}
             .location=${"apps"}
           ></wy-comment-list>
         `
       : html`
           <wy-empty>
-            <wy-spinner></wy-spinner>
+            <wy-spinner padded></wy-spinner>
           </wy-empty>
         `;
   }

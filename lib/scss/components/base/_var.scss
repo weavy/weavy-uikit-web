@@ -1,5 +1,4 @@
 @use "sass:map";
-@use "const";
 @use "md";
 @use "sass:math";
 @use "sass:meta";
@@ -17,7 +16,7 @@
   @return $number;
 }
 
-/// Function for wrapping rem with --wy-rem
+/// Function for wrapping rem with --wy-size
 /// @param {Number|rem|px} $size - The value to wrap. For example 1, 1rem or 1px
 @function wy-rem($size) {
     @if meta.type-of($size) == "number" and not math.is-unitless($size) {
@@ -28,7 +27,7 @@
         }
     }
 
-    @return calc(#{$size} * var(--wy-rem, 1rem));
+    @return calc(#{$size} * var(--wy-size, 1rem));
 }
 
 
@@ -40,34 +39,49 @@
  */
 
  $defaults: (
-  --wy-rem:                       1rem, // Base size for layout
+  /* Theme colors */
+  --wy-theme-color:               unset,
 
+  /* Size */
+  --wy-size:                      1rem, // Base size for layout
+   
+  /* Padding */
+  --wy-padding:                   wy-rem(.5),
+  --wy-padding-sm:                calc(.5  * var(--wy-padding, wy-rem(.5))),
+  --wy-padding-lg:                calc(1.5 * var(--wy-padding, wy-rem(.5))),
+   
+  /* Gap */
+  --wy-gap:                       wy-rem(.5),
+  --wy-gap-sm:                    calc(.5  * var(--wy-gap, wy-rem(.5))),
+  --wy-gap-lg:                    calc(1.5 * var(--wy-gap, wy-rem(.5))),
+
+  /* Border */
+  --wy-border:                    1px,
+  --wy-border-outline:            0,
+  --wy-border-radius:             wy-rem(.5),
+  --wy-border-radius-sm:          calc(var(--wy-border-radius, wy-rem(.5)) - .25 * var(--wy-padding, wy-rem(.5))), // .375rem;
+  --wy-border-radius-pill:        var(--wy-border-radius, wy-rem(2.5)),
+   
   /* Typography */
-
   // Font should be inherited/unset by default
   --wy-font-family:               unset, // #{$font-family-sans-serif};
+  --wy-font-size:                 var(--wy-size, 1em), // Assumes the inherited font-size, typically 16px
+
   --wy-font-weight:               unset, // #{$font-weight-normal};
-  --wy-font-size:                 1em, // Assumes the inherited font-size, typically 16px
+  --wy-font-weight-bold:          bolder,
 
   --wy-line-height:               1.5,
 
-  --wy-font-size-base:            var(--wy-font-size, 1em), // Deprecated, use --wy-font-size instead
-  --wy-font-size-xxs:             calc(.625 * var(--wy-font-size-base, 1em)), // .625rem 10px
-  --wy-font-size-xs:              calc(.75  * var(--wy-font-size-base, 1em)), //  .75rem 12px
-  --wy-font-size-sm:              calc(.875 * var(--wy-font-size-base, 1em)), // .875rem 14px
-  --wy-font-size-lg:              calc(1.25 * var(--wy-font-size-base, 1em)), // 1.25rem 20px
+  --wy-font-size-xxs:             calc(.625 * var(--wy-font-size, 1em)), // .625rem 10px
+  --wy-font-size-xs:              calc(.75  * var(--wy-font-size, 1em)), //  .75rem 12px
+  --wy-font-size-sm:              calc(.875 * var(--wy-font-size, 1em)), // .875rem 14px
+  --wy-font-size-lg:              calc(1.25 * var(--wy-font-size, 1em)), // 1.25rem 20px
 
+  --wy-headings-font-size:        1.25em,
   --wy-headings-font-style:       unset,
   --wy-headings-font-family:      var(--wy-font-family, unset),
-  --wy-headings-font-weight:      #{const.$font-weight-medium},
+  --wy-headings-font-weight:      var(--wy-font-weight-bold, bolder),
   --wy-headings-line-height:      var(--wy-line-height, 1.5),
-
-  /* Border */
-  --wy-border-radius:             wy-rem(.5),
-  --wy-border-radius-sm:          calc(.75 * var(--wy-border-radius, wy-rem(.5))), // .375rem;
-  --wy-border-radius-lg:          calc(1.5 * var(--wy-border-radius, wy-rem(.5))), // .75rem;
-  --wy-border-radius-xl:          calc(2   * var(--wy-border-radius, wy-rem(.5))), //  1rem;
-  --wy-border-radius-pill:        wy-rem(50),
 
   /* Links */
   //--wy-link-color:              #{color.token(--wy-primary)},  ---> --wy-link in colors
@@ -75,18 +89,8 @@
   --wy-link-hover-decoration:     unset,
 
   /* Tables */
-  --wy-table-cell-padding-x:      wy-rem(.25),
-  --wy-table-cell-padding-y:      wy-rem(.25),
-
-  /* Inputs */
-  --wy-input-padding-y:           wy-rem(.4375),
-  --wy-input-padding-x:           wy-rem(.75),
-  --wy-input-font-family:         var(--wy-font-family, inherit), // VERY SPECIAL CASE: inherit instead of unset
-  --wy-input-font-size:           var(--wy-font-size-base, 1em),
-  --wy-input-font-weight:         var(--wy-font-weight, unset),
-  --wy-input-line-height:         var(--wy-line-height, wy-rem(1.5)),
-  --wy-input-border-width:        1px,
-  --wy-input-border-radius:       var(--wy-border-radius, wy-rem(.5)),
+  --wy-table-cell-padding-x:      var(--wy-gap-sm, calc(.5  * var(--wy-gap, wy-rem(.5)))),
+  --wy-table-cell-padding-y:      var(--wy-padding-sm, calc(.5  * var(--wy-padding, wy-rem(.5)))),
 
   /* Shadows */
   --wy-shadow-level0:             none, // xxs
@@ -125,25 +129,60 @@
   --wy-surface-5-mix:             14%,
 
   /* Components */
-  --wy-appbar-height:             wy-rem(3),
+  --wy-appbar-height:             calc(max(1lh, var(--wy-button-size, wy-rem(2.5))) + 2 * var(--wy-padding, wy-rem(.25))), //wy-rem(3),
   --wy-footerbar-height:          wy-rem(4),
 
   /* Buttons */
-  --wy-btn-padding-x:             1.5em,
-  --wy-btn-padding-y:             .5em,
-  --wy-btn-font-family:           var(--wy-font-family, unset),
-  --wy-btn-font-size:             var(--wy-font-size-base, 1em),
-  --wy-btn-font-weight:           #{const.$font-weight-normal},
-  --wy-btn-line-height:           var(--wy-line-height, 1.5),
-  --wy-btn-border-width:          0,
-  --wy-btn-border-color:          transparent,
-  --wy-btn-border-radius:         1.25em,
+  --wy-button-size:               calc(wy-rem(var(--wy-button-line-height, 1.5)) + 2 * var(--wy-button-padding-y, var(--wy-padding, wy-rem(.5)))), // wy-rem(2.5) 
+  --wy-button-padding-x:          calc(var(--wy-padding, wy-rem(.5)) + 2 * var(--wy-button-padding-y, var(--wy-padding, wy-rem(.5)))),//wy-rem(1.5),
+  --wy-button-padding-y:          var(--wy-padding, wy-rem(.5)),
+  --wy-button-gap:                var(--wy-gap-sm, calc(.5  * var(--wy-gap, wy-rem(.5)))),
+  --wy-button-font-family:        var(--wy-font-family, unset),
+  --wy-button-font-size:          var(--wy-font-size, 1em),
+  --wy-button-font-weight:        var(--wy-font-weight, unset),
+  --wy-button-line-height:        var(--wy-line-height, 1.5),
+  --wy-button-border-width:       var(--wy-border-outline, 0),
+  --wy-button-border-color:       transparent,
+  --wy-button-border-radius:      var(--wy-border-radius, wy-rem(2.5)),
 
+  /* Inputs */
+  --wy-input-padding-y:           var(--wy-padding, wy-rem(.5)),
+  --wy-input-padding-x:           var(--wy-padding-lg, calc(1.5 * var(--wy-padding, wy-rem(.5)))),
+  --wy-input-font-family:         var(--wy-font-family, inherit), // VERY SPECIAL CASE: inherit instead of unset
+  --wy-input-font-size:           var(--wy-font-size, 1em),
+  --wy-input-font-weight:         var(--wy-font-weight, unset),
+  --wy-input-line-height:         var(--wy-line-height, wy-rem(1.5)),
+  --wy-input-border-width:        var(--wy-border, 1px),
+  --wy-input-border-radius:       var(--wy-border-radius, wy-rem(.5)),
+  --wy-input-filled-border-radius:var(--wy-border-radius-pill, var(--wy-border-radius, wy-rem(2.5))),
+  --wy-input-filled-border-width: var(--wy-border-outline, 0),
+    
+  /* Dropdowns */
+  --wy-dropdown-padding-x:        var(--wy-padding-lg, calc(1.5 * var(--wy-padding, wy-rem(.5)))),
+  --wy-dropdown-padding-y:        var(--wy-padding, wy-rem(.5)),
+  --wy-dropdown-gap:              var(--wy-gap, wy-rem(.5)),
+  --wy-dropdown-shadow:           var(--wy-shadow-level1, #{md.$shadow-2dp}),
+  --wy-dropdown-border-radius:    var(--wy-border-radius, wy-rem(.5)),
+  --wy-dropdown-border-width:     var(--wy-border, 1px),
+
+  /* Items */
+  --wy-item-title-font-size:      var(--wy-font-size, 1em),
+  --wy-item-title-font-weight:    var(--wy-font-weight, unset),
+
+  /* Avatars */
   --wy-avatar-font-size:          .382em, // Golden section
-  --wy-avatar-font-weight:        #{const.$font-weight-semibold}
+  --wy-avatar-font-weight:        var(--wy-font-weight-bold, unset),
+  --wy-avatar-border-radius:      var(--wy-border-radius-pill, var(--wy-border-radius, 50%)),
+
+  /* Messages */
+  --wy-message-padding:           var(--wy-padding-lg, calc(1.5 * var(--wy-padding, wy-rem(.5)))),
 );
 
 @function default($name) {
+  @if (not map.has-key($defaults, $name)) {
+    @warn "Unknown var.default(#{$name}).";
+  }
+
   $value: map.get($defaults, $name);
   @return var(#{$name}, #{$value});
 }

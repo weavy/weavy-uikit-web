@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import type { ReactableType } from "../types/reactions.types";
@@ -6,28 +6,21 @@ import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
-import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
 
 import chatCss from "../scss/all"
 
-import type { AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
-
 import "./wy-comment-trashed";
 import "./wy-comment-view";
 import "./wy-comment-edit";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-comment")
 export default class WyComment extends LitElement {
   
-  static override styles = chatCss;
+  static override styles = [chatCss, css`:host { display: contents; }`];
   
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   commentId!: number;
@@ -57,7 +50,7 @@ export default class WyComment extends LitElement {
   text: string = "";
 
   @property({ attribute: false })
-  attachments: FileType[] = [];
+  attachments?: FileType[] = [];
 
   @property({ type: Array })
   pollOptions: PollOptionType[] | undefined = [];
@@ -69,19 +62,13 @@ export default class WyComment extends LitElement {
   embed?: EmbedType;
 
   @property({ type: Array })
-  reactions: ReactableType[] = [];
+  reactions?: ReactableType[] = [];
 
   @property({ attribute: false })
   commentCount: number = 0;
 
   @property({ type: Array })
   seenBy: MemberType[] = [];
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
 
   @state()
   private editing: boolean = false;
@@ -120,12 +107,8 @@ export default class WyComment extends LitElement {
       ${!this.isTrashed && this.editing
         ? html`<wy-comment-edit
             class="wy-comment"
-            .app=${this.app}
-            .user=${this.user}
             .commentId=${this.commentId}
             .parentId=${this.parentId}
-            .availableFeatures=${this.availableFeatures}
-            .features=${this.features}
             .text=${this.text}
             .pollOptions=${this.pollOptions}
             .attachments=${this.attachments}
@@ -137,9 +120,7 @@ export default class WyComment extends LitElement {
       ${!this.isTrashed && !this.editing
         ? html`<wy-comment-view
             class="wy-comment"
-            id="${this.id}"
-            .app=${this.app}
-            .user=${this.user}
+            id="comment-view-${this.commentId}"
             .commentId=${this.commentId}
             .parentId=${this.parentId}
             .temp=${this.temp}
@@ -154,8 +135,6 @@ export default class WyComment extends LitElement {
             .meeting=${this.meeting}
             .pollOptions=${this.pollOptions}
             .reactions=${this.reactions}
-            .availableFeatures=${this.availableFeatures}
-            .features=${this.features}
             @edit=${(e: CustomEvent) => {
               this.editing = e.detail.edit;
             }}

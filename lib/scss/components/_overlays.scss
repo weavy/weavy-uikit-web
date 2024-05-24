@@ -11,6 +11,10 @@
     left: 0;
     z-index: const.$zindex-max; /* max possible z-index */;
     pointer-events: none;
+
+    &:focus-visible {
+        outline: none;
+    }
 }
 
 // Overlays

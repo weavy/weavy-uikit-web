@@ -1,5 +1,6 @@
 import { PlainObjectType } from "./generic.types";
 import { PresenceType } from "./presence.types";
+import { QueryResultType } from "./query.types";
 
 // TYPES
 export type UserType = {
@@ -19,41 +20,50 @@ export type UserType = {
   presence?: PresenceType;
   directory?: DirectoryType;
   directory_id?: number;
-  metadata?: PlainObjectType | PlainObjectType & BotMetadataType;
+  metadata?: PlainObjectType | (PlainObjectType & BotMetadataType);
   tags?: string[];
   created_at?: string;
-  modified_at?: string
+  updated_at?: string;
   is_suspended?: boolean;
   is_trashed?: boolean;
   is_bot?: boolean;
 };
 
-export type AutocompleteUserType = {
-  id: number;
-  uid?: string;
-  display_name: string;
-  avatar_url?: string;
-  presence?: PresenceType;
-  is_member?: boolean
-}
+export type UsersResultType = QueryResultType<UserType>;
 
-export type UsersAutocompleteResultType = {
-  data: AutocompleteUserType[];
-  start?: number;
-  end?: number;
-  count: number;
-}
+// export type AutoCompleteResultType = {
+//   data?: UserType[];
+//   start?: number;
+//   end?: number;
+//   count: number;
+// };
+
+// export type AutocompleteUserType = {
+//   id: number;
+//   uid?: string;
+//   display_name: string;
+//   avatar_url?: string;
+//   presence?: PresenceType;
+//   is_member?: boolean
+// }
+
+// export type UsersAutocompleteResultType = {
+//   data: AutocompleteUserType[];
+//   start?: number;
+//   end?: number;
+//   count: number;
+// }
 
 export type DirectoryType = {
   id: number;
   name: string;
   members?: UserType[];
-}
+};
 
 export type BotType = UserType & {
   metadata: PlainObjectType & BotMetadataType;
   is_bot: true;
-}
+};
 
 export enum BotFamilyType {
   ChatGPT = "chatgpt", // Deprecated alias for OpenAI
@@ -62,5 +72,5 @@ export enum BotFamilyType {
 }
 
 export type BotMetadataType = {
-  family: BotFamilyType
-}
+  family: BotFamilyType;
+};

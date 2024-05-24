@@ -6,6 +6,7 @@ import {
   type MutationObserverOptions,
   MutationObserver,
   replaceEqualDeep,
+  MutateOptions,
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
@@ -15,8 +16,10 @@ import { whenParentsDefined } from "../utils/dom";
 export class MutationController<TData, TError, TVariables, TContext> implements ReactiveController {
   host: ReactiveControllerHost;
   context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
-  whenContext?: Promise<void>;
+  whenContext: Promise<void>;
   resolveContext?: (value: void | PromiseLike<void>) => void;
+  whenObserver: Promise<MutationObserver<TData, TError, TVariables, TContext>>;
+  resolveObserver?: (value: MutationObserver<TData, TError, TVariables, TContext> | PromiseLike<MutationObserver<TData, TError, TVariables, TContext>>) => void;
   observer?: MutationObserver<TData, TError, TVariables, TContext>;
   result?: MutationObserverResult<TData, TError, TVariables, TContext>;
 
@@ -25,11 +28,14 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
     this.host = host;
+
+    this.whenContext = new Promise((r) => this.resolveContext = r);
+    this.whenObserver = new Promise((r) => this.resolveObserver = r);
+
     this.setContext();
   }
 
   async setContext() {
-    this.whenContext = new Promise((r) => this.resolveContext = r)
     await whenParentsDefined(this.host as LitElement);
     this.context = new ContextConsumer(this.host as LitElement, { context: weavyContextDefinition, subscribe: true });
   }
@@ -52,9 +58,13 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
 
     this.observerUnsubscribe?.();
 
-    this.observer = new MutationObserver(queryClient, { ...options });
+    if (this.observer) {
+      this.whenObserver = new Promise((r) => this.resolveObserver = r);
+    }
 
+    this.observer = new MutationObserver(queryClient, { ...options });
     this.observerSubscribe();
+    this.resolveObserver?.(this.observer)
 
     return this.observer;
   }
@@ -86,8 +96,9 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
     this.host.requestUpdate();
   }
 
-  get mutate() {
-    return this.observer!.mutate;
+  async mutate(variables: TVariables, options?: MutateOptions<TData, TError, TVariables, TContext>) {
+    const observer = await this.whenObserver;
+    return observer.mutate(variables, options);
   }
 
   hostConnected() {

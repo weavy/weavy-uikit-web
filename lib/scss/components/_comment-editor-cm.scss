@@ -93,10 +93,5 @@
     .wy-item-hover:hover, .wy-item-hover:focus {
       background: #{color.token(--wy-surface-variant)};
     }
-
-    .wy-avatar {
-      width: var.wy-rem(2);
-      height: var.wy-rem(2);
-    }
   }
 }

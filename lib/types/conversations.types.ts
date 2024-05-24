@@ -1,5 +1,6 @@
 import { AppType } from "./app.types";
 import { MessageType } from "./messages.types";
+import { InfiniteQueryResultType } from "./query.types";
 
 export enum ConversationTypeGuid {
   ChatRoom = "edb400ac-839b-45a7-b2a8-6a01820d1c44",
@@ -15,22 +16,12 @@ export enum ConversationTypeString {
 }
 
 export type ConversationType = AppType & {
-  id: number;
   type: ConversationTypeGuid,
-  created_by_id: number;
-  display_name: string;
   last_message: MessageType;
   is_unread: boolean;
   is_pinned: boolean;
-  is_starred: boolean;
-  avatar_url: string;
 };
 
-export type ConversationsResultType = {
-  data: ConversationType[];
-  start: number;
-  end: number;
-  count: number;
-};
+export type ConversationsResultType = InfiniteQueryResultType<ConversationType>;
 
 export type ConversationMutationContextType = {};

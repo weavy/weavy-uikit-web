@@ -1,5 +1,5 @@
 import { createContext } from "@lit/context";
-import { AppSettingProps } from "../mixins/settings-mixin";
+import { AppSettingProps } from "../mixins/app-mixin";
 import { LitElement } from "lit";
 
 export class AppSettings implements AppSettingProps {
@@ -30,4 +30,4 @@ export class AppSettings implements AppSettingProps {
 }
 
 export type AppSettingsType = AppSettings;
-export const appSettingsContext = createContext<AppSettings>(Symbol.for("weavy-app-settings"));
+export const appSettingsContext = createContext<AppSettings | undefined>(Symbol.for("weavy-app-settings"));

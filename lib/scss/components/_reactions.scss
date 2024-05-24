@@ -1,130 +1,87 @@
 @use "base/color";
 @use "base/var";
-@use "buttons"; // Ensures correct order, since buttons is needed by reactions
-@use "dropdown"; // Ensures correct order, since dropdown is needed by reactions
+@use "base/const";
 
-.wy-likes {
-  display: inline-flex;
-  align-items: center;
-}
-
-.wy-like-button {
-  background: var(--wy-component-background-color);
-  color: var(--wy-primary);
-  width: var.wy-rem(2.5);
-  height: var.wy-rem(2.5);
-}
-
-.wy-like-count {
-  padding: 0 var.wy-rem(.5);
-  color: var(--wy-outline);
-  font-size: var.default(--wy-font-size-sm);
-}
-
-.wy-reaction-count {
-  margin: 0 var.wy-rem(.5) 0 var.wy-rem(.125);
-  line-height: 1;
-  font-size: var.default(--wy-font-size-sm);
-}
-
-.wy-reaction-menu {
-  padding: var.wy-rem(.25);
+[part~=wy-reaction] {
   font-size: var.wy-rem(1.125);
-  border-radius: var.wy-rem(2.5);
 }
 
-.wy-reaction-picker {
-  display: flex;
-
-  .wy-reaction-button {
-    color: unset;
-  }
-
-  // button{
-  //   span{
-  //     font-size: var.wy-rem(2);
-  //   }
-  // }
-}
-
-
-.wy-reactions {
+[part~="wy-reactions"] {
   display: inline-flex;
   align-items: center;
-  column-gap: var.wy-rem(.1875);
+  column-gap: var.wy-rem(0.25);
+  margin-left: var.wy-rem(0.25);
+  margin-right: var.wy-rem(0.25);
+
   // hidden when empty
   &:empty {
     display: none;
   }
 }
 
-.wy-reactions-line {
+[part~="wy-reaction-count"] {
+  margin: 0 var.wy-rem(0.25) 0;
+  line-height: 1;
+  font-size: var.default(--wy-font-size-sm);
+}
+
+[part~="wy-reaction-menu"] {
+  --wy-component-background-color: #{color.token(--wy-surface-2)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+
+  display: flex;
+  position: absolute;
+  z-index: const.$zindex-dropdown;
+  margin: 0; // Override default margin of ul
+  text-align: left; // Ensures proper alignment if parent has it changed (e.g., modal footer)
+  background-clip: padding-box;
+  box-shadow: var.default(--wy-shadow-level1);
+  overflow: hidden;
+  top: 100%;
+  left: 0;
+  padding: var.default(--wy-padding-sm);
+  font-size: var.wy-rem(1.125);
+  border-radius: var.default(--wy-border-radius-pill);
+}
+
+[part~="wy-reaction-picker"] {
+  display: flex;
+  flex-direction: row;
+  gap: var.default(--wy-gap-sm);
+}
+
+[part~="wy-reactions-line"] {
   display: flex;
   align-items: center;
+  padding-left: var.wy-rem(0.1875);
+  padding-right: var.wy-rem(0.1875);
+  gap: var.wy-rem(0.1875);
+  justify-content: end;
 }
 
-:host(wy-reactions) {
-  .wy-emoji {
-    width: var.wy-rem(1.125);
-    height: var.wy-rem(1.125);
-    font-size: var.wy-rem(1.125);
-
-    &:first-child {
-      margin-left: var.wy-rem(.1875);
-    }
-
-    &:last-child {
-      margin-right: var.wy-rem(.1875);
-    }
-  }
-}
-  
-  :host(wy-reactions[small]) {
-    .wy-reaction-lineup, .wy-reaction-like-button {
-      .wy-emoji {
-        width: var.wy-rem(1.125);
-        height: var.wy-rem(1.125);
-        font-size: var.wy-rem(1);
-    
-        &:first-child {
-          margin-left: var.wy-rem(.125);
-        }
-    
-        &:last-child {
-          margin-right: var.wy-rem(.125);
-        }
-      }
-
-      .wy-like-count {
-        font-size: var.default(--wy-font-size-xs);
-      }
-    }
-  }
-
-
-
-.wy-table-reactions {
-  // avatar
-  td:first-child {
-    width: var.wy-rem(3);
-  }
-  // name
-  td:nth-child(2) {
-    width: 100%;
-  }
-
-  tr:last-child td {
-    box-shadow: none;
-  }
+[part~="wy-reactions-line-reverse"] {
+  flex-direction: row-reverse;
+  justify-content: start;
 }
 
-.wy-reaction {
-  font-size: var.wy-rem(1.125);
+[part~="wy-reactions-line-bottom"] {
+  position: absolute;
+  bottom: var.wy-rem(-1.125);
+  right: var.wy-rem(0.25);
 }
 
-.wy-reaction-menu-button, .wy-like-button {
-  background: var(--wy-component-background-color);
-  color: currentColor;
-  border-radius: var.default(--wy-border-radius-pill);
-  background-clip: content-box;
+[part~="wy-reactions-line-below"] {
+  position: relative;
+  height: 0;
+  min-height: 0;
+  max-height: 0;
+  margin: calc(var.default(--wy-message-padding) - var.default(--wy-gap)) calc(-1 * var.default(--wy-message-padding)) calc(-1 * var.default(--wy-message-padding));
+  padding-left: var.wy-rem(0.125);
+  padding-right: var.wy-rem(0.125);
+  gap: var.wy-rem(0.125);
+  flex: 0 0 0;
+  justify-content: flex-end;
 }

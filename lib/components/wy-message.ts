@@ -1,8 +1,7 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import { hasFeature } from "../utils/features";
 import { localized, msg, str } from "@lit/localize";
 import { keyed } from "lit/directives/keyed.js";
 
@@ -10,16 +9,15 @@ import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
-import chatCss from "../scss/all"
-import type { AppType } from "../types/app.types";
+import chatCss from "../scss/all";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { type ConversationType } from "../types/conversations.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-avatar";
 import "./wy-embed";
@@ -35,16 +33,13 @@ import "./wy-poll";
 
 @customElement("wy-message")
 @localized()
-export default class WyMessage extends LitElement {
-  
+export default class WyMessage extends AppConsumerMixin(LitElement) {
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
+  protected exportParts = new ShadowPartsController(this);
 
-  @property({ type: Object })
-  app!: AppType;
+  @property({ attribute: false })
+  conversation?: ConversationType;
 
   @property({ type: Number })
   messageId!: number;
@@ -83,7 +78,7 @@ export default class WyMessage extends LitElement {
   text: string = "";
 
   @property({ type: Array })
-  attachments: FileType[] = [];
+  attachments?: FileType[] = [];
 
   @property({ attribute: false })
   meeting?: MeetingType;
@@ -95,19 +90,10 @@ export default class WyMessage extends LitElement {
   embed?: EmbedType;
 
   @property({ type: Array })
-  reactions: ReactableType[] = [];
+  reactions?: ReactableType[] = [];
 
   @property({ type: Array })
   seenBy: MemberType[] = [];
-
-  @property({ type: Number })
-  userId: number = -1;
-
-  @state()
-  availableFeatures?: FeaturesListType;
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
 
   private previewRef: Ref<WeavyPreview> = createRef();
 
@@ -116,10 +102,9 @@ export default class WyMessage extends LitElement {
     return this.dispatchEvent(event);
   }
 
-
   override render() {
-    const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url);
-    const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url);
+    const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url) || [];
+    const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url) || [];
 
     const dateFull = this.createdAt
       ? new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
@@ -135,7 +120,12 @@ export default class WyMessage extends LitElement {
         ${!this.me
           ? html`
               <div class="wy-message-author">
-                <wy-avatar .src="${this.avatar}" .size=${32} .name="${this.displayName}" .isBot=${this.isBot}></wy-avatar>
+                <wy-avatar
+                  .src="${this.avatar}"
+                  .size=${32}
+                  .name="${this.displayName}"
+                  .isBot=${this.isBot}
+                ></wy-avatar>
               </div>
             `
           : ""}
@@ -156,27 +146,27 @@ export default class WyMessage extends LitElement {
                         .images=${images}
                         @file-open=${(e: CustomEvent) => {
                           this.previewRef.value?.open(e.detail.file);
-                        }}></wy-image-grid>`
+                        }}
+                      ></wy-image-grid>`
                     : ``}
 
                   <!-- embeds -->
-                  ${this.embed && hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds)
+                  ${this.embed && this.hasFeatures?.embeds
                     ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
                     : nothing}
 
                   <!-- text -->
                   ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
 
-                   <!-- poll -->
-                  ${
-                  this.pollOptions && this.pollOptions.length > 0
+                  <!-- poll -->
+                  ${this.pollOptions && this.pollOptions.length > 0
                     ? html`
                         <wy-poll
                           .pollOptions=${this.pollOptions}
-                          @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}></wy-poll>
+                          @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}
+                        ></wy-poll>
                       `
-                    : nothing
-                  }
+                    : nothing}
 
                   <!-- meeting -->
                   ${this.meeting ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>` : ``}
@@ -187,41 +177,51 @@ export default class WyMessage extends LitElement {
                         .files=${files}
                         @file-open=${(e: CustomEvent) => {
                           this.previewRef.value?.open(e.detail.file);
-                        }}></wy-attachments-list>`
+                        }}
+                      ></wy-attachments-list>`
                     : ``}
 
                   <!-- reactions -->
-                  ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
-                    <div class="wy-reactions-line">
-                      ${keyed(`reactions-${this.app.id}-${this.messageId}`, html`<wy-reactions
-                        small                        
-                        .reactions=${this.reactions}
-                        parentId=${this.app.id}
-                        entityId=${this.messageId}
-                        messageType="messages"
-                        .userId=${this.userId}></wy-reactions>`)}
-                    </div>` : nothing}
+                  ${this.hasFeatures?.reactions && this.conversation
+                    ? html`
+                        ${keyed(
+                          `reactions-${this.conversation.id}-${this.messageId}`,
+                          html`
+                            <wy-reactions
+                              lineBelow
+                              ?lineReverse=${!this.me}
+                              small
+                              directionX=${this.me ? "right" : "left" }
+                              .reactions=${this.reactions}
+                              parentId=${this.conversation.id}
+                              entityId=${this.messageId}
+                              messageType="messages"
+                            ></wy-reactions>
+                          `
+                        )}
+                      `
+                    : nothing}
                 `}
           </div>
         </div>
       </div>
-      ${hasFeature(this.availableFeatures, Feature.Receipts, this.features?.receipts)
+      ${this.hasFeatures?.receipts
         ? html`<div class="wy-readby-status">
             ${this.seenBy && this.seenBy.length
               ? html`
                   ${this.seenBy.map((member: MemberType) => {
-                    const dateSeenFull =
-                      member.marked_at
-                        ? new Intl.DateTimeFormat(this.weavyContext?.locale, {
-                            dateStyle: "full",
-                            timeStyle: "short",
-                          }).format(new Date(member.marked_at))
-                        : "";
+                    const dateSeenFull = member.marked_at
+                      ? new Intl.DateTimeFormat(this.weavyContext?.locale, {
+                          dateStyle: "full",
+                          timeStyle: "short",
+                        }).format(new Date(member.marked_at))
+                      : "";
                     return html`<wy-avatar
                       title=${msg(str`Seen by ${member.display_name} at ${dateSeenFull}`)}
                       .name=${member.display_name}
                       .src=${member.avatar_url}
-                      size=${18}></wy-avatar>`;
+                      size=${18}
+                    ></wy-avatar>`;
                   })}
                 `
               : this.delivered === true
@@ -234,16 +234,17 @@ export default class WyMessage extends LitElement {
           </div>`
         : nothing}
       ${this.attachments
-        ? keyed(`preview-message-${this.messageId}`, html`
-            <wy-preview
-              ${ref(this.previewRef)}
-              .uid=${`message-${this.messageId}`}
-              .app=${this.app}
-              .files=${[...images, ...files]}
-              .availableFeatures=${this.availableFeatures}
-              .features=${this.features}
-              .isAttachment=${true}></wy-preview>
-          `)
+        ? keyed(
+            `preview-message-${this.messageId}`,
+            html`
+              <wy-preview
+                ${ref(this.previewRef)}
+                .uid=${`message-${this.messageId}`}
+                .files=${[...images, ...files]}
+                .isAttachment=${true}
+              ></wy-preview>
+            `
+          )
         : nothing}
     `;
   }

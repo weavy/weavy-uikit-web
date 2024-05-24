@@ -5,12 +5,12 @@
 
 // weavy ui components 
 @use "components/appbar";
-@use "components/avatar";
+//@use "components/avatar";
 @use "components/badge";
 @use "components/buttons";
 @use "components/code";
 @use "components/content";
-@use "components/dropdown";
+//@use "components/dropdown";
 @use "components/emoji";
 @use "components/icons";
 @use "components/image-grid";
@@ -34,7 +34,8 @@
 @use "components/preview-text";
 @use "components/reactions";
 @use "components/sheet";
-@use "components/spinner";
+//@use "components/spinner";
+@use "components/tab";
 @use "components/type";
 @use "components/toasts";
 @use "components/typing";
@@ -43,20 +44,4 @@
 @use "components/message-editor-cm";
 @use "components/conversations";
 
-.wy-messenger-conversation {
-    ---background-color: #{color.token(--wy-background)};
-    ---color: #{color.token(--wy-on-background)};
-  
-    background-color: var(---background-color);
-    color: var(---color);
-  
-    overflow-anchor: none;
-    display: flex;
-    flex-direction: column;                    
-    flex: 1 0 min-content;
-    height: 100%;
-    width: 100%;
-    min-height: 0;
-    min-width: 0;
-  }
-    
+@use "components/messenger";

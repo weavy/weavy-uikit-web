@@ -7,7 +7,7 @@
   border-radius: var.default(--wy-border-radius-sm);
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: var(--wy-border);
   min-width: 0;
 
   .wy-item {
@@ -33,11 +33,11 @@
 
 // A list of items with rounded corners and borders to visually group them together
 .wy-list-bordered {
-  border: 1px solid #{color.token(--wy-outline-variant)};  
+  border: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};  
   gap:0;
 
   .wy-item {
-    border-top: 1px solid #{color.token(--wy-outline-variant)};
+    border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
     border-left: none;
     border-right: none;
 

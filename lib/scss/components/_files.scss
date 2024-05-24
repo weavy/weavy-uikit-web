@@ -10,6 +10,7 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+
   :first-child {
     line-height: var.default(--wy-line-height);
     flex: 0 1 auto;
@@ -17,6 +18,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  
   :last-child:not(:first-child) {
     flex: 0 0 auto;
     white-space: nowrap;
@@ -35,8 +37,8 @@
   width: 100%;
   height: 100%;
   position: relative;
-  color: #{color.token(--wy-on-background)};
-  background-color: #{color.token(--wy-background)};
+  /*color: #{color.token(--wy-on-background)};
+  background-color: #{color.token(--wy-background)};*/
   display: flex;
   flex-direction: column;
   flex: 1;

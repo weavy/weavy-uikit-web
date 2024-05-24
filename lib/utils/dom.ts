@@ -60,3 +60,7 @@ export async function whenVisible() {
     });
   }
 }
+
+export function isInShadowDom(node: Node) {
+  return node.getRootNode() instanceof ShadowRoot;
+}

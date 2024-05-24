@@ -1,6 +1,6 @@
 import { ConversationTypeGuid } from "./conversations.types";
 import { MembersResultType } from "./members.types";
-import { UserType } from "./users.types";
+//import { UserType } from "./users.types";
 
 export type AppType = {
   id: number;
@@ -16,15 +16,16 @@ export type AppType = {
   metadata?: { [key: string]: unknown };
   tags?: string[];
   created_at: string;
-  created_by_id: number;
-  created_by?: UserType;
-  modified_at?: string;
-  modified_by_id?: number;
-  modified_by?: UserType;
+  updated_at?: string;
   members: MembersResultType;
   is_starred: boolean;
   is_subscribed: boolean;
   is_trashed: boolean;
+};
+
+export type AppRef = {
+  id: number,
+  uid?: string
 };
 
 export enum AccessType {
@@ -43,10 +44,18 @@ export enum PermissionType {
   Admin = "admin",
 }
 
+export enum ContextualAppTypes {
+  Chat = "chat",
+  Comments = "comments",
+  Files = "files",
+  Posts = "posts",
+}
+
 export enum AppTypes {
   Chat = "chat",
   Comments = "comments",
   Files = "files",
+  Messenger = "messenger",
   Posts = "posts",
 }
 
@@ -56,7 +65,6 @@ export enum AppTypeGuid {
   Files = "523edd88-4bbf-4547-b60f-2859a6d2ddc1",
   Posts = "5ebfa152-de85-48da-82dd-30a1b560c313",
 }
-
 
 export enum EntityTypes {
   App = "app",

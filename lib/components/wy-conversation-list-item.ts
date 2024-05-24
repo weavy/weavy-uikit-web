@@ -11,21 +11,24 @@ import { localized, msg } from "@lit/localize";
 import { DeliveredConversationMutationType, getDeliveredConversationMutation } from "../data/conversation";
 import { relativeTime } from "../utils/datetime";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
+import { WeavyContextProps } from "../types/weavy.types";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { ConversationTypeGuid } from "../types/conversations.types";
+import { userContext } from "../contexts/user-context";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-avatar";
 import "./wy-typing";
 import "./wy-icon";
 import "./wy-button";
 import "./wy-dropdown";
-import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
-import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { ConversationTypeGuid } from "../types/conversations.types";
 
 @customElement("wy-conversation-list-item")
 @localized()
 export default class WyConversationListItem extends LitElement {
   static override styles = chatCss;
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
@@ -38,7 +41,7 @@ export default class WyConversationListItem extends LitElement {
   unread: boolean = false;
 
   @property({ attribute: true })
-  avatarUrl: string = "";
+  avatarUrl?: string = "";
 
   @property({ attribute: true, type: Boolean })
   hideAvatar: boolean = false;
@@ -64,13 +67,18 @@ export default class WyConversationListItem extends LitElement {
   @property({ attribute: false })
   lastMessage?: MessageType;
 
-  @property({ attribute: false })
-  user?: UserType;
+  @consume({ context: userContext, subscribe: true })
+  @state()
+  user: UserType | undefined;
 
   private deliveredConversationMutation?: DeliveredConversationMutationType;
 
   private handleMessageCreated = (realtimeEvent: RealtimeMessageEventType) => {
-    if (realtimeEvent.message.app_id === this.conversationId && realtimeEvent.actor.id !== this.user!.id) {
+    if (!this.user) {
+      return;
+    }
+
+    if (realtimeEvent.message.app.id === this.conversationId && realtimeEvent.actor.id !== this.user.id) {
       this.deliveredConversationMutation?.mutate({
         id: this.conversationId,
       });
@@ -84,7 +92,11 @@ export default class WyConversationListItem extends LitElement {
   };
 
   private handleConversationMarked = (realtimeEvent: RealtimeConversationMarkedEventType) => {
-    if (realtimeEvent.actor.id === this.user!.id) {
+    if (!this.user) {
+      return;
+    }
+
+    if (realtimeEvent.actor.id === this.user.id) {
       this.dispatchRefetch();
     }
   };
@@ -171,8 +183,8 @@ export default class WyConversationListItem extends LitElement {
       : "";
 
     const otherMember =
-      this.type === ConversationTypeGuid.PrivateChat
-        ? (this.members?.data || []).filter((member) => member.id !== this.user!.id)?.[0]
+      this.type === ConversationTypeGuid.PrivateChat && this.user
+        ? (this.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user
         : null;
 
     return html`
@@ -187,29 +199,25 @@ export default class WyConversationListItem extends LitElement {
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
+
         ${this.type !== ConversationTypeGuid.BotChat
-          ? this.type === ConversationTypeGuid.ChatRoom && this.user
-            ? html`
-                <wy-avatar-group
-                  .members=${this.members}
-                  .user=${this.user}
-                  .name=${this.displayName}
-                  .size=${48}
-                ></wy-avatar-group>
-              `
+          ? this.avatarUrl
+            ? html`<wy-avatar .size=${48} src=${this.avatarUrl}></wy-avatar>`
+            : this.type == ConversationTypeGuid.ChatRoom
+            ? html` <wy-avatar-group .members=${this.members} title=${this.displayName} .size=${48}></wy-avatar-group>`
             : html`
                 <wy-avatar
                   src=${ifDefined(otherMember?.avatar_url)}
-                  name=${this.displayName}
-                  size=${48}
+                  name=${ifDefined(otherMember?.display_name)}
                   presence=${otherMember?.presence || "away"}
+                  ?isBot=${otherMember?.is_bot}
                   id=${ifDefined(otherMember?.id)}
-                  ?isbot=${otherMember?.is_bot}
+                  size=${48}
                 ></wy-avatar>
               `
           : nothing}
 
-        <div class="wy-item-body">
+        <div class="wy-item-rows">
           <div class="wy-item-row">
             <div class="wy-item-title"
               >${this.displayName || this.lastMessage?.plain || msg("Untitled conversation")}</div
@@ -222,68 +230,74 @@ export default class WyConversationListItem extends LitElement {
           </div>
           <div class="wy-item-row">
             <div class="wy-item-text">
-              <wy-typing appId=${this.conversationId} userId=${this.user!.id}>
-                ${this.lastMessage
-                  ? html`
-                      ${this.user!.id === this.lastMessage.created_by.id ? html`${msg("You")}: ` : nothing}
-                      ${this.members.count > 2 && this.user!.id !== this.lastMessage?.created_by.id
-                        ? html`${this.lastMessage?.created_by.display_name}: `
+              ${this.user
+                ? html`
+                    <wy-typing appId=${this.conversationId} userId=${this.user.id}>
+                      ${this.lastMessage
+                        ? html`
+                            ${this.user.id === this.lastMessage.created_by.id ? html`${msg("You")}: ` : nothing}
+                            ${this.members.count > 2 && this.user.id !== this.lastMessage?.created_by.id
+                              ? html`${this.lastMessage?.created_by.display_name}: `
+                              : nothing}
+                          `
                         : nothing}
+                      ${this.lastMessage?.text ? html`<span>${this.lastMessage.plain}</span>` : nothing}
+                      ${!this.lastMessage?.text && (this.lastMessage?.attachments?.count || 0) > 0
+                        ? html`<wy-icon kind="text-icon" name="attachment"></wy-icon>`
+                        : nothing}
+                      ${!this.lastMessage?.text && this.lastMessage?.meeting?.id
+                        ? html`<wy-icon kind="text-icon" name="zoom"></wy-icon>`
+                        : nothing}
+                      ${!this.lastMessage ? html`&nbsp;` : nothing}
+                    </wy-typing>
+                  `
+                : nothing}
+            </div>
+
+            <div class="wy-item-actions wy-item-actions-bottom">
+              ${this.starred
+                ? html`<wy-button kind="icon" @click=${(e: Event) => this.handleStar(e, false)}>
+                    <wy-icon name="star" size=${24} color="yellow"></wy-icon>
+                  </wy-button>`
+                : nothing}
+              ${this.pinned
+                ? html`<wy-button kind="icon" @click=${(e: Event) => this.handlePin(e, false)}
+                    ><wy-icon name="pin" size=${24} color=""></wy-icon
+                  ></wy-button>`
+                : nothing}
+
+              <wy-dropdown>
+                ${!this.selected
+                  ? html`<wy-dropdown-item @click=${() => this.dispatchMarked(this.unread)}>
+                      <wy-icon name=${this.unread ? "unread" : "read"}></wy-icon>
+                      ${this.unread ? msg("Mark as read") : msg("Mark as unread")}
+                    </wy-dropdown-item>`
+                  : nothing}
+                <wy-dropdown-item @click=${(e: Event) => this.handlePin(e, !this.pinned)}>
+                  <wy-icon name=${this.pinned ? "unpin" : "pin"}></wy-icon>
+                  ${this.pinned ? msg("Unpin") : msg("Pin")}
+                </wy-dropdown-item>
+                <wy-dropdown-item @click=${(e: Event) => this.handleStar(e, !this.starred)}>
+                  <wy-icon name=${this.starred ? "unstar" : "star"}></wy-icon>
+                  ${this.starred ? msg("Unstar") : msg("Star")}
+                </wy-dropdown-item>
+                ${this.type === ConversationTypeGuid.ChatRoom
+                  ? html`<wy-dropdown-item @click=${() => this.handleLeaveConversation()}>
+                      <wy-icon name="account-minus"></wy-icon>
+                      ${msg("Leave conversation")}
+                    </wy-dropdown-item>`
+                  : nothing}
+                ${this.type === ConversationTypeGuid.BotChat
+                  ? html`
+                      <wy-dropdown-item @click=${() => this.handleTrashConversation()}>
+                        <wy-icon name="trashcan"></wy-icon>
+                        ${msg("Trash")}
+                      </wy-dropdown-item>
                     `
                   : nothing}
-                ${this.lastMessage?.text ? html`<span>${this.lastMessage.plain}</span>` : nothing}
-                ${!this.lastMessage?.text && (this.lastMessage?.attachment_count || 0) > 0
-                  ? html`<wy-icon kind="text-icon" name="attachment"></wy-icon>`
-                  : nothing}
-                ${!this.lastMessage?.text && this.lastMessage?.meeting_id
-                  ? html`<wy-icon kind="text-icon" name="zoom"></wy-icon>`
-                  : nothing}
-                ${!this.lastMessage ? html`&nbsp;` : nothing}
-              </wy-typing>
+              </wy-dropdown>
             </div>
           </div>
-        </div>
-
-        <div class="wy-item-actions wy-item-actions-bottom">
-          ${this.starred
-            ? html`<wy-button kind="icon" @click=${(e: Event) => this.handleStar(e, false)}>
-                <wy-icon name="star" size=${24} color="yellow"></wy-icon>
-              </wy-button>`
-            : nothing}
-          ${this.pinned
-            ? html`<wy-button kind="icon" @click=${(e: Event) => this.handlePin(e, false)}
-                ><wy-icon name="pin" size=${24} color=""></wy-icon
-              ></wy-button>`
-            : nothing}
-
-          <wy-dropdown>
-            <wy-dropdown-item @click=${() => this.dispatchMarked(this.unread)}>
-              <wy-icon name=${this.unread ? "unread" : "read"}></wy-icon>
-              ${this.unread ? msg("Mark as read") : msg("Mark as unread")}
-            </wy-dropdown-item>
-            <wy-dropdown-item @click=${(e: Event) => this.handlePin(e, !this.pinned)}>
-              <wy-icon name=${this.pinned ? "unpin" : "pin"}></wy-icon>
-              ${this.pinned ? msg("Unpin") : msg("Pin")}
-            </wy-dropdown-item>
-            <wy-dropdown-item @click=${(e: Event) => this.handleStar(e, !this.starred)}>
-              <wy-icon name=${this.starred ? "unstar" : "star"}></wy-icon>
-              ${this.starred ? msg("Unstar") : msg("Star")}
-            </wy-dropdown-item>
-            ${this.type === ConversationTypeGuid.ChatRoom
-              ? html`<wy-dropdown-item @click=${() => this.handleLeaveConversation()}>
-                  <wy-icon name="account-minus"></wy-icon>
-                  ${msg("Leave conversation")}
-                </wy-dropdown-item>`
-              : nothing}
-            ${this.type === ConversationTypeGuid.BotChat
-              ? html`
-                  <wy-dropdown-item @click=${() => this.handleTrashConversation()}>
-                    <wy-icon name="trashcan"></wy-icon>
-                    ${msg("Trash")}
-                  </wy-dropdown-item>
-                `
-              : nothing}
-          </wy-dropdown>
         </div>
       </div>
     `;

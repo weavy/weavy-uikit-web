@@ -1,9 +1,14 @@
-@use "base/const";
 @use "base/color";
 @use "base/text";
+@use "base/var";
 
 .wy-conversations{
     position:relative;
+    /*--wy-component-background-color: #{color.token(--wy-background)};
+    --wy-component-color: #{color.token(--wy-on-background)};
+  
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);*/
 }
 
 .wy-conversation {
@@ -11,25 +16,26 @@
   position: relative;
 
   .wy-item-title {
-    font-weight: const.$font-weight-normal;
+    font-weight: var.default(--wy-item-title-font-weight);
+    font-size: var.default(--wy-item-title-font-size);
   }
 
+  // TODO: Change to something other than font-weight
   &.wy-unread {
     .wy-item-title {
-      font-weight: const.$font-weight-bold;
+      font-weight: var.default(--wy-font-weight-bold);
     }
 
     .wy-item-text, .wy-meta {
       color: color.token(--wy-on-background);
-      font-weight: const.$font-weight-semibold;
+      font-weight: var.default(--wy-font-weight-bold);
     }
   }
 
   .wy-item-text {
     .wy-typing-show {
       @include text.truncate;
-      font-weight: const.$font-weight-normal;
+      font-weight: var.default(--wy-font-weight);
     }
   }
 }
-

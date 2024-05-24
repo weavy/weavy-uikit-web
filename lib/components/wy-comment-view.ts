@@ -1,24 +1,17 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { hasFeature } from "../utils/features";
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
-
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
 import chatCss from "../scss/all";
 
-import type { AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
 import { relativeTime } from "../utils/datetime";
@@ -36,21 +29,15 @@ import "./wy-dropdown";
 import "./wy-icon";
 import "./wy-preview";
 import "./wy-skeleton";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-comment-view")
 @localized()
-export default class WyCommentView extends LitElement {
+export default class WyCommentView extends AppConsumerMixin(LitElement) {
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   commentId!: number;
@@ -80,7 +67,7 @@ export default class WyCommentView extends LitElement {
   html: string = "";
 
   @property({ type: Array })
-  attachments: FileType[] = [];
+  attachments?: FileType[] = [];
 
   @property({ attribute: false })
   embed?: EmbedType;
@@ -92,13 +79,7 @@ export default class WyCommentView extends LitElement {
   meeting?: MeetingType;
 
   @property({ type: Array })
-  reactions: ReactableType[] = [];
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
+  reactions?: ReactableType[] = [];
 
   private previewRef: Ref<WeavyPreview> = createRef();
 
@@ -133,7 +114,12 @@ export default class WyCommentView extends LitElement {
 
     return this.temp
       ? html`<div class="wy-item wy-item-sm wy-comment-header">
-            <wy-avatar .src="${this.createdBy.avatar_url}" .size=${32} .name=${this.createdBy.display_name} .isBot=${this.createdBy.is_bot}></wy-avatar>
+            <wy-avatar
+              .src="${this.createdBy.avatar_url}"
+              .size=${32}
+              .name=${this.createdBy.display_name}
+              .isBot=${this.createdBy.is_bot}
+            ></wy-avatar>
             <div class="wy-item-body">
               <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
               <div class="wy-item-text">
@@ -147,7 +133,12 @@ export default class WyCommentView extends LitElement {
             </div>
           </div>`
       : html`<div class="wy-item wy-item-sm wy-comment-header">
-            <wy-avatar .src=${this.createdBy.avatar_url} .size=${32} .name=${this.createdBy.display_name} .isBot=${this.createdBy.is_bot}></wy-avatar>
+            <wy-avatar
+              .src=${this.createdBy.avatar_url}
+              .size=${32}
+              .name=${this.createdBy.display_name}
+              .isBot=${this.createdBy.is_bot}
+            ></wy-avatar>
             <div class="wy-item-body">
               <div class="wy-item-title">${this.createdBy.display_name}</div>
               <div class="wy-item-text">
@@ -156,7 +147,7 @@ export default class WyCommentView extends LitElement {
               </div>
             </div>
 
-            ${this.user.id === this.createdBy.id
+            ${this.user && this.user.id === this.createdBy.id
               ? html`
                   <div class="wy-item-actions wy-item-actions-top">
                     <wy-dropdown>
@@ -185,11 +176,12 @@ export default class WyCommentView extends LitElement {
                     .images=${images}
                     @file-open=${(e: CustomEvent) => {
                       this.previewRef.value?.open(e.detail.file);
-                    }}></wy-image-grid>`
+                    }}
+                  ></wy-image-grid>`
                 : ``}
 
               <!-- embeds -->
-              ${this.embed && hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds)
+              ${this.embed && this.hasFeatures?.embeds
                 ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
                 : nothing}
               ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
@@ -199,17 +191,19 @@ export default class WyCommentView extends LitElement {
                 ? html`
                     <wy-poll
                       .pollOptions=${this.pollOptions}
-                      @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}></wy-poll>
+                      @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}
+                    ></wy-poll>
                   `
                 : nothing}
 
               <!-- files -->
               ${files && !!files.length
                 ? html`<wy-attachments-list
-                    .files=${files}
+                    .files=${files ?? []}
                     @file-open=${(e: CustomEvent) => {
                       this.previewRef.value?.open(e.detail.file);
-                    }}></wy-attachments-list>`
+                    }}
+                  ></wy-attachments-list>`
                 : ``}
 
               <!-- meeting -->
@@ -217,25 +211,23 @@ export default class WyCommentView extends LitElement {
             </div>
           </div>
 
-          ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
-          <div class="wy-reactions-line">
+          ${this.hasFeatures?.reactions
+            ? html` 
                 <wy-reactions
+                  lineBottom
                   small
                   .reactions=${this.reactions}
                   parentId=${this.parentId}
                   entityId=${this.commentId}
                   messageType="comments"
-                  .userId=${this.user.id}></wy-reactions>
-              </div>` : nothing}
+                ></wy-reactions>`
+            : nothing}
 
           <wy-preview
             ${ref(this.previewRef)}
-            .app=${this.app}
             .uid=${`comment-${this.parentId}-${this.commentId.toString()}`}
             .files=${this.attachments}
             .isAttachment=${true}
-            .availableFeatures=${this.availableFeatures}
-            .features=${this.features}></wy-preview>
-      `;
+          ></wy-preview> `;
   }
 }

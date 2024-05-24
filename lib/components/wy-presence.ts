@@ -1,20 +1,25 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
-import chatCss from "../scss/all"
 import { Presence, type PresenceType } from "../types/presence.types";
+import { shadowPartMap } from "../utils/directives/shadow-part-map";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import rebootCss from "../scss/wrappers/base/reboot";
+import presenceCss from "../scss/wrappers/presence";
 
 @customElement("wy-presence")
 export default class WyPresence extends LitElement {
-  
   static override styles = [
-    chatCss,
+    rebootCss,
+    presenceCss,
     css`
       :host {
         display: contents;
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   placement: "avatar" | "text" = "avatar";
@@ -23,12 +28,12 @@ export default class WyPresence extends LitElement {
   status?: PresenceType;
 
   override render() {
-    const presenceClasses = {
+    const presenceParts = {
       "wy-presence": true,
       "wy-presence-active": this.status === Presence.Active,
       "wy-presence-in-text": this.placement === "text",
     };
 
-    return html` <span class=${classMap(presenceClasses)} data-presence-id=${this.id}></span> `;
+    return html` <span part=${shadowPartMap(presenceParts)} data-presence-id=${this.id}></span> `;
   }
 }

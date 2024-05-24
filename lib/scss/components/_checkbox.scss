@@ -1,5 +1,8 @@
 @use "base/var";
 
+// NOT USED
+
+/*
 // Include mixin in the relative class that should be suffixed with -check
 .wy-button {
   // From bootstrap/scss/forms/_form_check
@@ -19,16 +22,7 @@
   &-check:focus + &,
   &:focus {
     outline: 0;
-    //box-shadow: var.default(--wy-btn-focus-box-shadow);
   }
-  /*&-check:checked + &,
-  &-check:active + & {
-    box-shadow: var.default(--wy-btn-active-box-shadow);
-  
-    &:focus {
-      box-shadow: var.default(--wy-btn-focus-box-shadow), var.default(--wy-btn-active-box-shadow);
-    }
-  }*/
   // Custom icons
   &-check + .wy-button-icon {
     svg:last-child {
@@ -50,3 +44,4 @@
     }
   }
 }
+*/

@@ -1,22 +1,13 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 
-import "./wy-icon";
-import "./wy-dropdown";
-import "./wy-file-menu";
-import "./wy-spinner";
-
-import filesCss from "../scss/all"
-import type { FileType } from "../types/files.types";
+import type { FileType, FilesResultType } from "../types/files.types";
 import { getExtension, getIcon } from "../utils/files";
 import { classMap } from "lit/directives/class-map.js";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { repeat } from "lit/directives/repeat.js";
-import type { AppType } from "../types/app.types";
 import {
   FileVersionDeleteMutationType,
   FileVersionMutationType,
@@ -27,21 +18,24 @@ import {
 import { openUrl } from "../utils/urls";
 import { relativeTime } from "../utils/datetime";
 import { WeavyContextProps } from "../types/weavy.types";
-import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
-import "./wy-empty";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import "./wy-icon";
+import "./wy-dropdown";
+import "./wy-empty";
+import "./wy-file-menu";
+import "./wy-spinner";
+
+import filesCss from "../scss/all";
 
 @customElement("wy-file-versions")
 @localized()
-export class WyFileVersions extends LitElement {
+export class WyFileVersions extends AppConsumerMixin(LitElement) {
   static override styles = filesCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app!: AppType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })
   file!: FileType;
@@ -49,13 +43,7 @@ export class WyFileVersions extends LitElement {
   @property({ attribute: false })
   activeVersion?: FileType;
 
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @state()
-  availableFeatures?: FeaturesListType = [];
-
-  private fileVersionsQuery = new QueryController<FileType[]>(this);
+  private fileVersionsQuery = new QueryController<FilesResultType>(this);
 
   private fileVersionRestoreMutation?: FileVersionMutationType;
   private fileVersionDeleteMutation?: FileVersionDeleteMutationType;
@@ -71,13 +59,11 @@ export class WyFileVersions extends LitElement {
   }
 
   handleRevert(versionFile: FileType) {
-    console.debug("reverting file version", versionFile.version);
     this.fileVersionRestoreMutation?.mutate({ versionFile });
     this.selectVersion(versionFile);
   }
 
   handleRemove(versionFile: FileType) {
-    console.debug("removing file version", versionFile.version);
     this.fileVersionDeleteMutation?.mutate({ versionFile });
     if (this.activeVersion === versionFile) {
       this.activeVersion = this.file;
@@ -89,46 +75,45 @@ export class WyFileVersions extends LitElement {
   }
 
   override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if ((changedProperties.has("weavyContext") || changedProperties.has("file")) && this.weavyContext) {
+    super.willUpdate(changedProperties);
+
+    if (
+      (changedProperties.has("weavyContext") || changedProperties.has("file") || changedProperties.has("app")) &&
+      this.weavyContext &&
+      this.file &&
+      this.app
+    ) {
       this.fileVersionsQuery.trackQuery(
-        getApiOptions<FileType[]>(
+        getApiOptions<FilesResultType>(
           this.weavyContext,
           getFileVersionsKey(this.app, this.file),
           `/api/files/${this.file.id}/versions`
         )
       );
-    }
 
-    if (
-      (changedProperties.has("weavyContext") || changedProperties.has("app") || changedProperties.has("file")) &&
-      this.weavyContext &&
-      this.app &&
-      this.file
-    ) {
       this.fileVersionRestoreMutation = getFileVersionRestoreMutation(this.weavyContext, this.app, this.file);
       this.fileVersionDeleteMutation = getFileVersionDeleteMutation(this.weavyContext, this.app, this.file);
     }
   }
 
   override render() {
-
     const { data, isPending } = this.fileVersionsQuery.result ?? { isPending: true };
 
     if (isPending) {
       return html`<wy-spinner overlay></wy-spinner>`;
     }
 
-    return data
+    return data?.data
       ? html`
           <div class="wy-list wy-versions">
             ${repeat(
-              data,
+              data.data,
               (versionFile) => versionFile.id,
               (versionFile: FileType, index) => {
                 const versionIcon = getIcon(versionFile.name || "").icon;
-                const num = data.length - index;
+                const num = data.data!.length - index;
                 const ext = getExtension(versionFile.name);
-                const modifiedAt = new Date(versionFile.modified_at || versionFile.created_at);
+                const modifiedAt = new Date(versionFile.updated_at || versionFile.created_at);
                 const isExternal = Boolean(this.file.external_url);
 
                 const dateFull = new Intl.DateTimeFormat(this.weavyContext?.locale, {
@@ -157,10 +142,10 @@ export class WyFileVersions extends LitElement {
                         <div class="wy-item-body">
                           <div class="wy-item-title">${num}. ${versionFile.name}</div>
                           <div class="wy-item-text">
-                            <time datetime=${versionFile.modified_at || versionFile.created_at} title=${dateFull}
+                            <time datetime=${versionFile.updated_at || versionFile.created_at} title=${dateFull}
                               >${dateFromNow}</time
                             >
-                            · ${versionFile.modified_by?.display_name}</div
+                            · ${versionFile.updated_by?.display_name}</div
                           >
                         </div>
 

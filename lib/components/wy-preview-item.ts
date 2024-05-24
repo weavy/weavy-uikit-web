@@ -1,13 +1,11 @@
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import allCss from "../scss/all"
-
 import { getExtension, getIcon } from "../utils/files";
 import type { FileProviderType, FileType, PreviewFormatType } from "../types/files.types";
 
-import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-preview-icon";
 import "./wy-preview-image";
@@ -17,9 +15,10 @@ import "./wy-preview-embed";
 import "./wy-pdf-viewer";
 import "./wy-confluence-viewer";
 
+import allCss from "../scss/all";
+
 @customElement("wy-preview-item")
 export class WyPreviewItem extends LitElement {
-  
   static override styles = [
     allCss,
     css`
@@ -29,16 +28,10 @@ export class WyPreviewItem extends LitElement {
     `,
   ];
 
-  
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Object })
   file?: FileType;
-
-  @property({ type: Array })
-  availableFeatures: FeaturesListType = [];
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
 
   override render() {
     const file = this.file;
@@ -66,7 +59,11 @@ export class WyPreviewItem extends LitElement {
       raw: string | undefined = file.raw;
 
     if (format === "image") {
-      return html`<wy-preview-image src=${src} width=${ifDefined(width)} height=${ifDefined(height)}></wy-preview-image>`;
+      return html`<wy-preview-image
+        src=${src}
+        width=${ifDefined(width)}
+        height=${ifDefined(height)}
+      ></wy-preview-image>`;
     } else if (format === "pdf") {
       return html`<wy-pdf-viewer src=${src}></wy-pdf-viewer>`;
     } else if (format === "video" || format === "audio") {
@@ -74,7 +71,8 @@ export class WyPreviewItem extends LitElement {
         format=${format}
         src=${src}
         name=${name}
-        mediaType=${mediaType}></wy-preview-media>`;
+        mediaType=${mediaType}
+      ></wy-preview-media>`;
     } else if (format === "text") {
       return html`<wy-preview-text src=${src}></wy-preview-text>`;
     } else if (format === "code") {
@@ -82,7 +80,12 @@ export class WyPreviewItem extends LitElement {
     } else if (format === "html") {
       return html`<wy-preview-text src=${src} html></wy-preview-text>`;
     } else if (format === "embed") {
-      return html`<wy-preview-embed src=${src} name=${name} icon=${icon} provider=${ifDefined(provider)}></wy-preview-embed>`;
+      return html`<wy-preview-embed
+        src=${src}
+        name=${name}
+        icon=${icon}
+        provider=${ifDefined(provider)}
+      ></wy-preview-embed>`;
     } else if (format === "none") {
       if (provider === "Confluence" && raw) {
         return html`<wy-confluence-viewer src=${ifDefined(link)} icon=${icon} raw=${raw}></wy-confluence-viewer>`;

@@ -91,7 +91,7 @@
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
 
-  border-radius: var.wy-rem(1.25);
+  border-radius: var.default(--wy-input-filled-border-radius);
   border-color: var(--wy-component-background-color);
 
   &:focus {
@@ -124,19 +124,11 @@
 
 .wy-input-group {
   position: relative;
-
-  // Optional leading icon
-  > wy-icon {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 4;
-
-    + .wy-input {
-      padding-left: var.wy-rem(2.5);
-    }
-  }
+  display: flex;
+  gap: var.default(--wy-gap);
+  align-items: center;
 }
+
 
 // Required trailing button
 .wy-input-group-button-icon {
@@ -145,14 +137,11 @@
   right: 0;
   z-index: 4;
   border-radius: var.default(--wy-input-border-radius);
-}
-
-.wy-input-group > wy-button {
   --wy-component-background-color: transparent;
 }
 
 .wy-input-group-input {
-  padding-right: var.wy-rem(2.5);
+  //padding-right: var.wy-rem(2.5);
 
   &:placeholder-shown {
     ~ .wy-input-group-button-icon[type=reset] {

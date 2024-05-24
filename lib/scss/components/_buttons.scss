@@ -1,143 +1,178 @@
-@use 'base/var';
-@use 'base/color';
-@use 'base/svg';
+@use "base/var";
+@use "base/color";
+@use "base/svg";
 
 // basic unstyled button with support for icon and text
-.wy-button {
-    --wy-component-color: #{color.token(--wy-primary)};
-    //--wy-component-background-color: var(--wy-component-background-color, transparent); // #{color.token(--wy-surface-3});
+[part~="wy-button"] {
+  --wy-component-color: #{color.token(--wy-primary)};
+  //--wy-component-background-color: var(--wy-component-background-color, transparent); // #{color.token(--wy-surface-3});
 
-    color: var(--wy-component-color);
-    background: var(--wy-component-background-color, transparent);
+  color: var(--wy-component-color);
+  background: var(--wy-component-background-color, transparent);
 
-    padding: var.default(--wy-btn-padding-y) var.default(--wy-btn-padding-x);
-    font-family: var.default(--wy-btn-font-family), inherit;
-    font-size: var.default(--wy-btn-font-size);
-    font-weight: var.default(--wy-btn-font-weight);
-    line-height: var.default(--wy-btn-line-height);
-    text-align: center;
-    text-decoration: none;
-    white-space: null; // Set to `nowrap` to prevent text wrapping;
-    vertical-align: middle;
+  height: var.default(--wy-button-size);
+  padding: var.default(--wy-button-padding-y) var.default(--wy-button-padding-x);
+  font-family: var.default(--wy-button-font-family), inherit;
+  font-size: var.default(--wy-button-font-size);
+  font-weight: var.default(--wy-button-font-weight);
+  line-height: var.default(--wy-button-line-height);
+  text-align: center;
+  text-decoration: none;
+  white-space: null; // Set to `nowrap` to prevent text wrapping;
+  vertical-align: middle;
 
-    cursor: pointer;
-    user-select: none;
-    border: var.default(--wy-btn-border-width) solid var.default(--wy-btn-border-color);
-    border-radius: var.default(--wy-btn-border-radius);
+  cursor: pointer;
+  user-select: none;
+  border: var.default(--wy-button-border-width) solid color.token(--wy-outline);
+  border-radius: var.default(--wy-button-border-radius);
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var.wy-rem(.25);
-    position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var.default(--wy-button-gap);
+  position: relative;
 
-    // State layer
-    &:not(.wy-button-link, :disabled) {
-        > * {
-            z-index: 3;
-        }
+  &:disabled {
+    opacity: var.default(--wy-opacity-disabled);
+    cursor: unset;
+    pointer-events: none;
+  }
+}
 
-        &::before {
-            content: '';
-            z-index: 2;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: inherit;
-            background: var(--wy-component-color);
-            opacity: 0%;
-        }
+[part~="wy-button-state-layer"] {
+  // State layer
+  > * {
+    z-index: 3;
+  }
 
-        &:hover {
-            &::before {
-                opacity: 8%;
-            }
-        }
+  &::before {
+    content: "";
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: var(--wy-component-color);
+    opacity: 0%;
+  }
+  
+  &[part~=wy-button-sm]::before {
+    margin: calc(var.default(--wy-button-padding-x) * -.25) calc(var.default(--wy-button-padding-x) * -.25);
+    border-radius: var.default(--wy-button-border-radius);
+  }
 
-        &:focus,
-        &:active,
-        &.wy-active {
-            &::before {
-                opacity: 12%;
-            }
-        }
+  &:hover {
+    &::before {
+      opacity: 8%;
     }
+  }
 
-    &:disabled {
-        opacity: var.default(--wy-opacity-disabled);
-        cursor: unset;
-        pointer-events: none;
+  &:focus,
+  &:active,
+  &[part~="wy-active"] {
+    &::before {
+      opacity: 12%;
     }
+  }
 }
 
 // button with only icon (no text)
-.wy-button-icon {
-    --wy-component-color: #{color.token(--wy-on-surface-variant)};
-    //--wy-component-background-color: var(--wy-component-background-color, transparent);
-    width: var.wy-rem(2.5);
-    height: var.wy-rem(2.5);
-    padding: var.wy-rem(.5);
-    line-height: 1;
-    border-radius: var.default(--wy-border-radius-pill);
-    border-width: 0;
-    align-items: center;
-    justify-content: center;
+[part~="wy-button-icon"] {
+  --wy-component-color: #{color.token(--wy-on-surface-variant)};
+  //--wy-component-background-color: var(--wy-component-background-color, transparent);
+  width: var.default(--wy-button-size);
+  height: var.default(--wy-button-size);
+  padding: var.default(--wy-button-padding-y);
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
 
-    &.wy-active {
-        --wy-component-color: #{color.token(--wy-primary)};
-    }
+  &[part~="wy-button-sm"] {
+    height: calc(var.default(--wy-button-size) * .625);
+    width: calc(var.default(--wy-button-size) * .625);
+    padding: 0;
+    margin: calc(var.default(--wy-button-padding-y) * .5);
+  }
+
+  &[part~="wy-active"] {
+    --wy-component-color: #{color.token(--wy-primary)};
+  }
 }
 
-.wy-button-icon-inline {
-    background: var(--wy-component-background-color);
-    color: currentColor;
-    border-radius: var.default(--wy-border-radius-pill);
-    display: flex;
-    width: auto;
-    background-clip: content-box;
+[part~="wy-button-icon-inline"] {
+  height: var.default(--wy-button-size);
+  width: auto;
+  min-width: var.default(--wy-button-size);
+  background: var(--wy-component-background-color);
+  color: currentColor;
+  //border-radius: var.default(--wy-button-border-radius);
+  display: flex;
+  padding: var.default(--wy-button-padding-y);
+
+  &[part~="wy-button-sm"] {
+    height: calc(var.default(--wy-button-size) * .625);
+    padding: calc(var.default(--wy-button-padding-y) * .25) 0;
+    margin: calc(var.default(--wy-button-padding-y) * .5);
+    min-width: calc(var.default(--wy-button-size) * .625);
+  }
 }
 
-.wy-button-inline {
-    border-radius: var.default(--wy-border-radius-pill);
-    padding: var.wy-rem(.5) var.wy-rem(.75);
+
+
+[part~="wy-button-inline"] {
+  border-radius: var.default(--wy-border-radius-pill);
+  padding: var.wy-rem(0.5) var.wy-rem(0.75);
+  margin-inline: var.wy-rem(-.25);
 }
 
 // primary button
-.wy-button-primary {
-    --wy-component-background-color: #{color.token(--wy-primary)};
-    --wy-component-color: #{color.token(--wy-on-primary)};
+[part~="wy-button-primary"] {
+  --wy-component-background-color: #{color.token(--wy-primary)};
+  --wy-component-color: #{color.token(--wy-on-primary)};
 }
 
-.wy-button-variant {
-    --wy-component-background-color: #{color.token(--wy-surface-variant)};
-    --wy-component-color: #{color.token(--wy-on-surface-variant)};
+[part~="wy-button-variant"] {
+  --wy-component-background-color: #{color.token(--wy-surface-variant)};
+  --wy-component-color: #{color.token(--wy-on-surface-variant)};
 }
 
 // primary button (text only)
-.wy-button-primary-text {
-    --wy-component-color: #{color.token(--wy-primary)};
+[part~="wy-button-primary-text"] {
+  --wy-component-color: #{color.token(--wy-primary)};
+}
+
+[part~="wy-button-inherit-color"] {
+  --wy-component-color: currentColor;
+}
+
+[part~="wy-button-no-color"] {
+  --wy-component-color: unset;
 }
 
 // button that looks and behaves like a link
-.wy-button-link {
-    //--wy-component-background-color: transparent;
-    padding: 0;
-    color: var(--wy-link-color, #{color.token(--wy-primary)});
+[part="wy-button-link"] {
+  //--wy-component-background-color: transparent;
+  padding: 0;
+  color: var(--wy-link-color, #{color.token(--wy-primary)});
 
-    text-decoration: var.default(--wy-link-decoration);
+  text-decoration: var.default(--wy-link-decoration);
 
-    &:hover,
-    &:focus {
-        text-decoration: var.default(--wy-link-hover-decoration);
-    }
+  &:hover,
+  &:focus {
+    text-decoration: var.default(--wy-link-hover-decoration);
+  }
 }
 
 // container for proper spacing and alignment of buttons
-.wy-buttons {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var.wy-rem(.5);
+[part~="wy-buttons"] {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var.wy-rem(0.5);
+}
+
+[part~="wy-buttons-reverse"] {
+  flex-direction: row-reverse;
 }

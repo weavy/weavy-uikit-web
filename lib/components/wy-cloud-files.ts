@@ -1,34 +1,26 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { portal } from "lit-modal-portal";
-
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 import WeavyPostal from "../utils/postal-parent";
 import type { ExternalBlobType } from "../types/files.types";
 import type WeavyOverlay from "./wy-overlay";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
 
 import cloudFilesCss from "../scss/all";
 
 import "./wy-overlay";
 import "./wy-spinner";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-cloud-files")
 @localized()
-export default class WyCloudFiles extends LitElement {
+export default class WyCloudFiles extends AppConsumerMixin(LitElement) {
   static override styles = cloudFilesCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
+  protected exportParts = new ShadowPartsController(this);
   
   @state()
   src?: URL;
@@ -163,7 +155,9 @@ export default class WyCloudFiles extends LitElement {
           this.showOverlay
             ? html`
                 <wy-overlay
+                  .contexts=${this.contexts}
                   ${ref(this.overlayRef)}
+                  @close=${() => this.close()}
                   @release-focus=${() =>
                     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
                 >

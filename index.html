@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <head>
   <meta charset="UTF-8">
   <style>
@@ -7,17 +8,40 @@
     }
   </style>
 </head>
+
 <body>
-  <h1>uikit-js</h1>
-  <h2>Web Components</h2>
+  <h1>uikit-web</h1>
+  <form action="/api/user" method="post">
+    <select name="username" id="users">
+    </select>
+    <button type="submit">Sign in</button>
+  </form>
+
+  <h2>Building blocks</h2>
   <ul>
     <li><a href="dev/pages/botchat.html">Bot Chat</a></li>
     <li><a href="dev/pages/chat.html">Chat</a></li>
     <li><a href="dev/pages/comments.html">Comments</a></li>
     <li><a href="dev/pages/files.html">Files</a></li>
-    <li><a href="dev/pages/messenger.html">Messenger</a></li>    
+    <li><a href="dev/pages/messenger.html">Messenger</a></li>
     <li><a href="dev/pages/posts.html">Posts</a></li>
     <li><a href="dev/pages/composed.html">Composed</a></li>
   </ul>
-  
+
+  <script>
+    const users = fetch("/api/users", {
+      credentials: "include",
+    }).then(res => res.json()
+    ).then((users) => {
+      const selectElement = document.getElementById("users");
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.username;
+        option.text = user.name;
+        option.selected = user.is_selected;
+        selectElement.add(option);
+      });
+    });
+  </script>
+
 </body>

@@ -1,8 +1,4 @@
-import type {
-  InfiniteQueryObserverOptions,
-  MutationKey,
-  InfiniteData,
-} from "@tanstack/query-core";
+import type { InfiniteQueryObserverOptions, MutationKey, InfiniteData } from "@tanstack/query-core";
 
 import { type WeavyContextType } from "../client/weavy";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
@@ -20,7 +16,7 @@ export function getPostsOptions(
     queryKey: ["posts", appId],
     queryFn: async (opt) => {
       const skip = opt.pageParam;
-      const url = "/api/apps/" + appId + "/posts?orderby=createdat+desc&skip=" + skip + "&top=" + PAGE_SIZE;
+      const url = "/api/apps/" + appId + "/posts?orderby=id+desc&skip=" + skip + "&take=" + PAGE_SIZE;
 
       const response = await weavyContext.get(url);
       const result = await response.json();
@@ -69,13 +65,11 @@ export function getUpdatePostMutationOptions(weavyContext: WeavyContextType, mut
         updateCacheItem(weavyContext.queryClient, ["posts", variables.appId], variables.id, (item: PostType) => {
           item.text = data.text;
           item.html = data.html;
-          item.attachment_ids = data.attachment_ids;
           item.attachments = data.attachments;
           item.embed = data.embed;
           item.meeting = data.meeting;
-          item.meeting_id = data.meeting_id;
-          item.modified_at = data.modified_at;
-          item.modified_by = data.modified_by;
+          item.updated_at = data.updated_at;
+          item.updated_by = data.updated_by;
           item.options = data.options;
         });
       }
@@ -113,29 +107,26 @@ export function getAddPostMutationOptions(weavyContext: WeavyContextType, mutati
       await queryClient.cancelQueries({ queryKey: ["posts", variables.appId] });
 
       const tempId = Math.random();
-      const tempData: PostType = {
-        id: tempId,
-        app_id: -1,
-        attachment_ids: [],
-        is_subscribed: true,
-        is_trashed: false,
-        text: variables.text,
-        html: variables.text,
-        plain: variables.text,
-        temp: true,
-        created_by_id: variables.user.id,
-        created_by: {
-          id: variables.user.id,
-          avatar_url: variables.user.avatar_url,
-          display_name: variables.user.display_name,
-          presence: undefined,
-          name: variables.user.name,
-        },
-        created_at: new Date().toUTCString(),
-        attachments: [],
-        reactions: [],
-      };
-      addCacheItem(queryClient, ["posts", variables.appId], tempData, undefined, { descending: true });
+
+      if (variables.user) {
+        const tempData: PostType = {
+          id: tempId,
+          app: { id: -1 },
+          is_subscribed: true,
+          is_trashed: false,
+          text: variables.text,
+          html: variables.text,
+          plain: variables.text,
+          temp: true,
+          created_by: variables.user,
+          created_at: new Date().toUTCString(),
+          attachments: { count: 0 },
+          reactions: { count: 0 },
+          is_starred: false,
+          comments: { count: 0 }
+        };
+        addCacheItem(queryClient, ["posts", variables.appId], tempData, undefined, { descending: true });
+      }
       return { tempId } as MutatePostContextType;
     },
     onSuccess: (data: PostType, variables: MutatePostProps, context?: MutatePostContextType) => {

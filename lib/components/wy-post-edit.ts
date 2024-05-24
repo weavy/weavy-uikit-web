@@ -1,7 +1,5 @@
 import { LitElement, html, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { customElement, property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
@@ -10,8 +8,12 @@ import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { MutatePostProps, PostMutationContextType, PostType } from "../types/posts.types";
 import type { EmbedType } from "../types/embeds.types";
-import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
+import { MutationController } from "../controllers/mutation-controller";
+import { getUpdatePostMutationOptions } from "../data/posts";
+import { WeavyContextProps } from "../types/weavy.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all"
 
@@ -24,27 +26,14 @@ import "./wy-reactions";
 import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-embed";
-import type { AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
-import { MutationController } from "../controllers/mutation-controller";
-import { getUpdatePostMutationOptions } from "../data/posts";
-import { WeavyContextProps } from "../types/weavy.types";
 
 @customElement("wy-post-edit")
 @localized()
-export default class WyPostEdit extends LitElement {
+export default class WyPostEdit extends AppConsumerMixin(LitElement) {
   
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   postId!: number;
@@ -71,7 +60,7 @@ export default class WyPostEdit extends LitElement {
   text: string = "";
 
   @property({ type: Array })
-  attachments: FileType[] = [];
+  attachments?: FileType[] = [];
 
   @property({ type: Array })
   pollOptions: PollOptionType[] | undefined = [];
@@ -88,15 +77,6 @@ export default class WyPostEdit extends LitElement {
   @property({ type: Array })
   seenBy: MemberType[] = [];
 
-  @property({ type: Number })
-  userId: number = -1;
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
-
   private updatePostMutation = new MutationController<PostType, Error, MutatePostProps, PostMutationContextType>(this);
 
   private dispatchEdit(edit: boolean) {
@@ -104,24 +84,26 @@ export default class WyPostEdit extends LitElement {
     return this.dispatchEvent(event);
   }
 
-  private handleSubmit(e: CustomEvent) {
+  private async handleSubmit(e: CustomEvent) {
+    const app = await this.whenApp();
     this.updatePostMutation.mutate({
       id: this.postId,
-      appId: this.app.id,
+      appId: app.id,
       text: e.detail.text,
       meetingId: e.detail.meetingId,
       blobs: e.detail.blobs,
       attachments: e.detail.attachments,
       pollOptions: e.detail.pollOptions,
       embed: e.detail.embed,
-      user: this.user,
     });
 
     this.dispatchEdit(false);
   }
 
   override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if ((changedProperties.has("weavyContext") ||changedProperties.has("app")) && this.weavyContext) {
+    super.willUpdate(changedProperties);
+
+    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       this.updatePostMutation.trackMutation(getUpdatePostMutationOptions(this.weavyContext, ["posts", this.app.id]));
     }
   }
@@ -142,12 +124,8 @@ export default class WyPostEdit extends LitElement {
         .text=${this.text}
         .embed=${this.embed}
         .options=${this.pollOptions}
-        .attachments=${this.attachments}
-        .app=${this.app}
-        .user=${this.user}
+        .attachments=${this.attachments ?? []}
         .parentId=${this.postId}
-        .availableFeatures=${this.availableFeatures}
-        .features=${this.features}
         .typing=${false}
         .draft=${false}
         placeholder=${msg("Edit post...")}

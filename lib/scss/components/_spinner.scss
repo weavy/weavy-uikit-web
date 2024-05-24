@@ -1,38 +1,45 @@
 @use "base/color";
+@use "base/var";
+@use "progress";
 
 $spinner-offset: 187 !default;
 $spinner-duration: 1.4s !default;
 
-.wy-spinner {
+[part~=wy-spinner] {
   align-self: center;
   justify-self: center;
   margin: auto;
-
-  circle {
-    stroke-dasharray: 1, 100;
-    stroke-dashoffset: 0;
-    transform-origin: center;
-    fill: none !important;
-  }
-
-  &.wy-spin {
-    // add class .wy-spin to animate the spinner (otherwise it will not be visible)
-    animation: wy-rotate $spinner-duration linear infinite;
-
-    circle {
-      animation: wy-dash $spinner-duration ease-in-out infinite, wy-color ($spinner-duration*2) ease-in-out infinite;
-    }
-  }
-
-  &.wy-spinner-overlay {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-  }
 }
+
+[part~=wy-spinner-padded] {
+  margin: var.wy-rem(1) var.wy-rem(2);
+}
+
+[part~=wy-spinner-overlay] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+}
+
+[part~=wy-spinner-circle] {
+  stroke-dasharray: 1, 100;
+  stroke-dashoffset: 0;
+  transform-origin: center;
+  fill: none !important;
+}
+
+[part~=wy-spinner][part~=wy-spin] {
+  // add class .wy-spin to animate the spinner (otherwise it will not be visible)
+  animation: wy-rotate $spinner-duration linear infinite;
+}
+
+[part~=wy-spinner-circle][part~=wy-spin] {
+    animation: wy-dash $spinner-duration ease-in-out infinite, wy-color ($spinner-duration*2) ease-in-out infinite;
+}
+
 
 @keyframes wy-rotate {
   100% {

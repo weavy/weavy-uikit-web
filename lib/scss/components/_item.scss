@@ -7,38 +7,41 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var.wy-rem(.5);
-  padding: var.wy-rem(.25) var.wy-rem(.75);
+  gap: var.default(--wy-gap);
+  padding: var.default(--wy-padding);
   text-decoration: none;
   min-height: var.wy-rem(3);
-  // Adjust position of icon/avatar (makes padding/margin look ok for all combinations of item content)
-  > .wy-avatar, > wy-icon, > wy-spinner, > .wy-icon-stack {
-    margin-left: var.wy-rem(-.25);
-  }
+}
+
+// Item with room for larger icon and two rows of content
+.wy-item-lg {
+  padding: var.default(--wy-padding);
+  min-height: var.wy-rem(4.5);
+  gap: var.default(--wy-gap);
 }
 
 .wy-item-body {
   width: 100%;
-  @include text.truncate;
-
-  > * {
-    @include text.truncate;
-  }
-  // adjust position of buttons/emoji
-  + .wy-dropdown, + .wy-button-icon, + .wy-item-actions {
-    margin-right: var.wy-rem(-.5);
-  }
-
-  + .wy-emoji {
-    margin-right: var.wy-rem(.125);
-  }
+  min-width: 0;
 }
 
+.wy-item-rows {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  row-gap: var.default(--wy-gap-sm);
+  min-width: 0;
 
+  &:only-child{
+    margin-inline-start: var.default(--wy-gap-sm)
+  }
+
+}
 
 .wy-item-title {
   color: color.token(--wy-on-background);
-  font-weight: var.default(--wy-headings-font-weight);
+  font-size: var.default(--wy-item-title-font-size);
+  font-weight: var.default(--wy-item-title-font-weight);
   @include text.truncate;
 }
 
@@ -60,49 +63,27 @@
   display: flex;
   align-items: center;
   flex: 0 0 auto;
+  margin: var.wy-rem(-.25);
 }
 
 .wy-item-actions-top {
-  position: absolute;
-  top: var.wy-rem(.25);
-  right: var.wy-rem(.25);
-  margin:0 !important;
+  align-self: flex-start;
 }
 
 .wy-item-actions-bottom {
-  position: absolute;
-  bottom: var.wy-rem(.25);
-  right: var.wy-rem(.25);
-  margin: 0 !important;
-}
-
-.wy-item-body:has(+ .wy-item-actions-bottom) {
-  .wy-item-row:last-child {
-    // room for 2 icons
-    margin-right: var.wy-rem(4.5);
-  }
-}
-
-.wy-item-body:has(+ .wy-item-actions-top) {
-  .wy-item-row:first-child {
-    // room for 1 icon
-      margin-right: var.wy-rem(2);
-  }
+  align-self: flex-start;
+  margin-block: var.wy-rem(-.5);
 }
 
 .wy-action-label {
-  margin-right: var.wy-rem(.5);
+  margin-right: var.default(--wy-padding);
   font-style: italic;
 }
 
 
 .wy-item-row {
   display: flex;
-  align-items: baseline;
-
-  &:first-child {
-    margin-bottom: var.wy-rem(.125);
-  }
+  align-items: center;
 
   .wy-item-title {
     margin-right: auto;
@@ -112,9 +93,7 @@
     margin-right: auto;
   }
 
-
   .wy-meta {
-    margin: 0 var.wy-rem(.25);
     white-space: nowrap;
   }
 }
@@ -172,14 +151,4 @@
   }
 }
 
-// Item with room for larger icon and two rows of content
-.wy-item-lg {
-  padding: var.wy-rem(.75);
-  min-height: var.wy-rem(4.5);
-  gap: var.wy-rem(.75);
 
-  // adjust position of icon/avatar
-  > .wy-avatar, > wy-icon, > .wy-icon-stack {
-    margin-left: 0;
-  }
-}

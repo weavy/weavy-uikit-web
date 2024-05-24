@@ -3,6 +3,8 @@ import { customElement, property } from "lit/decorators.js";
 import type { EmbedType } from "../types/embeds.types";
 import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
 import chatCss from "../scss/all"
 import "./wy-button";
 import "./wy-icon";
@@ -11,6 +13,8 @@ import "./wy-icon";
 export default class WyEmbed extends LitElement {
   
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })
   embed!: EmbedType;
@@ -42,7 +46,7 @@ export default class WyEmbed extends LitElement {
           ? html`<wy-button kind="icon" @click=${() => this.dispatchSwap()}
               ><wy-icon name="swap-horizontal"></wy-icon
             ></wy-button>`
-          : html`<wy-button buttonClass="wy-embed-cycle"></wy-button>`}
+          : html`<wy-button class="wy-embed-cycle"></wy-button>`}
 
         <wy-button kind="icon" @click=${() => this.dispatchRemove(this.embed.id)}
           ><wy-icon name="close-circle"></wy-icon

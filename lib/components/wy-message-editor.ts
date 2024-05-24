@@ -2,8 +2,6 @@ import { html, nothing, TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
-import { hasFeature } from "../utils/features";
-import { Feature } from "../types/features.types";
 
 import WyEditor from "./wy-editor";
 
@@ -27,14 +25,11 @@ export default class WyMessageEditor extends WyEditor {
   protected override renderMiddleSlot() {
     return html` <div class="wy-message-editor-inputs">
       <!-- Add -->
-      ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments) ||
-      hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles) ||
-      hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls) ||
-      hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings)
+      ${this.hasFeatures?.attachments || this.hasFeatures?.cloudFiles || this.hasFeatures?.polls || this.hasFeatures?.meetings
         ? html`<wy-dropdown icon="plus" directionY="up">
-            ${hasFeature(this.availableFeatures, Feature.Attachments, this.features?.attachments)
+            ${this.hasFeatures?.attachments
               ? html`
-                  <wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}> 
+                  <wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
                     <wy-icon name="attachment"></wy-icon>
                     <span>${msg("From device")}</span>
                   </wy-dropdown-item>
@@ -53,32 +48,29 @@ export default class WyMessageEditor extends WyEditor {
                   />
                 `
               : nothing}
-            ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
+            ${this.hasFeatures?.cloudFiles
               ? html`
-                  <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}> 
+                  <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
                     <wy-icon name="cloud"></wy-icon>
                     <span>${msg("From cloud")}</span>
                   </wy-dropdown-item>
                 `
               : nothing}
-            ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
-            this.weavyContext?.confluenceAuthenticationUrl 
+            ${this.hasFeatures?.confluence && this.weavyContext?.confluenceAuthenticationUrl
               ? html`<wy-confluence
                   dropdown
-                  .user=${this.user}
                   @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
                 ></wy-confluence>`
               : nothing}
-            ${hasFeature(this.availableFeatures, Feature.Polls, this.features?.polls)
+            ${this.hasFeatures?.polls
               ? html`
-                  <wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}> 
+                  <wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}>
                     <wy-icon name="poll"></wy-icon>
                     <span>${msg("Poll")}</span>
                   </wy-dropdown-item>
                 `
               : nothing}
-            ${hasFeature(this.availableFeatures, Feature.Meetings, this.features?.meetings) &&
-            this.weavyContext?.zoomAuthenticationUrl
+            ${this.hasFeatures?.meetings && this.configuration?.zoom_authentication_url
               ? html`
                   <wy-dropdown-item @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
                     <wy-icon name="zoom"></wy-icon>
@@ -95,7 +87,7 @@ export default class WyMessageEditor extends WyEditor {
       <!-- Button -->
       <wy-button
         kind="icon"
-        buttonClass="wy-button-primary-text"
+        color="primary-text"
         title=${msg("Send", { desc: "Button action to send" })}
         @click="${this.submit}"
       >

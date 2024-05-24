@@ -6,7 +6,10 @@
 @use "dropzone";
 
 .wy-post-editor {
-  padding: var.wy-rem(.75);
+  padding: var.default(--wy-padding-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap-lg);
 
   &.wy-uploading {
     .wy-icon-active-stack {
@@ -21,8 +24,8 @@
   }
 
   .wy-picker-list:not(:empty) {
-    margin-top: var.wy-rem(.75);
-    border-top: 1px solid #{color.token(--wy-outline-variant)};
+    margin-top: var.default(--wy-padding-lg);
+    border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
   }
 }
 
@@ -30,21 +33,20 @@
   display: flex;
   flex-direction: row;
   align-items: flex-end;
+  justify-content: space-between;
   //border-top: 1px solid #{color.token(--wy-outline-variant};
   //padding: var.wy-rem(.5) var.wy-rem(.25);
-  min-height: var.wy-rem(3.5);
+  //min-height: var.wy-rem(3.5);
+ //margin-top: var.default(--wy-gap);
   flex-wrap: wrap;
-
-  > :not(:last-child) {
-    margin-right: var.wy-rem(.25);
-  }
-
-  > :last-child {
-    margin-left: auto;
-  }
+  gap: var.default(--wy-gap-sm);
 }
 
 .wy-post-editor-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var.default(--wy-gap-sm);
   flex: 1 0 auto;
 }
 
@@ -67,8 +69,8 @@
 %post-editor-textfield,
 .wy-post-editor-textfield {
   flex: 1 1 100%;
-  max-height: var.wy-rem(11.25);
-  min-height: var.wy-rem(4);
+  max-height: 11.25em;
+  min-height: 4em;
   background-color: color.token(--wy-background);
   color: color.token(--wy-on-background);
   border-radius: var.default(--wy-border-radius);

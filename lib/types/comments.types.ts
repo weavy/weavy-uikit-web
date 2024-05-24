@@ -1,27 +1,24 @@
 import { PollOptionType } from "./polls.types";
-import { UserType } from "./users.types";
 
 import { MsgType } from "./msg.types";
+import { UserType } from "./users.types";
+import { EntityType } from "./app.types";
+import { InfiniteQueryResultType } from "./query.types";
 
-export type CommentsResultType = {
-  data: CommentType[];
-  start: number;
-  end: number;
-  count: number;
-};
+export type CommentsResultType = InfiniteQueryResultType<CommentType>;
 
 export type MutateCommentProps = {
   id?: number;
   appId?: number;
   parentId: number;
   type: "posts" | "files" | "apps";
-  user: UserType;
   text: string;
   blobs?: number[];
   attachments?: number[];
   meetingId?: number;
   pollOptions: PollOptionType[];
-  embed: number;
+  embedId: number;
+  user?: UserType;
 };
 
 export type CommentMutationContextType = { 
@@ -29,5 +26,6 @@ export type CommentMutationContextType = {
 };
 
 export type CommentType = MsgType & {
-  temp?: boolean;
+  parent?: EntityType,
+  temp?: boolean
 };

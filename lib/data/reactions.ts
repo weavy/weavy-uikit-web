@@ -3,6 +3,7 @@ import { type WeavyContextType } from "../client/weavy";
 import { updateCacheItem } from "../utils/query-cache";
 import { MessageType } from "../types/messages.types";
 import { ReactableType } from "../types/reactions.types";
+import { MemberType } from "../types/members.types";
 
 /// POST to add a reaction to a message
 export function addReactionMutation(
@@ -11,7 +12,7 @@ export function addReactionMutation(
   entityId: number | null,
   type: "messages" | "posts" | "comments",
   reaction: string,
-  userId: number
+  user: MemberType
 ) {
   return new MutationObserver(weavyContext.queryClient, {
     mutationFn: async () => {
@@ -24,14 +25,12 @@ export function addReactionMutation(
     },
     onMutate: () => {
       updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
-        item.reactions = item.reactions || [];
-        item.reactions = [...item.reactions.filter((r: ReactableType) => r.created_by_id !== userId), { content: reaction, created_by_id: userId }];
+        updateReaction(item, reaction, user, "add");
       });
     },
     onSuccess: () => {
       updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
-        item.reactions = item.reactions || [];
-        item.reactions = [...item.reactions.filter((r: ReactableType) => r.created_by_id !== userId), { content: reaction, created_by_id: userId }];
+        updateReaction(item, reaction, user, "add");
       });
     },
   });
@@ -43,7 +42,7 @@ export function removeReactionMutation(
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
-  userId: number
+  user: MemberType
 ) {
   return new MutationObserver(weavyContext.queryClient, {
     mutationFn: async () => {
@@ -52,12 +51,12 @@ export function removeReactionMutation(
     },
     onMutate: () => {
       updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
-        item.reactions = [...item.reactions.filter((r: ReactableType) => r.created_by_id !== userId)];
+        updateReaction(item, "", user, "remove");              
       });
     },
     onSuccess: () => {
       updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
-        item.reactions = [...item.reactions.filter((r: ReactableType) => r.created_by_id !== userId)];
+        updateReaction(item, "", user, "remove");              
       });
     },
   });
@@ -70,7 +69,7 @@ export function replaceReactionMutation(
   entityId: number | null,
   type: "messages" | "posts" | "comments",
   reaction: string,
-  userId: number
+  user: MemberType
 ) {
   return new MutationObserver(weavyContext.queryClient, {
     mutationFn: async () => {
@@ -85,14 +84,12 @@ export function replaceReactionMutation(
     },
     onMutate: () => {
       updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
-        item.reactions = item.reactions || [];
-        item.reactions = [...item.reactions.filter((r: ReactableType) => r.created_by_id !== userId), { content: reaction, created_by_id: userId }];
+        updateReaction(item, reaction, user, "replace");        
       });
     },
     onSuccess: () => {
       updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
-        item.reactions = item.reactions || [];
-        item.reactions = [...item.reactions.filter((r: ReactableType) => r.created_by_id !== userId), { content: reaction, created_by_id: userId }];
+        updateReaction(item, reaction, user, "replace");        
       });
     },
   });
@@ -107,4 +104,39 @@ export function getReactionListOptions(weavyContext: WeavyContextType, type: str
       return await response.json();
     },
   };
+}
+
+type Action = "add" | "replace" | "remove";
+
+function updateReaction(item: MessageType, reactionContent: string, user: MemberType, action: Action) : MessageType {
+  if ((action === "remove" || action === "replace") && !item.reactions?.data) {
+    return item;
+  }
+
+  if (!item.reactions) {
+    item.reactions = { count: 0, data: []};
+  }
+
+  if (!item.reactions.data) {
+    item.reactions.data = [];
+  }
+
+  if (action === "add") {
+    item.reactions.data = [
+      ...item.reactions.data.filter((r: ReactableType) => r.created_by?.id !== user.id),
+      { content: reactionContent, created_by: user },
+    ];
+  } else if (action === "replace") {
+    item.reactions.data = [
+      ...item.reactions.data.filter((r: ReactableType) => r.created_by?.id !== user.id),
+      { content: reactionContent, created_by: user },
+    ];
+  } else if (action === "remove") {
+    if (item.reactions.data) {
+      item.reactions.data = [...item.reactions.data.filter((r: ReactableType) => r.created_by?.id !== user.id)];
+    }
+  }
+
+  return item;
+
 }

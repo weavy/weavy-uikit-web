@@ -1,10 +1,10 @@
 import { PlainObjectType } from "./generic.types";
 
-export type QueryResultType<TDataItem> = Array<TDataItem & PlainObjectType>;
-
-export type InfiniteQueryResultType<TDataItem> = {
-    data?: Array<TDataItem & PlainObjectType>;
+export type QueryResultType<TDataItem extends PlainObjectType> = {
+    data?: Array<TDataItem>;
     start?: number;
     end?: number;
     count: number;
 };
+
+export type InfiniteQueryResultType<TDataItem extends PlainObjectType> = QueryResultType<TDataItem>;

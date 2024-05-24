@@ -2,22 +2,20 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { hasFeature } from "../utils/features";
 import type WeavyPreview from "../components/wy-preview";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
-import { Feature, type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
 
 import { localized, msg, str } from "@lit/localize";
+import { relativeTime } from "../utils/datetime";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-
-import chatCss from "../scss/all"
+import chatCss from "../scss/all";
 
 import "./wy-avatar";
 import "./wy-attachment";
@@ -30,14 +28,9 @@ import "./wy-embed";
 import "./wy-comment-list";
 import "./wy-skeleton";
 
-import type { AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
-import { relativeTime } from "../utils/datetime";
-
 @customElement("wy-post-view")
 @localized()
-export default class WyPostView extends LitElement {
-  
+export default class WyPostView extends AppConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -47,15 +40,7 @@ export default class WyPostView extends LitElement {
     `,
   ];
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   postId!: number;
@@ -97,19 +82,13 @@ export default class WyPostView extends LitElement {
   embed?: EmbedType;
 
   @property({ type: Array })
-  reactions: ReactableType[] = [];
+  reactions?: ReactableType[] = [];
 
   @property({ attribute: false })
   commentCount: number = 0;
 
   @property({ type: Array })
   seenBy: MemberType[] = [];
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
 
   @state()
   private showComments: boolean = false;
@@ -154,7 +133,7 @@ export default class WyPostView extends LitElement {
       dateStyle: "full",
       timeStyle: "short",
     }).format(new Date(this.createdAt));
-    const dateFromNow = relativeTime(this.weavyContext?.locale, new Date(this.createdAt))
+    const dateFromNow = relativeTime(this.weavyContext?.locale, new Date(this.createdAt));
     const modifiedDateFull =
       this.modifiedAt && this.weavyContext
         ? new Intl.DateTimeFormat(this.weavyContext.locale, { dateStyle: "full", timeStyle: "short" }).format(
@@ -165,12 +144,21 @@ export default class WyPostView extends LitElement {
     return this.temp
       ? html`<div class="wy-post">
           <div class="wy-item wy-item-lg">
-            <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${this.createdBy.display_name}></wy-avatar>
-            <div class="wy-item-body">
-              <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
-              <div class="wy-item-text">
-                <time class="wy-placeholder">${dateFromNow}</time>
-              </div>
+            <wy-avatar
+              .src="${this.createdBy.avatar_url}"
+              .isBot=${this.createdBy.is_bot}
+              .size=${48}
+              .name=${this.createdBy.display_name}
+            ></wy-avatar>
+            <div class="wy-item-rows">
+              <div class="wy-item-row">
+                <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
+        </div>
+        <div class="wy-item-row">
+          <div class="wy-item-text">
+            <time class="wy-placeholder">${dateFromNow}</time>
+          </div>
+        </div>
             </div>
           </div>
           <div class="wy-post-body">
@@ -180,8 +168,10 @@ export default class WyPostView extends LitElement {
       : html`
           <div class="wy-post">
             <div class="wy-item wy-item-lg">
-              <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${this.createdBy.display_name}></wy-avatar>
-              <div class="wy-item-body">
+              <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
+          this.createdBy.display_name
+        }></wy-avatar>
+              <div class="wy-item-rows">
                 <div class="wy-item-row">
                   <div class="wy-item-title">${this.createdBy.display_name}</div>
                 </div>
@@ -211,7 +201,7 @@ export default class WyPostView extends LitElement {
                           </wy-dropdown-item>`
                     }
                     ${
-                      this.user.id === this.createdBy.id
+                      this.user && this.user.id === this.createdBy.id
                         ? html`<wy-dropdown-item @click=${() => this.dispatchEdit(true)}>
                             <wy-icon name="pencil"></wy-icon>
                             ${msg("Edit")}
@@ -219,7 +209,7 @@ export default class WyPostView extends LitElement {
                         : nothing
                     }
                     ${
-                      this.user.id === this.createdBy.id
+                      this.user && this.user.id === this.createdBy.id
                         ? html`<wy-dropdown-item @click=${() => this.dispatchTrash()}>
                             <wy-icon name="trashcan"></wy-icon>
                             ${msg("Trash")}
@@ -236,13 +226,14 @@ export default class WyPostView extends LitElement {
                       .images=${images}
                       @file-open=${(e: CustomEvent) => {
                         this.previewRef.value?.open(e.detail.file);
-                      }}></wy-image-grid>`
+                      }}
+                    ></wy-image-grid>`
                   : ``
               }
 
               <!-- embeds -->
               ${
-                this.embed && hasFeature(this.availableFeatures, Feature.Embeds, this.features?.embeds)
+                this.embed && this.hasFeatures?.embeds
                   ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
                   : nothing
               }
@@ -256,7 +247,8 @@ export default class WyPostView extends LitElement {
                     ? html`
                         <wy-poll
                           .pollOptions=${this.pollOptions}
-                          @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}></wy-poll>
+                          @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}
+                        ></wy-poll>
                       `
                     : nothing
                 }
@@ -265,10 +257,11 @@ export default class WyPostView extends LitElement {
                 ${
                   files && !!files.length
                     ? html`<wy-attachments-list
-                        .files=${files}
+                        .files=${files ?? []}
                         @file-open=${(e: CustomEvent) => {
                           this.previewRef.value?.open(e.detail.file);
-                        }}></wy-attachments-list>`
+                        }}
+                      ></wy-attachments-list>`
                     : ``
                 }
 
@@ -280,40 +273,40 @@ export default class WyPostView extends LitElement {
                 <div>
                   <!-- comment count -->
                   ${
-                    hasFeature(this.availableFeatures, Feature.Comments, this.features?.comments)
+                    this.hasFeatures?.comments
                       ? html` <wy-button
                           kind="inline"
                           ?active=${this.showComments}
-                          buttonClass="wy-meta"
-                          @click=${(e: Event) => this.handleCommentsClick(e)}>
+                          class="wy-meta"
+                          color="inherit"
+                          @click=${(e: Event) => this.handleCommentsClick(e)}
+                        >
                           ${this.commentCount !== 1 ? msg(str`${this.commentCount} comments`) : msg("1 comment")}
                         </wy-button>`
                       : nothing
                   }
                 </div>
-                ${hasFeature(this.availableFeatures, Feature.Reactions, this.features?.reactions) ? html`
-                <div class="wy-reactions-line wy-reactions-line-reverse">
-                  <wy-reactions                    
-                    .reactions=${this.reactions}
-                    parentId=${this.app.id}
-                    entityId=${this.postId}
-                    messageType="posts"
-                    .userId=${this.user.id}></wy-reactions>
-                </div>` : nothing}
+                ${
+                  this.hasFeatures?.reactions && this.app
+                    ? html`
+                        <wy-reactions
+                          line
+                          .reactions=${this.reactions}
+                          parentId=${this.app.id}
+                          entityId=${this.postId}
+                          messageType="posts"
+                        ></wy-reactions>
+                      `
+                    : nothing
+                }
               </div>
 
               <!-- comments -->
               ${
                 this.loadComments
                   ? html`
-                      <div ?hidden=${!this.showComments}>
-                        <wy-comment-list
-                          .app=${this.app}
-                          .user=${this.user}
-                          .parentId=${this.postId}
-                          .location=${"posts"}
-                          .features=${this.features}
-                          .availableFeatures=${this.availableFeatures}></wy-comment-list>
+                      <div class="wy-post-comments" ?hidden=${!this.showComments}>
+                        <wy-comment-list .parentId=${this.postId} .location=${"posts"}></wy-comment-list>
                       </div>
                     `
                   : nothing
@@ -321,11 +314,9 @@ export default class WyPostView extends LitElement {
             </div>
             <wy-preview
               ${ref(this.previewRef)}
-              .app=${this.app}
               .files=${this.attachments}
-              .availableFeatures=${this.availableFeatures}
               .isAttachment=${true}
-              .features=${this.features}></wy-preview>
+              ></wy-preview>
           </div>
         `;
   }

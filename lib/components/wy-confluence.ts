@@ -1,17 +1,15 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 import type { ExternalBlobType } from "../types/files.types";
 
 import chatCss from "../scss/all";
-import { consume } from "@lit/context";
-import type { UserType } from "../types/users.types";
 import type { ConfluencePageProps } from "../types/confluence.types";
 
 import { portal } from "lit-modal-portal";
 import { localized, msg } from "@lit/localize";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-dropdown";
 import "./wy-icon";
@@ -20,22 +18,10 @@ import "./wy-confluence-picker";
 
 @customElement("wy-confluence")
 @localized()
-export default class WyConfluence extends LitElement {
+export default class WyConfluence extends AppConsumerMixin(LitElement) {
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
-
-  @property({
-    attribute: false,
-    type: Object,
-  })
-  user?: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Boolean })
   dropdown: boolean = false;
@@ -107,6 +93,8 @@ export default class WyConfluence extends LitElement {
             this.showPicker
               ? html`
                   <wy-overlay
+                    .contexts=${this.contexts}
+                    @close=${() => this.close()}
                     @release-focus=${() =>
                       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
                   >
@@ -130,7 +118,7 @@ export default class WyConfluence extends LitElement {
                   </wy-overlay>
                 `
               : nothing,
-              this.settings.submodals || this.weavyContext.modalRoot === undefined
+            this.settings.submodals || this.weavyContext.modalRoot === undefined
               ? this.settings.component.renderRoot
               : this.weavyContext.modalRoot
           )

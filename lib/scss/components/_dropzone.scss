@@ -1,5 +1,4 @@
 @use "base/color";
-@use "base/const";
 @use "base/var";
 
 .wy-dragging {
@@ -10,7 +9,7 @@
         justify-content: center;
         align-items: center;
         border: var.wy-rem(.125) dashed color.token(--wy-primary);
-        font-weight: const.$font-weight-bold;
+        font-weight: var.default(--wy-font-weight-bold);
         z-index: 10000;
         position: absolute;
         top: 0;

@@ -12,6 +12,8 @@ import { type WeavyContextType } from "../contexts/weavy-context";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
+import { ifDefined } from "lit/directives/if-defined.js";
+import { checkImageLoad, imageLoaded } from "../utils/images";
 
 export function renderFileCard(
   this: WyFilesList,
@@ -20,7 +22,7 @@ export function renderFileCard(
   isRenamingId?: number
 ) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
-  const fileChangedAt = file.modified_at || file.created_at;
+  const fileChangedAt = file.updated_at || file.created_at;
   const fileDate = new Intl.DateTimeFormat(weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
     new Date(fileChangedAt)
   );
@@ -74,9 +76,8 @@ export function renderFileCard(
     >
       <div class="wy-card-actions">
         <wy-file-menu
+          small
           .file=${file}
-          .availableFeatures=${this.availableFeatures}
-          .features=${this.features}
           @edit-name=${(e: CustomEvent) => this.dispatchEditName(e.detail.file)}
           @trash=${(e: CustomEvent) => this.dispatchTrash(e.detail.file)}
           @restore=${(e: CustomEvent) => this.dispatchRestore(e.detail.file)}
@@ -87,14 +88,21 @@ export function renderFileCard(
       ${!file.is_trashed && file.thumbnail_url
         ? html`
             <img
-              class="wy-card-top wy-card-content ${classMap({ "wy-card-top-image": file.kind === "image" })}"
+              class="wy-card-top wy-card-content wy-card-image ${classMap({
+                "wy-card-top-image": file.kind === "image",
+              })}"
+              width=${ifDefined(file.width)}
+              height=${ifDefined(file.height)}
               src=${file.thumbnail_url}
               alt=${file.name}
+              ${ref(checkImageLoad)}
+              @load=${imageLoaded}
               loading="lazy"
+              decoding="async"
             />
           `
         : html`
-            <div class="wy-content-icon wy-card-top wy-card-content">
+            <div class="wy-card-top wy-card-content wy-card-icon">
               <wy-icon name=${icon} size="96" kind=${file.kind} ext=${ext}></wy-icon>
             </div>
           `}
@@ -116,7 +124,11 @@ export function renderFileCard(
                 ${ref(autofocusRef)}
               />
             `
-          : html`<div class="wy-truncated-text-and-icon"><div>${file.name}</div> ${file.comment_count ? html`<wy-icon size="16" name="comment" color="secondary"></wy-icon>` : nothing}</div>`}
+          : html`<div class="wy-truncated-text-and-icon"
+              ><div>${file.name}</div> ${file.comments?.count
+                ? html`<wy-icon size="16" name="comment" color="secondary"></wy-icon>`
+                : nothing}</div
+            >`}
       </div>
     </div>
   `;

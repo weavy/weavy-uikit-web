@@ -11,6 +11,8 @@ import { checkImageLoad, imageLoaded } from "../utils/images";
 export default class WyImageGrid extends LitElement {
   static override styles = chatCss;
 
+  //protected exportParts = new ShadowPartsController(this);
+
   override createRenderRoot() {
     // Review: needed?
     return this;

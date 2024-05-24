@@ -38,6 +38,22 @@
       width: 100%;
       // TODO: scale down only for small images like icons (with inline style?)
       object-fit: contain;
+
+      &.wy-loading {
+        transition: opacity 0.15s ease-out;
+        opacity: 0;
+       
+        &.wy-loaded {
+          opacity: 1;
+          transition: opacity 0.15s ease-out;
+       
+          ~ img {
+            // hide any previous images/thumbs, wait for loaded image transition
+            transition-delay: 0.15s;
+            opacity: 0;
+          }
+        }
+       }
     }
   }
 

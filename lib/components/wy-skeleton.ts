@@ -1,12 +1,16 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import chatCss from "../scss/all"
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all"
 
 @customElement("wy-skeleton")
 export default class WySkeleton extends LitElement {
   
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   text: string = "";

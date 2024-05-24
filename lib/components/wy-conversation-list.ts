@@ -1,24 +1,14 @@
 import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { repeat } from "lit/directives/repeat.js";
 import chatCss from "../scss/all";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { ConversationTypeGuid, ConversationsResultType } from "../types/conversations.types";
-import { getApiOptions } from "../data/api";
 import type { UserType } from "../types/users.types";
 import { getConversationsOptions } from "../data/conversations";
 import { InfiniteData } from "@tanstack/query-core";
-
-import "./wy-conversation-list-item";
-import "./wy-conversation-new";
-import "./wy-presence";
-import "./wy-avatar";
-import "./wy-empty";
-import "./wy-spinner";
 
 import {
   LeaveConversationMutationType,
@@ -37,13 +27,21 @@ import { ConversationType } from "../types/conversations.types";
 import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
 import { inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
-import { QueryController } from "../controllers/query-controller";
 import { RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import "./wy-conversation-list-item";
+import "./wy-conversation-new";
+import "./wy-presence";
+import "./wy-avatar";
+import "./wy-empty";
+import "./wy-spinner";
 
 @customElement("wy-conversation-list")
 @localized()
-export default class WeavyConversationList extends LitElement {
+export default class WeavyConversationList extends AppConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -52,13 +50,7 @@ export default class WeavyConversationList extends LitElement {
       }
     `,
   ];
-
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @state()
-  user?: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Object })
   avatarUser?: UserType;
@@ -87,7 +79,6 @@ export default class WeavyConversationList extends LitElement {
   private inputRef: Ref<HTMLInputElement> = createRef();
 
   conversationsQuery = new InfiniteQueryController<ConversationsResultType>(this);
-  userQuery = new QueryController<UserType>(this);
 
   private markConversationMutation?: MarkConversationMutationType;
   private starConversationMutation?: StarConversationMutationType;
@@ -117,7 +108,7 @@ export default class WeavyConversationList extends LitElement {
       ["conversations"],
       () => true,
       (item: ConversationType) => {
-        const members = item.members.data;
+        const members = item.members.data ?? [];
         members.forEach((m) => {
           m.presence = (data as number[]).indexOf(m.id) != -1 ? "active" : "away";
         });
@@ -129,17 +120,14 @@ export default class WeavyConversationList extends LitElement {
   private async handleMark(id: number, markAsRead: boolean, messageId: number) {
     const lastMessageId = markAsRead ? messageId : null;
     await this.markConversationMutation?.mutate({ id: id, markAsRead: markAsRead, messageId: lastMessageId });
-    this.conversationsQuery.result.refetch();
   }
 
   private async handleStar(id: number, star: boolean) {
     await this.starConversationMutation?.mutate({ id: id, star: star });
-    this.conversationsQuery.result.refetch();
   }
 
   private async handlePin(id: number, pin: boolean) {
     await this.pinConversationMutation?.mutate({ id: id, pin: pin });
-    this.conversationsQuery.result.refetch();
   }
 
   private async handleLeaveConversation(id: number) {
@@ -167,10 +155,10 @@ export default class WeavyConversationList extends LitElement {
   }
 
   protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if ((changedProperties.has("weavyContext") || changedProperties.has("types")) && this.weavyContext) {
-      this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
+    super.willUpdate(changedProperties);
 
-      this.conversationsQuery.trackInfiniteQuery(
+    if ((changedProperties.has("weavyContext") || changedProperties.has("types")) && this.weavyContext) {
+     this.conversationsQuery.trackInfiniteQuery(
         getConversationsOptions(this.weavyContext, {}, () => this.searchText, this.types, this.bot)
       );
 
@@ -186,8 +174,7 @@ export default class WeavyConversationList extends LitElement {
       this.weavyContext.subscribe(null, "online", this.handlePresenceChange);
     }
 
-    if (!this.userQuery.result?.isPending) {
-      this.user = this.userQuery.result?.data;
+    if(changedProperties.has("user") && this.user) {
       if (!this.bot) {
         this.avatarUser ??= this.user;
       }
@@ -207,17 +194,16 @@ export default class WeavyConversationList extends LitElement {
 
   private renderConversations(user: UserType, infiniteData?: InfiniteData<ConversationsResultType>) {
     if (infiniteData) {
-      const flattenedPages = infiniteData.pages.flatMap((conversationsResult) => conversationsResult.data);
+      const flattenedPages = infiniteData.pages.flatMap((conversationsResult) => conversationsResult.data!);
 
       return repeat(
         flattenedPages,
-        (conversation) => conversation.id,
+        (conversation) => conversation?.id,
         (conversation) => {
           return [
             html`<wy-conversation-list-item
-              .conversationId=${conversation.id}
-              .user=${this.user}
-              .avatarUrl=${conversation.avatar_url}
+              .conversationId=${conversation?.id}
+              .avatarUrl=${conversation?.avatar_url}
               .hideAvatar=${Boolean(this.bot)}
               .displayName=${conversation.display_name}
               .lastMessage=${conversation.last_message}
@@ -284,11 +270,10 @@ export default class WeavyConversationList extends LitElement {
                           @click=${this.clear}
                           kind="icon"
                           class="wy-input-group-button-icon"
-                          buttonClass="wy-button-icon"
                         >
                           <wy-icon name="close-circle"></wy-icon>
                         </wy-button>
-                        <wy-button kind="icon" class="wy-input-group-button-icon" buttonClass="wy-button-icon">
+                        <wy-button kind="icon" class="wy-input-group-button-icon">
                           <wy-icon name="magnify"></wy-icon>
                         </wy-button>
                       </div>
@@ -307,7 +292,7 @@ export default class WeavyConversationList extends LitElement {
                         </div>
                       </div>
                     `
-                : html`<wy-spinner class="wy-content-icon"></wy-spinner>`}
+                : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
               <div ${ref(this.pagerRef)} class="wy-pager"></div>
             </div>
           `

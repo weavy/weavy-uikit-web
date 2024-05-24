@@ -3,12 +3,13 @@ import { customElement, property } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
+import { checkImageLoad, imageLoaded } from "../utils/images";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-spinner";
 
 import allCss from "../scss/all"
 
-import { checkImageLoad, imageLoaded } from "../utils/images";
 
 @customElement("wy-preview-image")
 @localized()
@@ -22,6 +23,8 @@ export class WyPreviewImage extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   src!: string;

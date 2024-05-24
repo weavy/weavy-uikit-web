@@ -21,7 +21,7 @@
   }
 
   .wy-picker-list:not(:empty) {
-    border-top: 1px solid #{color.token(--wy-outline-variant)};
+    border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
   }
 }
 
@@ -40,12 +40,9 @@
   flex-direction: row;
   align-items: flex-end;
   //border-top: 1px solid #{color.token(--wy-outline-variant};
-  padding: var.wy-rem(.5) var.wy-rem(.25);
+  padding: var.default(--wy-padding) var.default(--wy-padding-sm);
   min-height: var.wy-rem(3.5);
-
-  > :not(:last-child) {
-    margin-right: var.wy-rem(.25);
-  }
+  gap: var.default(--wy-gap-sm);
 }
 
 .wy-comment-editor-buttons {

@@ -10,7 +10,7 @@ export type MutateFileVariables = {
   file: FileType;
 };
 
-export type RemoveFileMutationType = MutationObserver<FileType, Error, MutateFileVariables, FileMutationContextType>;
+export type RemoveFileMutationType = MutationObserver<void, Error, MutateFileVariables, FileMutationContextType>;
 export type DeleteForeverFileMutationType = MutationObserver<void, Error, MutateFileVariables, FileMutationContextType>;
 
 export function getTrashFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
@@ -22,7 +22,10 @@ export function getTrashFileMutationOptions(weavyContext: WeavyContextType, app:
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1) {
         const response = await weavyContext.post("/api/files/" + file.id + "/trash", "POST", "");
-        return response.json();
+
+        if (!response.ok) {
+          throw new Error();
+        }
       } else {
         throw new Error(`Could not trash ${file.name}.`);
       }
@@ -36,7 +39,7 @@ export function getTrashFileMutationOptions(weavyContext: WeavyContextType, app:
       );
       return <FileMutationContextType>{ type: "trash", file: variables.file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileVariables) => {
+    onSuccess: (data: void, variables: MutateFileVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -81,7 +84,6 @@ export function getRestoreFileMutationOptions(weavyContext: WeavyContextType, ap
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
         }
-        return response.json();
       } else {
         const serverError = <ServerErrorResponseType>{ status: 400, title: `Could not restore ${file.name}.` };
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -97,12 +99,12 @@ export function getRestoreFileMutationOptions(weavyContext: WeavyContextType, ap
       );
       return <FileMutationContextType>{ type: "restore", file: variables.file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileVariables) => {
+    onSuccess: (data: void, variables: MutateFileVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, data, { is_trashed: false, status: "ok" })
+        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false, status: "ok" })
       );
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "ok";

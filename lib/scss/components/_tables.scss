@@ -3,10 +3,10 @@
 @use "base/text";
 
 .wy-table {
-  --wy-component-color: #{color.token(--wy-on-background)};
+  /*--wy-component-color: #{color.token(--wy-on-background)};
   --wy-component-background-color: #{color.token(--wy-background)};
   color: var(--wy-component-color);
-  background-color: var(--wy-component-background-color);
+  background-color: var(--wy-component-background-color);*/
   table-layout: fixed;
   width: 100%;
   //margin-bottom: var.wy-rem(1);
@@ -21,11 +21,11 @@
     height: var.wy-rem(2.5);
 
     &:first-child {
-      padding-left: calc(#{var.default(--wy-table-cell-padding-x)} * 2);
+      padding-left: var.default(--wy-padding);
     }
 
     &:last-child {
-      padding-right: calc(#{var.default(--wy-table-cell-padding-x)} * 2);
+      padding-right: var.default(--wy-padding);
     }
   }
 
@@ -44,8 +44,8 @@
     padding: calc(#{var.default(--wy-table-cell-padding-y)} * .5) var.default(--wy-table-cell-padding-x);
     width: calc(#{var.wy-rem(2.5)} + #{var.default(--wy-table-cell-padding-x)} * 2);
     // reset th styles (for dropdown menus in th)
-    font-size: var.default(--wy-font-size-base);
-    font-weight: var.default(--wy-font-weight-base);
+    font-size: var.default(--wy-font-size);
+    font-weight: var.default(--wy-font-weight);
     text-transform: none;
     letter-spacing: normal;
   }

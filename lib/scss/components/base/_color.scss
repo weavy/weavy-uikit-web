@@ -11,236 +11,256 @@ $shadow: $black;
 
 // css variables
 $colors: (
-    // fixed colors
-    --wy-theme: #{$theme},
-    --wy-black: #{$black},
-    --wy-white: #{$white},
-    --wy-shadow: #{$shadow},
+  // fixed colors
+  --wy-theme: #{$theme},
+  --wy-black: #{$black},
+  --wy-white: #{$white},
+  --wy-shadow: #{$shadow},
 
-    // palette
-    --wy-primary-99: #{palette.$primary-99},
-    --wy-primary-95: #{palette.$primary-95},
-    --wy-primary-90: #{palette.$primary-90},
-    --wy-primary-80: #{palette.$primary-80},
-    --wy-primary-70: #{palette.$primary-70},
-    --wy-primary-60: #{palette.$primary-60},
-    --wy-primary-50: #{palette.$primary-50},
-    --wy-primary-40: #{palette.$primary-40},
-    --wy-primary-30: #{palette.$primary-30},
-    --wy-primary-20: #{palette.$primary-20},
-    --wy-primary-10: #{palette.$primary-10},
-                    
-    --wy-secondary-99: #{palette.$secondary-99},
-    --wy-secondary-95: #{palette.$secondary-95},
-    --wy-secondary-90: #{palette.$secondary-90},
-    --wy-secondary-80: #{palette.$secondary-80},
-    --wy-secondary-70: #{palette.$secondary-70},
-    --wy-secondary-60: #{palette.$secondary-60},
-    --wy-secondary-50: #{palette.$secondary-50},
-    --wy-secondary-40: #{palette.$secondary-40},
-    --wy-secondary-30: #{palette.$secondary-30},
-    --wy-secondary-20: #{palette.$secondary-20},
-    --wy-secondary-10: #{palette.$secondary-10},
+  // palette
+  --wy-primary-99: #{palette.$primary-99},
+  --wy-primary-95: #{palette.$primary-95},
+  --wy-primary-90: #{palette.$primary-90},
+  --wy-primary-80: #{palette.$primary-80},
+  --wy-primary-70: #{palette.$primary-70},
+  --wy-primary-60: #{palette.$primary-60},
+  --wy-primary-50: #{palette.$primary-50},
+  --wy-primary-40: #{palette.$primary-40},
+  --wy-primary-30: #{palette.$primary-30},
+  --wy-primary-20: #{palette.$primary-20},
+  --wy-primary-10: #{palette.$primary-10},
 
-    --wy-tertiary-99: #{palette.$secondary-99},
-    --wy-tertiary-95: #{palette.$secondary-95},
-    --wy-tertiary-90: #{palette.$secondary-90},
-    --wy-tertiary-80: #{palette.$secondary-80},
-    --wy-tertiary-70: #{palette.$secondary-70},
-    --wy-tertiary-60: #{palette.$secondary-60},
-    --wy-tertiary-50: #{palette.$secondary-50},
-    --wy-tertiary-40: #{palette.$secondary-40},
-    --wy-tertiary-30: #{palette.$secondary-30},
-    --wy-tertiary-20: #{palette.$secondary-20},
-    --wy-tertiary-10: #{palette.$secondary-10},
+  --wy-secondary-99: #{palette.$secondary-99},
+  --wy-secondary-95: #{palette.$secondary-95},
+  --wy-secondary-90: #{palette.$secondary-90},
+  --wy-secondary-80: #{palette.$secondary-80},
+  --wy-secondary-70: #{palette.$secondary-70},
+  --wy-secondary-60: #{palette.$secondary-60},
+  --wy-secondary-50: #{palette.$secondary-50},
+  --wy-secondary-40: #{palette.$secondary-40},
+  --wy-secondary-30: #{palette.$secondary-30},
+  --wy-secondary-20: #{palette.$secondary-20},
+  --wy-secondary-10: #{palette.$secondary-10},
 
-    --wy-error-99: #{palette.$error-99},
-    --wy-error-95: #{palette.$error-95},
-    --wy-error-90: #{palette.$error-90},
-    --wy-error-80: #{palette.$error-80},
-    --wy-error-70: #{palette.$error-70},
-    --wy-error-60: #{palette.$error-60},
-    --wy-error-50: #{palette.$error-50},
-    --wy-error-40: #{palette.$error-40},
-    --wy-error-30: #{palette.$error-30},
-    --wy-error-20: #{palette.$error-20},
-    --wy-error-10: #{palette.$error-10},
+  --wy-tertiary-99: #{palette.$secondary-99},
+  --wy-tertiary-95: #{palette.$secondary-95},
+  --wy-tertiary-90: #{palette.$secondary-90},
+  --wy-tertiary-80: #{palette.$secondary-80},
+  --wy-tertiary-70: #{palette.$secondary-70},
+  --wy-tertiary-60: #{palette.$secondary-60},
+  --wy-tertiary-50: #{palette.$secondary-50},
+  --wy-tertiary-40: #{palette.$secondary-40},
+  --wy-tertiary-30: #{palette.$secondary-30},
+  --wy-tertiary-20: #{palette.$secondary-20},
+  --wy-tertiary-10: #{palette.$secondary-10},
 
-    /* Warning is a custom addition */
-    --wy-warning-99: #{palette.$warning-99},
-    --wy-warning-95: #{palette.$warning-95},
-    --wy-warning-90: #{palette.$warning-90},
-    --wy-warning-80: #{palette.$warning-80},
-    --wy-warning-70: #{palette.$warning-70},
-    --wy-warning-60: #{palette.$warning-60},
-    --wy-warning-50: #{palette.$warning-50},
-    --wy-warning-40: #{palette.$warning-40},
-    --wy-warning-30: #{palette.$warning-30},
-    --wy-warning-20: #{palette.$warning-20},
-    --wy-warning-10: #{palette.$warning-10},
+  --wy-error-99: #{palette.$error-99},
+  --wy-error-95: #{palette.$error-95},
+  --wy-error-90: #{palette.$error-90},
+  --wy-error-80: #{palette.$error-80},
+  --wy-error-70: #{palette.$error-70},
+  --wy-error-60: #{palette.$error-60},
+  --wy-error-50: #{palette.$error-50},
+  --wy-error-40: #{palette.$error-40},
+  --wy-error-30: #{palette.$error-30},
+  --wy-error-20: #{palette.$error-20},
+  --wy-error-10: #{palette.$error-10},
 
-    --wy-neutral-99: #{palette.$neutral-99},
-    --wy-neutral-95: #{palette.$neutral-95},
-    --wy-neutral-90: #{palette.$neutral-90},
-    --wy-neutral-80: #{palette.$neutral-80},
-    --wy-neutral-70: #{palette.$neutral-70},
-    --wy-neutral-60: #{palette.$neutral-60},
-    --wy-neutral-50: #{palette.$neutral-50},
-    --wy-neutral-40: #{palette.$neutral-40},
-    --wy-neutral-30: #{palette.$neutral-30},
-    --wy-neutral-20: #{palette.$neutral-20},
-    --wy-neutral-10: #{palette.$neutral-10},
+  /* Warning is a custom addition */ --wy-warning-99: #{palette.$warning-99},
+  --wy-warning-95: #{palette.$warning-95},
+  --wy-warning-90: #{palette.$warning-90},
+  --wy-warning-80: #{palette.$warning-80},
+  --wy-warning-70: #{palette.$warning-70},
+  --wy-warning-60: #{palette.$warning-60},
+  --wy-warning-50: #{palette.$warning-50},
+  --wy-warning-40: #{palette.$warning-40},
+  --wy-warning-30: #{palette.$warning-30},
+  --wy-warning-20: #{palette.$warning-20},
+  --wy-warning-10: #{palette.$warning-10},
 
-    --wy-neutral-variant-99: #{palette.$neutral-variant-99},
-    --wy-neutral-variant-95: #{palette.$neutral-variant-95},
-    --wy-neutral-variant-90: #{palette.$neutral-variant-90},
-    --wy-neutral-variant-80: #{palette.$neutral-variant-80},
-    --wy-neutral-variant-70: #{palette.$neutral-variant-70},
-    --wy-neutral-variant-60: #{palette.$neutral-variant-60},
-    --wy-neutral-variant-50: #{palette.$neutral-variant-50},
-    --wy-neutral-variant-40: #{palette.$neutral-variant-40},
-    --wy-neutral-variant-30: #{palette.$neutral-variant-30},
-    --wy-neutral-variant-20: #{palette.$neutral-variant-20},
-    --wy-neutral-variant-10: #{palette.$neutral-variant-10},
+  --wy-neutral-99: #{palette.$neutral-99},
+  --wy-neutral-95: #{palette.$neutral-95},
+  --wy-neutral-90: #{palette.$neutral-90},
+  --wy-neutral-80: #{palette.$neutral-80},
+  --wy-neutral-70: #{palette.$neutral-70},
+  --wy-neutral-60: #{palette.$neutral-60},
+  --wy-neutral-50: #{palette.$neutral-50},
+  --wy-neutral-40: #{palette.$neutral-40},
+  --wy-neutral-30: #{palette.$neutral-30},
+  --wy-neutral-20: #{palette.$neutral-20},
+  --wy-neutral-10: #{palette.$neutral-10},
 
-    --wy-surface-1-light: #{palette.$surface-1-light}, // --wy-surface + --wy-primary with 5% opacity
-    --wy-surface-2-light: #{palette.$surface-2-light}, // --wy-surface + --wy-primary with 8% opacity
-    --wy-surface-3-light: #{palette.$surface-3-light}, // --wy-surface + --wy-primary with 11 opacity
-    --wy-surface-4-light: #{palette.$surface-4-light}, // --wy-surface + --wy-primary with 12% opacity
-    --wy-surface-5-light: #{palette.$surface-5-light}, // --wy-surface + --wy-primary with 14% opacity
+  --wy-neutral-variant-99: #{palette.$neutral-variant-99},
+  --wy-neutral-variant-95: #{palette.$neutral-variant-95},
+  --wy-neutral-variant-90: #{palette.$neutral-variant-90},
+  --wy-neutral-variant-80: #{palette.$neutral-variant-80},
+  --wy-neutral-variant-70: #{palette.$neutral-variant-70},
+  --wy-neutral-variant-60: #{palette.$neutral-variant-60},
+  --wy-neutral-variant-50: #{palette.$neutral-variant-50},
+  --wy-neutral-variant-40: #{palette.$neutral-variant-40},
+  --wy-neutral-variant-30: #{palette.$neutral-variant-30},
+  --wy-neutral-variant-20: #{palette.$neutral-variant-20},
+  --wy-neutral-variant-10: #{palette.$neutral-variant-10},
 
-    --wy-surface-1-dark: #{palette.$surface-1-dark}, // --wy-surface + --wy-primary with 5% opacity
-    --wy-surface-2-dark: #{palette.$surface-2-dark}, // --wy-surface + --wy-primary with 8% opacity
-    --wy-surface-3-dark: #{palette.$surface-3-dark}, // --wy-surface + --wy-primary with 11 opacity
-    --wy-surface-4-dark: #{palette.$surface-4-dark}, // --wy-surface + --wy-primary with 12% opacity
-    --wy-surface-5-dark: #{palette.$surface-5-dark}, // --wy-surface + --wy-primary with 14% opacity
+  --wy-surface-1-light: #{palette.$surface-1-light},
+  // --wy-surface + --wy-primary with 5% opacity
+  --wy-surface-2-light: #{palette.$surface-2-light},
+  // --wy-surface + --wy-primary with 8% opacity
+  --wy-surface-3-light: #{palette.$surface-3-light},
+  // --wy-surface + --wy-primary with 11 opacity
+  --wy-surface-4-light: #{palette.$surface-4-light},
+  // --wy-surface + --wy-primary with 12% opacity
+  --wy-surface-5-light: #{palette.$surface-5-light},
 
-    // custom colors
-    --wy-blue-light: #{palette.$blue-light},
-    --wy-indigo-light: #{palette.$indigo-light},
-    --wy-purple-light: #{palette.$purple-light},
-    --wy-pink-light: #{palette.$pink-light},
-    --wy-red-light: #{palette.$red-light},
-    --wy-orange-light: #{palette.$orange-light},
-    --wy-yellow-light: #{palette.$yellow-light},
-    --wy-green-light: #{palette.$green-light},
-    --wy-teal-light: #{palette.$teal-light},
-    --wy-cyan-light: #{palette.$cyan-light},
-    --wy-gray-light: #{palette.$gray-light},
+  // --wy-surface + --wy-primary with 14% opacity
+  --wy-surface-1-dark: #{palette.$surface-1-dark},
+  // --wy-surface + --wy-primary with 5% opacity
+  --wy-surface-2-dark: #{palette.$surface-2-dark},
+  // --wy-surface + --wy-primary with 8% opacity
+  --wy-surface-3-dark: #{palette.$surface-3-dark},
+  // --wy-surface + --wy-primary with 11 opacity
+  --wy-surface-4-dark: #{palette.$surface-4-dark},
+  // --wy-surface + --wy-primary with 12% opacity
+  --wy-surface-5-dark: #{palette.$surface-5-dark},
 
-    // custom colors
-    --wy-blue-dark: #{palette.$blue-dark},
-    --wy-indigo-dark: #{palette.$indigo-dark},
-    --wy-purple-dark: #{palette.$purple-dark},
-    --wy-pink-dark: #{palette.$pink-dark},
-    --wy-red-dark: #{palette.$red-dark},
-    --wy-orange-dark: #{palette.$orange-dark},
-    --wy-yellow-dark: #{palette.$yellow-dark},
-    --wy-green-dark: #{palette.$green-dark},
-    --wy-teal-dark: #{palette.$teal-dark},
-    --wy-cyan-dark: #{palette.$cyan-dark},
-    --wy-gray-dark: #{palette.$gray-dark},
+  // --wy-surface + --wy-primary with 14% opacity
+  // custom colors
+  --wy-blue-light: #{palette.$blue-light},
+  --wy-indigo-light: #{palette.$indigo-light},
+  --wy-purple-light: #{palette.$purple-light},
+  --wy-pink-light: #{palette.$pink-light},
+  --wy-red-light: #{palette.$red-light},
+  --wy-orange-light: #{palette.$orange-light},
+  --wy-yellow-light: #{palette.$yellow-light},
+  --wy-green-light: #{palette.$green-light},
+  --wy-teal-light: #{palette.$teal-light},
+  --wy-cyan-light: #{palette.$cyan-light},
+  --wy-gray-light: #{palette.$gray-light},
 
-    --wy-code-text-light: #{palette.$code-text-light},
-    --wy-code-variable-light: #{palette.$code-variable-light},
-    --wy-code-operator-light: #{palette.$code-operator-light},
-    --wy-code-prolog-light: #{palette.$code-prolog-light},
-    --wy-code-comment-light: #{palette.$code-comment-light},
-    --wy-code-builtin-light: #{palette.$code-builtin-light},
-    --wy-code-number-light: #{palette.$code-number-light},
-    --wy-code-inserted-light: #{palette.$code-inserted-light},
-    --wy-code-constant-light: #{palette.$code-constant-light},
-    --wy-code-hexcode-light: #{palette.$code-hexcode-light},
-    --wy-code-regex-light: #{palette.$code-regex-light},
-    --wy-code-char-light: #{palette.$code-char-light},
-    --wy-code-tag-light: #{palette.$code-tag-light},
-    --wy-code-attr-name-light: #{palette.$code-attr-name-light},
-    --wy-code-selector-light: #{palette.$code-selector-light},
-    --wy-code-property-light: #{palette.$code-property-light},
-    --wy-code-deleted-light: #{palette.$code-deleted-light},
-    --wy-code-string-light: #{palette.$code-string-light},
-    --wy-code-changed-light: #{palette.$code-changed-light},
-    --wy-code-punctuation-light: #{palette.$code-punctuation-light},
-    --wy-code-function-light: #{palette.$code-function-light},
-    --wy-code-keyword-light: #{palette.$code-keyword-light},
-    --wy-code-class-name-light: #{palette.$code-class-name-light},
+  // custom colors
+  --wy-blue-dark: #{palette.$blue-dark},
+  --wy-indigo-dark: #{palette.$indigo-dark},
+  --wy-purple-dark: #{palette.$purple-dark},
+  --wy-pink-dark: #{palette.$pink-dark},
+  --wy-red-dark: #{palette.$red-dark},
+  --wy-orange-dark: #{palette.$orange-dark},
+  --wy-yellow-dark: #{palette.$yellow-dark},
+  --wy-green-dark: #{palette.$green-dark},
+  --wy-teal-dark: #{palette.$teal-dark},
+  --wy-cyan-dark: #{palette.$cyan-dark},
+  --wy-gray-dark: #{palette.$gray-dark},
 
-    --wy-code-text-dark: #{palette.$code-text-dark},
-    --wy-code-variable-dark: #{palette.$code-variable-dark},
-    --wy-code-operator-dark: #{palette.$code-operator-dark},
-    --wy-code-prolog-dark: #{palette.$code-prolog-dark},
-    --wy-code-comment-dark: #{palette.$code-comment-dark},
-    --wy-code-builtin-dark: #{palette.$code-builtin-dark},
-    --wy-code-number-dark: #{palette.$code-number-dark},
-    --wy-code-inserted-dark: #{palette.$code-inserted-dark},
-    --wy-code-constant-dark: #{palette.$code-constant-dark},
-    --wy-code-hexcode-dark: #{palette.$code-hexcode-dark},
-    --wy-code-regex-dark: #{palette.$code-regex-dark},
-    --wy-code-char-dark: #{palette.$code-char-dark},
-    --wy-code-tag-dark: #{palette.$code-tag-dark},
-    --wy-code-attr-name-dark: #{palette.$code-attr-name-dark},
-    --wy-code-selector-dark: #{palette.$code-selector-dark},
-    --wy-code-property-dark: #{palette.$code-property-dark},
-    --wy-code-deleted-dark: #{palette.$code-deleted-dark},
-    --wy-code-string-dark: #{palette.$code-string-dark},
-    --wy-code-changed-dark: #{palette.$code-changed-dark},
-    --wy-code-punctuation-dark: #{palette.$code-punctuation-dark},
-    --wy-code-function-dark: #{palette.$code-function-dark},
-    --wy-code-keyword-dark: #{palette.$code-keyword-dark},
-    --wy-code-class-name-dark: #{palette.$code-class-name-dark},
+  --wy-code-text-light: #{palette.$code-text-light},
+  --wy-code-variable-light: #{palette.$code-variable-light},
+  --wy-code-operator-light: #{palette.$code-operator-light},
+  --wy-code-prolog-light: #{palette.$code-prolog-light},
+  --wy-code-comment-light: #{palette.$code-comment-light},
+  --wy-code-builtin-light: #{palette.$code-builtin-light},
+  --wy-code-number-light: #{palette.$code-number-light},
+  --wy-code-inserted-light: #{palette.$code-inserted-light},
+  --wy-code-constant-light: #{palette.$code-constant-light},
+  --wy-code-hexcode-light: #{palette.$code-hexcode-light},
+  --wy-code-regex-light: #{palette.$code-regex-light},
+  --wy-code-char-light: #{palette.$code-char-light},
+  --wy-code-tag-light: #{palette.$code-tag-light},
+  --wy-code-attr-name-light: #{palette.$code-attr-name-light},
+  --wy-code-selector-light: #{palette.$code-selector-light},
+  --wy-code-property-light: #{palette.$code-property-light},
+  --wy-code-deleted-light: #{palette.$code-deleted-light},
+  --wy-code-string-light: #{palette.$code-string-light},
+  --wy-code-changed-light: #{palette.$code-changed-light},
+  --wy-code-punctuation-light: #{palette.$code-punctuation-light},
+  --wy-code-function-light: #{palette.$code-function-light},
+  --wy-code-keyword-light: #{palette.$code-keyword-light},
+  --wy-code-class-name-light: #{palette.$code-class-name-light},
+
+  --wy-code-text-dark: #{palette.$code-text-dark},
+  --wy-code-variable-dark: #{palette.$code-variable-dark},
+  --wy-code-operator-dark: #{palette.$code-operator-dark},
+  --wy-code-prolog-dark: #{palette.$code-prolog-dark},
+  --wy-code-comment-dark: #{palette.$code-comment-dark},
+  --wy-code-builtin-dark: #{palette.$code-builtin-dark},
+  --wy-code-number-dark: #{palette.$code-number-dark},
+  --wy-code-inserted-dark: #{palette.$code-inserted-dark},
+  --wy-code-constant-dark: #{palette.$code-constant-dark},
+  --wy-code-hexcode-dark: #{palette.$code-hexcode-dark},
+  --wy-code-regex-dark: #{palette.$code-regex-dark},
+  --wy-code-char-dark: #{palette.$code-char-dark},
+  --wy-code-tag-dark: #{palette.$code-tag-dark},
+  --wy-code-attr-name-dark: #{palette.$code-attr-name-dark},
+  --wy-code-selector-dark: #{palette.$code-selector-dark},
+  --wy-code-property-dark: #{palette.$code-property-dark},
+  --wy-code-deleted-dark: #{palette.$code-deleted-dark},
+  --wy-code-string-dark: #{palette.$code-string-dark},
+  --wy-code-changed-dark: #{palette.$code-changed-dark},
+  --wy-code-punctuation-dark: #{palette.$code-punctuation-dark},
+  --wy-code-function-dark: #{palette.$code-function-dark},
+  --wy-code-keyword-dark: #{palette.$code-keyword-dark},
+  --wy-code-class-name-dark: #{palette.$code-class-name-dark}
 );
 
 $tokens: defaultmode.$tokens;
 
-$token-color-names: (
-    "theme",
-    "primary",
-    "secondary",
-    "tertiary",
-    "surface",
-    "surface-variant",
-    "error",
-    "warning",
-);
+$token-color-names: ("primary", "secondary", "tertiary", "surface", "surface-variant", "error", "warning");
 
 $color-names: (
-    "blue",
-    "indigo",
-    "purple",
-    "pink",
-    "red",
-    "orange",
-    "yellow",
-    "green",
-    "teal",
-    "cyan",
-    "gray",
-    "black",
-    "white"
+  "blue",
+  "indigo",
+  "purple",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "teal",
+  "cyan",
+  "gray",
+  "black",
+  "white"
 );
 
 $all-color-names: list.join($token-color-names, $color-names);
 
 @function default($name) {
-    $value: map.get($colors, $name);
-    @return var(#{$name}, #{$value});
+  @if (not map.has-key($colors, $name)) {
+    @if (map.has-key($tokens, $name)) {
+        @warn "Unknown color.default(#{$name}), did you mean to use color.token(#{$name}) instead?";
+    } @else {
+        @warn "Unknown color.default(#{$name}).";
+
+    }
+  }
+
+  $value: map.get($colors, $name);
+  @return var(#{$name}, #{$value});
 }
 
 @function token($name, $tokens: $tokens) {
-    $value: map.get($tokens, $name);
-    @return var(#{$name}, #{default($value)});
+  $token: null;
+  @if (map.has-key($tokens, $name)) {
+    $token: map.get($tokens, $name);
+  }
+
+  @if (not $token and map.has-key($colors, $name)) {
+    $token: $name;
+  }
+
+  @if ($token) {
+    @return var(#{$name}, #{default($token)});
+  } @else {
+    @warn "Unknown color.token(#{$name}).";
+    @return var(#{$name});
+  }
 }
 
 @mixin custom-properties-defaults {
-    @each $name, $value in $defaults {
-        #{$name}: $value;
-    }
+  @each $name, $value in $defaults {
+    #{$name}: $value;
+  }
 }
 
 @mixin custom-properties-tokens($tokens: $tokens) {
-    @each $name, $value in $tokens {
-        #{$name}: default($value);
-    }
+  @each $name, $value in $tokens {
+    #{$name}: default($value);
+  }
 }
-
-

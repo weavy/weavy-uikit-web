@@ -1,5 +1,6 @@
 import { AccessType } from "./app.types";
 import { PresenceType } from "./presence.types";
+import { QueryResultType } from "./query.types";
 import { UserType } from "./users.types";
 
 export type MemberType = UserType & {
@@ -11,9 +12,4 @@ export type MemberType = UserType & {
   presence?: PresenceType;
 };
 
-export type MembersResultType = {
-  data: MemberType[];
-  start?: number;
-  end?: number;
-  count: number;
-};
+export type MembersResultType = QueryResultType<MemberType>;

@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
 import type { FileProviderType } from "../types/files.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all"
 import "./wy-icon";
@@ -9,6 +10,8 @@ import "./wy-icon";
 @customElement("wy-attachment")
 export default class WyAttachment extends LitElement {
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   name: string = "";
@@ -41,7 +44,7 @@ export default class WyAttachment extends LitElement {
         <wy-icon name=${icon} size="48" kind=${kind} ext=${ext}></wy-icon>
         <div class="wy-item-body ">
           <div class="wy-item-title">${this.name}</div>
-          ${fileSize ? html`<div class="wy-item-text" title="{fileSize}">${fileSize}</div>` : ``}
+          ${fileSize ? html`<div class="wy-item-text" title="${fileSize}">${fileSize}</div>` : ``}
         </div>
       </a>
     `;

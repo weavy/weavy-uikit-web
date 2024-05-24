@@ -4,29 +4,13 @@
 
 $dropdown-spacer: var.wy-rem(.25);
 $dropdown-min-width: var.wy-rem(10);
-$dropdown-padding-y: 0;
-$dropdown-padding-x: 0;
-$dropdown-font-size: var.default(--wy-font-size-base);
-$dropdown-border-radius: var.default(--wy-border-radius);
-$dropdown-box-shadow: var.default(--wy-shadow-level1);
+$dropdown-font-size: var.default(--wy-font-size);
+$dropdown-border-radius: var.default(--wy-dropdown-border-radius);
+$dropdown-box-shadow: var.default(--wy-dropdown-shadow);
 
-$dropdown-item-padding-y: var.wy-rem(.75);
-$dropdown-item-padding-x: var.wy-rem(1);
-
-.wy-dropdown,
-.wy-dropup {
+.wy-dropdown {
   position: relative
 }
-
-.wy-dropup {
-  .wy-dropdown-menu {
-    top: auto;
-    bottom: 100%;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-}
-
 
 .wy-dropdown-toggle {
   white-space: nowrap;
@@ -43,64 +27,36 @@ $dropdown-item-padding-x: var.wy-rem(1);
   z-index: const.$zindex-dropdown;
   //display: none; // none by default, but block on "open" of the menu
   min-width: $dropdown-min-width;
-  padding: $dropdown-padding-y $dropdown-padding-x;
-  margin: 0; // Override default margin of ul
+  //padding: $dropdown-padding-y $dropdown-padding-x;
+  //margin: 0; // Override default margin of ul
   font-size: $dropdown-font-size;
   text-align: left; // Ensures proper alignment if parent has it changed (e.g., modal footer)
-  list-style: none;
+  //list-style: none;
   background-clip: padding-box;
   border-radius: $dropdown-border-radius;
   box-shadow: $dropdown-box-shadow;
   overflow: hidden;
 
-  &[data-bs-popper] {
-    top: 100%;
-    left: 0;
-    margin-top: $dropdown-spacer;
-  }
-
   display: block;
-
-  .wy-dropup & {
-      top: auto;
-      bottom: 100%;
-      margin-top: 0;
-      margin-bottom: 0;
-  }
-
-  // Bootstrap compatibility
-  [data-bs-toggle="dropdown"] ~ & {
-    &:not(.show) {
-      display: none;
-    }
-
-    &[hidden].show {
-        display: block !important;
-    }
-  }
-}
-
-.wy-dropdown-menu-end {
-  right: 0;
 }
 
 .wy-dropdown-item {
   background-color: transparent; // For `<button>`s
   color: var(--wy-component-color, #{color.token(--wy-on-surface)});
 
-  display: block;
+  display: flex;
   width: 100%; // For `<button>`s
-  padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+  padding: var.default(--wy-dropdown-padding-y) var.default(--wy-dropdown-padding-x);
   clear: both;
   font-family: var.default(--wy-font-family), inherit;
   font-size: inherit;
-  font-weight: const.$font-weight-normal;
+  font-weight: var.default(--wy-font-weight);
   line-height: 1;
   text-align: inherit; // For `<button>`s
   text-decoration: none;
   white-space: nowrap; // prevent links from randomly breaking onto new lines
   border: 0; // For `<button>`s
-  gap: var.wy-rem(.25);
+  gap: var.default(--wy-dropdown-gap);
 
   &:hover,
   &:focus {
@@ -133,7 +89,6 @@ $dropdown-item-padding-x: var.wy-rem(1);
     opacity: var.default(--wy-opacity-disabled);
   }
 
-
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -165,15 +120,13 @@ $dropdown-item-padding-x: var.wy-rem(1);
       } 
     }
   }
-
 }
-
 
 .wy-dropdown-divider {
   height: 0;
   margin: 0;
   overflow: hidden;
   border: none;
-  border-top: 1px solid color.token(--wy-outline-variant);
+  border-top: var.default(--wy-dropdown-border-width) solid color.token(--wy-outline-variant);
 }
 

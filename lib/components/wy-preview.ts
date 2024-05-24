@@ -1,16 +1,12 @@
-import allCss from "../scss/all";
-
 import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import { type FeaturesListType, type FeaturesConfigType, Feature } from "../types/features.types";
 import type { FilesResultType, FileType } from "../types/files.types";
 import type { AppType } from "../types/app.types";
 
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
 import { portal } from "lit-modal-portal";
-import { hasFeature } from "../utils/features";
 import { localized, msg } from "@lit/localize";
 import type { UserType } from "../types/users.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -18,8 +14,8 @@ import { SwipeScrollController } from "../controllers/swipe-scroll-controller";
 import { repeat } from "lit/directives/repeat.js";
 import { PersistStateController } from "../controllers/persist-state-controller";
 import { HistoryController } from "../controllers/history-controller";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-button";
 import "./wy-icon";
@@ -31,29 +27,18 @@ import "./wy-file-menu";
 import "./wy-comment-list";
 import "./wy-file-versions";
 import "./wy-portal";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
+
+import allCss from "../scss/all";
 
 @customElement("wy-preview")
 @localized()
-export default class WyPreview extends LitElement {
+export default class WyPreview extends AppConsumerMixin(LitElement) {
   static override styles = [allCss];
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
-
+  protected exportParts = new ShadowPartsController(this);
+  
   @property()
   uid: string = "preview";
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @state()
-  availableFeatures?: FeaturesListType = [];
 
   @property({ attribute: false })
   files?: FileType[];
@@ -65,16 +50,13 @@ export default class WyPreview extends LitElement {
   infiniteQueryResult?: InfiniteQueryObserverResult<InfiniteData<FilesResultType, unknown>>;
 
   @property({ type: Object })
-  app?: AppType;
+  override app: AppType | undefined;
 
   @property({ type: Object })
-  user?: UserType;
+  override user: UserType | undefined;
 
   @property({ type: Number })
   currentId: number = NaN;
-
-  @property({ type: Number })
-  commentCount: number = NaN;
 
   @property({ type: Boolean })
   isAttachment: boolean = false;
@@ -128,7 +110,6 @@ export default class WyPreview extends LitElement {
 
     if (file) {
       this.currentId = file.id;
-      this.commentCount = file.comment_count!;
     }
 
     if (uid) {
@@ -202,13 +183,17 @@ export default class WyPreview extends LitElement {
   }
 
   setPrev() {
-    this.currentId = this.previousFile!.id;
-    this.blockSwipeScroll();
+    if (this.previousFile) {
+      this.currentId = this.previousFile.id;
+      this.blockSwipeScroll();
+    }
   }
 
   setNext() {
-    this.currentId = this.nextFile!.id;
-    this.blockSwipeScroll();
+    if (this.nextFile) {
+      this.currentId = this.nextFile.id;
+      this.blockSwipeScroll();
+    }
   }
 
   currentPreviewFileCallback(refElement: Element | undefined) {
@@ -217,6 +202,8 @@ export default class WyPreview extends LitElement {
   }
 
   override willUpdate(changedProperties: PropertyValues<this>) {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("app") && this.app) {
       this.persistState.observe(
         ["commentsOpen", "versionsOpen"],
@@ -244,6 +231,12 @@ export default class WyPreview extends LitElement {
         .flatMap((filesResult) => filesResult.data!)
         .filter((file) => file && !file.is_trashed)
         .filter((f) => f);
+    }
+
+    if (changedProperties.has("currentFile") && this.currentFile) {
+      if(this.currentFile.id !== this.currentId) {
+        this.currentId = this.currentFile.id;
+      }
     }
 
     if (
@@ -308,7 +301,7 @@ export default class WyPreview extends LitElement {
             ? html`
                 ${activeFile.id >= 1 &&
                 !this.isAttachment &&
-                hasFeature(this.availableFeatures, Feature.Comments, this.features?.comments)
+                this.hasFeatures?.comments
                   ? html`
                       <wy-button
                         kind="icon"
@@ -316,24 +309,22 @@ export default class WyPreview extends LitElement {
                         @click=${() => this.toggleSidebarTab("comments")}
                         title=${msg("Comments")}
                       >
-                        <div class="wy-icon-active-stack">
-                          ${this.commentCount && this.commentCount > 0
-                            ? html` <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>
-                                <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>`
-                            : html` <span class="wy-icon-stack-item"><wy-icon name="comment-outline"></wy-icon></span>
-                                <span class="wy-icon-stack-item"><wy-icon name="comment"></wy-icon></span>`}
-                        </div>
+                        <wy-icon-stack>
+                          ${activeFile.comments?.count && activeFile.comments?.count > 0
+                            ? html`<wy-icon name="comment" state ?active=${!this.commentsOpen}></wy-icon>
+                                <wy-icon name="comment" layer state ?active=${this.commentsOpen}></wy-icon>`
+                            : html`<wy-icon name="comment-outline" state ?active=${!this.commentsOpen}></wy-icon>
+                                <wy-icon name="comment" layer state ?active=${this.commentsOpen}></wy-icon>`}
+                          </wy-icon-stack>
                       </wy-button>
                     `
                   : nothing}
                 <wy-file-menu
                   .file=${activeFile}
-                  .availableFeatures=${this.availableFeatures}
-                  .features=${this.features}
                 >
                   ${activeFile.id >= 1 &&
                   !this.isAttachment &&
-                  hasFeature(this.availableFeatures, Feature.Versions, this.features?.versions)
+                  this.hasFeatures?.versions
                     ? html`
                         <wy-dropdown-item
                           ?active=${this.versionsOpen}
@@ -384,7 +375,10 @@ export default class WyPreview extends LitElement {
           <wy-overlay
             class="wy-dark"
             maximized
+            .contexts=${this.contexts}
+            .open=${this.showOverlay}
             @keyup=${this.handleKeys}
+            @close=${() => this.close()}
             @release-focus=${() =>
               this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
           >
@@ -416,12 +410,8 @@ export default class WyPreview extends LitElement {
                   ${this.commentsOpen && this.currentFile && this.currentFile.id >= 1 && this.app && this.user
                     ? html`
                         <wy-comment-list
-                          .app=${this.app}
-                          .user=${this.user}
                           .parentId=${this.currentFile.id}
                           .location=${"files"}
-                          .availableFeatures=${this.availableFeatures}
-                          .features=${this.features}
                         ></wy-comment-list>
                       `
                     : nothing}
@@ -453,11 +443,8 @@ export default class WyPreview extends LitElement {
                     ${this.versionsOpen && this.currentFile && this.app
                       ? html`
                           <wy-file-versions
-                            .app=${this.app}
                             .file=${this.currentFile}
                             .activeVersion=${this.versionFile || this.currentFile}
-                            .availableFeatures=${this.availableFeatures}
-                            .features=${this.features}
                             @file-version-select=${(e: CustomEvent) => this.handleVersionFile(e)}
                           ></wy-file-versions>
                         `

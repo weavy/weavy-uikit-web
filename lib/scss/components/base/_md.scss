@@ -12,7 +12,7 @@
     @return $number;
   }
   
-  /// Function for wrapping rem with --wy-rem
+  /// Function for wrapping rem with --wy-size
   /// @param {Number|rem|px} $size - The value to wrap. For example 1, 1rem or 1px
   @function wy-rem($size) {
       @if meta.type-of($size) == "number" and not math.is-unitless($size) {
@@ -23,7 +23,7 @@
           }
       }
   
-      @return calc(#{$size} * var(--wy-rem, 1rem));
+      @return calc(#{$size} * var(--wy-size, 1rem));
   }
   
 

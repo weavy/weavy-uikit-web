@@ -5,12 +5,15 @@ import chatCss from "../scss/all"
 import { localized, msg } from "@lit/localize";
 
 import "./wy-button";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-post-trashed")
 @localized()
 export default class WyPostTrashed extends LitElement {
   
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   postId!: number;

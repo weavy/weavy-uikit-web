@@ -33,7 +33,6 @@ export function getAppSubscribeMutationOptions(weavyContext: WeavyContextType, a
         if (!response.ok) {
           throw await response.json();
         }
-        return response.json();
       } else {
         throw new Error(`Could not subscribe to app ${app.uid}.`);
       }
@@ -51,16 +50,6 @@ export function getAppSubscribeMutationOptions(weavyContext: WeavyContextType, a
         subscribe: variables.subscribe,
       };
       return mutationContext;
-    },
-    onSuccess: (data: AppType) => {
-      queryClient.setQueryData(
-        mutationKey,
-        (mApp: AppType) => {
-          return { ...mApp, ...data };
-        },
-        { updatedAt: Date.now() }
-      );
-      queryClient.invalidateQueries({ queryKey: mutationKey, exact: true });
     },
     onError(error: Error, variables: MutateAppSubscribeProps, context: MutateAppSubscribeContextType) {
       if (context && context.previousSubscribe !== undefined) {

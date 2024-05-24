@@ -15,12 +15,14 @@ import { repeat } from "lit/directives/repeat.js";
 
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-files-list")
 @localized()
 export class WyFilesList extends LitElement {
   static override styles = filesCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   // Used in renderFileTable & renderFileCard
   @consume({ context: weavyContextDefinition, subscribe: true })
@@ -41,12 +43,6 @@ export class WyFilesList extends LitElement {
 
   @property({ type: Number })
   isRenamingId?: number = NaN;
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @state()
-  availableFeatures?: FeaturesListType = [];
 
   dispatchFileOpen(file: FileType) {
     const event = new CustomEvent("file-open", { detail: { file } });

@@ -1,20 +1,12 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { type FeaturesListType, Feature, type FeaturesConfigType } from "../types/features.types";
-import { hasFeature } from "../utils/features";
-import { AccessType, type AppType } from "../types/app.types";
+import { PermissionType } from "../types/app.types";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
-
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
-
 import filesCss from "../scss/all";
 
-import { type UserType } from "../types/users.types";
 import {
   getFileMutationsByConflictOrError,
   getFileMutationsTotalProgress,
@@ -38,7 +30,9 @@ import { toUpperCaseFirst } from "../utils/strings";
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
 import { WeavyContextProps } from "../types/weavy.types";
-import { hasAccess } from "../utils/access";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { hasPermission } from "../utils/permission";
 
 import "./wy-button";
 import "./wy-dropdown";
@@ -52,28 +46,10 @@ import "./wy-confluence";
 
 @customElement("wy-files-appbar")
 @localized()
-export class WyFilesAppbar extends LitElement {
+export class WyFilesAppbar extends AppConsumerMixin(LitElement) {
   static override styles = [filesCss];
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
-
-  @property({ type: Object })
-  app?: AppType;
-
-  @property({ type: Object })
-  user?: UserType;
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType = [];
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Object })
   order: FileOrderType = { by: "name", descending: false };
@@ -162,6 +138,8 @@ export class WyFilesAppbar extends LitElement {
   }
 
   override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+    super.willUpdate(changedProperties);
+
     if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       this.mutatingFiles.trackMutationState(
         { filters: { mutationKey: ["apps", this.app.id], exact: false } },
@@ -185,8 +163,6 @@ export class WyFilesAppbar extends LitElement {
 
       return html`
         <wy-file-item
-          .availableFeatures=${this.availableFeatures}
-          .features=${this.features}
           .file=${mutation.context?.file}
           .status=${fileStatus}
           .actionType=${mutation.context.type}
@@ -237,7 +213,7 @@ export class WyFilesAppbar extends LitElement {
     return html`
       <nav class="wy-toolbar">
         <div class="wy-toolbar-buttons">
-          ${hasAccess(AccessType.Write, this.app?.access || AccessType.None, this.app?.permissions)
+          ${hasPermission(PermissionType.Create, this.app?.permissions)
             ? html`
                 <wy-dropdown title=${msg("Add files")}>
                   <span slot="button">${msg("Add files")}</span>
@@ -257,7 +233,7 @@ export class WyFilesAppbar extends LitElement {
                     hidden
                     tabindex="-1"
                   />
-                  ${hasFeature(this.availableFeatures, Feature.CloudFiles, this.features?.cloudFiles)
+                  ${this.hasFeatures?.cloudFiles
                     ? html`
                         <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
                           <wy-icon name="cloud"></wy-icon>
@@ -265,7 +241,7 @@ export class WyFilesAppbar extends LitElement {
                         </wy-dropdown-item>
                       `
                     : nothing}
-                  ${hasFeature(this.availableFeatures, Feature.Confluence, this.features?.confluence) &&
+                  ${this.hasFeatures?.confluence &&
                   this.weavyContext?.confluenceAuthenticationUrl
                     ? html`<wy-confluence
                         dropdown
@@ -315,8 +291,8 @@ export class WyFilesAppbar extends LitElement {
               ${msg("Name")}
             </wy-dropdown-option>
             <wy-dropdown-option
-              ?selected=${this.order.by === "modified_at"}
-              @click=${() => this.dispatchOrder({ ...this.order, by: "modified_at" })}
+              ?selected=${this.order.by === "updated_at"}
+              @click=${() => this.dispatchOrder({ ...this.order, by: "updated_at" })}
             >
               ${msg("Modified")}
             </wy-dropdown-option>
@@ -388,7 +364,9 @@ export class WyFilesAppbar extends LitElement {
             this.showUploadSheet && Boolean(fileMutationResults?.length)
               ? html`
                   <wy-sheet
+                    .contexts=${this.contexts}
                     .show=${this.showUploadSheet}
+                    @close=${() => this.showUploadSheet = false}
                     @release-focus=${() =>
                       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
                   >

@@ -1,26 +1,12 @@
-import filesCss from "./scss/all"
-import colorModes from "./scss/colormodes"
-
-import "./components/wy-dropdown";
-import "./components/wy-button";
-import "./components/wy-overlay";
-import "./components/wy-files-appbar";
-import "./components/wy-files-list";
-import "./components/wy-preview";
-import "./components/wy-spinner";
-
+import filesCss from "./scss/all";
+import colorModes from "./scss/colormodes";
 import { LitElement, html, nothing, css, type PropertyValues } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "./contexts/weavy-context";
-
-import { getApiOptions } from "./data/api";
 import { AppTypes, type AppType } from "./types/app.types";
 import type { UserType } from "./types/users.types";
-import type { FeaturesListType, FeaturesConfigType } from "./types/features.types";
 
 import { getInfiniteFileListOptions } from "./data/files";
 
@@ -40,8 +26,11 @@ import { InfiniteScrollController } from "./controllers/infinite-scroll-controll
 import { MutationController } from "./controllers/mutation-controller";
 import { getCreateFileMutationOptions } from "./data/file-create";
 
-import { type MutateAppSubscribeProps, getAppSubscribeMutationOptions, type MutateAppSubscribeContextType, getAppOptions } from "./data/app";
-import { QueryController } from "./controllers/query-controller";
+import {
+  type MutateAppSubscribeProps,
+  getAppSubscribeMutationOptions,
+  type MutateAppSubscribeContextType,
+} from "./data/app";
 import { RenameFileMutationType, getRenameFileMutation } from "./data/file-rename";
 import {
   type RemoveFileMutationType,
@@ -60,10 +49,14 @@ import { localized, msg } from "@lit/localize";
 import { PersistStateController } from "./controllers/persist-state-controller";
 import { ThemeController } from "./controllers/theme-controller";
 import { RealtimeFileEventType } from "./types/realtime.types";
-import "./components/wy-empty";
-import { whenParentsDefined } from "./utils/dom";
-import { AppSettingsProviderMixin } from "./mixins/settings-mixin";
+import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
+
+import "./components/wy-files-appbar";
+import "./components/wy-files-list";
+import "./components/wy-preview";
+import "./components/wy-spinner";
+import "./components/wy-empty";
 
 /**
  * Files component to render a list of uploaded files and linked files from cloud providers.
@@ -73,7 +66,7 @@ import { Constructor } from "./types/generic.types";
  */
 @customElement("wy-files")
 @localized()
-export class WyFiles extends AppSettingsProviderMixin(LitElement) {
+export class WyFiles extends AppProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     filesCss,
@@ -87,25 +80,7 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
     `,
   ];
 
-  protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
-
-  // Manually consumed in scheduleUpdate()
-  @state()
-  protected weavyContext?: WeavyContextType;
-
-  /**
-   * Unique identifier for your app component.
-   * The uid should correspond to the uid of the app created using the server-to-server Web API.
-   */
-  @property()
-  uid!: string;
-
-  /**
-   * Config for disabling features in the component.
-   * *Note: You can't enable any features that aren't available in your license.*
-   */
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
+  override appType = AppTypes.Files;
 
   /**
    * The view for showing the file list.
@@ -117,7 +92,7 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
   /**
    * File order in the list. Order by combined with direction.
    * This value is persisted in sessionStorage.
-   * Order by: "id" | "name" | "size" | "created_at" | "modified_at" | "timestamp".
+   * Order by: "name" | "updated_at" | "size".
    */
   @property({ type: Object })
   order: FileOrderType = { by: "name", descending: false };
@@ -128,15 +103,6 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
    */
   @property({ type: Boolean })
   showTrashed: boolean = false;
-
-  @state()
-  protected app?: AppType;
-
-  @state()
-  protected user?: UserType;
-
-  @state()
-  protected availableFeatures?: FeaturesListType = [];
 
   /**
    * Event: New file created.
@@ -173,10 +139,6 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
   protected realtimeFileDeletedEvent = (realtimeEvent: RealtimeFileEventType) =>
     new CustomEvent("wy:file_deleted", { bubbles: true, composed: false, detail: realtimeEvent });
 
-  private appQuery = new QueryController<AppType>(this);
-  private userQuery = new QueryController<UserType>(this);
-  private featuresQuery = new QueryController<FeaturesListType>(this);
-
   private filesQuery = new InfiniteQueryController<FilesResultType>(this);
 
   private persistState = new PersistStateController<this>(this);
@@ -189,7 +151,12 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
 
   private dropZone: DropZoneController = new DropZoneController(this);
 
-  private appSubscribeMutation = new MutationController<AppType, Error, MutateAppSubscribeProps, MutateAppSubscribeContextType>(this);
+  private appSubscribeMutation = new MutationController<
+    void,
+    Error,
+    MutateAppSubscribeProps,
+    MutateAppSubscribeContextType
+  >(this);
   private uploadBlobMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(this);
   private externalBlobMutation?: ExternalBlobMutationType;
   private createFileMutation = new MutationController<FileType, Error, CreateFileProps, FileMutationContextType>(this);
@@ -218,7 +185,7 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
   }
 
   // upload files
-  private handleExternalBlobs(e: CustomEvent) {    
+  private handleExternalBlobs(e: CustomEvent) {
     if (e.detail.externalBlobs) {
       for (let i = 0; i < e.detail.externalBlobs.length; i++) {
         const externalBlob = e.detail.externalBlobs[i];
@@ -228,7 +195,7 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
   }
 
   // add uploaded files
-  private async handleCreateFile(blob: BlobType, replace?: boolean) {    
+  private async handleCreateFile(blob: BlobType, replace?: boolean) {
     return await this.createFileMutation.mutate({ blob, replace });
   }
 
@@ -315,21 +282,10 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
     this.addEventListener("drop-files", this.handleBlobUpload);
     new ThemeController(this, WyFiles.styles);
   }
-  
-  override async scheduleUpdate() {
-    await whenParentsDefined(this);
-    this.weavyContextConsumer = new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
 
-    if (this.weavyContextConsumer?.value && this.weavyContext !== this.weavyContextConsumer?.value) {
-      this.weavyContext = this.weavyContextConsumer?.value;
-    }
-
-    await super.scheduleUpdate();
-  }
-
-  protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType, weavyContext: WeavyContextType, user: UserType }>) {
+  protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType; user: UserType }>) {
     super.willUpdate(changedProperties);
-    
+
     if (changedProperties.has("app")) {
       const lastApp = changedProperties.get("app");
 
@@ -340,25 +296,8 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
 
     //console.log("files willUpdate", Array.from(changedProperties.keys()), this.uid, this.weavyContext)
     if ((changedProperties.has("uid") || changedProperties.has("weavyContext")) && this.uid && this.weavyContext) {
-      this.appQuery.trackQuery(getAppOptions(this.weavyContext, this.uid, AppTypes.Files));
-
-      this.userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
-      this.featuresQuery.trackQuery(getApiOptions<FeaturesListType>(this.weavyContext, ["features", "files"]));
-
       this.persistState.observe(["view", "order", "showTrashed"], this.uid);
       //this.history.observe(['view'], this.uid)
-    }
-
-    if (!this.appQuery.result?.isPending) {
-      this.app = this.appQuery.result?.data;
-    }
-
-    if (!this.userQuery.result?.isPending) {
-      this.user = this.userQuery.result?.data;
-    }
-
-    if (!this.featuresQuery.result?.isPending) {
-      this.availableFeatures = this.featuresQuery.result?.data;
     }
 
     if (
@@ -418,10 +357,6 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
 
     return html`
       <wy-files-appbar
-        .app=${this.app}
-        .user=${this.user}
-        .availableFeatures=${this.availableFeatures}
-        .features=${this.features}
         .order=${this.order}
         .showTrashed=${this.showTrashed}
         .view=${this.view}
@@ -454,8 +389,6 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
                   .files=${files}
                   .dataUpdatedAt=${dataUpdatedAt}
                   .order=${this.order}
-                  .availableFeatures=${this.availableFeatures}
-                  .features=${this.features}
                   @file-open=${(e: CustomEvent) => {
                     this.previewRef.value?.open(e.detail.file);
                   }}
@@ -485,30 +418,17 @@ export class WyFiles extends AppSettingsProviderMixin(LitElement) {
               `
             : html`
                 <wy-empty>
-                  <div class="wy-content-icon">
-                    <div class="wy-content-icon">
-                      <wy-icon name="file-upload"></wy-icon>
-                    </div>
-                    <div class="wy-content-name">
-                      <span>${msg("Add some files to get started!")}</span>
-                    </div>
-                  </div>
+                  <wy-icon-display>
+                    <wy-icon name="file-upload"></wy-icon>
+                    <span slot="text">${msg("Add some files to get started!")}</span>
+                  </wy-icon-display>
                 </wy-empty>
               `
           : html`<wy-empty><wy-spinner overlay></wy-spinner></wy-empty>`}
         <div ${ref(this.pagerRef)} class="wy-pager"></div>
       </div>
       ${!isPending
-        ? html`
-            <wy-preview
-              ${ref(this.previewRef)}
-              .app=${this.app}
-              .user=${this.user}
-              .infiniteQueryResult=${this.filesQuery.result}
-              .availableFeatures=${this.availableFeatures}
-              .features=${this.features}
-            ></wy-preview>
-          `
+        ? html` <wy-preview ${ref(this.previewRef)} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
         : nothing}
     `;
   }

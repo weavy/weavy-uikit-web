@@ -3,17 +3,20 @@ import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { localized, msg, str } from "@lit/localize";
-
-import chatCss from "../scss/all"
 import { RealtimeEventType, RealtimeTypingEventType } from "../types/realtime.types";
 import { UserType } from "../types/users.types";
 import { WeavyContextProps } from "../types/weavy.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all"
 
 @customElement("wy-typing")
 @localized()
 export default class WyTyping extends LitElement {
   
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()

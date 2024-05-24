@@ -82,8 +82,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   staleTime = WeavyContextBase.defaults.staleTime;
   tokenFactoryRetryDelay = WeavyContextBase.defaults.tokenFactoryRetryDelay;
   tokenFactoryTimeout = WeavyContextBase.defaults.tokenFactoryTimeout;
-  zoomAuthenticationUrl = WeavyContextBase.defaults.zoomAuthenticationUrl;
-
+  
   // Promises
 
   // whenUrl
@@ -140,6 +139,19 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
     if (this.#url) {
       this.#resolveUrl?.(this.#url);
     }
+  }
+
+  // DEPRECATED
+
+  #zoomAuthenticationUrl?: string | URL;
+
+  get zoomAuthenticationUrl() {
+    return this.#zoomAuthenticationUrl ?? WeavyContextBase.defaults.zoomAuthenticationUrl;
+  }
+
+  set zoomAuthenticationUrl(url: string | URL | undefined) {
+    console.warn(`Setting "zoomAuthenticationUrl" is deprecated. Configure Zoom on your Weavy Environment instead.`);
+    this.#zoomAuthenticationUrl = url;
   }
 
   // CONSTRUCTOR

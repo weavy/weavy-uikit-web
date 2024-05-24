@@ -1,13 +1,13 @@
 @use "base/color";
 @use "base/var";
 
-.wy-tabs {
+[part~=wy-tabs] {
     display: flex;
     justify-content: space-evenly;
-    padding: var.wy-rem(.25);
+    padding: var.default(--wy-padding-sm);
 }
 
-.wy-tab {
+[part~=wy-tab] {
     --wy-component-color: #{color.token(--wy-primary)};
     --wy-component-background-color: transparent; // #{color.token(--wy-surface-2)};
   
@@ -15,13 +15,13 @@
     background: var(--wy-component-background-color);
 
     border: none;
-    border-radius: var.default(--wy-border-radius-lg);
+    border-radius: var.default(--wy-border-radius);
 
     display: inline-flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var.wy-rem(.25);
+    gap: var.default(--wy-gap-sm);
     position: relative;
 
     text-align: center;
@@ -34,7 +34,7 @@
         // State layer
         position: relative;
         padding: var.wy-rem(.25) var.wy-rem(1);
-        border-radius: var.default(--wy-btn-border-radius);
+        border-radius: var.default(--wy-button-border-radius);
         display: inline-flex;
 
         &::before {
@@ -63,10 +63,10 @@
     }
 
     .wy-tab-label {
-        font-family: #{var.default(--wy-btn-font-family)}, inherit;
-        line-height: var.default(--wy-btn-line-height);
+        font-family: #{var.default(--wy-button-font-family)}, inherit;
+        line-height: var.default(--wy-button-line-height);
     
         font-size: var.default(--wy-font-size-xs);
-        font-weight: var.default(--wy-font-weight-base);
+        font-weight: var.default(--wy-font-weight);
     }
 }

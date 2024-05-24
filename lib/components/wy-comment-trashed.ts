@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all"
 
@@ -11,6 +12,8 @@ import "./wy-button";
 export default class WyCommentTrashed extends LitElement {
   
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
   
   @property({ type: Number })
   commentId!: number;

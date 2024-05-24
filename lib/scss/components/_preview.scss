@@ -96,8 +96,8 @@
 }
 
 .wy-document {
-  --wy-component-background-color: #{color.default(--wy-background)};
-  --wy-component-color: #{color.default(--wy-on-background)};
+  --wy-component-background-color: #{color.token(--wy-background)};
+  --wy-component-color: #{color.token(--wy-on-background)};
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
   align-self: flex-start;

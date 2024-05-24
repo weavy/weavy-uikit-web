@@ -1,11 +1,12 @@
-import { EntityType } from "./app.types";
-import { CommentType } from "./comments.types";
+import { AppRef, EntityType } from "./app.types";
+import { CommentsResultType } from "./comments.types";
 import type { SortOrderType } from "./lists.types";
 import { MetadataType } from "./msg.types";
+import { InfiniteQueryResultType } from "./query.types";
 import type { UserType } from "./users.types";
 import { type Mutation } from "@tanstack/query-core";
 
-export type FileOrderByType = "id" | "name" | "size" | "created_at" | "modified_at" | "timestamp";
+export type FileOrderByType = "name" | "updated_at" | "size";
 
 export type FileOrderType = SortOrderType & {
   by: FileOrderByType;
@@ -53,7 +54,7 @@ export type ExternalBlobType = {
 
 export type FileType = {
   id: number;
-  app_id?: number;
+  app: AppRef;
   parent?: EntityType;
   version?: number;
   name: string;
@@ -74,26 +75,18 @@ export type FileType = {
   thumbnail_url?: string;
   created_at: string;
   created_by?: UserType;
-  created_by_id: number;
-  modified_at?: string;
-  modified_by?: UserType;
-  modified_by_id?: number;
-  comment_count?: number;
-  comment_ids?: number[];
-  comments?: CommentType[];
+  updated_at?: string;
+  updated_by?: UserType;
+  comments?: CommentsResultType;
   is_subscribed: boolean;
-  is_trashed: boolean;
+  is_starred: boolean;
+  is_trashed: boolean;  
   refId?: number; //*
   raw?: string;
   confluence?: boolean;
 };
 
-export type FilesResultType = {
-  data?: FileType[];
-  start?: number;
-  end?: number;
-  count: number;
-};
+export type FilesResultType = InfiniteQueryResultType<FileType>;
 
 export type FileStatusStateType = "error" | "conflict" | "pending" | "ok";
 

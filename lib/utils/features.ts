@@ -1,9 +1,11 @@
-import { Feature, FeaturesListType } from "../types/features.types";
+import { AppTypes } from "../types/app.types";
+import { FeaturesProductType } from "../types/features.types";
 
-export const hasFeature = (availableFeatures?: FeaturesListType, feature?: Feature, featureEnabled: boolean = true) => {
-  if (availableFeatures && feature) {
-    return availableFeatures.indexOf(feature) != -1 && featureEnabled;
+export function getProductFromAppType(app: AppTypes) {
+  switch (app) {
+    case AppTypes.Posts:
+      return FeaturesProductType.Feeds;
+    default:
+      return app as unknown as FeaturesProductType;
   }
-
-  return false;
-};
+}

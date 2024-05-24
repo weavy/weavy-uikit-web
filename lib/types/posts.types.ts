@@ -1,4 +1,4 @@
-import { CommentType } from "./comments.types";
+import { CommentsResultType } from "./comments.types";
 import { MsgType } from "./msg.types";
 import { PollOptionType } from "./polls.types";
 import { UserType } from "./users.types";
@@ -13,7 +13,7 @@ export type PostsResultType = {
 export type MutatePostProps = {
   id?: number;
   appId: number;
-  user: UserType;
+  user?: UserType;
   text: string;
   blobs?: number[];
   attachments?: number[];
@@ -25,8 +25,6 @@ export type MutatePostProps = {
 export type PostMutationContextType = {};
 
 export type PostType = MsgType & {
-  comment_count?: number;
-  comments?: CommentType[];
-  is_subscribed: boolean;
+  comments: CommentsResultType;
   temp?: boolean;
 };

@@ -2,16 +2,16 @@ import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { codecError, mediaError, mediaLoaded } from "../utils/media";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
 
-import allCss from "../scss/all"
-import { codecError, mediaError, mediaLoaded } from "../utils/media";
+import allCss from "../scss/all";
 
 @customElement("wy-preview-media")
 export class WyPreviewMedia extends LitElement {
-  
   static override styles = [
     allCss,
     css`
@@ -20,6 +20,8 @@ export class WyPreviewMedia extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   format: string = "";

@@ -14,7 +14,7 @@ export type MutateCommentVariables = {
 };
 
 export type RemoveCommentMutationType = MutationObserver<
-  CommentType,
+  void,
   Error,
   MutateCommentVariables,
   CommentMutationContextType
@@ -28,7 +28,10 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContextType, p
     mutationKey: commentsKey,
     mutationFn: async ({ id }: MutateCommentVariables) => {
       const response = await weavyContext.post("/api/comments/" + id + "/trash", "POST", "");
-      return response.json();
+      
+      if (!response.ok) {
+        throw new Error();
+      }
     },
     onMutate: async (variables: MutateCommentVariables) => {
       updateCacheItems(
@@ -39,7 +42,7 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContextType, p
       );
       return <CommentMutationContextType>{ type: "trash", id: variables.id };
     },
-    onSuccess: (data: CommentType, variables: MutateCommentVariables) => {
+    onSuccess: (data: void, variables: MutateCommentVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -47,7 +50,7 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContextType, p
         (existingComment: CommentType) => Object.assign(existingComment, data)
       );
       updateCacheItem(queryClient, [variables.type, variables.appId], variables.parentId, (item: PostType) => {
-        item.comment_count = (item.comment_count || 1) - 1;
+        item.comments.count -= 1;
       });
     },
     /*onError(error: Error, variables: MutateCommentVariables, _context: any) {
@@ -73,8 +76,7 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContextType,
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
-      }
-      return response.json();
+      }      
     },
     onMutate: async (variables: MutateCommentVariables) => {
       updateCacheItems(
@@ -85,7 +87,7 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContextType,
       );
       return <PostMutationContextType>{ type: "restore", file: variables.id };
     },
-    onSuccess: (data: CommentType, variables: MutateCommentVariables) => {
+    onSuccess: (data: void, variables: MutateCommentVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -93,7 +95,7 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContextType,
         (existingComment: CommentType) => Object.assign(existingComment, data)
       );
       updateCacheItem(queryClient, [variables.type, variables.appId], variables.parentId, (item: PostType) => {
-        item.comment_count = (item.comment_count || 0) + 1;
+        item.comments.count += 1;
       });
     },
     /*onError(error: Error, variables: MutateCommentVariables, _context: any) {

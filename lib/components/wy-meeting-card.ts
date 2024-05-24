@@ -8,12 +8,15 @@ import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy
 import { relativeTime } from "../utils/datetime";
 import "./wy-icon";
 import "./wy-button";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-meeting-card")
 @localized()
 export default class WyMeetingCard extends LitElement {
   
   static override styles = chatCss;
+
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
@@ -69,7 +72,7 @@ export default class WyMeetingCard extends LitElement {
                       )}-${this.meeting.provider_id.substring(6)}</div
                     >
                     <div class="wy-meeting-actions">
-                      <wy-button buttonClass="wy-button-primary">${msg("Join meeting")}</wy-button>
+                      <wy-button color="primary">${msg("Join meeting")}</wy-button>
                     </div>
                   </div>
                 </div>

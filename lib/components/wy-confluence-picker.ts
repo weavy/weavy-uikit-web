@@ -19,6 +19,7 @@ import type {
 } from "../types/confluence.types";
 import type { UserType } from "../types/users.types";
 import type { WeavyContextProps } from "../types/weavy.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-empty";
 import "./wy-icon";
@@ -28,6 +29,8 @@ import "./wy-spinner";
 @localized()
 export default class WyConfluencePicker extends LitElement {
   static override styles = chatCss;
+  
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()

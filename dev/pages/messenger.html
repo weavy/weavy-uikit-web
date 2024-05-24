@@ -27,7 +27,6 @@
   <wy-context 
       url="%WEAVY_URL%" 
       reactions='["👍", "❤️", "😂", "😒", "😁"]'
-      zoomAuthenticationUrl="%WEAVY_ZOOM_AUTH_URL%"
       confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
       confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"
       modalParent="html"
@@ -41,7 +40,7 @@
           throw new Error('Could not get access token from server!')
         }
       }">
-      <wy-messenger features='{"receipts": true}' submodals></wy-messenger>
+      <wy-messenger submodals></wy-messenger>
       
       <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
   </wy-context>

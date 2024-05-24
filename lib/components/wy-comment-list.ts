@@ -1,9 +1,6 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
-import { consume } from "@lit/context";
+import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import {
@@ -13,8 +10,8 @@ import {
   MutateCommentProps,
 } from "../types/comments.types";
 import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
-import { AccessType, type AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
+import { PermissionType } from "../types/app.types";
+import { hasPermission } from "../utils/permission";
 import { InfiniteData } from "@tanstack/query-core";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
@@ -23,42 +20,30 @@ import { MutationController } from "../controllers/mutation-controller";
 import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMutation } from "../data/comment-remove";
 import { PollMutationType, getPollMutation } from "../data/poll";
 
-import chatCss from "../scss/all"
+import { addCacheItem, updateCacheItem } from "../utils/query-cache";
+import { RealtimeCommentEventType, RealtimeReactionEventType } from "../types/realtime.types";
+import { WeavyContextProps } from "../types/weavy.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all";
 
 import "./wy-comment";
 import "./wy-spinner";
 import "./wy-comment-editor";
-import { addCacheItem, updateCacheItem } from "../utils/query-cache";
-import { RealtimeCommentEventType, RealtimeReactionEventType } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
-import { hasAccess } from "../utils/access";
 
 @customElement("wy-comment-list")
 @localized()
-export default class WyCommentList extends LitElement {
+export default class WyCommentList extends AppConsumerMixin(LitElement) {
   static override styles = chatCss;
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   parentId!: number;
 
   @property({ attribute: false })
   location: "posts" | "files" | "apps" = "apps";
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
 
   commentsQuery = new InfiniteQueryController<CommentsResultType>(this);
 
@@ -68,7 +53,7 @@ export default class WyCommentList extends LitElement {
     MutateCommentProps,
     CommentMutationContextType
   >(this);
-  
+
   private removeCommentMutation?: RemoveCommentMutationType;
   private restoreCommentMutation?: RemoveCommentMutationType;
   private pollMutation?: PollMutationType;
@@ -76,6 +61,8 @@ export default class WyCommentList extends LitElement {
   private pagerRef: Ref<Element> = createRef();
 
   override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+    super.willUpdate(changedProperties);
+
     if (
       (changedProperties.has("parentId") || changedProperties.has("weavyContext")) &&
       this.parentId &&
@@ -90,7 +77,7 @@ export default class WyCommentList extends LitElement {
       this.pollMutation = getPollMutation(this.weavyContext, ["comments", this.parentId]);
     }
 
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
+    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       // realtime
       this.weavyContext.subscribe(`a${this.app.id}`, "comment_created", this.handleRealtimeCommentCreated);
       this.weavyContext.subscribe(`a${this.app.id}`, "reaction_added", this.handleRealtimeReactionAdded);
@@ -128,9 +115,12 @@ export default class WyCommentList extends LitElement {
       ["comments", this.parentId],
       realtimeEvent.entity.id,
       (item: CommentType) => {
-        item.reactions = [
-          ...(item.reactions || []),
-          { content: realtimeEvent.reaction, created_by_id: realtimeEvent.actor.id },
+        if (!item.reactions?.data) {
+          item.reactions = { count: 0 };
+        }
+        item.reactions.data = [
+          ...(item.reactions.data || []),
+          { content: realtimeEvent.reaction, created_by: realtimeEvent.actor },
         ];
       }
     );
@@ -146,13 +136,15 @@ export default class WyCommentList extends LitElement {
       ["comments", this.parentId],
       realtimeEvent.entity.id,
       (item: CommentType) => {
-        item.reactions = item.reactions.filter((item) => item.created_by_id !== realtimeEvent.actor.id);
+        if (item.reactions?.data) {
+          item.reactions.data = item.reactions.data.filter((item) => item.created_by?.id !== realtimeEvent.actor.id);
+        }
       }
     );
   };
 
   private async handleSubmit(e: CustomEvent) {
-    if (this.app) {
+    if (this.app && this.user) {
       await this.addCommentMutation.mutate({
         appId: this.app.id,
         parentId: this.parentId,
@@ -161,7 +153,7 @@ export default class WyCommentList extends LitElement {
         meetingId: e.detail.meetingId,
         blobs: e.detail.blobs,
         pollOptions: e.detail.pollOptions,
-        embed: e.detail.embed,
+        embedId: e.detail.embed,
         user: this.user,
       });
     }
@@ -169,7 +161,7 @@ export default class WyCommentList extends LitElement {
 
   private renderComments(infiniteData?: InfiniteData<CommentsResultType>) {
     if (infiniteData) {
-      const flattenedPages = infiniteData.pages.flatMap((messageResult) => messageResult.data);
+      const flattenedPages = infiniteData.pages.flatMap((messageResult) => messageResult.data || []);
 
       return repeat(
         flattenedPages,
@@ -178,36 +170,34 @@ export default class WyCommentList extends LitElement {
           return [
             html`<wy-comment
               id="comment-${comment.id}"
-              .app=${this.app}
-              .user=${this.user}
               .commentId=${comment.id}
               .parentId=${this.parentId}
-              .temp=${comment.temp || false}
+              .temp=${comment?.temp || false}
               .createdBy=${comment.created_by}
               .createdAt=${comment.created_at}
-              .modifiedAt=${comment.modified_at}
+              .modifiedAt=${comment.updated_at}
               .isTrashed=${comment.is_trashed}
               .html=${comment.html}
               .text=${comment.text}
-              .attachments=${comment.attachments}
+              .attachments=${comment.attachments?.data}
               .embed=${comment.embed}
               .meeting=${comment.meeting}
-              .pollOptions=${comment.options}
-              .reactions=${comment.reactions}
-              .availableFeatures=${this.availableFeatures}
-              .features=${this.features}
-              @trash=${(e: CustomEvent) => {
+              .pollOptions=${comment.options?.data}
+              .reactions=${comment.reactions?.data}
+              @trash=${async (e: CustomEvent) => {
+                const app = await this.whenApp();
                 this.removeCommentMutation?.mutate({
                   id: e.detail.id,
-                  appId: this.app.id,
+                  appId: app.id,
                   parentId: this.parentId,
                   type: this.location,
                 });
               }}
-              @restore=${(e: CustomEvent) => {
+              @restore=${async (e: CustomEvent) => {
+                const app = await this.whenApp();
                 this.restoreCommentMutation?.mutate({
                   id: e.detail.id,
-                  appId: this.app.id,
+                  appId: app.id,
                   parentId: this.parentId,
                   type: this.location,
                 });
@@ -230,22 +220,18 @@ export default class WyCommentList extends LitElement {
   override render() {
     const { data: infiniteData, isPending } = this.commentsQuery.result ?? {};
 
-    return html`<div>
+    return html`
       <div class="wy-comments">
-        ${!isPending && this.app && infiniteData && this.availableFeatures
+        ${!isPending && this.app && infiniteData
           ? this.renderComments(infiniteData)
-          : html`<wy-spinner class="wy-content-icon"></wy-spinner>`}
+          : html`<wy-spinner padded></wy-spinner>`}
         <div ${ref(this.pagerRef)} class="wy-pager"></div>
       </div>
-      ${hasAccess(AccessType.Write, this.app.access, this.app.permissions)
+      ${hasPermission(PermissionType.Create, this.app?.permissions)
         ? html`
             <wy-comment-editor
               editorLocation=${this.location}
-              .app=${this.app}
-              .user=${this.user}
               .parentId=${this.parentId}
-              .availableFeatures=${this.availableFeatures}
-              .features=${this.features}
               .typing=${false}
               .draft=${true}
               placeholder=${msg("Create a comment...")}
@@ -254,7 +240,7 @@ export default class WyCommentList extends LitElement {
             ></wy-comment-editor>
           `
         : nothing}
-    </div>`;
+    `;
   }
 
   override disconnectedCallback(): void {

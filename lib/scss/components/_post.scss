@@ -1,6 +1,5 @@
 @use "base/color";
 @use "base/var";
-@use "base/const";
 
 .wy-posts {
   display: flex;
@@ -23,43 +22,40 @@
 
   .wy-image-grid {
     border-radius: 0;
-    margin-bottom: var.wy-rem(1);
   }
 
-  .wy-embed {
-    margin-bottom: var.wy-rem(1);
-  }
-
-  .wy-comments {
-    margin: var.wy-rem(0.5) var.wy-rem(0.75);
-    border-top: 1px solid #{color.token(--wy-outline-variant)};
-    padding: var.wy-rem(0.75) 0 0;
+  wy-comment-list {
+    border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
   }
 }
 
 .wy-post-body {
-  padding: 0 var.wy-rem(1);
+  display: flex;
+  flex-direction: column;
+
+  padding: var.default(--wy-padding) var.default(--wy-padding-lg);
 
   &:empty {
     display: none;
   }
 
-  .wy-content,
-  .wy-list,
-  .wy-poll {
-    // spacing between content
-    margin-bottom: var.wy-rem(1);
-  }
+  gap: var.default(--wy-gap-lg);
 }
 
 .wy-post-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 var.wy-rem(0.25) var.wy-rem(0.25);
+  margin: 0 calc(.75 * var.default(--wy-padding)) calc(.75* var.default(--wy-padding));
 
   .wy-meta {
     margin-right: var.wy-rem(0.5);
+  }
+}
+
+.wy-post-comments {
+  &:not(:empty) {
+    padding: var.default(--wy-padding);
   }
 }
 
@@ -71,7 +67,7 @@
     justify-content: center;
     align-items: center;
     border: var.wy-rem(2px) dashed color.token(--wy-primary);
-    font-weight: const.$font-weight-bold;
+    font-weight: var.default(--wy-font-weight-bold);
     z-index: 10000;
     position: absolute;
     top: 0;

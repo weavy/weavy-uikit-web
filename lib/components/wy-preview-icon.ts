@@ -1,12 +1,13 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { localized, msg, str } from "@lit/localize";
+import { getProvider } from "../utils/files";
+import type { FileProviderType } from "../types/files.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-icon";
 
 import allCss from "../scss/all"
-import { getProvider } from "../utils/files";
-import type { FileProviderType } from "../types/files.types";
 
 @customElement("wy-preview-icon")
 @localized()
@@ -18,9 +19,11 @@ export class WyPreviewIcon extends LitElement {
       :host {
         display: contents;
       }
-    `,
+      `,
   ];
-
+  
+  protected exportParts = new ShadowPartsController(this);
+  
   @property()
   src!: string;
 
@@ -30,9 +33,6 @@ export class WyPreviewIcon extends LitElement {
   @property()
   provider?: FileProviderType;
 
-  @property()
-  iconClass?: string;
-
   override render() {
     let icon = this.icon;
     const provider = getProvider(this.provider);
@@ -40,20 +40,19 @@ export class WyPreviewIcon extends LitElement {
     if (provider) {
       icon = `${icon}+${provider}`;
     }
+
     return html`
-      <div class="wy-content-icon ${this.iconClass ?? ""}">
-        <div class="wy-content-icon">
-          <wy-icon name=${icon}></wy-icon>
-        </div>
-        <div class="wy-content-name">
+      <wy-icon-display>
+        <wy-icon name=${icon}></wy-icon>
+        <span slot="text">
           ${this.provider
             ? html`
                 <span>${msg("No preview available :(")} </span>
                 <a href=${this.src} target="_blank">${msg(str`Open in ${this.provider}?`)}</a>
               `
             : html`<span>${msg("No preview available :(")}</span>`}
-        </div>
-      </div>
+        </span>
+      </wy-icon-display>
     `;
   }
 }

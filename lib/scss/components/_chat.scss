@@ -1,0 +1,19 @@
+@use "base/color";
+
+.wy-chat-conversation {
+    /*--wy-component-background-color: #{color.token(--wy-background)};
+    --wy-component-color: #{color.token(--wy-on-background)};
+  
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);*/
+  
+    overflow-anchor: none;
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 min-content;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
+}
+  

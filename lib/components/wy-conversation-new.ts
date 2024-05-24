@@ -1,25 +1,24 @@
 import { LitElement, html, css, type PropertyValueMap, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { portal } from "lit-modal-portal";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type AppSettingsType, appSettingsContext } from "../contexts/settings-context";
 
 import allStyles from "../scss/all";
 import { MemberType } from "../types/members.types";
 import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
 import { localized, msg } from "@lit/localize";
+import { WeavyContextProps } from "../types/weavy.types";
+import { ConversationTypeString } from "../types/conversations.types";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-users-search";
 import "./wy-overlay";
 import "./wy-button";
 import "./wy-icon";
-import { WeavyContextProps } from "../types/weavy.types";
-import { ConversationTypeString } from "../types/conversations.types";
 
 @customElement("wy-conversation-new")
 @localized()
-export default class WyConversationNew extends LitElement {
+export default class WyConversationNew extends AppConsumerMixin(LitElement) {
   static override styles = [
     allStyles,
     css`
@@ -29,13 +28,7 @@ export default class WyConversationNew extends LitElement {
     `,
   ];
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
-
-  @consume({ context: appSettingsContext, subscribe: true })
-  @state()
-  private settings?: AppSettingsType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   bot?: string;
@@ -88,6 +81,8 @@ export default class WyConversationNew extends LitElement {
         ? portal(
             this.show
               ? html`<wy-overlay
+                  .contexts=${this.contexts}
+                  @close=${() => this.close()}
                   @release-focus=${() =>
                     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
                 >

@@ -1,11 +1,5 @@
 <!DOCTYPE html>
 <html style="--wy-theme-color: #61afef">
-  <head>
-    <script>
-      //fetch("/api/contextual/acme-chat-2?type=chat");
-      //fetch("/api/contextual/acme-feed-2?type=posts");
-      //fetch("/api/contextual/acme-files-2?type=files");
-    </script>
     <!--script src="./weavy.js"></script-->
     <link rel="modulepreload" href="%WEAVY_URL%/uikit-web/es/locales/sv-SE.js" />
     <script type="module" src="/dev/tools/tanstack-dev-tools.ts" async defer></script>
@@ -38,7 +32,6 @@
       const weavy = new Weavy({
         url: "%WEAVY_URL%",
         reactions: ["👍", "❤️", "😂", "😒", "😁"],
-        zoomAuthenticationUrl: "%WEAVY_ZOOM_AUTH_URL%",
         confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
         confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
         modalParent: ""
@@ -61,11 +54,9 @@
   </head>
   <body>
     <div class="grid">
-      <wy-chat uid="acme-chat-2" features='{"reactions": true}'></wy-chat>
-
-      <wy-posts uid="acme-feed-2" features='{"reactions": true}' style="max-width: 33vw"></wy-posts>
-
-      <wy-files uid="acme-files-2" features='{"reactions": true}' style="max-width: 33vw"></wy-files>
+      <wy-chat uid="acme-chat"></wy-chat>
+      <wy-posts uid="acme-feed" style="max-width: 33vw"></wy-posts>
+      <wy-files uid="acme-files" style="max-width: 33vw"></wy-files>
     </div>
     <tanstack-dev-tools buttonPosition="bottom-right"></tanstack-dev-tools>
   </body>

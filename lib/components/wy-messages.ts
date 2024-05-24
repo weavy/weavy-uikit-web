@@ -1,29 +1,26 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { type Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import { keyed } from "lit/directives/keyed.js";
 
-import type { MessagesResultType } from "../types/messages.types";
+import type { MessageType, MessagesResultType } from "../types/messages.types";
 
 import type { InfiniteData } from "@tanstack/query-core";
-import type { UserType } from "../types/users.types";
-import type { FeaturesConfigType, FeaturesListType } from "../types/features.types";
 
 import chatCss from "../scss/all";
-import { type AppType } from "../types/app.types";
-import { ConversationTypeGuid } from "../types/conversations.types";
+import { type ConversationType, ConversationTypeGuid } from "../types/conversations.types";
 import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
 
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import "./wy-message";
+import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-messages")
 @localized()
-export default class WyMessages extends LitElement {
+export default class WyMessages extends AppConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -36,12 +33,10 @@ export default class WyMessages extends LitElement {
     `,
   ];
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })
-  app!: AppType;
+  conversation?: ConversationType;
 
   @property({ attribute: false })
   infiniteMessages!: InfiniteData<MessagesResultType, unknown>;
@@ -50,16 +45,7 @@ export default class WyMessages extends LitElement {
   dataUpdatedAt: number = NaN;
 
   @property({ attribute: false })
-  user!: UserType;
-
-  @property({ attribute: false })
   members?: MembersResultType;
-
-  @property({ attribute: false })
-  availableFeatures?: FeaturesListType;
-
-  @property({ attribute: false })
-  features?: FeaturesConfigType;
 
   @property({ attribute: false })
   unreadMarkerId?: number;
@@ -83,7 +69,7 @@ export default class WyMessages extends LitElement {
   }
 
   override render() {
-    const flattenedPages = this.infiniteMessages?.pages.flatMap((messageResult) => messageResult.data);
+    const flattenedPages = this.infiniteMessages?.pages.flatMap((messageResult) => messageResult.data).filter((x) => x) as MessageType[];
 
     let lastDate: Date;
 
@@ -91,7 +77,7 @@ export default class WyMessages extends LitElement {
       <div class="wy-messages">
         <div ${ref(this.pagerRef)} class="wy-pager"></div>
         <!-- this.user ?? -->
-        ${flattenedPages
+        ${flattenedPages && this.conversation && this.user
           ? repeat(
               flattenedPages,
               (message) => message.id,
@@ -140,39 +126,36 @@ export default class WyMessages extends LitElement {
                     `message-${message.id}`,
                     html`<wy-message
                       id="message-${message.id}"
-                      .app=${this.app}
+                      .conversation=${this.conversation}
                       .messageId=${message.id}
-                      .me=${message.created_by.id === this.user.id}
+                      .me=${message.created_by.id === this.user?.id}
                       .isBot=${message.created_by.is_bot || false}
-                      .isPrivateChat=${this.app?.type === ConversationTypeGuid.PrivateChat || this.app?.type === ConversationTypeGuid.BotChat}
+                      .isPrivateChat=${this.conversation?.type === ConversationTypeGuid.PrivateChat || this.conversation?.type === ConversationTypeGuid.BotChat}
                       .temp=${message.temp}
                       .displayName=${message.created_by.display_name}
                       .avatar=${message.created_by.avatar_url}
                       .createdAt=${message.created_at}
                       .text=${message.plain}
                       .html=${message.html}
-                      .attachments=${message.attachments}
+                      .attachments=${message.attachments?.data}
                       .meeting=${message.meeting}
-                      .pollOptions=${message.options}
+                      .pollOptions=${message.options?.data}
                       .embed=${message.embed}
-                      .reactions=${message.reactions}
-                      .userId=${this.user.id}
-                      .availableFeatures=${this.availableFeatures}
-                      .features=${this.features}
+                      .reactions=${message.reactions?.data}
                       .sent=${this.members &&
                       index === flattenedPages.length - 1 &&
-                      message.created_by.id === this.user.id
+                      message.created_by.id === this.user?.id
                         ? !message.temp
                           ? true
                           : false
                         : null}
                       .delivered=${this.members &&
                       index === flattenedPages.length - 1 &&
-                      this.members.data.filter((m) => m.id !== this.user.id && m.delivered_at! > message.created_at)
+                      (this.members.data ?? []).filter((m) => m.id !== this.user?.id && m.delivered_at! > message.created_at)
                         .length > 0}
                       .seenBy=${this.members && this.members.data && this.members.data.length > 0
                         ? this.members.data.filter((member) => {
-                            return member.marked_id === message.id && member.id !== this.user.id;
+                            return member.marked_id === message.id && member.id !== this.user?.id;
                           })
                         : []}
                       @vote=${(e: CustomEvent) => {

@@ -6,27 +6,21 @@ import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
-import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all"
 
 import "./wy-post-trashed";
 import "./wy-post-view";
 import "./wy-post-edit";
-import type { AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
 
 @customElement("wy-post")
 export default class WyPost extends LitElement {
   
   static override styles = chatCss;
 
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
+  protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
   postId!: number;
@@ -59,7 +53,7 @@ export default class WyPost extends LitElement {
   plain: string = "";
 
   @property({ attribute: false })
-  attachments: FileType[] = [];
+  attachments?: FileType[] = [];
 
   @property({ type: Array })
   pollOptions: PollOptionType[] | undefined = [];
@@ -71,19 +65,13 @@ export default class WyPost extends LitElement {
   embed?: EmbedType;
 
   @property({ type: Array })
-  reactions: ReactableType[] = [];
+  reactions?: ReactableType[] = [];
 
   @property({ attribute: false })
   commentCount: number = 0;
 
   @property({ type: Array })
   seenBy: MemberType[] = [];
-
-  @property({ type: Object })
-  features: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
 
   @state()
   private editing: boolean = false;
@@ -121,11 +109,7 @@ export default class WyPost extends LitElement {
       ${!this.isTrashed && this.editing
         ? html`<wy-post-edit
             class="wy-post"
-            .app=${this.app}
-            .user=${this.user}
             .postId=${this.postId}
-            .availableFeatures=${this.availableFeatures}
-            .features=${this.features}
             .text=${this.text}
             .embed=${this.embed}
             .pollOptions=${this.pollOptions}
@@ -137,8 +121,6 @@ export default class WyPost extends LitElement {
       ${!this.isTrashed && !this.editing
         ? html`<wy-post-view
             id="${this.id}"
-            .app=${this.app}
-            .user=${this.user}
             .postId=${this.postId}
             .temp=${this.temp}
             .createdBy=${this.createdBy}
@@ -148,14 +130,12 @@ export default class WyPost extends LitElement {
             .isTrashed=${this.isTrashed}
             .html=${this.html}
             .text=${this.plain}
-            .attachments=${this.attachments}
+            .attachments=${this.attachments ?? []}
             .meeting=${this.meeting}
             .pollOptions=${this.pollOptions}
             .embed=${this.embed}
             .reactions=${this.reactions}
             .commentCount=${this.commentCount}
-            .availableFeatures=${this.availableFeatures}
-            .features=${this.features}
             @edit=${(e: CustomEvent) => {
               this.editing = e.detail.edit;
             }}

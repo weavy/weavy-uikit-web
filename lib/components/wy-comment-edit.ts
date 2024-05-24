@@ -9,16 +9,12 @@ import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
-import { type FeaturesConfigType, type FeaturesListType } from "../types/features.types";
 import { PollOptionType } from "../types/polls.types";
 
-import chatCss from "../scss/all"
-
-import type { AppType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
 import { MutationController } from "../controllers/mutation-controller";
 import { CommentMutationContextType, CommentType, MutateCommentProps } from "../types/comments.types";
 import { getUpdateCommentMutationOptions } from "../data/comments";
+import { WeavyContextProps } from "../types/weavy.types";
 
 import "./wy-attachment";
 import "./wy-image-grid";
@@ -28,7 +24,9 @@ import "./wy-embed";
 import "./wy-button";
 import "./wy-icon";
 import "./wy-editor";
-import { WeavyContextProps } from "../types/weavy.types";
+
+import chatCss from "../scss/all"
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-comment-edit")
 @localized()
@@ -36,15 +34,11 @@ export default class WyCommentEdit extends LitElement {
   
   static override styles = chatCss;
 
+  protected exportParts = new ShadowPartsController(this);
+
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
   private weavyContext?: WeavyContextType;
-
-  @property({ attribute: false })
-  app!: AppType;
-
-  @property({ attribute: false })
-  user!: UserType;
 
   @property({ type: Number })
   parentId!: number;
@@ -74,7 +68,7 @@ export default class WyCommentEdit extends LitElement {
   text: string = "";
 
   @property({ type: Array })
-  attachments: FileType[] = [];
+  attachments?: FileType[] = [];
 
   @property({ type: Array })
   pollOptions: PollOptionType[] | undefined = [];
@@ -90,15 +84,6 @@ export default class WyCommentEdit extends LitElement {
 
   @property({ type: Array })
   seenBy: MemberType[] = [];
-
-  @property({ type: Number })
-  userId: number = -1;
-
-  @property({ type: Object })
-  features?: FeaturesConfigType = {};
-
-  @property({ type: Array })
-  availableFeatures?: FeaturesListType;
 
   private updateCommentMutation = new MutationController<
     CommentType,
@@ -123,15 +108,14 @@ export default class WyCommentEdit extends LitElement {
       blobs: e.detail.blobs,
       attachments: e.detail.attachments,
       pollOptions: e.detail.pollOptions,
-      embed: e.detail.embed,
-      user: this.user,
+      embedId: e.detail.embed,
     });
 
     this.dispatchEdit(false);
   }
 
   override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if ((changedProperties.has("app") || changedProperties.has("weavyContext")) && this.app && this.weavyContext) {
+    if ((changedProperties.has("parentId") || changedProperties.has("weavyContext")) && this.parentId && this.weavyContext) {
       this.updateCommentMutation.trackMutation(
         getUpdateCommentMutationOptions(this.weavyContext, ["comments", this.parentId])
       );
@@ -154,12 +138,8 @@ export default class WyCommentEdit extends LitElement {
         .text=${this.text}
         .embed=${this.embed}
         .options=${this.pollOptions}
-        .attachments=${this.attachments}
-        .app=${this.app}
-        .user=${this.user}
+        .attachments=${this.attachments ?? []}
         .parentId=${this.commentId}
-        .availableFeatures=${this.availableFeatures}
-        .features=${this.features}
         .typing=${false}
         .draft=${false}
         placeholder=${msg("Edit comment...")}

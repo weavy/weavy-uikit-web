@@ -25,6 +25,7 @@ export const getTempFile = (
   const srcUrl = file && (file instanceof URL ? file.toString() : URL.createObjectURL(file));
   const tempFile: FileType = {
     id: refId,
+    app: { id: -1 },
     refId: refId,
     name: name,
     kind: getKind(name),
@@ -37,10 +38,10 @@ export const getTempFile = (
     download_url: srcUrl,
     version: -1,
     created_by: user,
-    created_by_id: user.id,
     created_at: new Date().toUTCString(),
     is_subscribed: false,
     is_trashed: false,
+    is_starred: false
   };
   return tempFile;
 };

@@ -29,6 +29,7 @@ export function updateMutationContext(
         type: "pending",
         context: mutation.state.context,
         variables: mutation.state.variables,
+        isPaused: false
       },
     });
   }

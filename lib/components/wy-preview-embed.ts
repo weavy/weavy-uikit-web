@@ -4,6 +4,7 @@ import { ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type { FileProviderType } from "../types/files.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
@@ -22,6 +23,8 @@ export class WyPreviewEmbed extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
 
   @property()
   src!: string;

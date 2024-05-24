@@ -8,7 +8,6 @@ import { type WeavyContextType, weavyContextDefinition } from "../../lib/context
 import { onlineManager } from "@tanstack/query-core";
 import * as TanstackQueryDevtools from "@tanstack/query-devtools";
 import type { DevToolsErrorType, DevtoolsButtonPosition, DevtoolsPosition } from "@tanstack/query-devtools";
-import { falsyBoolean } from "../../lib/converters/falsy-boolean";
 import { whenParentsDefined } from "../../lib/utils/dom";
 
 @customElement("tanstack-dev-tools")
@@ -23,7 +22,7 @@ export default class TanstackDevTools extends LitElement {
    * Set this true if you want the dev tools to default to being open
    */
   @property({
-    converter: falsyBoolean,
+    type: Boolean,
   })
   initialIsOpen: boolean = false;
 

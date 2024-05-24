@@ -1,0 +1,69 @@
+@use "base/color";
+
+:host(wy-messenger) {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 16rem;
+
+  /*--wy-component-background-color: #{color.token(--wy-background)};
+  --wy-component-color: #{color.token(--wy-on-background)};
+
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);*/
+}
+
+.wy-messenger-layout {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  position: relative;
+  container-type: inline-size;
+}
+
+wy-conversation-list {
+  flex: 0 1 50%;
+  min-width: 0;
+  max-width: 24rem;
+  border-right: 1px solid var(--wy-outline-variant, var(--wy-neutral-variant-80, #c1c7ce));
+}
+
+.wy-messenger-conversation {
+  display: flex;
+  flex-direction: column;
+  overflow-anchor: none;
+  height: 100%;
+  width: 100%;
+  flex: 0 1 100%;
+  min-width: max(50%, 16rem);
+  min-height: min-content;
+}
+
+.wy-close-conversation {
+  display: none;
+}
+
+@container (max-width: 768px) {
+  wy-conversation-list {
+    flex: 0 1 100%;
+    min-width: 0;
+    max-width: none;
+    border-right: none;
+  }
+
+  wy-conversation-list[conversationid] {
+    display: none;
+  }
+
+  .wy-messenger-conversation[data-conversation-id=""] {
+    display: none;
+  }
+
+  .wy-close-conversation {
+    display: unset;
+  }
+
+  wy-empty {
+    display: none;
+  }
+}

@@ -12,3 +12,7 @@ export type NetworkStatus = {
   isPending: boolean;
   state: "online" | "unreachable" | "offline";
 }
+
+export type ServerConfigurationType = {
+  zoom_authentication_url?: string;
+}

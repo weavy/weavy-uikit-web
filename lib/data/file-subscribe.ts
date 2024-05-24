@@ -12,7 +12,7 @@ export type MutateFileSubscribeVariables = {
 };
 
 export type SubscribeFileMutationType = MutationObserver<
-  FileType,
+  void,
   Error,
   MutateFileSubscribeVariables,
   FileMutationContextType
@@ -34,8 +34,7 @@ export function getSubscribeFileMutationOptions(weavyContext: WeavyContextType, 
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
-        }
-        return response.json();
+        }        
       } else {
         throw new Error(`Could not ${subscribe ? "subscribe" : "unsubscribe"} to ${file.name}.`);
       }
@@ -50,9 +49,9 @@ export function getSubscribeFileMutationOptions(weavyContext: WeavyContextType, 
         status: { state: "pending" },
       };
     },
-    onSuccess: (data: FileType, variables: MutateFileSubscribeVariables) => {
+    onSuccess: (data: void, variables: MutateFileSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
-        Object.assign(existingFile, data, { status: "ok" })
+        Object.assign(existingFile, { status: "ok" })
       );
       updateMutationContext(queryClient, filesKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "ok";

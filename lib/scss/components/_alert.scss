@@ -3,7 +3,9 @@
 @use "base/var";
 @use "base/color";
 
-.wy-alerts {
+// Not used
+
+/*.wy-alerts {
   position: fixed;
   left: 0;
   top: var.wy-rem(4);
@@ -70,3 +72,4 @@
   background: color.token(--wy-primary-container);
   color: color.token(--wy-on-primary-container);
 }
+*/

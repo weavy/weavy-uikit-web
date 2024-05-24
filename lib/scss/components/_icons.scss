@@ -1,48 +1,49 @@
 @use "base/color";
 @use "base/var";
 
-.wy-icon {
+[part~="wy-icon"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
   position: relative;
 
-  &:not([width]), &[width="24"] {
+  /*&:not([width]),
+  &[width="24"] {
     width: var(--wy-component-icon-width, var.wy-rem(1.5));
-  }
+  }*/
 
-  &:not([height]), &[height="24"] {
+  /*&:not([height]),
+  &[height="24"] {
     height: var(--wy-component-icon-height, var.wy-rem(1.5));
-  }
+  }*/
 
   width: var(--wy-component-icon-width);
   height: var(--wy-component-icon-height);
 }
 
 // For being first element in buttons etc
-.wy-icon-first {
-  margin-left: var.wy-rem(-.5);
+[part~="wy-icon-first"] {
+  margin-left: var.wy-rem(-0.5);
 }
 
 // For being last element in buttons etc
-.wy-icon-last {
-  margin-right: var.wy-rem(-.5);
+[part~="wy-icon-last"] {
+  margin-right: var.wy-rem(-0.5);
 }
 
-.wy-icon-padded {
+[part~="wy-icon-padded"] {
   //width: calc(var(--wy-component-icon-width, var.wy-rem(1.5)) * 9 / 10);
   //height: calc(var(--wy-component-icon-height, var.wy-rem(1.5)) * 9 / 10);
   //margin: calc(var(--wy-component-icon-width, var.wy-rem(1.5)) / 10)
   margin: 16.66666667%;
 }
 
-.wy-icon-inline {
-  vertical-align: -.25em;
+[part~="wy-icon-inline"] {
+  vertical-align: -0.25em;
 }
 
-
-.wy-icon-overlay {
+[part~="wy-icon-overlay"] {
   position: absolute;
   bottom: 0;
   right: 0;
@@ -52,65 +53,50 @@
 }
 
 // stacked icons (icon+overlay icon)
-.wy-icon-stack {
+:host(wy-icon-stack),
+[part~="wy-icon-stack"] {
   display: inline-flex;
   position: relative;
   line-height: 1;
-
-  .wy-icon, > svg {
-    &:last-child {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      background-color: var(--wy-component-background-color, #{color.token(--wy-background)});
-      border-radius: 50%;
-      width: calc(var(--wy-component-icon-width) / 2);
-      height: calc(var(--wy-component-icon-height) / 2);
-    }
-  }
 }
 
-// stacked icons (icon+active icon)
-.wy-icon-active-stack {
-  display: inline-flex;
-  position: relative;
-  line-height: 1;
+[part~="wy-icon-stack-layer"] {
+  position: absolute;
+}
 
-  .wy-icon-stack-item {
-      transition: opacity var.default(--wy-transition);
-      align-self: center;
-      justify-self: center;
-      margin: auto;
-      //display: inline-flex;
-  }
-
-  .wy-icon-stack-item:last-child {
-      position: absolute;
-      opacity: 0;
-  }
-
-  &.wy-active, .wy-active & {
-    .wy-icon-stack-item:first-child {
-        opacity: 0;
-    }
-
-    .wy-icon-stack-item:last-child {
-      opacity: 1;
-    }
-  }
+[part~="wy-icon-stack-overlay"] {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: var(--wy-component-background-color, #{color.token(--wy-background)});
+  border-radius: 50%;
+  width: calc(var(--wy-component-icon-width) / 2);
+  height: calc(var(--wy-component-icon-height) / 2);
 }
 
 // icons normally inherit the text color of its parent
-.wy-icon {
-  &:not([class*="wy-icon-color-"]):not([class*="wy-kind-"]):not([data-icon=progress]) * {
-    fill: currentColor;
-  }
+[part~="wy-icon-current-color"] {
+  fill: currentColor;
+}
+
+// stacked icons (icon+active icon)
+[part~="wy-icon-state"] {
+  transition: opacity var.default(--wy-transition);
+  align-self: center;
+  justify-self: center;
+  margin: auto;
+  //display: inline-flex;
+  opacity: 0;
+}
+
+[part~="wy-icon-state"][part~="wy-active"] {
+  opacity: 1;
 }
 
 // big file type icon
-.wy-content-icon {
+:host(wy-icon-display), [part~=wy-icon-display] {
   color: var(--wy-component-color, color.token(--wy-on-surface-variant));
-  border-radius: var(--wy-component-border-radius, var.default(--wy-border-radius-lg));
+  border-radius: var(--wy-component-border-radius, var.default(--wy-border-radius));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,102 +104,79 @@
   text-align: center;
   padding: var.wy-rem(1) var.wy-rem(2);
   margin: auto;
+}
 
-  > .wy-icon-stack, > .wy-icon, > wy-icon, ::slotted(.wy-icon-stack), ::slotted(.wy-icon), ::slotted(wy-icon) {
-    --wy-component-icon-width: #{var.wy-rem(4)};
-    --wy-component-icon-height: #{var.wy-rem(4)};
-  }
+[part~=wy-icon-display-icon] {
+  --wy-component-icon-width: #{var.wy-rem(4)};
+  --wy-component-icon-height: #{var.wy-rem(4)};
+  padding: var.wy-rem(1) var.wy-rem(2);
 }
 
 // Name after content icon
-.wy-content-name, .wy-content-meta {
+[part~=wy-icon-display-text],
+[part~=wy-icon-display-meta] {
   padding: var.wy-rem(1) var.wy-rem(2);
   text-align: center;
 }
 
 // theme icons
 @each $name in color.$all-color-names {
-  .wy-icon-color-#{$name} * {
-    &, & * {
-      fill: color.token(--wy-#{$name});
-    }
+  [part~="wy-icon-color-#{$name}"] {
+    fill: color.token(--wy-#{$name});
   }
 }
 
 // file type icons
-[class*="wy-kind-"] {
-  &, & * {
-    fill: color.token(--wy-gray);
-
-  }
+[part*="wy-kind-"] {
+  fill: color.token(--wy-gray);
 }
 
-.wy-kind-archive {
+[part~="wy-kind-archive"] {
   fill: color.token(--wy-orange);
 }
 
-.wy-kind-audio * {
+[part~="wy-kind-audio"] {
   fill: color.token(--wy-teal);
 }
 
-.wy-kind-code * {
+[part~="wy-kind-code"] {
   fill: color.token(--wy-green);
 }
 
-.wy-kind-document * {
+[part~="wy-kind-document"] {
   fill: color.token(--wy-blue);
 }
 
-.wy-kind-email * {
+[part~="wy-kind-email"] {
   fill: color.token(--wy-red);
 }
 
-.wy-kind-presentation * {
+[part~="wy-kind-presentation"] {
   fill: color.token(--wy-orange);
 }
 
-.wy-kind-spreadsheet * {
+[part~="wy-kind-spreadsheet"] {
   fill: color.token(--wy-green);
 }
 
-.wy-kind-image * {
+[part~="wy-kind-image"] {
   fill: color.token(--wy-pink);
 }
 
-.wy-kind-text * {
+[part~="wy-kind-text"] {
   fill: color.token(--wy-cyan);
 }
 
-.wy-kind-video * {
+[part~="wy-kind-video"] {
   fill: color.token(--wy-purple);
 }
 
-.wy-ext-pdf * {
+[part~="wy-ext-pdf"] {
   fill: color.token(--wy-red);
 }
 
-.wy-kind-text-icon {
+[part~="wy-kind-text-icon"] {
   width: var.wy-rem(1.25);
   height: var.wy-rem(1.25);
-  vertical-align: var.wy-rem(-.3125);
+  vertical-align: var.wy-rem(-0.3125);
 }
-
-
-// progress icon
-[data-icon=progress] {
-
-  &.wy-icon-primary {
-    color: color.token(--wy-primary);
-  }
-
-  :first-child {
-    fill: none;
-    stroke: color.token(--wy-surface-variant);
-  }
-
-  :last-child {
-    fill: none;
-    stroke: currentColor;
-  }
-}
-

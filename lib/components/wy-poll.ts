@@ -3,6 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import chatCss from "../scss/all"
 import { PollOptionType } from "../types/polls.types";
 import "./wy-poll-option";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-poll")
 export default class WyPoll extends LitElement {
@@ -14,6 +15,8 @@ export default class WyPoll extends LitElement {
       }
     `,
   ];
+
+  protected exportParts = new ShadowPartsController(this);
   
   @property({ type: Array, attribute: false })
   pollOptions: PollOptionType[] = [];
@@ -24,7 +27,7 @@ export default class WyPoll extends LitElement {
   }
 
   override render() {
-    const totalVotes = this.pollOptions.reduce((prev, curr) => prev + (curr.vote_count || 0), 0);
+    const totalVotes = this.pollOptions.reduce((prev, curr) => prev + (curr.votes?.count || 0), 0);
 
     return html`
       <div class="wy-poll">

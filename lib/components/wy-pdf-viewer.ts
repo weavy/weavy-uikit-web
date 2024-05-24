@@ -15,6 +15,7 @@ import "./wy-button";
 import "./wy-icon";
 import { inputConsumeWithBlurOnEscape } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-pdf-viewer")
 @localized()
@@ -27,6 +28,8 @@ export default class WyPdfViewer extends LitElement {
       }
     `,
   ];
+  
+  protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
