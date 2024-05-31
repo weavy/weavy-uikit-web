@@ -58,7 +58,7 @@ export function getScrollParent(element: Element, includeHidden: boolean = false
  * @returns boolean
  */
 export function hasScroll(element?: Element) {
-  if (element) {
+  if (element && element.isConnected) {
     const area = getScrollParent(element);
     return area.clientHeight !== area.scrollHeight;
   }

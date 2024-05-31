@@ -162,7 +162,7 @@ export default class WyConversationExtended extends WyConversation {
                       ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
                       : this.isChatRoom() ? html`
                         <wy-avatar-group
-                          .members=${membersData}
+                          .members=${membersData?.data}
                           title=${this.conversation.display_name}
                           .size=${96}
                         ></wy-avatar-group>`

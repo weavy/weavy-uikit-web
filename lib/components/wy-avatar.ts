@@ -2,7 +2,7 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { getInitials } from "../utils/strings";
-import { type MembersResultType } from "../types/members.types";
+import { type MemberType } from "../types/members.types";
 import { type UserType } from "../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { Presence, type PresenceType } from "../types/presence.types";
@@ -108,10 +108,10 @@ export class WyAvatarGroup extends LitElement {
   size: number = 32;
 
   @property({
-    type: Object,
+    type: Array,
     attribute: false,
   })
-  members?: MembersResultType;
+  members?: MemberType[];
 
   @consume({ context: userContext, subscribe: true })
   @state()
@@ -125,7 +125,7 @@ export class WyAvatarGroup extends LitElement {
     }
 
     const remSize = this.size / 16;
-    const otherMembers = (this.members?.data || [])
+    const otherMembers = (this.members|| [])
       .filter((member) => member.id !== this.user?.id)
       .slice(0, 2)
       .reverse();

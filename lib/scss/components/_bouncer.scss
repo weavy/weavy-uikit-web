@@ -1,0 +1,36 @@
+@use "base/var";
+
+@keyframes wy-bouncing {
+  to {
+    transform: translate3d(0, var.wy-rem(-4px), 0);
+  }
+}
+
+@keyframes wy-bouncing-fade {
+  to {
+    opacity: 0.2;
+  }
+}
+
+[part~=wy-bouncer] {
+  width: var.wy-rem(24px);
+  height: var.wy-rem(12px);
+}
+
+[part~=wy-bouncer-dot] {
+  position: relative;
+  animation: wy-bouncing 0.6s infinite alternate, wy-bouncing-fade 0.6s infinite alternate;
+  fill: currentColor;
+}
+
+[part~=wy-bouncer-dot-start] {
+  animation-delay: 0s, 0.6s;
+}
+
+[part~=wy-bouncer-dot-middle] {
+  animation-delay: 0.3s, 0.3s;
+}
+
+[part~=wy-bouncer-dot-end] {
+  animation-delay: 0.6s, 0s;
+}

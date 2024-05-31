@@ -135,13 +135,13 @@
   margin-left: var.default(--wy-gap);
 }
 
-.wy-footerbars {
+/*.wy-footerbars {
   padding-bottom: var.default(--wy-footerbar-height);
 
   > .wy-toolbar {
     box-shadow: none;
   }
-}
+}*/
 
 .wy-footerbar {
   --wy-component-background-color: #{color.token(--wy-surface-1)};

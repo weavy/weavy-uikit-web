@@ -28,7 +28,6 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all";
 
-import "./wy-typing";
 import "./wy-presence";
 import "./wy-users-search";
 import "./wy-overlay";
@@ -255,16 +254,14 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
           <div><slot name="action"></slot></div>
           ${this.conversation && this.user
             ? html`
-                <wy-typing appId=${this.conversation?.id} userId=${this.user.id}>
-                  ${this.conversation.type === ConversationTypeGuid.PrivateChat
-                    ? html`<wy-presence
-                        placement="text"
-                        .status=${otherMember?.presence}
-                        id=${ifDefined(otherMember?.id)}
-                      ></wy-presence>`
-                    : nothing}
-                  <span class="wy-appbar-text">${this.conversationTitle}</span>
-                </wy-typing>
+                ${this.conversation.type === ConversationTypeGuid.PrivateChat
+                  ? html`<wy-presence
+                      placement="text"
+                      .status=${otherMember?.presence}
+                      id=${ifDefined(otherMember?.id)}
+                    ></wy-presence>`
+                  : nothing}
+                <span class="wy-appbar-text">${this.conversationTitle}</span>
               `
             : html`<span></span>`}
           ${this.isChatRoom()
@@ -318,7 +315,7 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
                                               src=${this.conversation.avatar_url}
                                             ></wy-avatar>`
                                           : html`<wy-avatar-group
-                                              .members=${membersData}
+                                              .members=${membersData?.data}
                                               title=${this.conversation.display_name}
                                               .size=${96}
                                             ></wy-avatar-group>`}

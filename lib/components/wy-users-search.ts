@@ -167,7 +167,8 @@ export default class WyUsersSearch extends LitElement {
   }
 
   override render() {
-    return html`<div class="wy-scroll-y">
+    return html`<div class="wy-pane wy-scroll-y">
+      <div class="wy-pane-body">
       <div class="wy-pane-group">
         <div class="wy-input-group">
           <input
@@ -215,18 +216,17 @@ export default class WyUsersSearch extends LitElement {
       <div class="wy-pane-group">
         ${this.getSelected()} ${this.getSearchResult()}
       </div>      
-      <div class="wy-footerbars">
-        <div class="wy-footerbar">
-          <div class="wy-pane-group">
-            <wy-buttons reverse>
-              <wy-button
-                color="primary"
-                @click=${this.dispatchSubmit}
-                ?disabled=${this.selected.length === 0 && this.select.length === 0 ? true : undefined}
-                >${this.buttonTitle ?? msg("Create")}</wy-button
-              >
-            </wy-buttons>
-          </div>
+      </div>
+      <div class="wy-footerbar wy-footerbar-sticky">
+        <div class="wy-pane-group">
+          <wy-buttons reverse>
+            <wy-button
+              color="primary"
+              @click=${this.dispatchSubmit}
+              ?disabled=${this.selected.length === 0 && this.select.length === 0 ? true : undefined}
+              >${this.buttonTitle ?? msg("Create")}</wy-button
+            >
+          </wy-buttons>
         </div>
       </div>
     </div>`;

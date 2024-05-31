@@ -40,13 +40,6 @@
 
     .cm-scroller {
       overflow: auto;
-
-      .wy-scrollbars & {
-        @include scroll.custom-scrollbar;
-        // scrollbar offsets
-        @include scroll.scrollbar-top-padding(var.wy-rem(.375));
-        @include scroll.scrollbar-bottom-padding(var.wy-rem(.375));
-      }
     }
   }
 

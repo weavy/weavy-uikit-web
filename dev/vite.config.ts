@@ -56,6 +56,11 @@ export default defineConfig(({ mode }) => {
       WEAVY_VERSION: JSON.stringify(version),
       "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
     },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: "esnext",
+      },
+    },
     resolve: {
       alias: {
         "@microsoft/signalr": "@microsoft/signalr/dist/browser/signalr.min.js",

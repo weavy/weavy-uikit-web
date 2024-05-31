@@ -74,3 +74,5 @@ export enum BotFamilyType {
 export type BotMetadataType = {
   family: BotFamilyType;
 };
+
+export type TypingUserType = UserType & { time: number };

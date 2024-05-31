@@ -204,7 +204,7 @@ export default class WyConversationListItem extends LitElement {
           ? this.avatarUrl
             ? html`<wy-avatar .size=${48} src=${this.avatarUrl}></wy-avatar>`
             : this.type == ConversationTypeGuid.ChatRoom
-            ? html` <wy-avatar-group .members=${this.members} title=${this.displayName} .size=${48}></wy-avatar-group>`
+            ? html` <wy-avatar-group .members=${this.members?.data} title=${this.displayName} .size=${48}></wy-avatar-group>`
             : html`
                 <wy-avatar
                   src=${ifDefined(otherMember?.avatar_url)}

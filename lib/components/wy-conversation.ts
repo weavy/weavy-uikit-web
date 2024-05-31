@@ -238,9 +238,9 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
   }
 
   scrollToBottom() {
-    if (hasScroll(this.pagerRef.value)) {
-      if (this.weavyContext && this.conversation) {
-        keepFirstPage(this.weavyContext.queryClient, ["messages", this.conversation.id]);
+    if (hasScroll(this.pagerRef.value) && this.conversationId) {
+      if (this.weavyContext) {
+        keepFirstPage(this.weavyContext.queryClient, ["messages", this.conversationId]);
       }
       scrollParentToBottom(this.pagerRef.value);
     }
@@ -345,11 +345,11 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
       }
     }
 
-    // Always scroll to bottom when conversationId changed
+    // Always try to scroll to bottom when conversationId changed
     if (changedProperties.has("conversationId") && changedProperties.get("conversationId") !== this.conversationId) {
-      this.shouldBeAtBottom = true;
+      this.shouldBeAtBottom = Boolean(this.conversationId);
     } else {
-      //console.log("conversationId not changed, keeping bottom scroll")
+      //console.log("conversationId not changed, keeping bottom scroll", changedProperties.keys())
       // Check state for scrollParentToBottom
       this.shouldBeAtBottom = this.isAtBottom;
     }

@@ -147,23 +147,6 @@
   }
 }
 
-.wy-scrollbars {
-  // custom scrollbar styling
-  // use overlay scrollbars if supported
-
-  &.wy-scroll-y, .wy-scroll-y {
-    @supports (overflow-y: overlay) {
-      overflow-y: overlay;
-    }
-
-    @include custom-scrollbar;
-
-    // scrollbar offsets
-    @include scrollbar-top-padding(#{'var(--wy-scrollbar-adjust-top, 0)'});
-    @include scrollbar-bottom-padding(#{'var(--wy-scrollbar-adjust-bottom, 0)'});
-  }
-}
-
 // prevent scroll when opening modals etc.
 .wy-block-scroll {
   overflow: hidden !important;

@@ -3,20 +3,18 @@ import { customElement, property } from "lit/decorators.js";
 import { type Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import { keyed } from "lit/directives/keyed.js";
-
 import type { MessageType, MessagesResultType } from "../types/messages.types";
-
 import type { InfiniteData } from "@tanstack/query-core";
-
-import chatCss from "../scss/all";
 import { type ConversationType, ConversationTypeGuid } from "../types/conversations.types";
 import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
-
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import "./wy-message";
 import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all";
+import "./wy-message";
+import "./wy-message-typing";
 
 @customElement("wy-messages")
 @localized()
@@ -69,7 +67,9 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
   }
 
   override render() {
-    const flattenedPages = this.infiniteMessages?.pages.flatMap((messageResult) => messageResult.data).filter((x) => x) as MessageType[];
+    const flattenedPages = this.infiniteMessages?.pages
+      .flatMap((messageResult) => messageResult.data)
+      .filter((x) => x) as MessageType[];
 
     let lastDate: Date;
 
@@ -100,18 +100,16 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
                     class="wy-toast wy-toast-action wy-fade ${this.unreadMarkerShow ? "wy-show" : ""}"
                     tabindex=${this.unreadMarkerShow ? 0 : -1}
                     @click=${() => {
-                      let selector = `#message-${this.unreadMarkerId}`
+                      let selector = `#message-${this.unreadMarkerId}`;
                       if (this.unreadMarkerPosition === "below") {
-                        selector += "~ wy-message"
+                        selector += "~ wy-message";
                       }
-                      this.renderRoot
-                        .querySelector(selector)
-                        ?.scrollIntoView({
-                          block: "start",
-                          inline: "nearest",
-                          behavior: "smooth",
-                        })}
-                    }
+                      this.renderRoot.querySelector(selector)?.scrollIntoView({
+                        block: "start",
+                        inline: "nearest",
+                        behavior: "smooth",
+                      });
+                    }}
                     @keydown=${clickOnEnterAndConsumeOnSpace}
                     @keyup=${clickOnSpace}
                   >
@@ -130,7 +128,8 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
                       .messageId=${message.id}
                       .me=${message.created_by.id === this.user?.id}
                       .isBot=${message.created_by.is_bot || false}
-                      .isPrivateChat=${this.conversation?.type === ConversationTypeGuid.PrivateChat || this.conversation?.type === ConversationTypeGuid.BotChat}
+                      .isPrivateChat=${this.conversation?.type === ConversationTypeGuid.PrivateChat ||
+                      this.conversation?.type === ConversationTypeGuid.BotChat}
                       .temp=${message.temp}
                       .displayName=${message.created_by.display_name}
                       .avatar=${message.created_by.avatar_url}
@@ -151,8 +150,9 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
                         : null}
                       .delivered=${this.members &&
                       index === flattenedPages.length - 1 &&
-                      (this.members.data ?? []).filter((m) => m.id !== this.user?.id && m.delivered_at! > message.created_at)
-                        .length > 0}
+                      (this.members.data ?? []).filter(
+                        (m) => m.id !== this.user?.id && m.delivered_at! > message.created_at
+                      ).length > 0}
                       .seenBy=${this.members && this.members.data && this.members.data.length > 0
                         ? this.members.data.filter((member) => {
                             return member.marked_id === message.id && member.id !== this.user?.id;
@@ -168,6 +168,8 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
               }
             )
           : nothing}
+
+        <wy-message-typing .conversationId=${this.conversation?.id} .userId=${this.user?.id}></wy-message-typing>
       </div>
     `;
   }
