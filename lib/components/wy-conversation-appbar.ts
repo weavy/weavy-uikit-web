@@ -254,6 +254,7 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
           <div><slot name="action"></slot></div>
           ${this.conversation && this.user
             ? html`
+              <div class="wy-appbar-section">
                 ${this.conversation.type === ConversationTypeGuid.PrivateChat
                   ? html`<wy-presence
                       placement="text"
@@ -262,6 +263,7 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
                     ></wy-presence>`
                   : nothing}
                 <span class="wy-appbar-text">${this.conversationTitle}</span>
+              </div>
               `
             : html`<span></span>`}
           ${this.isChatRoom()

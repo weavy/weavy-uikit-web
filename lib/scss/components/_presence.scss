@@ -39,8 +39,9 @@
 
 [part~=wy-presence-in-text] {
     position: absolute;
-    top: calc(.5lh - var.wy-rem(.375));
-    left: var.wy-rem(.25);
-    bottom: auto;
-    right: auto;
+    bottom: unset;
+    right: unset;
+    &::after {
+      left: var.wy-rem(-1);
+    }
 }

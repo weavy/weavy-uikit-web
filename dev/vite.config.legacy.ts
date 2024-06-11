@@ -4,7 +4,7 @@ import dts from "vite-plugin-dts";
 import fs from "fs";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
-import { utf8BomPlugin, weavyChunkNames, weavyImportUrlPlugin } from "./vite.plugins";
+import { utf8BomPlugin } from "./vite.plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -49,18 +49,18 @@ export default defineConfig(({ mode }) => {
         files: ["./lib/**/wy-*.ts"],
         lit: true,
       }),
-      weavyImportUrlPlugin(),
+      //weavyImportUrlPlugin(),
     ],
     define: {
       WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
       WEAVY_VERSION: JSON.stringify(version),
       "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
     },
-    optimizeDeps: {
+    /*optimizeDeps: {
       esbuildOptions: {
         target: "esnext",
       },
-    },
+    },*/
     resolve: {
       alias: {
         "@microsoft/signalr": "@microsoft/signalr/dist/browser/signalr.min.js",
@@ -76,9 +76,10 @@ export default defineConfig(({ mode }) => {
       legalComments: "none",
       charset: "utf8",
       //banner: "\ufeff", // UTF-8 BOM
-      keepNames: true,
+      //keepNames: true,
     },
     build: {
+      emptyOutDir: false,
       lib: {
         // Could also be a dictionary or array of multiple entry points
         entry: "lib/index.ts",
@@ -99,37 +100,50 @@ export default defineConfig(({ mode }) => {
         ],
         output: [
           {
-            format: "esm",
-            minifyInternalExports: false,
-            preserveModules: false,
-            manualChunks: {
-              editor: [
-                "./lib/utils/editor/editor",
-                "@codemirror/view",
-                "@codemirror/state",
-                "@codemirror/language",
-                "@codemirror/autocomplete",
-                "@codemirror/lang-markdown",
-                "@codemirror/language-data",
-                "@codemirror/legacy-modes/mode/simple-mode",
-                "@lezer/common",
-                "@lezer/highlight",
-                "@lezer/lr",
-                "@lezer/markdown",
-              ],
-              react: ["react", "react-dom"],
-              pdfjs: ["pdfjs-dist"],
-              "locales/sv-SE": ["./locales/sv-SE"],
-            },
-            chunkFileNames: weavyChunkNames,
-          },
-          {
-            format: "esm",
-            entryFileNames: "weavy.esm.bundle.js",
+            format: "umd",
+            entryFileNames: "weavy.js",
             minifyInternalExports: false,
             preserveModules: false,
             inlineDynamicImports: true,
+            name: "WeavyLib",
+            exports: "named",
+            footer: `
+            // Expose WeavyLib in root
+            if (!(typeof exports == "object" && typeof module < "u" || typeof define == "function" && define.amd)) {
+              const root = typeof globalThis < "u" ? globalThis : this || self;
+              for (const exportName in root.WeavyLib) {
+                if (exportName !== "default") {
+                  root[exportName] = root.WeavyLib[exportName];
+                }
+              }
+            }
+          `,
           },
+          /*{
+          format: "esm",
+          name: "WeavyLib",
+          entryFileNames: "weavy.js",
+          exports: "named",
+          inlineDynamicImports: true,
+          plugins: [
+            getBabelOutputPlugin({
+              presets: [['@babel/preset-env', { modules: "umd" }], "@babel/preset-react"],
+              minified: true,
+              comments: false,
+            }),
+          ],
+        },
+        {
+          format: "es",
+          entryFileNames: "weavy.es5.esm.js",
+          plugins: [
+            getBabelOutputPlugin({
+              presets: [['@babel/preset-env', { modules: "auto" }], "@babel/preset-react"],
+              minified: true,
+              comments: false,
+            }),
+          ],
+        },*/
         ],
       },
     },
