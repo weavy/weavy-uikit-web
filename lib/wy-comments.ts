@@ -1,4 +1,4 @@
-import { LitElement, html, type PropertyValues, css } from "lit";
+import { LitElement, html, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 
@@ -6,6 +6,7 @@ import { AppTypes, type AppType } from "./types/app.types";
 
 import colorModes from "./scss/colormodes";
 import postsCss from "./scss/all";
+import { blockScrollYStyles, blockStyles } from "./scss/block";
 
 import "./components/wy-comment-list";
 import "./components/wy-empty";
@@ -21,13 +22,10 @@ import { Constructor } from "./types/generic.types";
 @localized()
 export class WyComments extends AppProviderMixin(LitElement) {
   static override styles = [
-    colorModes,
     postsCss,
-    css`
-      :host {
-        position: relative;
-      }
-    `,
+    blockStyles,
+    blockScrollYStyles,
+    colorModes,
   ];
 
   override appType = AppTypes.Comments;

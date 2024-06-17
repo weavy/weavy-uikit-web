@@ -1,24 +1,14 @@
 @use "base/color";
 
-:host(wy-messenger) {
-  display: flex;
-  align-items: stretch;
-  flex: 1;
-  min-width: 16rem;
-
-  /*--wy-component-background-color: #{color.token(--wy-background)};
-  --wy-component-color: #{color.token(--wy-on-background)};
-
-  background-color: var(--wy-component-background-color);
-  color: var(--wy-component-color);*/
-}
-
 .wy-messenger-layout {
   display: flex;
   flex: 1;
   align-items: stretch;
   position: relative;
   container-type: inline-size;
+  align-self: stretch;
+  min-height: 0;
+  min-width: 0;
 }
 
 wy-conversation-list {

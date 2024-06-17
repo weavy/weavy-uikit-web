@@ -3,10 +3,14 @@
 
 @mixin scroll-y {
   overflow-y: auto;
-  touch-action: pan-y, pan-x;
-
+  max-height: 100%;
+  
+  // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
+  overflow-anchor: none;
+  
   // to enable HW acceleration and not cause repaint on scroll
   // opacity needed for custom scrollbar to paint
+  touch-action: pan-y, pan-x;
   will-change: scroll-position, opacity;
   backface-visibility: hidden;
 
@@ -14,18 +18,19 @@
   &:not(body) {
     -webkit-overflow-scrolling: touch;
   }
-
-  max-height: 100%;
 }
 
 @mixin scroll-x {
   overflow-x: auto;
-  touch-action: pan-y, pan-x;
+  max-width: 100%;
 
+  // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
+  overflow-anchor: none;
+  
   // to enable HW acceleration and not cause repaint on scroll
+  touch-action: pan-y, pan-x;
   will-change: scroll-position, opacity;
   backface-visibility: hidden;
-  max-width: 100%;
 }
 
 // custom scrollbar styling
@@ -148,12 +153,12 @@
 }
 
 // prevent scroll when opening modals etc.
-.wy-block-scroll {
+/*.wy-block-scroll {
   overflow: hidden !important;
-}
+}*/
 
 // element for detecting scrollbar capabilities (visibility, overlay etc.)
-.wy-scrollbar-detection {
+/*.wy-scrollbar-detection {
   position: fixed;
   top: 0;
   left: 0;
@@ -163,4 +168,4 @@
   z-index: -99999;
   pointer-events: none;
   visibility: hidden;
-}
+}*/

@@ -1,0 +1,6 @@
+@use "components/base/scroll";
+
+// Scrolling for blocks
+:host {
+    @include scroll.scroll-y;
+}

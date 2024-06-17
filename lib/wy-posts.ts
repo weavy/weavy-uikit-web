@@ -1,4 +1,4 @@
-import { LitElement, html, type PropertyValues, nothing, css } from "lit";
+import { LitElement, html, type PropertyValues, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
@@ -30,6 +30,7 @@ import { WeavyContextProps } from "./types/weavy.types";
 import { hasPermission } from "./utils/permission";
 import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
+import { blockScrollYStyles, blockStyles } from "./scss/block";
 
 @customElement("wy-posts")
 @localized()
@@ -37,11 +38,8 @@ export class WyPosts extends AppProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     postsCss,
-    css`
-      :host {
-        position: relative;
-      }
-    `,
+    blockStyles, 
+    blockScrollYStyles,
   ];
 
   override appType = AppTypes.Posts;

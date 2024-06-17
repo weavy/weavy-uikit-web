@@ -13,10 +13,12 @@ import { Constructor } from "./types/generic.types";
 import { WeavyContextProps } from "./types/weavy.types";
 
 import colorModes from "./scss/colormodes";
+import { blockStyles } from "./scss/block";
 
 @customElement("wy-chat")
 export class WyChat extends AppProviderMixin(WyConversation) {
-  static override styles = [...WyConversation.styles, colorModes];
+  static override styles = [...WyConversation.styles, blockStyles, colorModes];
+
 
   override appType = AppTypes.Chat;
 

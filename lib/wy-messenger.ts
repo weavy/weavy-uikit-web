@@ -24,8 +24,10 @@ import { cache } from "lit/directives/cache.js";
 import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
 
-import messengerCss from "./scss/all";
+import allCss from "./scss/all";
+import messengerCss from "./scss/wrappers/messenger";
 import colorModes from "./scss/colormodes";
+import { blockStyles } from "./scss/block";
 
 import "./components/wy-empty";
 import "./components/wy-conversation-appbar";
@@ -41,7 +43,9 @@ import "./components/wy-spinner";
 export class WyMessenger extends AppProviderMixin(LitElement) {
   static override styles = [
     colorModes,
+    allCss,
     messengerCss,
+    blockStyles
   ];
 
   override appType = AppTypes.Messenger;

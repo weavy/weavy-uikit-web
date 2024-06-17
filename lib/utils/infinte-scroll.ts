@@ -18,8 +18,10 @@ export function createScroller(observeElement: Element, whenNext: () => Promise<
   const parent = getScrollParent(observeElement) as HTMLElement;
 
   // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
-  parent.style.overflowAnchor = "none";
-
+  if (getComputedStyle(parent).overflowAnchor !== "none") {
+    parent.style.overflowAnchor = "none";
+  }
+  
   // Bug using scrollingElement in frames. See https://github.com/w3c/IntersectionObserver/issues/372
   const intersectionParent = parent === document.documentElement ? document : parent;
 

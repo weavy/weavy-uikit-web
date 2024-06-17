@@ -1,4 +1,4 @@
-import { LitElement, html, css, type PropertyValueMap, nothing } from "lit";
+import { LitElement, html, type PropertyValueMap, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { portal } from "lit-modal-portal";
 
@@ -20,12 +20,7 @@ import "./wy-icon";
 @localized()
 export default class WyConversationNew extends AppConsumerMixin(LitElement) {
   static override styles = [
-    allStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    allStyles
   ];
 
   protected exportParts = new ShadowPartsController(this);

@@ -1,6 +1,6 @@
 import filesCss from "./scss/all";
 import colorModes from "./scss/colormodes";
-import { LitElement, html, nothing, css, type PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -52,6 +52,8 @@ import { RealtimeFileEventType } from "./types/realtime.types";
 import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
 
+import { blockScrollYStyles, blockStyles } from "./scss/block";
+
 import "./components/wy-files-appbar";
 import "./components/wy-files-list";
 import "./components/wy-preview";
@@ -70,14 +72,8 @@ export class WyFiles extends AppProviderMixin(LitElement) {
   static override styles = [
     colorModes,
     filesCss,
-    css`
-      :host {
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-      }
-    `,
+    blockStyles,
+    blockScrollYStyles
   ];
 
   override appType = AppTypes.Files;
