@@ -1,6 +1,5 @@
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { type Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import { keyed } from "lit/directives/keyed.js";
 import type { MessageType, MessagesResultType } from "../types/messages.types";
@@ -14,7 +13,6 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all";
 import "./wy-message";
-import "./wy-message-typing";
 
 @customElement("wy-messages")
 @localized()
@@ -54,13 +52,6 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
   @property({ attribute: false })
   unreadMarkerShow: boolean = true;
 
-  @property({ attribute: false })
-  pagerRef: Ref<Element> = createRef();
-
-  protected override createRenderRoot(): HTMLElement | DocumentFragment {
-    return this;
-  }
-
   private dispatchVote(id: number, parentId: number) {
     const event = new CustomEvent("vote", { detail: { id: id, parentId: parentId, parentType: "messages" } });
     return this.dispatchEvent(event);
@@ -75,7 +66,7 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
 
     return html`
       <div class="wy-messages">
-        <div ${ref(this.pagerRef)} class="wy-pager"></div>
+        <slot name="start"></slot>
         <!-- this.user ?? -->
         ${flattenedPages && this.conversation && this.user
           ? repeat(
@@ -169,7 +160,7 @@ export default class WyMessages extends AppConsumerMixin(LitElement) {
             )
           : nothing}
 
-        <wy-message-typing .conversationId=${this.conversation?.id} .userId=${this.user?.id}></wy-message-typing>
+        <slot name="end"></slot>
       </div>
     `;
   }

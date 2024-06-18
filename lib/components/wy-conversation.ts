@@ -1,6 +1,6 @@
 import { LitElement, html, type PropertyValues, nothing, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { type ConversationType } from "../types/conversations.types";
+import { ConversationTypeGuid, type ConversationType } from "../types/conversations.types";
 import type {
   MessageMutationContextType,
   MessageType,
@@ -19,7 +19,7 @@ import { hasScroll, isParentAtBottom, scrollParentToBottom } from "../utils/scro
 import { addCacheItem, keepFirstPage, updateCacheItem, updateCacheItems } from "../utils/query-cache";
 
 import { localized, msg } from "@lit/localize";
-import { Ref, createRef } from "lit/directives/ref.js";
+import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import type { RealtimeMessageEventType, RealtimeReactionEventType } from "../types/realtime.types";
 import { whenVisible } from "../utils/dom";
@@ -43,6 +43,7 @@ import chatCss from "../scss/all";
 import "./wy-empty";
 import "./wy-messages";
 import "./wy-message-editor";
+import "./wy-message-typing";
 import "./wy-spinner";
 
 @customElement("wy-conversation")
@@ -94,6 +95,14 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
    */
   releaseFocusEvent = () => new CustomEvent<undefined>("release-focus", { bubbles: true, composed: true });
 
+  isPrivateChat(conversation?: ConversationType) {
+    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.PrivateChat;
+  }
+
+  isChatRoom(conversation?: ConversationType) {
+    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.ChatRoom;
+  }
+
   protected markConversationMutation?: MarkConversationMutationType;
 
   messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
@@ -113,6 +122,17 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
   protected pagerRef: Ref<Element> = createRef();
 
   protected shouldBeAtBottom = true;
+
+  protected async handleTyping(e: CustomEvent) {
+    console.log("typing", e, e.detail.count, this.isAtBottom);
+    if (e.detail.count) {
+      if (this.isAtBottom) {
+        requestAnimationFrame(() => {
+          this.scrollToBottom(true);
+        });
+      }
+    }
+  }
 
   protected async handleSubmit(e: CustomEvent) {
     if (!this.conversation || !this.user) {
@@ -194,7 +214,6 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
   };
 
   private handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-
     if (!this.weavyContext || !this.user || !this.conversation) {
       return;
     }
@@ -237,12 +256,12 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
     return this.pagerRef.value ? isParentAtBottom(this.pagerRef.value) : true;
   }
 
-  scrollToBottom() {
+  scrollToBottom(smooth: boolean = false) {
     if (hasScroll(this.pagerRef.value) && this.conversationId) {
       if (this.weavyContext) {
         keepFirstPage(this.weavyContext.queryClient, ["messages", this.conversationId]);
       }
-      scrollParentToBottom(this.pagerRef.value);
+      scrollParentToBottom(this.pagerRef.value, smooth);
     }
   }
 
@@ -389,7 +408,7 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
     const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
 
     return html`
-      ${this.conversation && this.user && infiniteData
+      ${this.conversation && infiniteData
         ? html`
             ${!hasNextPage && !isPending ? html` <!-- Top of the conversation --> ` : nothing}
             <wy-messages
@@ -406,12 +425,22 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
                   parentId: e.detail.parentId,
                 });
               }}
-            ></wy-messages>
+            >
+              <div slot="start" ${ref(this.pagerRef)} class="wy-pager"></div>
+              <wy-message-typing
+                slot="end"
+                .conversationId=${this.conversation.id}
+                .userId=${this.user?.id}
+                .isPrivateChat=${this.isPrivateChat()}
+                .members=${this.conversation.members.data}
+                @typing=${(e: CustomEvent) => this.handleTyping(e)}
+              ></wy-message-typing>
+            </wy-messages>
           `
         : html`
             <div class="wy-messages">
               <wy-empty class="wy-pane">
-                ${isPending || !this.user || !this.conversation
+                ${isPending || !this.conversation
                   ? html`<wy-spinner overlay></wy-spinner>`
                   : msg("Start the conversation!")}
               </wy-empty>

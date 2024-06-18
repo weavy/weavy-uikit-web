@@ -1,6 +1,6 @@
 import { html, type PropertyValues, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { ConversationTypeGuid, type ConversationType } from "../types/conversations.types";
+import { type ConversationType } from "../types/conversations.types";
 import type { MemberType, MembersResultType } from "../types/members.types";
 import { getMemberOptions } from "../data/members";
 import { updateCacheItem } from "../utils/query-cache";
@@ -13,14 +13,16 @@ import type {
 } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
 import { hasPermission } from "../utils/permission";
+import { ref } from "lit/directives/ref.js";
+import { QueryController } from "../controllers/query-controller";
+import { PermissionType } from "../types/app.types";
 
 import WyConversation from "./wy-conversation";
 import "./wy-empty";
 import "./wy-messages";
 import "./wy-message-editor";
+import "./wy-message-typing";
 import "./wy-spinner";
-import { QueryController } from "../controllers/query-controller";
-import { PermissionType } from "../types/app.types";
 
 @customElement("wy-conversation-extended")
 @localized()
@@ -29,14 +31,6 @@ export default class WyConversationExtended extends WyConversation {
   protected conversationTitle: string = "";
 
   membersQuery = new QueryController<MembersResultType>(this);
-
-  isPrivateChat(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.PrivateChat;
-  }
-
-  isChatRoom(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.ChatRoom;
-  }
 
   private handleRealtimeAppUpdated = (realtimeEvent: RealtimeAppEventType) => {
     if (!this.conversation || realtimeEvent.app.id !== this.conversation.id) {
@@ -160,14 +154,14 @@ export default class WyConversationExtended extends WyConversation {
                   <wy-avatar-header>
                     ${this.conversation.avatar_url
                       ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
-                      : this.isChatRoom() ? html`
-                        <wy-avatar-group
+                      : this.isChatRoom()
+                      ? html` <wy-avatar-group
                           .members=${membersData?.data}
                           title=${this.conversation.display_name}
                           .size=${96}
                         ></wy-avatar-group>`
-                        : otherMember?.avatar_url ? 
-                        html`
+                      : otherMember?.avatar_url
+                      ? html`
                           <wy-avatar
                             src=${ifDefined(otherMember?.avatar_url)}
                             name=${this.conversation.display_name}
@@ -175,8 +169,7 @@ export default class WyConversationExtended extends WyConversation {
                             size=${96}
                           ></wy-avatar>
                         `
-                        : nothing
-                    }
+                      : nothing}
                   </wy-avatar-header>
                 `
               : nothing}
@@ -195,7 +188,17 @@ export default class WyConversationExtended extends WyConversation {
                   parentId: e.detail.parentId,
                 });
               }}
-            ></wy-messages>
+            >
+              <div slot="start" ${ref(this.pagerRef)} class="wy-pager"></div>
+              <wy-message-typing
+                slot="end"
+                .conversationId=${this.conversation.id}
+                .userId=${this.user?.id}
+                .isPrivateChat=${this.isPrivateChat()}
+                .members=${this.conversation.members.data}
+                @typing=${(e: CustomEvent) => this.handleTyping(e)}
+              ></wy-message-typing>
+            </wy-messages>
           `
         : html`
             <div class="wy-messages">

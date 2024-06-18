@@ -6,7 +6,7 @@ import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy
 import { whenParentsDefined } from "../utils/dom";
 
 export class TypingController implements ReactiveController {
-  host: ReactiveControllerHost;
+  host: ReactiveControllerHost & LitElement;
   context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
   whenContext?: Promise<WeavyContextType>;
   resolveContext?: (value: WeavyContextType | PromiseLike<WeavyContextType>) => void;
@@ -16,6 +16,7 @@ export class TypingController implements ReactiveController {
   }
 
   private typingTimeout: number | null = null;
+  private discardTime = 5 * 1000;
   
   // Inputs
   private _appId?: number;
@@ -54,7 +55,7 @@ export class TypingController implements ReactiveController {
   
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
-    this.host = host;
+    this.host = host as ReactiveControllerHost & LitElement;
     this.setContext();
   }
 
@@ -114,7 +115,7 @@ export class TypingController implements ReactiveController {
     // discard typing events older than 5 seconds
     const now = Date.now();
     this.typingMembers.forEach((member, index) => {
-      if (now - member.time > 5 * 1000) {
+      if (now - member.time > this.discardTime) {
         this.typingMembers.splice(index, 1);
       }
     });
@@ -146,8 +147,9 @@ export class TypingController implements ReactiveController {
     } else {
       this.names = [];
     }
-    
+
     this.host.requestUpdate();
+    this.host.dispatchEvent(new CustomEvent("typing", { bubbles: true, composed: false, detail: { count: this.typingMembers.length } }))
   }
 
   private setTypers(actor: UserType) {
