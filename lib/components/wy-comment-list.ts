@@ -94,7 +94,8 @@ export default class WyCommentList extends AppConsumerMixin(LitElement) {
     if (
       !this.weavyContext ||
       realtimeEvent.actor.id === this.user!.id ||
-      realtimeEvent.comment.parent?.id !== this.parentId
+      (realtimeEvent.comment.parent && realtimeEvent.comment.parent?.id !== this.parentId) ||
+      (this.app && realtimeEvent.comment.app.id !== this.app.id)
     ) {
       return;
     }

@@ -1,11 +1,11 @@
-import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
+import { LitElement, html, nothing, css, type PropertyValueMap, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
 import { portal } from "lit-modal-portal";
 import { localized, msg } from "@lit/localize";
 
-import { type Placement as PopperPlacement, type Instance as PopperInstance, createPopper } from "@popperjs/core";
+import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
 import type { ReactableType, ReactionsResultType } from "../types/reactions.types";
 import {
   addReactionMutation,
@@ -30,6 +30,7 @@ import rebootCss from "../scss/wrappers/base/reboot";
 import reactionCss from "../scss/wrappers/reactions";
 import itemCss from "../scss/wrappers/item";
 import emojiCss from "../scss/wrappers/emoji";
+import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
 
 @customElement("wy-reactions")
 @localized()
@@ -62,9 +63,6 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
   @property({ attribute: false })
   emojis: string[] = [];
 
-  @property({ attribute: false })
-  visible: boolean = false;
-
   @property({ attribute: true, type: String })
   messageType: "messages" | "posts" | "comments" = "messages";
 
@@ -87,10 +85,14 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
   lineBelow = false;
 
   @state()
-  private _placement: PopperPlacement = "bottom-start";
+  private _placement: Placement = "bottom-start";
 
   @state()
   reactedEmoji: string | undefined;
+
+
+  @state()
+  show: boolean = false;
 
   @state()
   private showSheet: boolean = false;
@@ -98,16 +100,31 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
   @state()
   private sheetId: string = "";
 
-  private popperReferenceRef: Ref<Element> = createRef();
-  private popperElementRef: Ref<HTMLSlotElement> = createRef();
+  private buttonRef: Ref<Element> = createRef();
+  private menuRef: Ref<HTMLSlotElement> = createRef();
 
-  private _popper?: PopperInstance;
+  private _computePositionCleanup?: () => void;
 
   reactionListQuery = new QueryController<ReactionsResultType>(this);
 
-  private _documentClickHandler = () => {
-    this.visible = false;
+  private _documentClickHandler = (e: Event) => {
+    if (this.show) {
+      e.preventDefault();
+    }
   };
+
+  private handleClose(e: ToggleEvent) {
+    if (e.newState === "closed") {
+      this.show = false;
+      this.dispatchEvent(new CustomEvent("close"));
+      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
+    }
+  }
+
+  private handleClickToggle(_e: Event) {
+    _e.stopPropagation();
+    this.show = !this.show;
+  }
 
   private handleReaction = async (emoji: string) => {
     if (!this.weavyContext || !this.parentId || !this.user) {
@@ -155,6 +172,7 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
   private handleReactionsClick() {
     this.reactionListQuery.observer?.refetch();
     this.showSheet = !this.showSheet;
+    this.show = false;
   }
 
   protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
@@ -175,39 +193,45 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
           : "top-end";
     }
 
-    if (changedProperties.has("visible")) {
-      if (this.visible) {
-        requestAnimationFrame(() => {
-          document.addEventListener("click", this._documentClickHandler, { once: true });
+    if (changedProperties.has("show")) {
+      if (this.show && !this._computePositionCleanup && this.buttonRef.value && this.menuRef.value) {
+        this._computePositionCleanup = autoUpdate(this.buttonRef.value, this.menuRef.value, () => {
+          requestAnimationFrame(() => {
+            if (this.buttonRef.value && this.menuRef.value) {
+              computePosition(this.buttonRef.value, this.menuRef.value, {
+                placement: this._placement,
+                strategy: "absolute",
+                middleware: [
+                  flip(),
+                  offset({ mainAxis: 0, alignmentAxis: -8 }),
+                  shift({ mainAxis: true, crossAxis: true, padding: 4, altBoundary: true }),
+                ],
+              }).then(({ x, y }) => {
+                if (this.menuRef.value) {
+                  Object.assign(this.menuRef.value.style, {
+                    marginLeft: `${x}px`,
+                    marginTop: `${y}px`,
+                  });
+                }
+              });
+            }
+          });
         });
-      } else {
-        document.removeEventListener("click", this._documentClickHandler);
+      } else if (!this.show && this._computePositionCleanup) {
+        this._computePositionCleanup();
+        this._computePositionCleanup = undefined;
       }
+    }
 
-      if (this.visible && !this._popper && this.popperReferenceRef.value && this.popperElementRef.value) {
-        this._popper = createPopper(this.popperReferenceRef.value, this.popperElementRef.value);
-      } else if (!this.visible && this._popper) {
-        this._popper.destroy();
-        this._popper = undefined;
-      }
-
-      this._popper?.setOptions({
-        placement: this._placement,
-        modifiers: [
-          {
-            name: "offset",
-            options: {
-              offset: [4, 0],
-            },
-          },
-          {
-            name: "preventOverflow",
-            options: {
-              padding: 4,
-            },
-          },
-        ],
+    if (this.show) {
+      // Catch clicks outside dropdowns
+      requestAnimationFrame(() => {
+        document.addEventListener("click", this._documentClickHandler, { once: true, capture: true });
       });
+
+      this.menuRef.value?.showPopover();
+    } else {
+      this.menuRef.value?.hidePopover();
     }
 
     if (
@@ -240,10 +264,10 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
                   const emojiClasses = {
                     "wy-emoji-icon": true,
                     "wy-emoji-icon-sm": !this.small,
-                    "wy-emoji-icon-xs" : this.small,
-                  }
-                  return html`<span class=${classMap(emojiClasses)} title="">${r.content}</span>`
-              })}
+                    "wy-emoji-icon-xs": this.small,
+                  };
+                  return html`<span class=${classMap(emojiClasses)} title="">${r.content}</span>`;
+                })}
                 ${this.reactions && this.reactions?.length > 1
                   ? html`<small part="wy-reaction-count">${this.reactions.length}</small>`
                   : nothing}
@@ -252,22 +276,23 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
           `
         : nothing}
 
-      <div ${ref(this.popperReferenceRef)}>
+      <div ${ref(this.buttonRef)}>
         <wy-button
           part="wy-reaction-menu-button"
           kind="icon"
-          ?active=${this.visible}
+          ?active=${this.show}
           small
-          @click=${() => {
-            this.visible = !this.visible;
-          }}
+          @click=${this.handleClickToggle}
+          @keydown=${clickOnEnterAndConsumeOnSpace}
+          @keyup=${clickOnSpace}
           title=${msg("React", { desc: "Button action to react" })}
         >
           <wy-icon name="emoticon-plus" size=${this.small ? 18 : 20}></wy-icon>
         </wy-button>
       </div>
 
-      <div ${ref(this.popperElementRef)} part="wy-reaction-menu" ?hidden=${!this.visible}>
+      <div ${ref(this.menuRef)} part="wy-reaction-menu"           @click=${this.handleClickToggle}
+      @keyup=${clickOnEnterAndSpace} ?hidden=${!this.show} popover>
         <div part="wy-reaction-picker">
           ${this.emojis.map(
             (emoji) =>
@@ -333,6 +358,10 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
       : [reactionButtons, reactionSheet];
   }
 
+  protected override firstUpdated(_changedProperties: PropertyValues<this>) {
+    this.menuRef.value?.addEventListener("toggle", (e: Event) => this.handleClose(e as ToggleEvent));
+  }
+  
   protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if (
       (changedProperties.has("weavyContext") || changedProperties.has("entityId")) &&
@@ -343,15 +372,16 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
       this.sheetId = "sheet-" + this.messageType + "-" + this.entityId;
     }
   }
+
+  override disconnectedCallback(): void {
+    this._computePositionCleanup?.();
+    super.disconnectedCallback();
+  }
 }
 
 @customElement("wy-reaction-item")
 export class WyReactionItem extends LitElement {
-  static override styles = [
-    rebootCss,
-    itemCss,
-    emojiCss,
-  ];
+  static override styles = [rebootCss, itemCss, emojiCss];
   protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })

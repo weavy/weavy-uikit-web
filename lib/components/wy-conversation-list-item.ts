@@ -266,7 +266,7 @@ export default class WyConversationListItem extends LitElement {
                   ></wy-button>`
                 : nothing}
 
-              <wy-dropdown>
+              <wy-dropdown directionX="left">
                 ${!this.selected
                   ? html`<wy-dropdown-item @click=${() => this.dispatchMarked(this.unread)}>
                       <wy-icon name=${this.unread ? "unread" : "read"}></wy-icon>

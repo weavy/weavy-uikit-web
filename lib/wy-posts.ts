@@ -30,7 +30,8 @@ import { WeavyContextProps } from "./types/weavy.types";
 import { hasPermission } from "./utils/permission";
 import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
-import { blockScrollYStyles, blockStyles } from "./scss/block";
+import { blockStyles } from "./scss/block";
+import { hostScrollYStyles } from "./scss/host";
 
 @customElement("wy-posts")
 @localized()
@@ -39,7 +40,7 @@ export class WyPosts extends AppProviderMixin(LitElement) {
     colorModes,
     postsCss,
     blockStyles, 
-    blockScrollYStyles,
+    hostScrollYStyles,
   ];
 
   override appType = AppTypes.Posts;

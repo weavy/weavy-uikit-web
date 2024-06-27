@@ -180,7 +180,6 @@ export default class WyConversationExtended extends WyConversation {
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
               .unreadMarkerShow=${this.lastReadMessageShow}
-              .pagerRef=${this.pagerRef}
               @vote=${(e: CustomEvent) => {
                 this.pollMutation?.mutate({
                   optionId: e.detail.id,

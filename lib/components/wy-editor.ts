@@ -301,6 +301,7 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
               autocompletion({
                 override: this.hasFeatures?.mentions ? [(context: CompletionContext) => this.autocomplete(context)] : null, //showMention
                 closeOnBlur: false,
+                aboveCursor: this.editorType !== "posts",
                 icons: false,
                 addToOptions: [
                   {

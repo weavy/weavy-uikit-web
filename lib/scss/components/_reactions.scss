@@ -26,6 +26,11 @@
 }
 
 [part~="wy-reaction-menu"] {
+  width: max-content;
+  position: absolute;
+  z-index: const.$zindex-dropdown;
+  border: none;
+
   --wy-component-background-color: #{color.token(--wy-surface-2)};
   --wy-component-color: #{color.token(--wy-on-surface)};
 
@@ -33,15 +38,11 @@
   color: var(--wy-component-color);
 
   display: flex;
-  position: absolute;
-  z-index: const.$zindex-dropdown;
   margin: 0; // Override default margin of ul
   text-align: left; // Ensures proper alignment if parent has it changed (e.g., modal footer)
   background-clip: padding-box;
   box-shadow: var.default(--wy-shadow-level1);
   overflow: hidden;
-  top: 100%;
-  left: 0;
   padding: var.default(--wy-padding-sm);
   font-size: var.wy-rem(1.125);
   border-radius: var.default(--wy-border-radius-pill);

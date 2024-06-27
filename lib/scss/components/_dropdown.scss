@@ -17,16 +17,22 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
 }
 
 .wy-dropdown-menu {
+  width: max-content;
+  position: absolute;
+
+  z-index: const.$zindex-dropdown;
+  min-width: $dropdown-min-width;
+
+  border: none;
+  padding: 0;
+
   --wy-component-background-color: #{color.token(--wy-surface-2)};
   --wy-component-color: #{color.token(--wy-on-surface)};
   
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
 
-  position: absolute;
-  z-index: const.$zindex-dropdown;
-  //display: none; // none by default, but block on "open" of the menu
-  min-width: $dropdown-min-width;
+
   //padding: $dropdown-padding-y $dropdown-padding-x;
   //margin: 0; // Override default margin of ul
   font-size: $dropdown-font-size;

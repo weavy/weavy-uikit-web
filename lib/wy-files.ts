@@ -52,7 +52,7 @@ import { RealtimeFileEventType } from "./types/realtime.types";
 import { AppProviderMixin } from "./mixins/app-mixin";
 import { Constructor } from "./types/generic.types";
 
-import { blockScrollYStyles, blockStyles } from "./scss/block";
+import { blockStyles } from "./scss/block";
 
 import "./components/wy-files-appbar";
 import "./components/wy-files-list";
@@ -73,7 +73,6 @@ export class WyFiles extends AppProviderMixin(LitElement) {
     colorModes,
     filesCss,
     blockStyles,
-    blockScrollYStyles
   ];
 
   override appType = AppTypes.Files;

@@ -6,7 +6,8 @@ import { AppTypes, type AppType } from "./types/app.types";
 
 import colorModes from "./scss/colormodes";
 import postsCss from "./scss/all";
-import { blockScrollYStyles, blockStyles } from "./scss/block";
+import { blockStyles } from "./scss/block";
+import { hostScrollYStyles } from "./scss/host";
 
 import "./components/wy-comment-list";
 import "./components/wy-empty";
@@ -24,7 +25,7 @@ export class WyComments extends AppProviderMixin(LitElement) {
   static override styles = [
     postsCss,
     blockStyles,
-    blockScrollYStyles,
+    hostScrollYStyles,
     colorModes,
   ];
 

@@ -41,6 +41,7 @@ export function inputConsumeWithClearAndBlurOnEscape(e: KeyboardEvent) {
 
 export function clickOnEnter(e: KeyboardEvent) {
   if (e.key === "Enter") {
+    e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).click();
   }
@@ -64,4 +65,9 @@ export function clickOnSpace(e: KeyboardEvent) {
       e.stopPropagation();
       (e.target as HTMLElement).click();
     }
+}
+
+export function clickOnEnterAndSpace(e: KeyboardEvent) {
+  clickOnEnter(e);
+  clickOnSpace(e);
 }

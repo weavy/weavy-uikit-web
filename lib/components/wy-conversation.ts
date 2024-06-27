@@ -417,7 +417,6 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
               .unreadMarkerShow=${this.lastReadMessageShow}
-              .pagerRef=${this.pagerRef}
               @vote=${(e: CustomEvent) => {
                 this.pollMutation?.mutate({
                   optionId: e.detail.id,

@@ -1,26 +1,27 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
-
-import "./wy-icon";
-import "./wy-dropdown";
-import "./wy-file-menu";
-import filesCss from "../scss/all"
-
-import type { FileOrderType, FileType, FileViewType } from "../types/files.types";
-
-import { renderFileCard } from "./wy-file-grid";
-import { renderFileTable } from "./wy-file-table";
+import type { FileOrderType, FileType, FileViewType } from "../types/files.types"
 import { repeat } from "lit/directives/repeat.js";
-
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
+import { renderFileCard } from "./wy-file-grid";
+import { renderFileTable } from "./wy-file-table";
+import "./wy-icon";
+import "./wy-dropdown";
+import "./wy-file-menu";
+import allCss from "../scss/all"
+import { hostScrollYStyles } from "../scss/host";
+
 @customElement("wy-files-list")
 @localized()
 export class WyFilesList extends LitElement {
-  static override styles = filesCss;
+  static override styles = [
+    allCss,
+    hostScrollYStyles,
+  ];
 
   protected exportParts = new ShadowPartsController(this);
 
