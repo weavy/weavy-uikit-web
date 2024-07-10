@@ -2,7 +2,7 @@ import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { shadowPartMap } from "../utils/directives/shadow-part-map";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 import rebootCss from "../scss/wrappers/base/reboot";
 import buttonCss from "../scss/wrappers/button";
@@ -61,10 +61,11 @@ export default class WyButton extends LitElement {
       "wy-button-state-layer": this.kind !== "link" && !this.disabled,
       "wy-button-sm": Boolean(this.small),
       "wy-tab": this.kind === "tab",
+      "wy-tab-sm": this.kind === "tab" && Boolean(this.small),
     };
 
     return html`
-      <button part=${shadowPartMap(buttonParts)} type=${ifDefined(this.type)} ?disabled=${this.disabled}>
+      <button part=${partMap(buttonParts)} type=${ifDefined(this.type)} ?disabled=${this.disabled}>
         <slot></slot>
       </button>
     `;
@@ -90,6 +91,9 @@ export class WyButtons extends LitElement {
   tabs = false;
 
   @property({ type: Boolean })
+  floating = false;
+
+  @property({ type: Boolean })
   reverse = false;
 
   protected override render() {
@@ -97,7 +101,8 @@ export class WyButtons extends LitElement {
       "wy-buttons": !this.tabs,
       "wy-buttons-reverse": this.reverse,
       "wy-tabs": this.tabs,
+      "wy-buttons-floating": this.floating
     };
-    return html`<div part=${shadowPartMap(buttonsParts)}><slot></slot></div>`;
+    return html`<div part=${partMap(buttonsParts)}><slot></slot></div>`;
   }
 }

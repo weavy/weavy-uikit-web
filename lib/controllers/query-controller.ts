@@ -36,18 +36,18 @@ export class QueryController<TData = unknown> implements ReactiveController {
   }
 
   async setContext() {
-    this.whenContext = new Promise((r) => this.resolveContext = r)
+    this.whenContext = new Promise((r) => (this.resolveContext = r));
     await whenParentsDefined(this.host as LitElement);
     this.context = new ContextConsumer(this.host as LitElement, { context: weavyContextDefinition, subscribe: true });
   }
 
   hostUpdate(): void {
-    if(this.context?.value) {
+    if (this.context?.value) {
       this.resolveContext?.();
     }
   }
 
-  async trackQuery(queryOptions: QueryObserverOptions<TData>, queryClient?: QueryClient) {
+  async trackQuery(queryOptions: QueryObserverOptions<TData>, optimistic: boolean = true, queryClient?: QueryClient) {
     if (!queryClient) {
       await this.whenContext;
       queryClient = this.context?.value?.queryClient;
@@ -63,12 +63,16 @@ export class QueryController<TData = unknown> implements ReactiveController {
     //console.log("trackQuery", queryOptions)
 
     this.observer = observer;
-    this.observerSubscribe();
+    this.observerSubscribe(optimistic);
   }
 
-  observerSubscribe() {
+  observerSubscribe(optimistic: boolean = true) {
     if (this.observer) {
-      this._result = this.observer.getOptimisticResult(this.observer.options as DefaultedQueryObserverOptions<TData>);
+      if (optimistic) {
+        this._result = this.observer.getOptimisticResult(this.observer.options as DefaultedQueryObserverOptions<TData>);
+      } else {
+        this._result = undefined;
+      }
 
       this.observerUnsubscribe = this.observer.subscribe(() => {
         if (this.observer) {
@@ -80,7 +84,7 @@ export class QueryController<TData = unknown> implements ReactiveController {
           }
         }
       });
-  
+
       // Update result to make sure we did not miss any query updates
       // between creating the observer and subscribing to it.
       this.observer.updateResult();

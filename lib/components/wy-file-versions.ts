@@ -19,7 +19,7 @@ import { openUrl } from "../utils/urls";
 import { relativeTime } from "../utils/datetime";
 import { WeavyContextProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-icon";
@@ -32,7 +32,7 @@ import filesCss from "../scss/all";
 
 @customElement("wy-file-versions")
 @localized()
-export class WyFileVersions extends AppConsumerMixin(LitElement) {
+export class WyFileVersions extends BlockConsumerMixin(LitElement) {
   static override styles = filesCss;
 
   protected exportParts = new ShadowPartsController(this);

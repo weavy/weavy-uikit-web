@@ -78,14 +78,10 @@ export class WyFileItem extends LitElement {
     const file = this.file;
     if (!file) return nothing;
 
-    let { icon } = getIcon(file.name);
+    const { icon } = getIcon(file.name);
     const actionIcon = getFileActionIconMapping(this.actionType);
     const ext = getExtension(file.name);
     const provider = getProvider(file.provider);
-
-    if (provider) {
-      icon = `${icon}+${provider}`;
-    }
 
     /*const onClickWrapper = (e: MouseEvent) => {
             if (!e.defaultPrevented && !renaming) {
@@ -134,7 +130,7 @@ export class WyFileItem extends LitElement {
           ? html`<wy-icon name="alert" color="yellow" title=${ifDefined(this.status.text)}></wy-icon>`
           : this.status.state === "pending"
           ? html`<wy-spinner ?nospin=${Boolean(this.status.progress)} .progress=${this.status.progress}></wy-spinner>`
-          : html`<wy-icon .name=${icon} .overlayPath=${actionIcon} .size=${24} .kind=${file.kind} ext=${ext}></wy-icon>` }
+          : html`<wy-icon .name=${icon} .overlayName=${provider} .overlayPath=${actionIcon} .size=${24} .kind=${file.kind} ext=${ext}></wy-icon>` }
         <div class="wy-item-body">
           ${this.isRenaming
             ? html`

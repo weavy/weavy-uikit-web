@@ -4,6 +4,7 @@
 
 // An individual (list) item with support for icon/img, content and actions.
 .wy-item {
+  --wy-component-color: #{color.token(--wy-on-background)};
   position: relative;
   display: flex;
   align-items: center;
@@ -32,28 +33,51 @@
   row-gap: var.default(--wy-gap-sm);
   min-width: 0;
 
-  &:only-child{
-    margin-inline-start: var.default(--wy-gap-sm)
+  &:only-child {
+    margin-inline-start: var.default(--wy-gap-sm);
   }
+}
 
+.wy-item-rows-compact {
+  row-gap: 0;
+}
+
+.wy-item-rows-single {
+  margin-inline-start: var.default(--wy-gap-sm);
 }
 
 .wy-item-title {
-  color: color.token(--wy-on-background);
+  color: var(--wy-component-color);
   font-size: var.default(--wy-item-title-font-size);
   font-weight: var.default(--wy-item-title-font-weight);
   @include text.truncate;
 }
 
+.wy-item-title-lg {
+  color: var(--wy-component-color);
+  font-size: var.default(--wy-item-title-font-size);
+  font-weight: var.default(--wy-item-title-font-weight);
+  @include text.truncate-lines(3);
+}
+
 .wy-item-text {
   color: color.token(--wy-outline);
-  @include text.truncate;
   font-size: var.default(--wy-font-size-sm);
+  
+  @include text.truncate;
 
   .wy-icon {
     width: var.wy-rem(1.25);
     height: var.wy-rem(1.25);
-    vertical-align: var.wy-rem(-.3125);
+    vertical-align: var.wy-rem(-0.3125);
+  }
+}
+
+.wy-item-quote {
+  color: color.token(--wy-outline);
+  &::before,
+  &::after {
+    content: '"';
   }
 }
 
@@ -62,28 +86,24 @@
   --wy-component-background-color: transparent;
   display: flex;
   align-items: center;
+  justify-items: flex-end;
   flex: 0 0 auto;
-  margin: var.wy-rem(-.25);
+  margin: var.wy-rem(-0.25);
 }
 
-.wy-item-actions-top {
+.wy-item-top {
   align-self: flex-start;
 }
 
 .wy-item-actions-bottom {
   align-self: flex-start;
-  margin-block: var.wy-rem(-.5);
+  margin-block: var.wy-rem(-0.5);
 }
-
-.wy-action-label {
-  margin-right: var.default(--wy-padding);
-  font-style: italic;
-}
-
 
 .wy-item-row {
   display: flex;
   align-items: center;
+  column-gap: var.default(--wy-gap);
 
   .wy-item-title {
     margin-right: auto;
@@ -96,6 +116,10 @@
   .wy-meta {
     white-space: nowrap;
   }
+}
+
+.wy-item-right {
+  margin-left: auto;
 }
 
 // An actionable item with hover, disabled, and active states.
@@ -150,5 +174,3 @@
     opacity: 1;
   }
 }
-
-

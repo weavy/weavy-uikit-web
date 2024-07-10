@@ -81,6 +81,8 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyContextBas
         return;
       }
 
+      newLocale ||=  WeavyLocalization.sourceLocale;
+
       this._locale = newLocale;
       if (this.localization) {
         this.localization.setLocale(this.locale);

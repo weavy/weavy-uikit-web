@@ -2,7 +2,6 @@ import { LitElement, html, nothing, css, type PropertyValueMap, PropertyValues }
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
-import { portal } from "lit-modal-portal";
 import { localized, msg } from "@lit/localize";
 
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
@@ -16,9 +15,9 @@ import {
 
 import { QueryController } from "../controllers/query-controller";
 import { WeavyContextProps } from "../types/weavy.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { shadowPartMap } from "../utils/directives/shadow-part-map";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 import "./wy-spinner";
 import "./wy-button";
@@ -34,7 +33,7 @@ import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } fro
 
 @customElement("wy-reactions")
 @localized()
-export default class WyReactions extends AppConsumerMixin(LitElement) {
+export default class WyReactions extends BlockConsumerMixin(LitElement) {
   static override styles = [
     rebootCss,
     reactionCss,
@@ -96,9 +95,6 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
 
   @state()
   private showSheet: boolean = false;
-
-  @state()
-  private sheetId: string = "";
 
   private buttonRef: Ref<Element> = createRef();
   private menuRef: Ref<HTMLSlotElement> = createRef();
@@ -314,34 +310,23 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
     `;
 
     const reactionSheet = html`
-      ${this.weavyContext && this.settings
-        ? portal(
-            this.showSheet
-              ? html`
-                  <wy-sheet
-                    .show=${this.showSheet}
-                    .sheetId="${this.sheetId}"
-                    .contexts=${this.contexts}
-                    @close=${() => (this.showSheet = false)}
-                    @release-focus=${() =>
-                      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-                  >
-                    <span slot="appbar-text">${msg("Reactions")}</span>
-                    <!-- <wy-spinner></wy-spinner> -->
-                    ${data && !isPending
-                      ? html`
-                          ${data.data?.map(
-                            (reaction) => html` <wy-reaction-item .reaction=${reaction}></wy-reaction-item> `
-                          )}
-                        `
-                      : nothing}
-                  </wy-sheet>
-                `
-              : nothing,
-            this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+      ${this.weavyContext
+        ? html`
+            <wy-sheet
+              .show=${this.showSheet}
+              @close=${() => (this.showSheet = false)}
+              @release-focus=${() =>
+                this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+            >
+              <span slot="appbar-text">${msg("Reactions")}</span>
+              <!-- <wy-spinner></wy-spinner> -->
+              ${this.showSheet && data && !isPending
+                ? html`
+                    ${data.data?.map((reaction) => html` <wy-reaction-item .reaction=${reaction}></wy-reaction-item> `)}
+                  `
+                : nothing}
+            </wy-sheet>
+          `
         : nothing}
     `;
     const lineParts = {
@@ -352,7 +337,7 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
     };
     return this.line || this.lineReverse || this.lineBottom || this.lineBelow
       ? html`
-          <div part=${shadowPartMap(lineParts)}>${reactionButtons}</div>
+          <div part=${partMap(lineParts)}>${reactionButtons}</div>
           ${reactionSheet}
         `
       : [reactionButtons, reactionSheet];
@@ -369,7 +354,6 @@ export default class WyReactions extends AppConsumerMixin(LitElement) {
       this.entityId
     ) {
       this.reactionListQuery.trackQuery(getReactionListOptions(this.weavyContext, this.messageType, this.entityId));
-      this.sheetId = "sheet-" + this.messageType + "-" + this.entityId;
     }
   }
 

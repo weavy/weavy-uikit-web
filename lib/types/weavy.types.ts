@@ -44,16 +44,19 @@ export interface WeavyOptions {
   gcTime?: number;
 
   /**
-   * Element query selector for where to attach modals.
-   * Defaults to `body` but can be optionally be set to `html` to provide compatibility with some frameworks.
-   * > Note that any font styles must be provided using `:root` or `html` when using the `html` selector.
-   */
-  modalParent?: string;
-
-  /**
    * An array of available reaction emojis in unicode.
    */
   reactions?: string[];
+
+  /**
+   * Enable the realtime `wy:notifications` event.
+   */
+  notificationEvents?: boolean;
+
+  /**
+   * Enable notification toasts in the browser.
+   */
+  notificationToasts?: boolean;
 
   /**
    * Which scroll behavior to use (where applicable).

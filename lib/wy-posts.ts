@@ -1,80 +1,45 @@
-import { LitElement, html, type PropertyValues, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { localized, msg } from "@lit/localize";
+import { LitElement, type PropertyValues, html, nothing } from "lit";
+import { customElement } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
-import { localized, msg } from "@lit/localize";
-
-import { AppTypes, type AppType, PermissionType } from "./types/app.types";
-import type { PostType, PostsResultType, MutatePostProps } from "./types/posts.types";
-
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
 import { InfiniteScrollController } from "./controllers/infinite-scroll-controller";
 import { MutationController } from "./controllers/mutation-controller";
-import { addCacheItem, updateCacheItem } from "./utils/query-cache";
-
-import colorModes from "./scss/colormodes";
-import postsCss from "./scss/all";
-
-import "./components/wy-post";
-import "./components/wy-editor";
-import "./components/wy-empty";
-import "./components/wy-spinner";
-
-import { MutatePostContextType, getAddPostMutationOptions, getPostsOptions } from "./data/posts";
-import { SubscribePostMutationType, getSubscribePostMutation } from "./data/post-subscribe";
-import { RemovePostMutationType, getRestorePostMutation, getTrashPostMutation } from "./data/post-remove";
-import { PollMutationType, getPollMutation } from "./data/poll";
 import { ThemeController } from "./controllers/theme-controller";
+import { PollMutationType, getPollMutation } from "./data/poll";
+import { RemovePostMutationType, getRestorePostMutation, getTrashPostMutation } from "./data/post-remove";
+import { SubscribePostMutationType, getSubscribePostMutation } from "./data/post-subscribe";
+import { MutatePostContextType, getAddPostMutationOptions, getPostsOptions } from "./data/posts";
+import { BlockProviderMixin } from "./mixins/block-mixin";
+import { type AppType, ContextualTypes, PermissionTypes } from "./types/app.types";
+import { Constructor } from "./types/generic.types";
+import type { MutatePostProps, PostType, PostsResultType } from "./types/posts.types";
+import { ProductTypes } from "./types/product.types";
 import { RealtimeCommentEventType, RealtimePostEventType, RealtimeReactionEventType } from "./types/realtime.types";
 import { WeavyContextProps } from "./types/weavy.types";
 import { hasPermission } from "./utils/permission";
-import { AppProviderMixin } from "./mixins/app-mixin";
-import { Constructor } from "./types/generic.types";
+import { addCacheItem, updateCacheItem } from "./utils/query-cache";
+
+import allStyles from "./scss/all";
 import { blockStyles } from "./scss/block";
+import colorModesStyles from "./scss/color-modes";
 import { hostScrollYStyles } from "./scss/host";
+
+import "./components/wy-button";
+import "./components/wy-editor";
+import "./components/wy-empty";
+import "./components/wy-notification-button-list";
+import "./components/wy-post";
+import "./components/wy-spinner";
 
 @customElement("wy-posts")
 @localized()
-export class WyPosts extends AppProviderMixin(LitElement) {
-  static override styles = [
-    colorModes,
-    postsCss,
-    blockStyles, 
-    hostScrollYStyles,
-  ];
+export class WyPosts extends BlockProviderMixin(LitElement) {
+  static override styles = [colorModesStyles, allStyles, blockStyles, hostScrollYStyles];
 
-  override appType = AppTypes.Posts;
-
-  @property()
-  cssClass?: string;
-
-  /**
-   * Event: New post created.
-   * @event wy:post_created
-   */
-  realtimePostCreatedEvent = (realtimeEvent: RealtimePostEventType) =>
-    new CustomEvent("wy:post_created", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: New comment created on a post.
-   * @event wy:comment_created
-   */
-  realtimeCommentCreatedEvent = (realtimeEvent: RealtimeCommentEventType) =>
-    new CustomEvent("wy:comment_created", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Post reaction added.
-   * @event wy:reaction_added
-   */
-  realtimeReactionAddedEvent = (realtimeEvent: RealtimeReactionEventType) =>
-    new CustomEvent("wy:reaction_added", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: Post reaction removed.
-   * @event wy:reaction_removed
-   */
-  realtimeReactionRemovedEvent = (realtimeEvent: RealtimeReactionEventType) =>
-    new CustomEvent("wy:reaction_removed", { bubbles: true, composed: false, detail: realtimeEvent });
+  override productType = ProductTypes.Feeds;
+  override contextualType = ContextualTypes.Posts;
 
   protected postsQuery = new InfiniteQueryController<PostsResultType>(this);
 
@@ -118,8 +83,6 @@ export class WyPosts extends AppProviderMixin(LitElement) {
     addCacheItem(this.weavyContext.queryClient, ["posts", this.app!.id], realtimeEvent.post, undefined, {
       descending: true,
     });
-
-    this.dispatchEvent(this.realtimePostCreatedEvent(realtimeEvent));
   };
 
   handleRealtimeCommentCreated = (realtimeEvent: RealtimeCommentEventType) => {
@@ -135,12 +98,10 @@ export class WyPosts extends AppProviderMixin(LitElement) {
         if (item.comments) {
           item.comments.count += 1;
         } else {
-          item.comments = { count: 1};
-        }       
+          item.comments = { count: 1 };
+        }
       }
     );
-
-    this.dispatchEvent(this.realtimeCommentCreatedEvent(realtimeEvent));
   };
 
   handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
@@ -159,8 +120,6 @@ export class WyPosts extends AppProviderMixin(LitElement) {
         ];
       }
     );
-
-    this.dispatchEvent(this.realtimeReactionAddedEvent(realtimeEvent));
   };
 
   handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
@@ -178,52 +137,41 @@ export class WyPosts extends AppProviderMixin(LitElement) {
         }
       }
     );
-
-    this.dispatchEvent(this.realtimeReactionRemovedEvent(realtimeEvent));
   };
 
-  private unsubscribeToRealtime(app: AppType) {
-    if (!this.weavyContext) {
-      return;
-    }
-    this.weavyContext.unsubscribe(`a${app.id}`, "post_created", this.handleRealtimePostCreated);
-    this.weavyContext.unsubscribe(`a${app.id}`, "comment_created", this.handleRealtimeCommentCreated);
-    this.weavyContext.unsubscribe(`a${app.id}`, "reaction_added", this.handleRealtimeReactionAdded);
-    this.weavyContext.unsubscribe(`a${app.id}`, "reaction_removed", this.handleRealtimeReactionDeleted);
-  }
+  #unsubscribeToRealtime?: () => void;
 
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps & { app: AppType }>) {
     super.willUpdate(changedProperties);
-
-    if (changedProperties.has("app")) {
-      const lastApp = changedProperties.get("app");
-
-      if (lastApp && lastApp !== this.app) {
-        this.unsubscribeToRealtime(lastApp);
-      }
-    }
 
     if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       this.postsQuery.trackInfiniteQuery(getPostsOptions(this.weavyContext, this.app.id));
     }
 
-    if (
-      (changedProperties.has("weavyContext") || changedProperties.has("app") || changedProperties.has("user")) &&
-      this.weavyContext &&
-      this.app &&
-      this.user
-    ) {
+    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       this.addPostMutation.trackMutation(getAddPostMutationOptions(this.weavyContext, ["posts", this.app.id]));
       this.subscribePostMutation = getSubscribePostMutation(this.weavyContext, this.app);
       this.removePostMutation = getTrashPostMutation(this.weavyContext, this.app);
       this.restorePostMutation = getRestorePostMutation(this.weavyContext, this.app);
       this.pollMutation = getPollMutation(this.weavyContext, ["posts", this.app.id]);
 
+      this.#unsubscribeToRealtime?.();
+
       // realtime
-      this.weavyContext.subscribe(`a${this.app.id}`, "post_created", this.handleRealtimePostCreated);
-      this.weavyContext.subscribe(`a${this.app.id}`, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavyContext.subscribe(`a${this.app.id}`, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavyContext.subscribe(`a${this.app.id}`, "reaction_removed", this.handleRealtimeReactionDeleted);
+      const subscribeGroup = `a${this.app.id}`;
+      
+      this.weavyContext.subscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
+      this.weavyContext.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+      this.weavyContext.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+      this.weavyContext.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+      this.#unsubscribeToRealtime = () => {
+        this.weavyContext?.unsubscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        this.#unsubscribeToRealtime = undefined;
+      };
     }
   }
 
@@ -237,8 +185,12 @@ export class WyPosts extends AppProviderMixin(LitElement) {
     const flattenedPages = infiniteData?.pages.flatMap((messageResult) => messageResult.data);
 
     return html`
+      <wy-buttons floating reverse>
+        <wy-notification-button-list></wy-notification-button-list>
+      </wy-buttons>
+
       <div class="wy-posts">
-        ${this.app && this.user && hasPermission(PermissionType.Create, this.app.permissions)
+        ${this.app && this.user && hasPermission(PermissionTypes.Create, this.app.permissions)
           ? html`
               <div class="wy-post">
                 <wy-editor
@@ -308,10 +260,7 @@ export class WyPosts extends AppProviderMixin(LitElement) {
   }
 
   override disconnectedCallback(): void {
-    if (this.weavyContext && this.app) {
-      // realtime
-      this.unsubscribeToRealtime(this.app);
-    }
+    this.#unsubscribeToRealtime?.();
     super.disconnectedCallback();
   }
 }

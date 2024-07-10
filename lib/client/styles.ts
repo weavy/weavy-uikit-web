@@ -1,8 +1,9 @@
 import { WeavyContextBase } from "./weavy";
-
-import colorModes from "../scss/colormodes";
 import { adoptGlobalStyles } from "../utils/styles";
 import { Constructor } from "../types/generic.types";
+
+import colorModes from "../scss/color-modes";
+import definitionStyles from "../scss/definitions";
 
 export interface WeavyStylesProps {}
 
@@ -14,7 +15,7 @@ export const WeavyStylesMixin = <TBase extends Constructor<WeavyContextBase>>(Ba
     constructor(...args: any[]) {
       super(...args);
 
-      adoptGlobalStyles([colorModes]);
+      adoptGlobalStyles([definitionStyles, colorModes]);
     }
   };
 };

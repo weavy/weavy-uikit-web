@@ -23,7 +23,7 @@ export default class WyBadge extends LitElement {
   @property({ attribute: false, type: Boolean })
   rooms: boolean = true;
 
-  @property() 
+  @property()
   bot?: string;
 
   badgeQuery = new QueryController<BadgeType>(this);
@@ -37,26 +37,42 @@ export default class WyBadge extends LitElement {
   handleRealtimeMessage = (_realtimeEvent: RealtimeMessageEventType) => {
     this.handleBadgeRefresh();
   };
+
   handleRealtimeSeenBy = (_realtimeEvent: RealtimeConversationMarkedEventType) => {
     this.handleBadgeRefresh();
   };
+
+  #unsubscribeToRealtime?: () => void;
 
   override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.badgeQuery.trackQuery(getApiOptions(this.weavyContext, ["conversations", "badge"]));
 
+      this.#unsubscribeToRealtime?.();
+
       this.weavyContext.subscribe(null, "message_created", this.handleRealtimeMessage);
       this.weavyContext.subscribe(null, "conversation_marked", this.handleBadgeRefresh);
+
+      this.#unsubscribeToRealtime = () => {
+        this.weavyContext?.unsubscribe(null, "message_created", this.handleRealtimeMessage);
+        this.weavyContext?.unsubscribe(null, "conversation_marked", this.handleBadgeRefresh);
+        this.#unsubscribeToRealtime = undefined;
+      };
     }
   }
 
   override render() {
     const { data, isPending } = this.badgeQuery.result ?? {};
     const conversationBadge = data ? (this.private ? data.private : 0) + (this.rooms ? data.rooms : 0) : 0;
-    const badge = this.bot ? (data ? data.bots : 0) : conversationBadge;  
+    const badge = this.bot ? (data ? data.bots : 0) : conversationBadge;
 
     return html`
       ${!isPending && badge > 0 ? html` <span class="wy-badge wy-badge-danger">${badge}</span> ` : nothing}
     `;
+  }
+
+  override disconnectedCallback(): void {
+    this.#unsubscribeToRealtime?.();
+    super.disconnectedCallback();
   }
 }

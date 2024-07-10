@@ -1,0 +1,14 @@
+@use "color";
+
+@keyframes wy-highlight {
+  from {
+    --wy-component-background-color: #{color.token(--wy-highlight)};
+    --wy-component-color: #{color.token(--wy-on-highlight)};
+  }
+}
+
+@mixin flash {
+  &[part~=wy-highlight] {
+    animation: wy-highlight 3s 1.5s ease-in-out both;
+  }
+}

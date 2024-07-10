@@ -50,7 +50,11 @@ $tokens: (
   --wy-surface-4: --wy-surface-4-dark, // --wy-surface + --wy-primary with 12% opacity
   --wy-surface-5: --wy-surface-5-dark, // --wy-surface + --wy-primary with 14% opacity
 
+  --wy-highlight: --wy-primary-20,
+  --wy-on-highlight: --wy-primary-90,
+
   --wy-link: --wy-primary-80,
+  --wy-presence-active: --wy-green-dark,
 
   // custom colors
   --wy-blue: --wy-blue-dark,
@@ -64,8 +68,6 @@ $tokens: (
   --wy-teal: --wy-teal-dark,
   --wy-cyan: --wy-cyan-dark,
   --wy-gray: --wy-gray-dark,
-
-  --wy-presence-active: --wy-green-dark,
 
   // syntax highlight
   --wy-code-text: --wy-code-text-dark,

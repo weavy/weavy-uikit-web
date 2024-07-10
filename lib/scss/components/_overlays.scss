@@ -3,112 +3,79 @@
 @use "base/color";
 @use "base/breakpoints";
 
-.wy-viewport {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: const.$zindex-max; /* max possible z-index */;
-    pointer-events: none;
-
-    &:focus-visible {
-        outline: none;
-    }
+.wy-dialog {
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 // Overlays
 
-.wy-overlays {
-    pointer-events: none;
+.wy-overlay-dialog {
     width: 100%;
     height: 100%;
-    max-width: none;
-    display: flex;
     align-items: center;
     justify-content: center;
-    transform-style: preserve-3d;
-    overflow-y: initial;
-    overflow-x: initial;
-    perspective: var.wy-rem(100);
-    perspective-origin: center center;
+    overflow: visible;
 
-    .wy-panel {
-        //background-color: color.token(--wy-background);
-        //max-height: 100vh; // Causes height error in safari
+    &:popover-open {
+        display: flex;
+    }
+}
 
-        &:not(.wy-transition) {
-            transform: translateZ(var.wy-rem(-4)) !important;
+.wy-overlay {
+    --wy-component-background-color: #{color.token(--wy-background)};
+    --wy-component-color: #{color.token(--wy-on-background)};
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
+    display: flex;
+    flex-direction: column;
+
+    &.wy-modal {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: var.default(--wy-border-radius);
+        box-shadow: var.default(--wy-shadow-level4);
+
+        @include breakpoints.media-breakpoint-up(md) {
+            margin-left: var.wy-rem(4);
+            margin-top: auto;
+            margin-right: var.wy-rem(4);
+            margin-bottom: auto;
+            width: var.wy-rem(32);
+            max-height: var.wy-rem(32);
         }
+    }
 
-        .wy-controls {
-            position: absolute;
-            border-bottom: none;
-            flex-direction: row;
-            transition: opacity .1s .2s step-end;
-            //background: color.token(--wy-surface-1;
+    &.wy-modal-full {
+        width: 100%;
+        height: 100%;
+        
+        @include breakpoints.media-breakpoint-up(md) {
+            margin: 0;
+            border-radius: var.default(--wy-border-radius);
+            box-shadow: var.default(--wy-shadow-level4);
 
-            wy-icon {
-                color: color.token(--wy-on-surface);
-            }
+            max-width: calc(100% - var.wy-rem(2));
+            max-height: calc(100% - var.wy-rem(2));
         }
+    }
+}
 
-        &.wy-loaded {
-            .wy-controls {
-                pointer-events: none;
-                opacity: 0;
-            }
-        }
+// Transitions
+.wy-overlay {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var.default(--wy-transition-fast) .01s, transform var.default(--wy-transition-fast) .01s, visibility .01s step-end var.default(--wy-transition-duration-fast);
 
-        .wy-panel-frame {
-            background-color: transparent;
-        }
+    &.wy-open {
+        transition: opacity var.default(--wy-transition), transform var.default(--wy-transition), visibility var.default(--wy-transition-duration) step-start;
+        visibility: visible;
 
-        &.wy-modal {
-            // TODO: REMOVE BREAKPOINTS
-            @include breakpoints.media-breakpoint-up(md) {
-                left: auto;
-                right: auto;
-                top: var.wy-rem(2);
-                bottom: var.wy-rem(3.2);
-                margin-left: var.wy-rem(4);
-                margin-top: auto;
-                margin-right: var.wy-rem(4);
-                margin-bottom: auto;
-                border-radius: var.default(--wy-border-radius);
-                box-shadow: var.default(--wy-shadow-level4);
-                width: var.wy-rem(32);
-                max-height: var.wy-rem(32);
-                &:not(.wy-scroll-y) {
-                    overflow: hidden;
-                }
-            }
-        }
-
-        &.wy-modal-full {
-            // TODO: REMOVE BREAKPOINTS
-            @include breakpoints.media-breakpoint-up(md) {
-                left: var.wy-rem(1);
-                top: var.wy-rem(1);
-                right: var.wy-rem(1);
-                bottom: var.wy-rem(1);
-                margin: 0;
-                border-radius: var.default(--wy-border-radius);
-                box-shadow: var.default(--wy-shadow-level4);
-                width: auto;
-                max-height: none;
-                &:not(.wy-scroll-y) {
-                    overflow: hidden;
-                }
-            }
-        }
-
-        &.wy-loading {
-            .wy-controls {
-                transition: opacity var.default(--wy-transition);
-                //transition: opacity variables.$transition .2s;
-                opacity: 1;
-            }
+        &.wy-transition {
+            opacity: 1;
+            transform: none;
         }
     }
 }

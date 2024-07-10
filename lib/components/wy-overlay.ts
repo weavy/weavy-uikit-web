@@ -2,11 +2,11 @@ import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import overlayStyles from "../scss/all"
 import { createRef, ref } from "lit/directives/ref.js";
-import { AppContextProps } from "../mixins/app-mixin";
-import { AppContextProviderMixin } from "../mixins/app-provider-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import overlayStyles from "../scss/all"
+import colorModesStyles from "../scss/color-modes";
 
 import "./wy-button";
 import "./wy-icon";
@@ -16,15 +16,18 @@ import "./wy-icon";
  *
  */
 @customElement("wy-overlay")
-export default class WyOverlay extends AppContextProviderMixin(LitElement) implements AppContextProps {
+export default class WyOverlay extends LitElement {
   
-  static override styles = overlayStyles;
+  static override styles = [
+    overlayStyles,
+    colorModesStyles
+  ];
 
   protected exportParts = new ShadowPartsController(this);
 
   // PROPERTIES
   @property({ type: Boolean })
-  open: boolean = true;
+  show: boolean = true;
 
   @property({ type: Boolean })
   maximized: boolean = false;
@@ -32,70 +35,39 @@ export default class WyOverlay extends AppContextProviderMixin(LitElement) imple
   @property({ type: Boolean })
   header: boolean = false;
 
-  override tabIndex: number = 0;
-
-  private viewportRef = createRef<HTMLDivElement>();
+  private viewportRef = createRef<HTMLDialogElement>();
 
   close() {
-    this.open = false;
+    this.viewportRef.value?.close();
+    this.show = false;
+  }
 
+  handleClose(_e: Event) {
+    this.show = false;
     this.dispatchEvent(new CustomEvent("close"));
     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
-  }
-
-  handleKeys = (e: KeyboardEvent) => {
-    //console.log("key", e.key);
-    if (this.open) {
-      if (e.key === "Escape") {
-
-        e.stopImmediatePropagation();
-        this.close();
-      }
-    }
-  };
-
-  regainFocus(e: Event) {
-    //console.log("regain focus?");
-    if (this.open && e.composedPath()[0] !== this) {
-      e.stopImmediatePropagation();
-      //console.log("Time to focus!");
-      this.viewportRef.value?.focus();
-    }
-  }
-
-  checkFocus(e: FocusEvent) {
-    const target = e.target as HTMLElement;
-    requestAnimationFrame(() => {
-      if (!target || !target.isConnected) {
-        this.regainFocus(e);
-      }
-    })
   }
 
   override willUpdate(changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties);
     
-    if (changedProperties.has("open")) {
-      if (this.open) {
-        this.addEventListener("keyup", this.handleKeys);
-        this.addEventListener("release-focus", this.regainFocus);
-        this.addEventListener("focusout", this.checkFocus);
+    if (changedProperties.has("show")) {
+      if (this.show) {
+        this.viewportRef.value?.showModal();
       } else {
-        this.removeEventListener("keyup", this.handleKeys);
-        this.removeEventListener("release-focus", this.regainFocus);
-        this.removeEventListener("focusout", this.checkFocus);
+        this.viewportRef.value?.close();
       }
     }
   }
 
   override render() {
     const modalClasses = {
-      "wy-open": this.open,
+      "wy-open": this.show,
       "wy-modal-full": this.maximized,
     };
     return html`
-      <section class="wy-overlays wy-viewport" tabindex="0" ${ref(this.viewportRef)}>
-        <div class="wy-panel wy-overlay wy-transition wy-modal ${classMap(modalClasses)}">
+      <dialog class="wy-dialog wy-overlay-dialog" ${ref(this.viewportRef)}>
+        <div class="wy-overlay wy-transition wy-modal ${classMap(modalClasses)}">
           ${this.header
             ? html`
                 <slot name="header">
@@ -103,7 +75,7 @@ export default class WyOverlay extends AppContextProviderMixin(LitElement) imple
                     <nav class="wy-appbar">
                       <wy-button kind="icon" @click=${() => this.close()}><wy-icon name="close"></wy-icon></wy-button>
                       <slot name="appbar-text" class="wy-appbar-text"></slot>
-                      <slot name="appbar-buttons" class="wy-appbar-buttons"></slot>
+                      <slot name="appbar-buttons" class="wy-appbar-buttons wy-appbar-buttons-last"></slot>
                     </nav>
                   </header>
                 </slot>
@@ -111,14 +83,18 @@ export default class WyOverlay extends AppContextProviderMixin(LitElement) imple
             : nothing}
           <slot></slot>
         </div>
-      </section>
+      </dialog>
     `;
   }
 
   override updated(changedProperties: PropertyValues<this>) {
-    if (changedProperties.has("open") && this.open) {
+    if (changedProperties.has("show") && this.show) {
       this.viewportRef.value?.focus();
     }
+  }
+
+  protected override firstUpdated(_changedProperties: PropertyValues<this>) {
+    this.viewportRef.value?.addEventListener("close", (e: Event) => this.handleClose(e as Event))
   }
 
   override disconnectedCallback(): void {

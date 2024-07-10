@@ -57,14 +57,14 @@ export function toSnakeCase(str: string) {
  * @param {string} str - The string to change to kebab case
  * @returns {string} The processed string as kebab-case
  */
-export function toKebabCase(str: string) {
+export function toKebabCase<T extends string = string >(str: string) {
   if (str.length > 0) {
     return str
       .replace(/([a-z\d])([A-Z]+)/g, "$1-$2")
       .replace(/_|\s+/g, "-")
-      .toLowerCase();
+      .toLowerCase() as T;
   } else {
-    return str;
+    return str as T;
   }
 }
 

@@ -7,16 +7,16 @@ import { HeaderContentType, type HttpMethodType, type HttpUploadMethodType } fro
 
 export interface WeavyFetchProps {
   fetchOptions: (authorized?: boolean) => Promise<RequestInit>;
-  get: (url: string) => Promise<Response>;
+  get: (url: string | URL) => Promise<Response>;
   post: (
-    url: string,
+    url: string | URL,
     method: HttpMethodType,
     body?: BodyInit,
     contentType?: HeaderContentType,
     retry?: boolean
   ) => Promise<Response>;
   upload: (
-    url: string,
+    url: string | URL,
     method: HttpUploadMethodType,
     body: string | FormData,
     contentType?: HeaderContentType,
@@ -52,13 +52,13 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
       );
     }
 
-    async get(this: this & WeavyContextMixins, url: string): Promise<Response> {
+    async get(this: this & WeavyContextMixins, url: string | URL): Promise<Response> {
       return await this.post(url, "GET");
     }
 
     async post(
       this: this & WeavyContextMixins,
-      url: string,
+      url: string | URL,
       method: HttpMethodType,
       body?: BodyInit,
       contentType: HeaderContentType = HeaderContentType.JSON,
@@ -105,7 +105,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
 
     async upload(
       this: this & WeavyContextMixins,
-      url: string,
+      url: string | URL,
       method: HttpUploadMethodType,
       body: string | FormData,
       contentType: HeaderContentType = HeaderContentType.JSON,

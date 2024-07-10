@@ -14,6 +14,8 @@
   border-collapse: collapse;
 
   th, td {
+    background-color: var(--wy-component-background-color);
+
     padding: var.default(--wy-table-cell-padding-y) var.default(--wy-table-cell-padding-x);
     box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
     line-height: 1;
@@ -38,7 +40,6 @@
   }
 
   .wy-table-cell-icon {
-    color: var(--wy-component-color);
     vertical-align: middle;
     text-align: center;
     padding: calc(#{var.default(--wy-table-cell-padding-y)} * .5) var.default(--wy-table-cell-padding-x);
@@ -51,22 +52,21 @@
   }
 
   .wy-table-cell-text {
-    @include text.truncate;
     width: 100%;
+    @include text.truncate;
   }
 }
 
 .wy-table-hover {
-  > tbody > tr:not(.wy-pager):hover > * {
+  > tbody > tr:hover > * {
     --wy-component-color: #{color.token(--wy-on-surface)};
     --wy-component-background-color: #{color.token(--wy-surface-2)};
-    color: var(--color); // Unclear what this color is
-    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
     cursor: pointer;
   }
 }
 
-.wy-table-trashed {
+.wy-table-row-trashed {
   th, td {
     text-decoration: line-through;
 

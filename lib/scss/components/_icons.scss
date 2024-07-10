@@ -8,18 +8,16 @@
   flex: 0 0 auto;
   position: relative;
 
-  /*&:not([width]),
-  &[width="24"] {
-    width: var(--wy-component-icon-width, var.wy-rem(1.5));
-  }*/
-
-  /*&:not([height]),
-  &[height="24"] {
-    height: var(--wy-component-icon-height, var.wy-rem(1.5));
-  }*/
-
   width: var(--wy-component-icon-width);
   height: var(--wy-component-icon-height);
+
+  &[width="24"] {
+    width: var(--wy-component-icon-width, var.wy-rem(1.5));
+  }
+
+  &[height="24"] {
+    height: var(--wy-component-icon-height, var.wy-rem(1.5));
+  }
 }
 
 // For being first element in buttons etc

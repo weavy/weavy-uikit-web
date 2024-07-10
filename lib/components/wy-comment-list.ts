@@ -10,7 +10,7 @@ import {
   MutateCommentProps,
 } from "../types/comments.types";
 import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
-import { PermissionType } from "../types/app.types";
+import { PermissionTypes } from "../types/app.types";
 import { hasPermission } from "../utils/permission";
 import { InfiniteData } from "@tanstack/query-core";
 import { repeat } from "lit/directives/repeat.js";
@@ -23,7 +23,7 @@ import { PollMutationType, getPollMutation } from "../data/poll";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { RealtimeCommentEventType, RealtimeReactionEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all";
@@ -34,7 +34,7 @@ import "./wy-comment-editor";
 
 @customElement("wy-comment-list")
 @localized()
-export default class WyCommentList extends AppConsumerMixin(LitElement) {
+export default class WyCommentList extends BlockConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -60,6 +60,8 @@ export default class WyCommentList extends AppConsumerMixin(LitElement) {
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<Element> = createRef();
 
+  #unsubscribeToRealtime?: () => void;
+
   override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     super.willUpdate(changedProperties);
 
@@ -79,9 +81,21 @@ export default class WyCommentList extends AppConsumerMixin(LitElement) {
 
     if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
       // realtime
-      this.weavyContext.subscribe(`a${this.app.id}`, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavyContext.subscribe(`a${this.app.id}`, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavyContext.subscribe(`a${this.app.id}`, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+      this.#unsubscribeToRealtime?.();
+
+      const subscribeGroup = `a${this.app.id}`;
+
+      this.weavyContext.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+      this.weavyContext.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+      this.weavyContext.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+      this.#unsubscribeToRealtime = () => {
+        this.weavyContext?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        this.#unsubscribeToRealtime = undefined;
+      };
     }
   }
 
@@ -226,9 +240,9 @@ export default class WyCommentList extends AppConsumerMixin(LitElement) {
         ${!isPending && this.app && infiniteData
           ? this.renderComments(infiniteData)
           : html`<wy-spinner padded></wy-spinner>`}
-        <div ${ref(this.pagerRef)} class="wy-pager"></div>
+        <div ${ref(this.pagerRef)} part="wy-pager"></div>
       </div>
-      ${hasPermission(PermissionType.Create, this.app?.permissions)
+      ${hasPermission(PermissionTypes.Create, this.app?.permissions)
         ? html`
             <wy-comment-editor
               editorLocation=${this.location}
@@ -245,12 +259,7 @@ export default class WyCommentList extends AppConsumerMixin(LitElement) {
   }
 
   override disconnectedCallback(): void {
-    if (this.weavyContext && this.app) {
-      // realtime
-      this.weavyContext.unsubscribe(`a${this.app.id}`, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavyContext.unsubscribe(`a${this.app.id}`, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavyContext.unsubscribe(`a${this.app.id}`, "reaction_removed", this.handleRealtimeReactionDeleted);
-    }
+    this.#unsubscribeToRealtime?.();
     super.disconnectedCallback();
   }
 }

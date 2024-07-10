@@ -1,4 +1,5 @@
 import { FileKindType, FileProviderType, PreviewFormatType, ProviderType } from "../types/files.types";
+import { iconNamesType } from "./icons";
 
 export const fileSizeAsString = (size: number, significantDigits: number = 3) => {
   const format = [" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
@@ -272,7 +273,7 @@ export function isOfficeDocument(path: string) {
   }
 }
 
-export function getIcon(name: string): { icon: string; color?: string } {
+export function getIcon(name: string): { icon: iconNamesType; color?: string } {
   const ext = getExtension(name);
 
   if (ext === "") return { icon: "file" };

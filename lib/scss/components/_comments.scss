@@ -1,7 +1,7 @@
 @use "base/color";
 @use "base/var";
 @use "base/text";
-@use "reactions";
+@use "base/highlight";
 
 .wy-comments {
   display: flex;
@@ -21,6 +21,8 @@
   gap: var.default(--wy-gap-sm);
   padding: var.default(--wy-padding-sm);
   position: relative;
+
+  @include highlight.flash;
 }
 
 .wy-comment-body {

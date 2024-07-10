@@ -1,10 +1,11 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { FileType } from "../types/files.types";
+import { FileOpenEventType, FileType } from "../types/files.types";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
 
 import chatCss from "../scss/all"
 import "./wy-icon";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 @customElement("wy-attachments-list")
 export default class WyAttachmentsList extends LitElement {
@@ -24,7 +25,7 @@ export default class WyAttachmentsList extends LitElement {
 
   dispatchFileOpen(e: Event, file: FileType) {
     e.preventDefault();
-    const event = new CustomEvent("file-open", { detail: { file } });
+    const event: FileOpenEventType = new CustomEvent("file-open", { detail: { fileId: file.id } });
     return this.dispatchEvent(event);
   }
 
@@ -34,23 +35,19 @@ export default class WyAttachmentsList extends LitElement {
         ${this.files.map((a: FileType) => {
           const fileSize = a.size && a.size > 0 ? fileSizeAsString(a.size) : null;
           const ext = getExtension(a.name);
-          let { icon } = getIcon(a.name);
+          const { icon } = getIcon(a.name);
           const kind = getKind(a.name);
           const provider = getProvider(a.provider);
-
-          if (provider) {
-            icon = `${icon}+${provider}`;
-          }
 
           return html`
             <a
               @click=${(e: Event) => {
                 !e.defaultPrevented && !a.is_trashed && this.dispatchFileOpen(e, a);
               }}
-              class="wy-item wy-item-lg"
-              href="#"
+              class="wy-item"
+              href="${ifDefined(a.download_url)}"
               title=${a.name}>
-              <wy-icon name=${icon} size="48" kind=${kind} ext=${ext}></wy-icon>
+              <wy-icon name=${icon} .overlayName=${provider} size="48" kind=${kind} ext=${ext}></wy-icon>
               <div class="wy-item-body ">
                 <div class="wy-item-title">${a.name}</div>
                 ${fileSize ? html`<div class="wy-item-text" title="${fileSize}">${fileSize}</div>` : ``}

@@ -5,7 +5,7 @@ import { localized } from "@lit/localize";
 import { getSimpleUploadBlobMutationOptions } from "../data/blob-upload";
 import { MutationController } from "../controllers/mutation-controller";
 import { BlobType, MutateFileProps } from "../types/files.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
@@ -13,7 +13,7 @@ import "./wy-button";
 
 @customElement("wy-blob-upload")
 @localized()
-export default class WyBlobUpload extends AppConsumerMixin(LitElement) {
+export default class WyBlobUpload extends BlockConsumerMixin(LitElement) {
   @property({ attribute: false })
   label?: string;
 

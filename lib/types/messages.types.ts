@@ -1,3 +1,4 @@
+import { MemberType } from "./members.types";
 import { MsgType } from "./msg.types";
 import { PollOptionType } from "./polls.types";
 import { InfiniteQueryResultType } from "./query.types";
@@ -20,5 +21,7 @@ export type MessageMutationContextType = {
 };
 
 export type MessageType = MsgType & {
+  created_by: MemberType;
+  updated_by?: MemberType;
   temp: boolean;
 };

@@ -123,13 +123,6 @@ export default defineConfig(({ mode }) => {
             },
             chunkFileNames: weavyChunkNames,
           },
-          {
-            format: "esm",
-            entryFileNames: "weavy.esm.bundle.js",
-            minifyInternalExports: false,
-            preserveModules: false,
-            inlineDynamicImports: true,
-          },
         ],
       },
     },

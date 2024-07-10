@@ -22,7 +22,7 @@ import { localized, msg } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import type { RealtimeMessageEventType, RealtimeReactionEventType } from "../types/realtime.types";
-import { whenVisible } from "../utils/dom";
+import { whenDocumentVisible } from "../utils/dom";
 import { ReactableType } from "../types/reactions.types";
 import { PollMutationType, getPollMutation } from "../data/poll";
 import { hasPermission } from "../utils/permission";
@@ -33,11 +33,11 @@ import {
   getUpdateConversationMutation,
 } from "../data/conversation";
 import { WeavyContextProps } from "../types/weavy.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { appContext } from "../contexts/app-context";
 import { provide } from "@lit/context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { PermissionType } from "../types/app.types";
+import { PermissionTypes } from "../types/app.types";
 
 import chatCss from "../scss/all";
 import "./wy-empty";
@@ -48,7 +48,7 @@ import "./wy-spinner";
 
 @customElement("wy-conversation")
 @localized()
-export default class WyConversation extends AppConsumerMixin(LitElement) {
+export default class WyConversation extends BlockConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -124,7 +124,6 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
   protected shouldBeAtBottom = true;
 
   protected async handleTyping(e: CustomEvent) {
-    console.log("typing", e, e.detail.count, this.isAtBottom);
     if (e.detail.count) {
       if (this.isAtBottom) {
         requestAnimationFrame(() => {
@@ -265,18 +264,6 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
     }
   }
 
-  protected unsubscribeToRealtime(conversationId: number) {
-    if (!this.weavyContext) {
-      return;
-    }
-
-    //console.log("unsubscribing conversation realtime", conversation.id);
-
-    this.weavyContext.unsubscribe(`a${conversationId}`, "message_created", this.handleRealtimeMessage);
-    this.weavyContext.unsubscribe(`a${conversationId}`, "reaction_added", this.handleRealtimeReactionAdded);
-    this.weavyContext.unsubscribe(`a${conversationId}`, "reaction_removed", this.handleRealtimeReactionDeleted);
-  }
-
   showUnread(placement: "above" | "below", messageId?: number) {
     if (messageId && !this.lastReadMessageShow) {
       this.lastReadMessagePosition = placement;
@@ -292,7 +279,7 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
   async markAsRead(messageId?: number, instantly: boolean = false) {
     if (!instantly) {
       // TODO: Check visibility of the component
-      await whenVisible();
+      await whenDocumentVisible();
       if (!this.isConnected) {
         return;
       }
@@ -318,6 +305,8 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
     }
   };
 
+  #unsubscribeToRealtime?: () => void;
+
   protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     super.willUpdate(changedProperties);
 
@@ -328,21 +317,12 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
       this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
     }
 
-    // ConversationId doesn't exist anymore
-    if (changedProperties.has("conversationId")) {
-      //console.log("conversation id changed")
-      const lastConversationId = changedProperties.get("conversationId");
-
-      // conversation id is changed
-      if (lastConversationId && lastConversationId !== this.conversationId) {
-        //console.log("conversation has changed id", lastConversation.id, this.conversation?.id)
-        this.unsubscribeToRealtime(lastConversationId);
-      }
-    }
-
     // conversationId is changed
     if ((changedProperties.has("weavyContext") || changedProperties.has("conversationId")) && this.weavyContext) {
       //console.log("context/conversationId changed", this.conversationId);
+
+      this.#unsubscribeToRealtime?.();
+
       if (this.conversationId) {
         this.messagesQuery.trackInfiniteQuery(getMessagesOptions(this.weavyContext, this.conversationId));
         this.addMessageMutation.trackMutation(
@@ -354,9 +334,18 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
         this.lastReadMessageId = undefined;
         this.lastReadMessageShow = false;
 
-        this.weavyContext.subscribe(`a${this.conversationId}`, "message_created", this.handleRealtimeMessage);
-        this.weavyContext.subscribe(`a${this.conversationId}`, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavyContext.subscribe(`a${this.conversationId}`, "reaction_removed", this.handleRealtimeReactionDeleted);
+        const subscribeGroup = `a${this.conversationId}`;
+
+        this.weavyContext.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+        this.weavyContext.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavyContext.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+        this.#unsubscribeToRealtime = () => {
+          this.weavyContext?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+          this.weavyContext?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+          this.weavyContext?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+          this.#unsubscribeToRealtime = undefined;
+        };
       } else {
         //console.log("no more conversation")
         this.messagesQuery.untrackInfiniteQuery();
@@ -425,7 +414,7 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
                 });
               }}
             >
-              <div slot="start" ${ref(this.pagerRef)} class="wy-pager"></div>
+              <div slot="start" ${ref(this.pagerRef)} part="wy-pager"></div>
               <wy-message-typing
                 slot="end"
                 .conversationId=${this.conversation.id}
@@ -445,7 +434,7 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
               </wy-empty>
             </div>
           `}
-      ${this.conversation && hasPermission(PermissionType.Create, this.conversation?.permissions)
+      ${this.conversation && hasPermission(PermissionTypes.Create, this.conversation?.permissions)
         ? html`
             <div class="wy-footerbar wy-footerbar-sticky">
               <wy-message-editor
@@ -475,6 +464,7 @@ export default class WyConversation extends AppConsumerMixin(LitElement) {
 
   override disconnectedCallback(): void {
     //console.log("conversation disconnected", this.conversationId)
+    this.#unsubscribeToRealtime?.();
     document.removeEventListener("visibilitychange", this.markAsReadWhenVisible);
     super.disconnectedCallback();
   }

@@ -8,7 +8,7 @@ import { type ConversationType, ConversationTypeGuid } from "../types/conversati
 import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all";
@@ -16,7 +16,7 @@ import "./wy-message";
 
 @customElement("wy-messages")
 @localized()
-export default class WyMessages extends AppConsumerMixin(LitElement) {
+export default class WyMessages extends BlockConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`

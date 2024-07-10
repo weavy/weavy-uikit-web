@@ -134,7 +134,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
             })
             .build();
 
-          this._connection.onclose(async (_error) => {
+          this._connection.onclose(async () => {
             console.info(this.weavyId, "SignalR closed.");
             this.connectionState = "disconnected";
 
@@ -149,12 +149,12 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
             });
             this.connect();
           });
-          this._connection.onreconnecting((_error) => {
+          this._connection.onreconnecting(() => {
             console.log(this.weavyId, "SignalR reconnecting...");
             this.connectionState = "reconnecting";
             //this.networkStateIsPending = true;
           });
-          this._connection.onreconnected((_connectionId) => {
+          this._connection.onreconnected(() => {
             console.info(this.weavyId, "SignalR reconnected.");
             this.connectionState = "connected";
             this.networkStateIsPending = false;

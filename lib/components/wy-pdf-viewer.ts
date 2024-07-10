@@ -11,7 +11,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy } from "pdfjs-dist";
 import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 
-import { inputConsumeWithBlurOnEscape } from "../utils/keyboard";
+import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import "./wy-button";
@@ -392,7 +392,8 @@ export default class WyPdfViewer extends LitElement {
                 type="text"
                 class="wy-input wy-pdf-page-number"
                 ${ref(this.pageNumberRef)}
-                @keyup=${inputConsumeWithBlurOnEscape}
+                @keydown=${inputBlurOnEscape}
+                @keyup=${inputConsume}
                 @change=${this.updatePage}
                 @click=${this.select}
               />
@@ -407,7 +408,8 @@ export default class WyPdfViewer extends LitElement {
                 type="text"
                 class="wy-input wy-pdf-zoom-level"
                 ${ref(this.zoomLevelRef)}
-                @keyup=${inputConsumeWithBlurOnEscape}
+                @keydown=${inputBlurOnEscape}
+                @keyup=${inputConsume}
                 @change=${this.updateZoom}
                 @click=${this.select}
                 value="100%"

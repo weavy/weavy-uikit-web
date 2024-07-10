@@ -1,4 +1,4 @@
 import { createContext } from "@lit/context";
-import type { FeaturesType } from "../types/features.types";
-export type { FeaturesType } from "../types/features.types";
-export const featuresContext = createContext<FeaturesType | undefined>(Symbol.for("weavy-app-features"));
+import type { ProductFeaturesType } from "../types/product.types";
+export type { ProductFeaturesType } from "../types/product.types";
+export const productFeaturesContext = createContext<ProductFeaturesType | undefined>(Symbol.for("weavy-product-features"));

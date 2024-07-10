@@ -1,15 +1,10 @@
-import filesCss from "./scss/all";
-import colorModes from "./scss/colormodes";
 import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
-
-import { AppTypes, type AppType } from "./types/app.types";
+import { ContextualTypes, type AppType } from "./types/app.types";
 import type { UserType } from "./types/users.types";
-
 import { getInfiniteFileListOptions } from "./data/files";
-
 import type {
   FileOrderType,
   FilesResultType,
@@ -19,13 +14,12 @@ import type {
   MutateFileProps,
   FileMutationContextType,
   FileViewType,
+  FileOpenEventType,
 } from "./types/files.types";
-
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
 import { InfiniteScrollController } from "./controllers/infinite-scroll-controller";
 import { MutationController } from "./controllers/mutation-controller";
 import { getCreateFileMutationOptions } from "./data/file-create";
-
 import {
   type MutateAppSubscribeProps,
   getAppSubscribeMutationOptions,
@@ -49,16 +43,20 @@ import { localized, msg } from "@lit/localize";
 import { PersistStateController } from "./controllers/persist-state-controller";
 import { ThemeController } from "./controllers/theme-controller";
 import { RealtimeFileEventType } from "./types/realtime.types";
-import { AppProviderMixin } from "./mixins/app-mixin";
+import { BlockProviderMixin } from "./mixins/block-mixin";
 import { Constructor } from "./types/generic.types";
+import { ProductTypes } from "./types/product.types";
 
+import allStyles from "./scss/all";
 import { blockStyles } from "./scss/block";
+import colorModesStyles from "./scss/color-modes";
 
 import "./components/wy-files-appbar";
 import "./components/wy-files-list";
 import "./components/wy-preview";
 import "./components/wy-spinner";
 import "./components/wy-empty";
+import "./components/wy-icon";
 
 /**
  * Files component to render a list of uploaded files and linked files from cloud providers.
@@ -68,14 +66,11 @@ import "./components/wy-empty";
  */
 @customElement("wy-files")
 @localized()
-export class WyFiles extends AppProviderMixin(LitElement) {
-  static override styles = [
-    colorModes,
-    filesCss,
-    blockStyles,
-  ];
+export class WyFiles extends BlockProviderMixin(LitElement) {
+  static override styles = [colorModesStyles, allStyles, blockStyles];
 
-  override appType = AppTypes.Files;
+  override productType = ProductTypes.Files;
+  override contextualType = ContextualTypes.Files;
 
   /**
    * The view for showing the file list.
@@ -98,41 +93,6 @@ export class WyFiles extends AppProviderMixin(LitElement) {
    */
   @property({ type: Boolean })
   showTrashed: boolean = false;
-
-  /**
-   * Event: New file created.
-   * @event wy:file_created
-   */
-  protected realtimeFileCreatedEvent = (realtimeEvent: RealtimeFileEventType) =>
-    new CustomEvent("wy:file_created", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: File updated.
-   * @event wy:file_updated
-   */
-  protected realtimeFileUpdatedEvent = (realtimeEvent: RealtimeFileEventType) =>
-    new CustomEvent("wy:file_updated", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: File trashed.
-   * @event wy:file_trashed
-   */
-  protected realtimeFileTrashedEvent = (realtimeEvent: RealtimeFileEventType) =>
-    new CustomEvent("wy:file_trashed", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: File restored.
-   * @event wy:file_restored
-   */
-  protected realtimeFileRestoredEvent = (realtimeEvent: RealtimeFileEventType) =>
-    new CustomEvent("wy:file_restored", { bubbles: true, composed: false, detail: realtimeEvent });
-
-  /**
-   * Event: File permanently deleted.
-   * @event wy:file_deleted
-   */
-  protected realtimeFileDeletedEvent = (realtimeEvent: RealtimeFileEventType) =>
-    new CustomEvent("wy:file_deleted", { bubbles: true, composed: false, detail: realtimeEvent });
 
   private filesQuery = new InfiniteQueryController<FilesResultType>(this);
 
@@ -200,77 +160,57 @@ export class WyFiles extends AppProviderMixin(LitElement) {
     }
   }
 
-  protected getFilesQueryKey() {
-    return ["apps", this.app!.id, "files"];
+  protected getFilesQueryKey(app: AppType) {
+    return ["apps", app.id, "files"];
   }
 
   protected handleRealtimeFileCreated = (realtimeEvent: RealtimeFileEventType) => {
-    if (!this.weavyContext) {
+    if (!this.weavyContext || !this.app) {
       return;
     }
 
     realtimeEvent.file.created_by = realtimeEvent.actor;
     //addCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey() });
-
-    this.dispatchEvent(this.realtimeFileCreatedEvent(realtimeEvent));
+    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
-  protected handleRealtimeFileUpdated = (realtimeEvent: RealtimeFileEventType) => {
+  protected handleRealtimeFileUpdated = (_realtimeEvent: RealtimeFileEventType) => {
     if (!this.weavyContext || !this.app) {
       return;
     }
 
     //updatedCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey() });
-
-    this.dispatchEvent(this.realtimeFileUpdatedEvent(realtimeEvent));
+    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
-  protected handleRealtimeFileTrashed = (realtimeEvent: RealtimeFileEventType) => {
+  protected handleRealtimeFileTrashed = (_realtimeEvent: RealtimeFileEventType) => {
     if (!this.weavyContext || !this.app) {
       return;
     }
 
     //updatedCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey() });
-
-    this.dispatchEvent(this.realtimeFileTrashedEvent(realtimeEvent));
+    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
-  protected handleRealtimeFileRestored = (realtimeEvent: RealtimeFileEventType) => {
+  protected handleRealtimeFileRestored = (_realtimeEvent: RealtimeFileEventType) => {
     if (!this.weavyContext || !this.app) {
       return;
     }
 
     //updatedCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey() });
-
-    this.dispatchEvent(this.realtimeFileRestoredEvent(realtimeEvent));
+    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
-  protected handleRealtimeFileDeleted = (realtimeEvent: RealtimeFileEventType) => {
+  protected handleRealtimeFileDeleted = (_realtimeEvent: RealtimeFileEventType) => {
     if (!this.weavyContext || !this.app) {
       return;
     }
 
     //removeCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey() });
-
-    this.dispatchEvent(this.realtimeFileDeletedEvent(realtimeEvent));
+    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
-  private unsubscribeToRealtime(app: AppType) {
-    if (!this.weavyContext) {
-      return;
-    }
-
-    this.weavyContext.unsubscribe(`a${app.id}`, "file_created", this.handleRealtimeFileCreated);
-    this.weavyContext.unsubscribe(`a${app.id}`, "file_updated", this.handleRealtimeFileUpdated);
-    this.weavyContext.unsubscribe(`a${app.id}`, "file_trashed", this.handleRealtimeFileTrashed);
-    this.weavyContext.unsubscribe(`a${app.id}`, "file_restored", this.handleRealtimeFileRestored);
-    this.weavyContext.unsubscribe(`a${app.id}`, "file_deleted", this.handleRealtimeFileDeleted);
-  }
+  #unsubscribeToRealtime?: () => void;
 
   constructor() {
     super();
@@ -280,14 +220,6 @@ export class WyFiles extends AppProviderMixin(LitElement) {
 
   protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType; user: UserType }>) {
     super.willUpdate(changedProperties);
-
-    if (changedProperties.has("app")) {
-      const lastApp = changedProperties.get("app");
-
-      if (lastApp && lastApp !== this.app) {
-        this.unsubscribeToRealtime(lastApp);
-      }
-    }
 
     //console.log("files willUpdate", Array.from(changedProperties.keys()), this.uid, this.weavyContext)
     if ((changedProperties.has("uid") || changedProperties.has("weavyContext")) && this.uid && this.weavyContext) {
@@ -330,12 +262,25 @@ export class WyFiles extends AppProviderMixin(LitElement) {
       this.restoreFileMutation = getRestoreFileMutation(this.weavyContext, this.app);
       this.deleteForeverFileMutation = getDeleteForeverFileMutation(this.weavyContext, this.app);
 
+      this.#unsubscribeToRealtime?.();
+
       // realtime
-      this.weavyContext.subscribe(`a${this.app.id}`, "file_created", this.handleRealtimeFileCreated);
-      this.weavyContext.subscribe(`a${this.app.id}`, "file_updated", this.handleRealtimeFileUpdated);
-      this.weavyContext.subscribe(`a${this.app.id}`, "file_trashed", this.handleRealtimeFileTrashed);
-      this.weavyContext.subscribe(`a${this.app.id}`, "file_restored", this.handleRealtimeFileRestored);
-      this.weavyContext.subscribe(`a${this.app.id}`, "file_deleted", this.handleRealtimeFileDeleted);
+      const subscribeGroup = `a${this.app.id}`;
+
+      this.weavyContext.subscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
+      this.weavyContext.subscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
+      this.weavyContext.subscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
+      this.weavyContext.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
+      this.weavyContext.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+
+      this.#unsubscribeToRealtime = () => {    
+        this.weavyContext?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
+        this.weavyContext?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
+        this.weavyContext?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+        this.#unsubscribeToRealtime = undefined;
+      }
     }
   }
 
@@ -384,8 +329,8 @@ export class WyFiles extends AppProviderMixin(LitElement) {
                   .files=${files}
                   .dataUpdatedAt=${dataUpdatedAt}
                   .order=${this.order}
-                  @file-open=${(e: CustomEvent) => {
-                    this.previewRef.value?.open(e.detail.file);
+                  @file-open=${(e: FileOpenEventType) => {
+                    this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
                   }}
                   @order=${(e: CustomEvent) => {
                     this.order = e.detail.order;
@@ -420,7 +365,7 @@ export class WyFiles extends AppProviderMixin(LitElement) {
                 </wy-empty>
               `
           : html`<wy-empty><wy-spinner overlay></wy-spinner></wy-empty>`}
-        <div ${ref(this.pagerRef)} class="wy-pager"></div>
+        <div ${ref(this.pagerRef)} part="wy-pager"></div>
       </div>
       ${!isPending
         ? html` <wy-preview ${ref(this.previewRef)} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
@@ -429,10 +374,7 @@ export class WyFiles extends AppProviderMixin(LitElement) {
   }
 
   override disconnectedCallback(): void {
-    if (this.weavyContext && this.app) {
-      // realtime
-      this.unsubscribeToRealtime(this.app);
-    }
+    this.#unsubscribeToRealtime?.();
     super.disconnectedCallback();
   }
 }

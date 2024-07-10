@@ -143,3 +143,26 @@ export function eqObjects(a: PlainObjectType, b: PlainObjectType, skipLength: bo
 
   return true;
 }
+
+/**
+ * Shifts the values and property keys.
+ * 
+ * @param {any} obj - The plain object to reverse keys and values from 
+ * @returns {Object} - A new object with reversed properties.
+ */
+export function reversedProperties(obj: PlainObjectType) {
+  return Object.fromEntries(
+    Object
+      .entries(obj)
+      .map(([key, value]) => [value, key])
+    );
+}
+
+/**
+ * Includes reversed keys and values in an object.
+ * @param {any} obj - The plain object to reverse keys and values from.
+ * @returns {Object} - A new object with the original properties together with reversed properties.
+ */
+export function includeReversedProperties(obj: PlainObjectType) {
+  return { ...obj, ...reversedProperties(obj)};
+}

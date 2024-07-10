@@ -71,10 +71,13 @@
           }
           botSelector.add(option);
         });
+        
+        // Set default
+        botSelector.value = messenger.getAttribute("bot");
     });
 
     botSelector.addEventListener("change", () => {
-      console.log("bot -> ", botSelector.value)
+      console.log("bot ->", botSelector.value)
       messenger.setAttribute("bot", botSelector.value);
       sessionStorage.setItem("wy-bot",  botSelector.value);
     })

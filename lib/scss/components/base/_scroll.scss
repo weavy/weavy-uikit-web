@@ -2,17 +2,19 @@
 @use "color";
 
 @mixin scroll-y {
-  overflow-y: auto;
-  max-height: 100%;
-  
-  // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
-  overflow-anchor: none;
-  
-  // to enable HW acceleration and not cause repaint on scroll
-  // opacity needed for custom scrollbar to paint
-  touch-action: pan-y, pan-x;
-  will-change: scroll-position, opacity;
-  backface-visibility: hidden;
+  & {
+    overflow-y: auto;
+    max-height: 100%;
+    
+    // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
+    overflow-anchor: none;
+    
+    // to enable HW acceleration and not cause repaint on scroll
+    // opacity needed for custom scrollbar to paint
+    touch-action: pan-y, pan-x;
+    will-change: scroll-position, opacity;
+    backface-visibility: hidden;
+  }
 
   // ios momentum scrolling on iOS <= 12, cannot be used on the <body> element!
   &:not(body) {
@@ -21,20 +23,29 @@
 }
 
 @mixin scroll-x {
-  overflow-x: auto;
-  max-width: 100%;
-
-  // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
-  overflow-anchor: none;
+  & {
+    overflow-x: auto;
+    max-width: 100%;
   
-  // to enable HW acceleration and not cause repaint on scroll
-  touch-action: pan-y, pan-x;
-  will-change: scroll-position, opacity;
-  backface-visibility: hidden;
+    // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
+    overflow-anchor: none;
+    
+    // to enable HW acceleration and not cause repaint on scroll
+    touch-action: pan-y, pan-x;
+    will-change: scroll-position, opacity;
+    backface-visibility: hidden;
+  }
 }
 
 // custom scrollbar styling
 @mixin custom-scrollbar {
+  & {
+    // custom scrollbar for firefox
+    scrollbar-width: thin;
+    //scrollbar-color: rgba(color.token(--wy-gray-500), 0.75) transparent;
+    scrollbar-color: #{color.token(--wy-outline)} transparent;
+  }
+
   // custom scrollbar for webkit browsers
   // reference https://webkit.org/blog/363/styling-scrollbars/
 
@@ -69,15 +80,17 @@
       opacity: 50%;
     }
   }
-
-  // custom scrollbar for firefox
-  scrollbar-width: thin;
-  //scrollbar-color: rgba(color.token(--wy-gray-500), 0.75) transparent;
-  scrollbar-color: #{color.token(--wy-outline)} transparent;
 }
 
 // custom scrollbar styling
 @mixin thin-scrollbar {
+  & {
+    // custom scrollbar for firefox
+    scrollbar-width: thin;
+    //scrollbar-color: rgba(color.token(--wy-gray-700), 0.75) transparent;
+    scrollbar-color: #{color.token(--wy-outline-variant)} transparent;
+  }
+
   // custom scrollbar for webkit browsers
   &::-webkit-scrollbar {
     height: .375rem;
@@ -110,11 +123,6 @@
       opacity: 50%;
     }
   }
-  
-  // custom scrollbar for firefox
-  scrollbar-width: thin;
-  //scrollbar-color: rgba(color.token(--wy-gray-700), 0.75) transparent;
-  scrollbar-color: #{color.token(--wy-outline-variant)} transparent;
 }
 
 @mixin scrollbar-top-padding($scrollbar-padding) {
@@ -132,15 +140,15 @@
 // Exposed styles
 
 .wy-scroll-y {
+  scroll-padding-top: var(--wy-scrollbar-adjust-top, 0);
+  scroll-padding-bottom: var(--wy-scrollbar-adjust-bottom, 0);
+  
   @include scroll-y;
 
   &:not(.wy-scroll-x) {
     overflow-x: hidden;
     touch-action: pan-y;
   }
-
-  scroll-padding-top: var(--wy-scrollbar-adjust-top, 0);
-  scroll-padding-bottom: var(--wy-scrollbar-adjust-bottom, 0);
 }
 
 .wy-scroll-x {

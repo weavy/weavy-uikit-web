@@ -9,6 +9,7 @@ import { consume } from "@lit/context";
 import { WeavyContextProps } from "../types/weavy.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import type { iconNamesType } from "../utils/icons";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
@@ -45,7 +46,7 @@ export class WyConfluenceViewer extends LitElement {
   src?: string;
 
   @property()
-  icon!: string;
+  icon!: iconNamesType;
 
   @property()
   raw?: string;

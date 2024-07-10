@@ -36,9 +36,12 @@
         <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
     </wy-context>
     <script>
-      const appUID = new URLSearchParams(window.location.search).get("appUID");
-      if (appUID != null) {
-        document.querySelector("wy-posts").setAttribute("uid", appUID);
+      const searchParams = new URLSearchParams(window.location.search);
+      const posts = document.querySelector("wy-posts");
+
+      const appUID = searchParams.get("appUID");
+      if (appUID) {
+        posts.setAttribute("uid", appUID);
       }
     </script>
   </body>

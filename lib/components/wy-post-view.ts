@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from "lit";
+import { LitElement, PropertyValues, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -6,13 +6,13 @@ import type WeavyPreview from "../components/wy-preview";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
-import type { FileType } from "../types/files.types";
+import type { FileOpenEventType, FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 
 import { localized, msg, str } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all";
@@ -27,10 +27,13 @@ import "./wy-poll";
 import "./wy-embed";
 import "./wy-comment-list";
 import "./wy-skeleton";
+import { EntityTypes } from "../types/app.types";
+import { hasEntityChildType, isEntityChainMatch } from "../utils/notifications";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 @customElement("wy-post-view")
 @localized()
-export default class WyPostView extends AppConsumerMixin(LitElement) {
+export default class WyPostView extends BlockConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -96,6 +99,12 @@ export default class WyPostView extends AppConsumerMixin(LitElement) {
   @state()
   private loadComments: boolean = false;
 
+  @property({ type: Boolean })
+  highlight: boolean = false;
+
+  @state()
+  isCommentLinked: boolean = false;
+
   private previewRef: Ref<WeavyPreview> = createRef();
 
   private dispatchVote(id: number) {
@@ -122,6 +131,18 @@ export default class WyPostView extends AppConsumerMixin(LitElement) {
     e.preventDefault();
     this.showComments = !this.showComments;
     this.loadComments = true;
+  }
+
+  protected override willUpdate(changedProperties: PropertyValues<this>) {
+      if (changedProperties.has("link")) {
+        this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Post, { id: this.postId }));
+        this.isCommentLinked = Boolean(this.link && hasEntityChildType(this.link, EntityTypes.Post, { id: this.postId }, EntityTypes.Comment));
+      }
+
+      if (changedProperties.has("isCommentLinked") && this.isCommentLinked) {
+        this.loadComments = true;
+        this.showComments = true;
+      }
   }
 
   override render() {
@@ -166,7 +187,7 @@ export default class WyPostView extends AppConsumerMixin(LitElement) {
           </div>
         </div>`
       : html`
-          <div class="wy-post">
+          <div class="wy-post" part=${partMap({"wy-highlight": this.highlight && !this.isCommentLinked})} ${ref((el) => this.highlight && el?.scrollIntoView({ block: "nearest" }))}>
             <div class="wy-item wy-item-lg">
               <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
           this.createdBy.display_name
@@ -187,7 +208,7 @@ export default class WyPostView extends AppConsumerMixin(LitElement) {
                   </div>
                 </div>
 
-                <div class="wy-item-actions wy-item-actions-top">
+                <div class="wy-item-actions wy-item-top">
                   <wy-dropdown>
                     ${
                       this.isSubscribed
@@ -224,8 +245,8 @@ export default class WyPostView extends AppConsumerMixin(LitElement) {
                 images && !!images.length
                   ? html`<wy-image-grid
                       .images=${images}
-                      @file-open=${(e: CustomEvent) => {
-                        this.previewRef.value?.open(e.detail.file);
+                      @file-open=${(e: FileOpenEventType) => {
+                        this.previewRef.value?.open(e.detail.fileId);
                       }}
                     ></wy-image-grid>`
                   : ``
@@ -258,8 +279,8 @@ export default class WyPostView extends AppConsumerMixin(LitElement) {
                   files && !!files.length
                     ? html`<wy-attachments-list
                         .files=${files ?? []}
-                        @file-open=${(e: CustomEvent) => {
-                          this.previewRef.value?.open(e.detail.file);
+                        @file-open=${(e: FileOpenEventType) => {
+                          this.previewRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-attachments-list>`
                     : ``

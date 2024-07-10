@@ -1,7 +1,7 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { shadowPartMap } from "../utils/directives/shadow-part-map";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 import rebootCss from "../scss/wrappers/base/reboot";
 import spinnerCss from "../scss/wrappers/spinner";
@@ -53,7 +53,7 @@ export default class WySpinner extends LitElement {
       };
 
       return html`<svg
-        part="${shadowPartMap(progressParts)}"
+        part="${partMap(progressParts)}"
         viewBox="0 0 24 24"
         width=${this.size}
         height=${this.size}
@@ -97,14 +97,14 @@ export default class WySpinner extends LitElement {
       }
 
       return html`<svg
-        part="${shadowPartMap(spinnerParts)}"
+        part="${partMap(spinnerParts)}"
         width=${this.size}
         height=${this.size}
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
         <circle
-          part="${shadowPartMap(spinnerCircleParts)}"
+          part="${partMap(spinnerCircleParts)}"
           fill="none"
           cx="12"
           cy="12"

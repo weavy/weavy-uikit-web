@@ -126,3 +126,26 @@ export function getTextStreamFromResponse(response: Response) {
     throw new Error("Could not parse text stream");
   }
 }
+
+export function getStorage(type: "sessionStorage" | "localStorage" | "sharedStorage") {
+  let storage: Storage | undefined;
+  try {
+    storage = window[type as keyof typeof window];
+    if (storage) {
+      const x = "__storage_test__";
+      storage.setItem(x, x);
+      storage.removeItem(x);
+    }
+  } catch (e) {
+    if(
+      e instanceof DOMException &&
+      e.name === "QuotaExceededError" &&
+      // acknowledge QuotaExceededError only if there's something already stored
+      storage &&
+      storage.length !== 0
+    ) {
+      console.error("Storage not available:", type);
+    }
+  }
+  return storage;
+}

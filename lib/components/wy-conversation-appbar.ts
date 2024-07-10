@@ -1,9 +1,8 @@
 import { LitElement, html, type PropertyValues, nothing, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { portal } from "lit-modal-portal";
 import { ConversationTypeGuid, type ConversationType } from "../types/conversations.types";
 
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import type { MemberType, MembersResultType } from "../types/members.types";
 
 import { getMemberOptions } from "../data/members";
@@ -25,21 +24,21 @@ import { inputBlurOnEnter } from "../utils/keyboard";
 import type { RealtimeAppEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { BlobType } from "../types/files.types";
+import { AccessTypes, PermissionTypes } from "../types/app.types";
+import { hasPermission } from "../utils/permission";
 
 import chatCss from "../scss/all";
 
 import "./wy-presence";
 import "./wy-users-search";
-import "./wy-overlay";
 import "./wy-dropdown";
 import "./wy-blob-upload";
-import { BlobType } from "../types/files.types";
-import { AccessType, PermissionType } from "../types/app.types";
-import { hasPermission } from "../utils/permission";
+import "./wy-overlay";
 
 @customElement("wy-conversation-appbar")
 @localized()
-export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
+export default class WyConversationAppbar extends BlockConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -102,14 +101,6 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
     this.conversationTitle = this.conversationTitleInput = realtimeEvent.app.display_name;
   };
 
-  private unsubscribeToRealtime(conversationId: number) {
-    if (!this.weavyContext) {
-      return;
-    }
-
-    this.weavyContext.unsubscribe(`a${conversationId}`, "app_updated", this.handleRealtimeAppUpdated);
-  }
-
   private async addMembers(members: MemberType[]) {
     this.showAddMembers = false;
     this.showDetails = true;
@@ -152,7 +143,7 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
     await this.updateConversationMutation?.mutate({ id: this.conversationId, blobId: null, thumbnailUrl: null });
   }
 
-  private async updateMember(id: number, access: AccessType) {
+  private async updateMember(id: number, access: AccessTypes) {
     if (!this.weavyContext || !this.conversationId) {
       return;
     }
@@ -187,6 +178,8 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
     await this.weavyContext.queryClient.invalidateQueries({ queryKey: ["conversations"] });
   }
 
+  #unsubscribeToRealtime?: () => void;
+
   protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     super.willUpdate(changedProperties);
 
@@ -201,16 +194,12 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
     // ConversationId doesn't exist anymore
     if (changedProperties.has("conversationId")) {
       this.showDetails = false;
-      const lastConversationId = changedProperties.get("conversationId");
-
-      // conversation id is changed
-      if (lastConversationId && this.conversation && lastConversationId !== this.conversationId) {
-        this.unsubscribeToRealtime(lastConversationId);
-      }
     }
 
     // conversationId is changed
     if ((changedProperties.has("weavyContext") || changedProperties.has("conversationId")) && this.weavyContext) {
+      this.#unsubscribeToRealtime?.();
+
       if (this.conversationId) {
         this.membersQuery.trackQuery(
           getMemberOptions(this.weavyContext, this.conversationId, {
@@ -226,7 +215,14 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
             },
           })
         );
-        this.weavyContext.subscribe(`a${this.conversationId}`, "app_updated", this.handleRealtimeAppUpdated);
+
+        const subscribeGroup = `a${this.conversationId}`;
+        this.weavyContext.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+
+        this.#unsubscribeToRealtime = () => {
+          this.weavyContext?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+          this.#unsubscribeToRealtime = undefined;
+        };
       } else {
         this.membersQuery.untrackQuery();
       }
@@ -241,7 +237,7 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
   override render() {
     const { data: membersData } = this.membersQuery.result ?? {};
 
-    const adminCount: number = (membersData?.data || []).filter((user) => user.access === AccessType.Admin).length;
+    const adminCount: number = (membersData?.data || []).filter((user) => user.access === AccessTypes.Admin).length;
 
     const otherMember =
       this.user && this.isPrivateChat()
@@ -251,19 +247,19 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
     return html`
       <header class="wy-appbars">
         <nav class="wy-appbar">
-          <div><slot name="action"></slot></div>
+          <slot class="wy-appbar-buttons wy-appbar-buttons-first" name="action"></slot>
           ${this.conversation && this.user
             ? html`
-              <div class="wy-appbar-section">
-                ${this.conversation.type === ConversationTypeGuid.PrivateChat
-                  ? html`<wy-presence
-                      placement="text"
-                      .status=${otherMember?.presence}
-                      id=${ifDefined(otherMember?.id)}
-                    ></wy-presence>`
-                  : nothing}
-                <span class="wy-appbar-text">${this.conversationTitle}</span>
-              </div>
+                <div class="wy-appbar-section">
+                  ${this.conversation.type === ConversationTypeGuid.PrivateChat
+                    ? html`<wy-presence
+                        placement="text"
+                        .status=${otherMember?.presence}
+                        id=${ifDefined(otherMember?.id)}
+                      ></wy-presence>`
+                    : nothing}
+                  <span class="wy-appbar-text">${this.conversationTitle}</span>
+                </div>
               `
             : html`<span></span>`}
           ${this.isChatRoom()
@@ -275,229 +271,213 @@ export default class WyConversationAppbar extends AppConsumerMixin(LitElement) {
       </header>
 
       <!-- details modal -->
-      ${this.weavyContext && this.settings
-        ? portal(
-            this.showDetails
-              ? html`
-                  <wy-overlay
-                    .contexts=${this.contexts}
-                    @close=${() => {
+      ${this.weavyContext
+        ? html`
+            <wy-overlay
+              .show=${this.showDetails}
+              @close=${() => {
+                this.showDetails = false;
+              }}
+              @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
+            >
+              <header class="wy-appbars">
+                <nav class="wy-appbar">
+                  <wy-button
+                    kind="icon"
+                    @click=${() => {
                       this.showDetails = false;
                     }}
-                    @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
                   >
-                    <header class="wy-appbars">
-                      <nav class="wy-appbar">
-                        <wy-button
-                          kind="icon"
-                          @click=${() => {
-                            this.showDetails = false;
-                          }}
-                        >
-                          <wy-icon name="close"></wy-icon>
-                        </wy-button>
-                        <div class="wy-appbar-text">${this.conversationTitle}</div>
-                      </nav>
-                    </header>
-                    <div class="wy-scroll-y">
-                      ${this.conversation && this.user
+                    <wy-icon name="close"></wy-icon>
+                  </wy-button>
+                  <div class="wy-appbar-text">${this.conversationTitle}</div>
+                </nav>
+              </header>
+              <div class="wy-scroll-y">
+                ${this.showDetails && this.conversation && this.user
+                  ? html`
+                      <wy-avatar-header>
+                        ${this.isChatRoom()
+                          ? html`
+                              <wy-blob-upload
+                                @blob-uploaded=${(e: CustomEvent) => this.handleAvatarUploaded(e.detail.blob)}
+                                .accept=${"image/*"}
+                                .label=${msg("Select picture")}
+                              >
+                                <div slot="placeholder">
+                                  ${this.conversation.avatar_url
+                                    ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
+                                    : html`<wy-avatar-group
+                                        .members=${membersData?.data}
+                                        title=${this.conversation.display_name}
+                                        .size=${96}
+                                      ></wy-avatar-group>`}
+                                </div>
+                                ${this.conversation.avatar_url
+                                  ? html`<div slot="label"
+                                      ><wy-button @click=${() => this.clearAvatar()}
+                                        >${msg("Remove picture")}</wy-button
+                                      ></div
+                                    >`
+                                  : nothing}
+                              </wy-blob-upload>
+                            `
+                          : html`
+                              <wy-avatar
+                                src=${ifDefined(otherMember?.avatar_url)}
+                                name=${ifDefined(otherMember?.display_name)}
+                                presence=${otherMember?.presence || "away"}
+                                ?isBot=${otherMember?.is_bot}
+                                id=${ifDefined(otherMember?.id)}
+                                size=${96}
+                              ></wy-avatar>
+                            `}
+                      </wy-avatar-header>
+                      ${this.isChatRoom()
                         ? html`
-                            <wy-avatar-header>
-                              ${this.isChatRoom()
+                            <div class="wy-pane-group">
+                              <label class="wy-label" for="roomName">${msg("Room name")}</label>
+
+                              <input
+                                id="roomName"
+                                class="wy-input"
+                                .value=${this.conversationTitleInput}
+                                @input=${(e: Event) => {
+                                  this.conversationTitleInput = (e.target as HTMLInputElement).value;
+                                }}
+                                @keyup=${inputBlurOnEnter}
+                                @blur=${() => this.handleSaveConversationName()}
+                              />
+
+                              <div class="wy-description">
+                                ${msg("Changing the name of a group chat changes it for everyone.")}
+                              </div>
+                              <br />
+                              <label class="wy-label">${msg("Members")}</label>
+                              ${membersData
                                 ? html`
-                                    <wy-blob-upload
-                                      @blob-uploaded=${(e: CustomEvent) => this.handleAvatarUploaded(e.detail.blob)}
-                                      .accept=${"image/*"}
-                                      .label=${msg("Select picture")}
-                                    >
-                                      <div slot="placeholder">
-                                        ${this.conversation.avatar_url
-                                          ? html`<wy-avatar
-                                              .size=${96}
-                                              src=${this.conversation.avatar_url}
-                                            ></wy-avatar>`
-                                          : html`<wy-avatar-group
-                                              .members=${membersData?.data}
-                                              title=${this.conversation.display_name}
-                                              .size=${96}
-                                            ></wy-avatar-group>`}
-                                      </div>
-                                      ${this.conversation.avatar_url
-                                        ? html`<div slot="label"
-                                            ><wy-button @click=${() => this.clearAvatar()}
-                                              >${msg("Remove picture")}</wy-button
-                                            ></div
-                                          >`
-                                        : nothing}
-                                    </wy-blob-upload>
-                                  `
-                                : html`
-                                    <wy-avatar
-                                      src=${ifDefined(otherMember?.avatar_url)}
-                                      name=${ifDefined(otherMember?.display_name)}
-                                      presence=${otherMember?.presence || "away"}
-                                      ?isBot=${otherMember?.is_bot}
-                                      id=${ifDefined(otherMember?.id)}
-                                      size=${96}
-                                    ></wy-avatar>
-                                  `}
-                            </wy-avatar-header>
-                            ${this.isChatRoom()
-                              ? html`
-                                  <div class="wy-pane-group">
-                                    <label class="wy-label" for="roomName">${msg("Room name")}</label>
-
-                                    <input
-                                      id="roomName"
-                                      class="wy-input"
-                                      .value=${this.conversationTitleInput}
-                                      @input=${(e: Event) => {
-                                        this.conversationTitleInput = (e.target as HTMLInputElement).value;
-                                      }}
-                                      @keyup=${inputBlurOnEnter}
-                                      @blur=${() => this.handleSaveConversationName()}
-                                    />
-
-                                    <div class="wy-description">
-                                      ${msg("Changing the name of a group chat changes it for everyone.")}
-                                    </div>
-                                    <br />
-                                    <label class="wy-label">${msg("Members")}</label>
-                                    ${membersData
-                                      ? html`
-                                          <div class="wy-list">
-                                            ${membersData.data?.map(
-                                              (member: MemberType) => html`
-                                                <div class="wy-item">
-                                                  <wy-avatar
-                                                    .src=${member.avatar_url}
-                                                    .name=${member.display_name}
-                                                    .isBot=${member.is_bot}
-                                                    size=${32}
-                                                  ></wy-avatar>
-                                                  <div class="wy-item-body">
-                                                    ${member.display_name}
-                                                    ${member.access === AccessType.Admin
-                                                      ? html` <wy-icon
-                                                          size="20"
-                                                          inline
-                                                          name="shield-star"
-                                                          title=${msg("Admin")}
-                                                        ></wy-icon>`
-                                                      : nothing}
-                                                  </div>
-                                                  ${member.id === this.user!.id &&
-                                                  !hasPermission(PermissionType.Admin, this.conversation?.permissions)
-                                                    ? html` <wy-button
-                                                        @click=${() => this.leaveConversation(member.id)}
-                                                        title=${msg("Leave conversation")}
-                                                        kind="icon"
+                                    <div class="wy-list">
+                                      ${membersData.data?.map(
+                                        (member: MemberType) => html`
+                                          <div class="wy-item">
+                                            <wy-avatar
+                                              .src=${member.avatar_url}
+                                              .name=${member.display_name}
+                                              .isBot=${member.is_bot}
+                                              size=${32}
+                                            ></wy-avatar>
+                                            <div class="wy-item-body">
+                                              ${member.display_name}
+                                              ${member.access === AccessTypes.Admin
+                                                ? html` <wy-icon
+                                                    size="20"
+                                                    inline
+                                                    name="shield-star"
+                                                    title=${msg("Admin")}
+                                                  ></wy-icon>`
+                                                : nothing}
+                                            </div>
+                                            ${member.id === this.user!.id &&
+                                            !hasPermission(PermissionTypes.Admin, this.conversation?.permissions)
+                                              ? html` <wy-button
+                                                  @click=${() => this.leaveConversation(member.id)}
+                                                  title=${msg("Leave conversation")}
+                                                  kind="icon"
+                                                >
+                                                  <wy-icon name="close"></wy-icon>
+                                                </wy-button>`
+                                              : hasPermission(PermissionTypes.Admin, this.conversation?.permissions)
+                                              ? html`<wy-dropdown>
+                                                  <wy-dropdown-item @click=${() => this.leaveConversation(member.id)}>
+                                                    <wy-icon name="account-minus"></wy-icon>
+                                                    ${member.id === this.user!.id
+                                                      ? msg("Leave conversation")
+                                                      : msg("Remove member")}
+                                                  </wy-dropdown-item>
+                                                  ${adminCount > 1 && member.access === AccessTypes.Admin
+                                                    ? html`<wy-dropdown-item
+                                                        @click=${() => this.updateMember(member.id, AccessTypes.Write)}
                                                       >
-                                                        <wy-icon name="close"></wy-icon>
-                                                      </wy-button>`
-                                                    : hasPermission(
-                                                        PermissionType.Admin,
-                                                        this.conversation?.permissions
-                                                      )
-                                                    ? html`<wy-dropdown>
-                                                        <wy-dropdown-item
-                                                          @click=${() => this.leaveConversation(member.id)}
-                                                        >
-                                                          <wy-icon name="account-minus"></wy-icon>
-                                                          ${member.id === this.user!.id
-                                                            ? msg("Leave conversation")
-                                                            : msg("Remove member")}
-                                                        </wy-dropdown-item>
-                                                        ${adminCount > 1 && member.access === AccessType.Admin
-                                                          ? html`<wy-dropdown-item
-                                                              @click=${() =>
-                                                                this.updateMember(member.id, AccessType.Write)}
-                                                            >
-                                                              <wy-icon name="shield-star-outline"></wy-icon>
-                                                              ${msg("Remove as admin")}
-                                                            </wy-dropdown-item>`
-                                                          : member.access !== AccessType.Admin
-                                                          ? html`<wy-dropdown-item
-                                                              @click=${() =>
-                                                                this.updateMember(member.id, AccessType.Admin)}
-                                                            >
-                                                              <wy-icon name="shield-star"></wy-icon>
-                                                              ${msg("Make admin")}
-                                                            </wy-dropdown-item>`
-                                                          : nothing}
-                                                      </wy-dropdown>`
+                                                        <wy-icon name="shield-star-outline"></wy-icon>
+                                                        ${msg("Remove as admin")}
+                                                      </wy-dropdown-item>`
+                                                    : member.access !== AccessTypes.Admin
+                                                    ? html`<wy-dropdown-item
+                                                        @click=${() => this.updateMember(member.id, AccessTypes.Admin)}
+                                                      >
+                                                        <wy-icon name="shield-star"></wy-icon>
+                                                        ${msg("Make admin")}
+                                                      </wy-dropdown-item>`
                                                     : nothing}
-                                                </div>
-                                              `
-                                            ) ?? nothing}
+                                                </wy-dropdown>`
+                                              : nothing}
                                           </div>
                                         `
-                                      : nothing}
-                                    <wy-button
-                                      kind="filled"
-                                      color="primary"
-                                      @click=${() => {
-                                        this.showDetails = false;
-                                        this.showAddMembers = true;
-                                      }}
-                                      title=${msg("Add members")}
-                                    >
-                                      ${msg("Add members")}
-                                    </wy-button>
-                                  </div>
-                                `
-                              : nothing}
+                                      ) ?? nothing}
+                                    </div>
+                                  `
+                                : nothing}
+                              <wy-button
+                                kind="filled"
+                                color="primary"
+                                @click=${() => {
+                                  this.showDetails = false;
+                                  this.showAddMembers = true;
+                                }}
+                                title=${msg("Add members")}
+                              >
+                                ${msg("Add members")}
+                              </wy-button>
+                            </div>
                           `
                         : nothing}
-                    </div>
-                  </wy-overlay>
-                `
-              : nothing,
-            this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+                    `
+                  : nothing}
+              </div>
+            </wy-overlay>
+          `
         : nothing}
 
       <!-- add members modal -->
-      ${this.weavyContext && this.settings
-        ? portal(
-            this.showAddMembers
-              ? html`
-                  <wy-overlay
-                    .contexts=${this.contexts}
-                    @close=${() => (this.showAddMembers = false)}
-                    @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
+      ${this.weavyContext
+        ? html`
+            <wy-overlay
+              .show=${this.showAddMembers}
+              @close=${() => {
+                this.showAddMembers = false;
+              }}
+              @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
+            >
+              <header class="wy-appbars">
+                <nav class="wy-appbar">
+                  <wy-button
+                    kind="icon"
+                    @click=${() => {
+                      this.showAddMembers = false;
+                    }}
                   >
-                    <header class="wy-appbars">
-                      <nav class="wy-appbar">
-                        <wy-button kind="icon" @click=${() => (this.showAddMembers = false)}>
-                          <wy-icon name="close"></wy-icon>
-                        </wy-button>
-                        <div class="wy-appbar-text">${msg("Add members")}</div>
-                      </nav>
-                    </header>
-
+                    <wy-icon name="close"></wy-icon>
+                  </wy-button>
+                  <div class="wy-appbar-text">${msg("Add members")}</div>
+                </nav>
+              </header>
+              ${this.showAddMembers
+                ? html`
                     <wy-users-search
                       .buttonTitle=${msg("Add members")}
                       .appId=${this.conversationId}
                       @submit=${(e: CustomEvent) => this.addMembers(e.detail.members)}
                     ></wy-users-search>
-                  </wy-overlay>
-                `
-              : nothing,
-            this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+                  `
+                : nothing}
+            </wy-overlay>
+          `
         : nothing}
     `;
   }
 
   override disconnectedCallback(): void {
-    if (this.weavyContext && this.conversationId) {
-      this.unsubscribeToRealtime(this.conversationId);
-    }
+    this.#unsubscribeToRealtime?.();
     super.disconnectedCallback();
   }
 }

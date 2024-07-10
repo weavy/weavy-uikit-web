@@ -1,5 +1,4 @@
 import { html, nothing } from "lit";
-import { ifDefined } from "lit/directives/if-defined.js";
 import { msg } from "@lit/localize";
 
 import "./wy-icon";
@@ -14,15 +13,17 @@ import { type WeavyContextType } from "../contexts/weavy-context";
 import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
+import { classMap } from "lit/directives/class-map.js";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 export type FileOrderHeaderType = { by: FileOrderByType | undefined; title: string }[];
 
 export function renderFileTable(
   this: WyFilesList,
-  weavyContext: WeavyContextType | undefined,
   files: FileType[],
   order?: FileOrderType,
-  isRenamingId?: number
+  isRenamingId?: number,
+  highlightId?: number,
 ) {
   return files && files.length
     ? html`
@@ -32,7 +33,7 @@ export function renderFileTable(
             ${repeat(
               files,
               (file) => file.id,
-              (file) => renderFileTableRow.call(this, weavyContext, { file }, isRenamingId)
+              (file) => renderFileTableRow.call(this, this.weavyContext, { file }, isRenamingId, highlightId)
             )}
           </tbody>
         </table>
@@ -81,7 +82,8 @@ export function renderFileTableRow(
   this: WyFilesList,
   weavyContext: WeavyContextType | undefined,
   { file }: { file: FileType },
-  isRenamingId?: number
+  isRenamingId?: number,
+  highlightId?: number,
 ) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
@@ -93,13 +95,9 @@ export function renderFileTableRow(
   );
   const isRenaming = Boolean(isRenamingId && isRenamingId === file.id);
 
-  let { icon } = getIcon(file.name);
+  const { icon } = getIcon(file.name);
   const ext = getExtension(file.name);
   const provider = getProvider(file.provider);
-
-  if (provider) {
-    icon = `${icon}+${provider}`;
-  }
 
   const handleRename = (e: Event) => {
     e.stopImmediatePropagation();
@@ -125,14 +123,18 @@ export function renderFileTableRow(
     }
   };
 
+  const highlight = Boolean(highlightId && highlightId === file.id)
+
   return html`
     <tr
-      class=${ifDefined(file.is_trashed ? "wy-table-trashed" : undefined)}
+      class=${classMap({"wy-table-row-trashed": file.is_trashed })}
+      part=${partMap({"wy-highlight": highlight})}
       @click=${(e: Event) => {
-        !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file);
+        !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file.id);
       }}
+      ${ref((el) => highlight && el?.scrollIntoView({ block: "nearest" }))}
     >
-      <td class="wy-table-cell-icon"><wy-icon name=${icon} size="24" kind=${file.kind} ext=${ext}></wy-icon></td>
+      <td class="wy-table-cell-icon"><wy-icon name=${icon} .overlayName=${provider} size="24" kind=${file.kind} ext=${ext}></wy-icon></td>
       <td>
         ${isRenaming
           ? html`

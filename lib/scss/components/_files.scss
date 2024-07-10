@@ -4,6 +4,7 @@
 @use "base/text";
 @use "base/breakpoints";
 @use "base/position";
+@use "base/highlight";
 @use "dropzone";
 
 .wy-truncated-text-and-icon {
@@ -60,6 +61,10 @@ wy-files-appbar {
     }
   }
 
+  tr { 
+    @include highlight.flash;
+  }
+
   // filename
   tr > :nth-child(2) {
     width: 100%;
@@ -70,32 +75,37 @@ wy-files-appbar {
   }
   // modified
   tr > :nth-child(3){
+    width: var.wy-rem(7);
+
     display: none;
     @include breakpoints.container-size-up(md) {
       display: table-cell;
     }    
 
-    width: var.wy-rem(7);
     @include text.truncate;
   }
   // kind
   tr > :nth-child(4) {
+    width: var.wy-rem(7.5);
+    text-align: right;
+
     display: none;
     @include breakpoints.container-size-up(md) {
       display: table-cell;
     }     
-    width: var.wy-rem(7.5);
-    text-align: right;
+
     @include text.truncate;
   }
   // size
   tr > :nth-child(5) {
+    width: var.wy-rem(7);
+    text-align: right;
+    
     display: none;
     @include breakpoints.container-size-up(sm) {
       display: table-cell;
     }    
-    width: var.wy-rem(7);
-    text-align: right;
+
     @include text.truncate;
   }
 }

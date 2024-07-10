@@ -21,7 +21,7 @@ export function createScroller(observeElement: Element, whenNext: () => Promise<
   if (getComputedStyle(parent).overflowAnchor !== "none") {
     parent.style.overflowAnchor = "none";
   }
-  
+
   // Bug using scrollingElement in frames. See https://github.com/w3c/IntersectionObserver/issues/372
   const intersectionParent = parent === document.documentElement ? document : parent;
 

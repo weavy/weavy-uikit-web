@@ -5,6 +5,8 @@ export function inputConsume(e: KeyboardEvent) {
 
 export function inputClearOnEscape(e: KeyboardEvent) {
   if (e.key === "Escape") {
+    e.preventDefault();
+    e.stopPropagation();
     (e.target as HTMLInputElement).value = "";
     (e.target as HTMLInputElement).dispatchEvent(new InputEvent("input", { data: '', inputType: 'deleteContent' }));
   }
@@ -12,6 +14,8 @@ export function inputClearOnEscape(e: KeyboardEvent) {
 
 export function inputBlurOnEscape(e: KeyboardEvent) {
   if (e.key === "Escape") {
+    e.preventDefault();
+    e.stopPropagation();
     (e.target as HTMLElement).blur();
     (e.target as HTMLElement).dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
     //console.log("I got my head checked. By a jumbo jet.");
@@ -30,13 +34,17 @@ export function inputConsumeWithBlurOnEscape(e: KeyboardEvent) {
   inputBlurOnEscape(e);
 }
 
-export function inputConsumeWithClearAndBlurOnEscape(e: KeyboardEvent) {
-  e.stopPropagation();
+export function inputClearAndBlurOnEscape(e: KeyboardEvent) {
   if ((e.target as HTMLInputElement).value) {
     inputClearOnEscape(e);
   } else {
     inputBlurOnEscape(e);
   }
+}
+
+export function inputConsumeWithClearAndBlurOnEscape(e: KeyboardEvent) {
+  e.stopPropagation();
+  inputClearAndBlurOnEscape(e);
 }
 
 export function clickOnEnter(e: KeyboardEvent) {

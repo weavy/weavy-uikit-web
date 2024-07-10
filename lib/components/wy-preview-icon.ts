@@ -4,6 +4,7 @@ import { localized, msg, str } from "@lit/localize";
 import { getProvider } from "../utils/files";
 import type { FileProviderType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import type { iconNamesType } from "../utils/icons";
 
 import "./wy-icon";
 
@@ -28,22 +29,18 @@ export class WyPreviewIcon extends LitElement {
   src!: string;
 
   @property()
-  icon!: string;
+  icon!: iconNamesType;
 
   @property()
   provider?: FileProviderType;
 
   override render() {
-    let icon = this.icon;
+    const icon = this.icon;
     const provider = getProvider(this.provider);
-
-    if (provider) {
-      icon = `${icon}+${provider}`;
-    }
 
     return html`
       <wy-icon-display>
-        <wy-icon name=${icon}></wy-icon>
+        <wy-icon name=${icon} .overlayName=${provider}></wy-icon>
         <span slot="text">
           ${this.provider
             ? html`

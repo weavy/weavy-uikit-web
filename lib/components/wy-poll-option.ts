@@ -1,6 +1,5 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { portal } from "lit-modal-portal";
 import chatCss from "../scss/all";
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
@@ -12,12 +11,12 @@ import "./wy-avatar";
 import "./wy-icon";
 import { WeavyContextProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-poll-option")
 @localized()
-export default class WyPollOption extends AppConsumerMixin(LitElement) {
+export default class WyPollOption extends BlockConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -31,15 +30,11 @@ export default class WyPollOption extends AppConsumerMixin(LitElement) {
   @state()
   private showSheet: boolean = false;
 
-  @state()
-  private sheetId: string = "";
-
   getVotesQuery = new QueryController<PollOptionType>(this);
 
   protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
     if (changedProperties.has("weavyContext") && this.weavyContext && this.option) {
       this.getVotesQuery.trackQuery(getVotesOptions(this.weavyContext, this.option.id!));
-      this.sheetId = "sheet-post-" + this.option.id;
     }
   }
 
@@ -85,39 +80,30 @@ export default class WyPollOption extends AppConsumerMixin(LitElement) {
           : nothing}
       </div>
 
-      ${this.weavyContext && this.settings
-        ? portal(
-            this.showSheet
-              ? html`
-                  <wy-sheet
-                    .show=${this.showSheet}
-                    .sheetId="${this.sheetId}"
-                    .contexts=${this.contexts}
-                    @close=${() => this.showSheet = false}
-                    @release-focus=${() =>
-                      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-                  >
-                    <span slot="appbar-text">${msg(str`Votes on ${this.option.text}`)}</span>
-                    <!-- <wy-spinner></wy-spinner> -->
-                    ${data && !isLoading
-                      ? html`
-                          ${data.votes?.data!.map(
-                            (vote) => html`
-                              <div class="wy-item">
-                                <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.display_name}></wy-avatar>
-                                <div class="wy-item-body">${vote.display_name}</div>
-                              </div>
-                            `
-                          )}
-                        `
-                      : nothing}
-                  </wy-sheet>
-                `
-              : nothing,
-              this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+      ${this.weavyContext
+        ? html`
+            <wy-sheet
+              .show=${this.showSheet}
+              @close=${() => (this.showSheet = false)}
+              @release-focus=${() =>
+                this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+            >
+              <span slot="appbar-text">${msg(str`Votes on ${this.option.text}`)}</span>
+              <!-- <wy-spinner></wy-spinner> -->
+              ${this.showSheet && data && !isLoading
+                ? html`
+                    ${data.votes?.data!.map(
+                      (vote) => html`
+                        <div class="wy-item">
+                          <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.display_name}></wy-avatar>
+                          <div class="wy-item-body">${vote.display_name}</div>
+                        </div>
+                      `
+                    )}
+                  `
+                : nothing}
+            </wy-sheet>
+          `
         : nothing}
     `;
   }

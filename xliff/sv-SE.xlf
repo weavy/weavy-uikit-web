@@ -159,14 +159,6 @@
         <source>Zoom meeting</source>
         <target state="">Zoom-möte</target>
       </trans-unit>
-      <trans-unit id="s48287bbcb6ba7b8d">
-        <source>Ended <x id="0" equiv-text="${dateFromNow}"/></source>
-        <target state="">Slutade <x id="0" equiv-text="${dateFromNow}"/></target>
-      </trans-unit>
-      <trans-unit id="s588f3ded8091c8c0">
-        <source>Play recording</source>
-        <target state="">Spela upp inspelning</target>
-      </trans-unit>
       <trans-unit id="s96cf128ca399b6fc">
         <source>Join meeting</source>
         <target state="">Gå med i möte</target>
@@ -479,6 +471,242 @@
       <trans-unit id="sbcf612e1db77bcec">
         <source>Make admin</source>
         <target>Sätt som admin</target>
+      </trans-unit>
+      <trans-unit id="sbcee3db8f10c0f9c">
+        <source><x id="0" equiv-text="${name}"/> added <x id="1" equiv-text="${fileName}"/> to <x id="2" equiv-text="${appName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> lade till <x id="1" equiv-text="${fileName}"/> till <x id="2" equiv-text="${appName}"/></target>
+      </trans-unit>
+      <trans-unit id="hd424f1e143fa57e9">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> added <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/> to <x id="2" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> lade till <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/> till <x id="2" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="sc02b2394071115dc">
+        <source><x id="0" equiv-text="${name}"/> edited <x id="1" equiv-text="${fileName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> redigerade <x id="1" equiv-text="${fileName}"/></target>
+      </trans-unit>
+      <trans-unit id="h01130b08c68f9a5e">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> edited <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> redigerade <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="s3732b439b691ea10">
+        <source><x id="0" equiv-text="${name}"/> commented on <x id="1" equiv-text="${fileName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> kommenterade på <x id="1" equiv-text="${fileName}"/></target>
+      </trans-unit>
+      <trans-unit id="hf66c4d1a8623e3f6">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> commented on <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> kommenterade på <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="h25b3f8f8b362512a">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> commented on <x id="1" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> kommenterade på <x id="1" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="s155459b88b1ea946">
+        <source><x id="0" equiv-text="${name}"/> replied to your post</source>
+        <target><x id="0" equiv-text="${name}"/> svarade på ditt inlägg</target>
+      </trans-unit>
+      <trans-unit id="hac73f0c2a8a81295">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> replied to your post</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> svarade på ditt inlägg</target>
+      </trans-unit>
+      <trans-unit id="sa03f857bf0a8da28">
+        <source><x id="0" equiv-text="${name}"/> replied to a post</source>
+        <target><x id="0" equiv-text="${name}"/> svarade på ett inlägg</target>
+      </trans-unit>
+      <trans-unit id="h4de4b38bbb77efd1">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> replied to a post</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> svarade på ett inlägg</target>
+      </trans-unit>
+      <trans-unit id="s89d4ec73de971102">
+        <source><x id="0" equiv-text="${name}"/> mentioned you in a comment</source>
+        <target><x id="0" equiv-text="${name}"/> nämnde dig i en kommentar</target>
+      </trans-unit>
+      <trans-unit id="h7dbb7ebbddd1e749">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> mentioned you in a comment</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> nämnde dig i en kommentar</target>
+      </trans-unit>
+      <trans-unit id="s8b635140729fa01d">
+        <source><x id="0" equiv-text="${name}"/> posted in <x id="1" equiv-text="${appName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> publicerade ett inlägg i <x id="1" equiv-text="${appName}"/></target>
+      </trans-unit>
+      <trans-unit id="hc347e1c50a2cbca3">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> posted in <x id="1" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> publicerade ett inlägg i <x id="1" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="s862e32090efc3ff3">
+        <source><x id="0" equiv-text="${name}"/> mentioned you in a post</source>
+        <target><x id="0" equiv-text="${name}"/> nämnde dig i ett inlägg</target>
+      </trans-unit>
+      <trans-unit id="h1c3b785e6e3a8e66">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> mentioned you in a post</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> nämnde dig i ett inlägg</target>
+      </trans-unit>
+      <trans-unit id="s705788463d78fe90">
+        <source>New message from <x id="0" equiv-text="${name}"/></source>
+        <target>Nytt meddelande från <x id="0" equiv-text="${name}"/></target>
+      </trans-unit>
+      <trans-unit id="h9ca2f3f1d2bab6a3">
+        <source>New message from <x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/></source>
+        <target>Nytt meddelande från <x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="s4985d93aab4206ee">
+        <source><x id="0" equiv-text="${name}"/> sent a message in <x id="1" equiv-text="${appName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> skickade ett meddelande i <x id="1" equiv-text="${appName}"/></target>
+      </trans-unit>
+      <trans-unit id="hd9c939638dd93e26">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> sent a message in <x id="1" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> skickade ett meddelande i <x id="1" equiv-text="&lt;strong&gt;${appName}&lt;/strong&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="s9ad031fe2ca83e58">
+        <source><x id="0" equiv-text="${name}"/> mentioned you in a message</source>
+        <target><x id="0" equiv-text="${name}"/> nämnde dig i ett meddelande</target>
+      </trans-unit>
+      <trans-unit id="h58b3d0836b9c096b">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> mentioned you in a message</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> nämnde dig i ett meddelande</target>
+      </trans-unit>
+      <trans-unit id="s49d5970ba2260205">
+        <source><x id="0" equiv-text="${name}"/> edited a post</source>
+        <target><x id="0" equiv-text="${name}"/> redigerade ett inlägg</target>
+      </trans-unit>
+      <trans-unit id="h553c0e517daf2138">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> edited a post</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> redigerade ett inlägg</target>
+      </trans-unit>
+      <trans-unit id="s400d02db3723548e">
+        <source><x id="0" equiv-text="${name}"/> liked <x id="1" equiv-text="${fileName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> gillade <x id="1" equiv-text="${fileName}"/></target>
+      </trans-unit>
+      <trans-unit id="hdf80c9b60917645e">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> liked <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> gillade <x id="1" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="sde63c2e93c5e1d54">
+        <source><x id="0" equiv-text="${name}"/> reacted <x id="1" equiv-text="${reaction}"/> to <x id="2" equiv-text="${fileName}"/></source>
+        <target><x id="0" equiv-text="${name}"/> reagerade med <x id="1" equiv-text="${reaction}"/> på <x id="2" equiv-text="${fileName}"/></target>
+      </trans-unit>
+      <trans-unit id="h38e95b7f86619e86">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reacted <x id="1" equiv-text="${reaction}"/> to <x id="2" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reagerade med <x id="1" equiv-text="${reaction}"/> på <x id="2" equiv-text="&lt;em&gt;${fileName}&lt;/em&gt;"/></target>
+      </trans-unit>
+      <trans-unit id="seb5b50de97156156">
+        <source><x id="0" equiv-text="${name}"/> liked your comment</source>
+        <target><x id="0" equiv-text="${name}"/> gillade din kommentar</target>
+      </trans-unit>
+      <trans-unit id="hec9260735fe49119">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> liked your comment</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> gillade din kommentar</target>
+      </trans-unit>
+      <trans-unit id="s9d791f9471ce2450">
+        <source><x id="0" equiv-text="${name}"/> reacted <x id="1" equiv-text="${reaction}"/> to your comment</source>
+        <target><x id="0" equiv-text="${name}"/> reagerade med <x id="1" equiv-text="${reaction}"/> på din kommentar</target>
+      </trans-unit>
+      <trans-unit id="h9c07a82c6eebf5c1">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reacted <x id="1" equiv-text="${reaction}"/> to your comment</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reagerade med <x id="1" equiv-text="${reaction}"/> på din kommentar</target>
+      </trans-unit>
+      <trans-unit id="sc415bef8633075ec">
+        <source><x id="0" equiv-text="${name}"/> liked your message</source>
+        <target><x id="0" equiv-text="${name}"/> gillade ditt meddelande</target>
+      </trans-unit>
+      <trans-unit id="hcb4eab821844b51b">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> liked your message</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> gillade ditt meddelande</target>
+      </trans-unit>
+      <trans-unit id="se687fac361e868f6">
+        <source><x id="0" equiv-text="${name}"/> reacted <x id="1" equiv-text="${reaction}"/> to your message</source>
+        <target><x id="0" equiv-text="${name}"/> reagerade med <x id="1" equiv-text="${reaction}"/> på ditt meddelande</target>
+      </trans-unit>
+      <trans-unit id="hdaefe9c8c54b22f3">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reacted <x id="1" equiv-text="${reaction}"/> to your message</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reagerade med <x id="1" equiv-text="${reaction}"/> på ditt meddelande</target>
+      </trans-unit>
+      <trans-unit id="s8f5a7ee3698b3a1f">
+        <source><x id="0" equiv-text="${name}"/> liked your post</source>
+        <target><x id="0" equiv-text="${name}"/> gillade ditt inlägg</target>
+      </trans-unit>
+      <trans-unit id="he6123e657aaaff16">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> liked your post</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> gillade ditt inlägg</target>
+      </trans-unit>
+      <trans-unit id="s84c4982a56c56159">
+        <source><x id="0" equiv-text="${name}"/> reacted <x id="1" equiv-text="${reaction}"/> to your post</source>
+        <target><x id="0" equiv-text="${name}"/> reagerade med <x id="1" equiv-text="${reaction}"/> på ditt inlägg</target>
+      </trans-unit>
+      <trans-unit id="h9103c911268b0c9e">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reacted <x id="1" equiv-text="${reaction}"/> to your post</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> reagerade med <x id="1" equiv-text="${reaction}"/> på ditt inlägg</target>
+      </trans-unit>
+      <trans-unit id="s19a7a03b4b8cfd32">
+        <source><x id="0" equiv-text="${name}"/> voted on your poll</source>
+        <target><x id="0" equiv-text="${name}"/> röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="hb7e18fe8a4d7621d">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> voted on your poll</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="s34ca77bbc683247b">
+        <source><x id="0" equiv-text="${name1}"/> and <x id="1" equiv-text="${name2}"/> voted on your poll</source>
+        <target><x id="0" equiv-text="${name1}"/> och <x id="1" equiv-text="${name2}"/> röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="h806676f9cb17dc43">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name1}&lt;/strong&gt;"/> and <x id="1" equiv-text="&lt;strong&gt;${name2}&lt;/strong&gt;"/> voted on your poll</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name1}&lt;/strong&gt;"/> och <x id="1" equiv-text="&lt;strong&gt;${name2}&lt;/strong&gt;"/> röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="sc68f2f748870a6eb">
+        <source><x id="0" equiv-text="${name1}"/>, <x id="1" equiv-text="${name2}"/> and <x id="2" equiv-text="${name3}"/> voted on your poll</source>
+        <target><x id="0" equiv-text="${name1}"/>, <x id="1" equiv-text="${name2}"/> och <x id="2" equiv-text="${name3}"/> röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="hd101f9562d8144ba">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name1}&lt;/strong&gt;"/>, <x id="1" equiv-text="&lt;strong&gt;${name2}&lt;/strong&gt;"/> and <x id="2" equiv-text="&lt;strong&gt;${name3}&lt;/strong&gt;"/> voted on your poll</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name1}&lt;/strong&gt;"/>, <x id="1" equiv-text="&lt;strong&gt;${name2}&lt;/strong&gt;"/> och <x id="2" equiv-text="&lt;strong&gt;${name3}&lt;/strong&gt;"/> röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="s6eb27836e516576a">
+        <source><x id="0" equiv-text="${name}"/> and <x id="1" equiv-text="${count}"/> others voted on your poll</source>
+        <target><x id="0" equiv-text="${name}"/> och <x id="1" equiv-text="${count}"/> andra röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="heea6eb8beac3fd2f">
+        <source><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> and <x id="1" equiv-text="${count}"/> others voted on your poll</source>
+        <target><x id="0" equiv-text="&lt;strong&gt;${name}&lt;/strong&gt;"/> och <x id="1" equiv-text="${count}"/> andra röstade i din omröstning</target>
+      </trans-unit>
+      <trans-unit id="s5be3c6d61cd9182f">
+        <source>Notifications</source>
+        <target>Notifieringar</target>
+      </trans-unit>
+      <trans-unit id="sf8e156354e5bacb8">
+        <source>Activities</source>
+        <target>Aktiviteter</target>
+      </trans-unit>
+      <trans-unit id="s4880dc3125543292">
+        <source>Mentions</source>
+        <target>Omnämnanden</target>
+      </trans-unit>
+      <trans-unit id="se47f210d062e8068">
+        <source>No updates yet.</source>
+        <target>Inga uppdateringar ännu.</target>
+      </trans-unit>
+      <trans-unit id="sfeddbc6c931b7ad7">
+        <source>Mark all as read</source>
+        <target>Markera alla som lästa</target>
+      </trans-unit>
+      <trans-unit id="s72180ed8bd45fa30">
+        <source>Teams meeting</source>
+        <target>Teams-möte</target>
+      </trans-unit>
+      <trans-unit id="s75d8b6d20cb17169">
+        <source>Google Meet</source>
+        <target>Google Meet</target>
+      </trans-unit>
+      <trans-unit id="sff2f8a87373e1d2a">
+        <source>Meeting ended</source>
+        <target>Mötet avslutades</target>
+      </trans-unit>
+      <trans-unit id="s1302c950c73f84cd">
+        <source>Microsoft Teams</source>
+        <target>Microsoft Teams</target>
+      </trans-unit>
+      <trans-unit id="s7c23790a4d2b3420">
+        <source>You are not subscribed to updates yet.</source>
+        <target>Du prenumererar inte på uppdateringar ännu.</target>
       </trans-unit>
     </body>
   </file>

@@ -3,25 +3,24 @@ import { customElement, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { portal } from "lit-modal-portal";
 import WeavyPostal from "../utils/postal-parent";
 import type { ExternalBlobType } from "../types/files.types";
-import type WeavyOverlay from "./wy-overlay";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 
 import cloudFilesCss from "../scss/all";
 
 import "./wy-overlay";
 import "./wy-spinner";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import WyOverlay from "./wy-overlay";
 
 @customElement("wy-cloud-files")
 @localized()
-export default class WyCloudFiles extends AppConsumerMixin(LitElement) {
+export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
   static override styles = cloudFilesCss;
 
   protected exportParts = new ShadowPartsController(this);
-  
+
   @state()
   src?: URL;
 
@@ -34,7 +33,7 @@ export default class WyCloudFiles extends AppConsumerMixin(LitElement) {
   private isRegistered = false;
 
   private iframeElementRef: Ref<HTMLIFrameElement> = createRef();
-  private overlayRef: Ref<WeavyOverlay> = createRef();
+  private overlayRef: Ref<WyOverlay> = createRef();
 
   open() {
     this.showOverlay = true;
@@ -147,36 +146,32 @@ export default class WyCloudFiles extends AppConsumerMixin(LitElement) {
   }
 
   override render() {
-    if (!this.weavyContext || !this.settings) {
+    if (!this.weavyContext) {
       return nothing;
     }
 
-    return portal(
-          this.showOverlay
-            ? html`
-                <wy-overlay
-                  .contexts=${this.contexts}
-                  ${ref(this.overlayRef)}
-                  @close=${() => this.close()}
-                  @release-focus=${() =>
-                    this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-                >
-                  <wy-spinner overlay ?hidden=${this.iframeVisible}></wy-spinner>
-                  <iframe
-                    ${ref(this.iframeElementRef)}
-                    @load=${() => (this.iframeVisible = true)}
-                    src=${ifDefined(this.src?.toString())}
-                    style="flex: 1 1 100%; border: 0;"
-                    id="weavy-filebrowser"
-                    name="weavy-filebrowser"
-                    title=${msg("Cloud File Browser")}
-                  ></iframe>
-                </wy-overlay>
-              `
-            : nothing,
-            this.settings.submodals || this.weavyContext.modalRoot === undefined
-            ? this.settings.component.renderRoot
-            : this.weavyContext.modalRoot
-        )
+    return html`
+      <wy-overlay
+        .show=${this.showOverlay}
+        ${ref(this.overlayRef)}
+        @close=${() => this.close()}
+        @release-focus=${() => this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+      >
+        ${this.showOverlay
+          ? html`
+              <wy-spinner overlay ?hidden=${this.iframeVisible}></wy-spinner>
+              <iframe
+                ${ref(this.iframeElementRef)}
+                @load=${() => (this.iframeVisible = true)}
+                src=${ifDefined(this.src?.toString())}
+                style="flex: 1 1 100%; border: 0;"
+                id="weavy-filebrowser"
+                name="weavy-filebrowser"
+                title=${msg("Cloud File Browser")}
+              ></iframe>
+            `
+          : nothing}
+      </wy-overlay>
+    `;
   }
 }

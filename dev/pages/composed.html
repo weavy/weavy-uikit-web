@@ -34,9 +34,9 @@
         reactions: ["👍", "❤️", "😂", "😒", "😁"],
         confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
         confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
-        modalParent: ""
       });
 
+      //weavy.notificationToasts = true;
       weavy.locales = [["sv-SE", svSE]];
       weavy.locale = "sv-SE";
       weavy.tokenFactory = async (refresh) => {
@@ -49,7 +49,39 @@
           throw new Error("Could not get access token from server!");
         }
       };
-      //weavy.modalParent = "html";
+
+      let linkWindow;
+
+      document.addEventListener("wy:link", (e) => {
+        const appType = e.detail.app.type;
+        const appUid = e.detail.app.uid;
+        const contextualPrefix = "acme-";
+        let linkUrl;
+
+        if (appType) {
+          linkUrl = new URL("./messenger.html", window.location);
+
+        } else if (appUid && appUid.startsWith(contextualPrefix)) {
+          const pageName = appUid.substring(contextualPrefix.length);
+          linkUrl = new URL(`./${pageName}.html`, window.location);
+        }
+
+        window.location = linkUrl;
+
+        /*if (linkUrl) {
+          if (linkWindow && !linkWindow.closed) {
+            if (linkWindow.location.href !== linkUrl.href) {
+              linkWindow.location.href = linkUrl.href;
+            }
+            linkWindow.focus()
+          } else {
+            linkWindow = window.open(linkUrl, "wy-link");
+          }
+        }*/
+      });
+      console.log("init done")
+
+      globalThis.weavy = weavy;
     </script>
   </head>
   <body>
@@ -59,5 +91,6 @@
       <wy-files uid="acme-files" style="max-width: 33vw"></wy-files>
     </div>
     <tanstack-dev-tools buttonPosition="bottom-right"></tanstack-dev-tools>
+    <wy-notification-toasts></wy-notification-toasts>
   </body>
 </html>

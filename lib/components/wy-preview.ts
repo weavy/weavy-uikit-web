@@ -6,15 +6,14 @@ import type { FilesResultType, FileType } from "../types/files.types";
 import type { AppType } from "../types/app.types";
 
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
-import { portal } from "lit-modal-portal";
 import { localized, msg } from "@lit/localize";
 import type { UserType } from "../types/users.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { SwipeScrollController } from "../controllers/swipe-scroll-controller";
 import { repeat } from "lit/directives/repeat.js";
 import { PersistStateController } from "../controllers/persist-state-controller";
-import { HistoryController } from "../controllers/history-controller";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+//import { HistoryController } from "../controllers/history-controller";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-button";
@@ -26,17 +25,16 @@ import "./wy-preview-item";
 import "./wy-file-menu";
 import "./wy-comment-list";
 import "./wy-file-versions";
-import "./wy-portal";
 
 import allCss from "../scss/all";
 
 @customElement("wy-preview")
 @localized()
-export default class WyPreview extends AppConsumerMixin(LitElement) {
+export default class WyPreview extends BlockConsumerMixin(LitElement) {
   static override styles = [allCss];
 
   protected exportParts = new ShadowPartsController(this);
-  
+
   @property()
   uid: string = "preview";
 
@@ -86,7 +84,7 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
   sidePanelMaximized = false;
 
   private persistState = new PersistStateController<this>(this);
-  private history = new HistoryController<this>(this);
+  //private history = new HistoryController<this>(this);
 
   previewFileRef: Ref<Element> = createRef();
 
@@ -100,32 +98,25 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
   private disableSwipeScroll = false;
   private disableSwipeScrollTimeout?: number;
 
-  open(file?: FileType, fileList?: FileType[], uid?: string) {
-    //console.log('open', file, fileList)
+  async open(fileId: number, showTab?: "comments" | "versions") {
+    //console.log('open', fileId, showTab)
 
-    if (fileList) {
-      // Note: this is not updated on change
-      this.files = fileList;
+    await this.whenApp();
+    await this.updateComplete;
+
+    if (fileId) {
+      this.currentId = fileId;
     }
 
-    if (file) {
-      this.currentId = file.id;
-    }
-
-    if (uid) {
-      this.uid = uid;
+    if (showTab) {
+      this.toggleSidebarTab(showTab, true)
     }
 
     this.showOverlay = true;
   }
 
   close() {
-    //console.log('close')
-    if (this.history.hasBackNavigation) {
-      this.history.backAll();
-    } else {
-      this.showOverlay = false;
-    }
+    this.showOverlay = false;
   }
 
   toggleSidebarTab(tab?: "comments" | "versions", state?: boolean) {
@@ -214,10 +205,10 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
         this.versionsOpen = false;
       }
 
-      this.history.observe(
+      /*this.history.observe(
         ["showOverlay", "currentFile", "versionFile"],
         `${this.app.type}-${this.app.id.toString()}-${this.uid}}`
-      );
+      );*/
     }
 
     if (changedProperties.has("queryResult") && this.queryResult) {
@@ -234,7 +225,7 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
     }
 
     if (changedProperties.has("currentFile") && this.currentFile) {
-      if(this.currentFile.id !== this.currentId) {
+      if (this.currentFile.id !== this.currentId) {
         this.currentId = this.currentFile.id;
       }
     }
@@ -296,12 +287,10 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
         <div class="wy-appbar-text ${classMap(headerTextClasses)}">
           ${activeFile ? html` <span>${activeFile.name}</span> ` : nothing}
         </div>
-        <div class="wy-appbar-buttons">
+        <div class="wy-appbar-buttons wy-appbar-buttons-last">
           ${activeFile
             ? html`
-                ${activeFile.id >= 1 &&
-                !this.isAttachment &&
-                this.hasFeatures?.comments
+                ${activeFile.id >= 1 && !this.isAttachment && this.hasFeatures?.comments
                   ? html`
                       <wy-button
                         kind="icon"
@@ -315,16 +304,12 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
                                 <wy-icon name="comment" layer state ?active=${this.commentsOpen}></wy-icon>`
                             : html`<wy-icon name="comment-outline" state ?active=${!this.commentsOpen}></wy-icon>
                                 <wy-icon name="comment" layer state ?active=${this.commentsOpen}></wy-icon>`}
-                          </wy-icon-stack>
+                        </wy-icon-stack>
                       </wy-button>
                     `
                   : nothing}
-                <wy-file-menu
-                  .file=${activeFile}
-                >
-                  ${activeFile.id >= 1 &&
-                  !this.isAttachment &&
-                  this.hasFeatures?.versions
+                <wy-file-menu .file=${activeFile}>
+                  ${activeFile.id >= 1 && !this.isAttachment && this.hasFeatures?.versions
                     ? html`
                         <wy-dropdown-item
                           ?active=${this.versionsOpen}
@@ -366,158 +351,147 @@ export default class WyPreview extends AppConsumerMixin(LitElement) {
       "wy-preview-swiper-disabled": this.disableSwipeScroll,
     };
 
-    if (!this.weavyContext || !this.settings) {
+    if (!this.weavyContext) {
       return nothing;
     }
 
-    const previewOverlay = this.showOverlay
-      ? html`
-          <wy-overlay
-            class="wy-dark"
-            maximized
-            .contexts=${this.contexts}
-            .open=${this.showOverlay}
-            @keyup=${this.handleKeys}
-            @close=${() => this.close()}
-            @release-focus=${() =>
-              this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-          >
-            ${this.renderHeader(this.currentFile)}
+    return html`
+      <wy-overlay
+        class="wy-dark"
+        maximized
+        .show=${this.showOverlay}
+        @close=${() => {this.showOverlay = false}}
+        @release-focus=${() => this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+      >
+        ${this.showOverlay
+          ? html`
+              ${this.renderHeader(this.currentFile)}
 
-            <div class="wy-main">
-              <aside
-                id="tab-comments"
-                class="wy-sidebar ${classMap({
-                  "wy-active": this.commentsOpen,
-                  "wy-maximized": this.sidePanelMaximized,
-                })}"
-                ?hidden=${!this.commentsOpen}
-              >
-                <nav class="wy-item">
-                  <div class="wy-item-body">
-                    <div class="wy-item-title">${msg("Comments")}</div>
-                  </div>
-                  <wy-button kind="icon" @click=${() => this.toggleSidebarTab("comments", false)}>
-                    <wy-icon name="close"></wy-icon>
-                  </wy-button>
-                  <button
-                    @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
-                    class="wy-sidebar-handle"
-                    title=${this.sidePanelMaximized ? msg("Restore side panel") : msg("Maximize side panel")}
-                  ></button>
-                </nav>
-                <div class="wy-pane wy-scroll-y">
-                  ${this.commentsOpen && this.currentFile && this.currentFile.id >= 1 && this.app && this.user
-                    ? html`
-                        <wy-comment-list
-                          .parentId=${this.currentFile.id}
-                          .location=${"files"}
-                        ></wy-comment-list>
-                      `
-                    : nothing}
-                </div>
-              </aside>
-              <aside
-                id="tab-versions"
-                class="wy-sidebar ${classMap({
-                  "wy-active": this.versionsOpen,
-                  "wy-maximized": this.sidePanelMaximized,
-                })}"
-                ?hidden=${!this.versionsOpen}
-              >
-                <nav class="wy-item">
-                  <div class="wy-item-body">
-                    <div class="wy-item-title">${msg("Versions")}</div>
-                  </div>
-                  <wy-button kind="icon" @click=${() => this.toggleSidebarTab("versions", false)}>
-                    <wy-icon name="close"></wy-icon>
-                  </wy-button>
-                  <button
-                    @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
-                    class="wy-sidebar-handle"
-                    title=${this.sidePanelMaximized ? msg("Restore side panel") : msg("Maximize side panel")}
-                  ></button>
-                </nav>
-                <div class="wy-pane wy-scroll-y">
-                  <div class="wy-pane-body">
-                    ${this.versionsOpen && this.currentFile && this.app
+              <div class="wy-main">
+                <aside
+                  id="tab-comments"
+                  class="wy-sidebar ${classMap({
+                    "wy-active": this.commentsOpen,
+                    "wy-maximized": this.sidePanelMaximized,
+                  })}"
+                  ?hidden=${!this.commentsOpen}
+                >
+                  <nav class="wy-item">
+                    <div class="wy-item-body">
+                      <div class="wy-item-title">${msg("Comments")}</div>
+                    </div>
+                    <wy-button kind="icon" @click=${() => this.toggleSidebarTab("comments", false)}>
+                      <wy-icon name="close"></wy-icon>
+                    </wy-button>
+                    <button
+                      @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
+                      class="wy-sidebar-handle"
+                      title=${this.sidePanelMaximized ? msg("Restore side panel") : msg("Maximize side panel")}
+                    ></button>
+                  </nav>
+                  <div class="wy-pane wy-scroll-y">
+                    ${this.commentsOpen && this.currentFile && this.currentFile.id >= 1 && this.app && this.user
                       ? html`
-                          <wy-file-versions
-                            .file=${this.currentFile}
-                            .activeVersion=${this.versionFile || this.currentFile}
-                            @file-version-select=${(e: CustomEvent) => this.handleVersionFile(e)}
-                          ></wy-file-versions>
+                          <wy-comment-list .parentId=${this.currentFile.id} .location=${"files"}></wy-comment-list>
                         `
                       : nothing}
                   </div>
-                </div>
-              </aside>
-
-              <div class="wy-preview">
-                <div ${ref(this.swipeScrollRef)} class="wy-preview-swiper ${classMap(previewSwiperClasses)}">
-                  ${repeat(
-                    previewFiles,
-                    (previewFile) => "preview-area-" + previewFile?.id,
-                    (previewFile) => {
-                      const previewFileRef =
-                        previewFile === currentPreviewFile
-                          ? this.currentPreviewFileCallback
-                          : previewFile === this.nextFile
-                          ? this.nextRef
-                          : previewFile === this.previousFile
-                          ? this.prevRef
-                          : undefined;
-
-                      return previewFile
+                </aside>
+                <aside
+                  id="tab-versions"
+                  class="wy-sidebar ${classMap({
+                    "wy-active": this.versionsOpen,
+                    "wy-maximized": this.sidePanelMaximized,
+                  })}"
+                  ?hidden=${!this.versionsOpen}
+                >
+                  <nav class="wy-item">
+                    <div class="wy-item-body">
+                      <div class="wy-item-title">${msg("Versions")}</div>
+                    </div>
+                    <wy-button kind="icon" @click=${() => this.toggleSidebarTab("versions", false)}>
+                      <wy-icon name="close"></wy-icon>
+                    </wy-button>
+                    <button
+                      @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
+                      class="wy-sidebar-handle"
+                      title=${this.sidePanelMaximized ? msg("Restore side panel") : msg("Maximize side panel")}
+                    ></button>
+                  </nav>
+                  <div class="wy-pane wy-scroll-y">
+                    <div class="wy-pane-body">
+                      ${this.versionsOpen && this.currentFile && this.app
                         ? html`
-                            <div
-                              id="preview-${previewFile.id}"
-                              ${ref(previewFileRef)}
-                              class="wy-preview-area wy-scroll-y wy-scroll-x"
-                            >
-                              ${!isPending
-                                ? html` <wy-preview-item .file=${previewFile}></wy-preview-item> `
-                                : html` <wy-spinner overlay></wy-spinner> `}
-                            </div>
-                          `
-                        : nothing;
-                    }
-                  )}
-                </div>
-                ${this.currentFile
-                  ? html`
-                      ${this.previousFile
-                        ? html`
-                            <nav class="wy-nav-prev">
-                              <wy-button kind="icon" @click=${() => this.scrollToPrev()}>
-                                <wy-icon name="previous"></wy-icon>
-                              </wy-button>
-                            </nav>
+                            <wy-file-versions
+                              .file=${this.currentFile}
+                              .activeVersion=${this.versionFile || this.currentFile}
+                              @file-version-select=${(e: CustomEvent) => this.handleVersionFile(e)}
+                            ></wy-file-versions>
                           `
                         : nothing}
-                      ${this.nextFile
-                        ? html`
-                            <nav class="wy-nav-next">
-                              <wy-button kind="icon" @click=${() => this.scrollToNext()}>
-                                <wy-icon name="next"></wy-icon>
-                              </wy-button>
-                            </nav>
-                          `
-                        : nothing}
-                    `
-                  : nothing}
+                    </div>
+                  </div>
+                </aside>
+
+                <div class="wy-preview">
+                  <div ${ref(this.swipeScrollRef)} class="wy-preview-swiper ${classMap(previewSwiperClasses)}">
+                    ${repeat(
+                      previewFiles,
+                      (previewFile) => "preview-area-" + previewFile?.id,
+                      (previewFile) => {
+                        const previewFileRef =
+                          previewFile === currentPreviewFile
+                            ? this.currentPreviewFileCallback
+                            : previewFile === this.nextFile
+                            ? this.nextRef
+                            : previewFile === this.previousFile
+                            ? this.prevRef
+                            : undefined;
+
+                        return previewFile
+                          ? html`
+                              <div
+                                id="preview-${previewFile.id}"
+                                ${ref(previewFileRef)}
+                                class="wy-preview-area wy-scroll-y wy-scroll-x"
+                              >
+                                ${!isPending
+                                  ? html` <wy-preview-item .file=${previewFile}></wy-preview-item> `
+                                  : html` <wy-spinner overlay></wy-spinner> `}
+                              </div>
+                            `
+                          : nothing;
+                      }
+                    )}
+                  </div>
+                  ${this.currentFile
+                    ? html`
+                        ${this.previousFile
+                          ? html`
+                              <nav class="wy-nav-prev">
+                                <wy-button kind="icon" @click=${() => this.scrollToPrev()}>
+                                  <wy-icon name="previous"></wy-icon>
+                                </wy-button>
+                              </nav>
+                            `
+                          : nothing}
+                        ${this.nextFile
+                          ? html`
+                              <nav class="wy-nav-next">
+                                <wy-button kind="icon" @click=${() => this.scrollToNext()}>
+                                  <wy-icon name="next"></wy-icon>
+                                </wy-button>
+                              </nav>
+                            `
+                          : nothing}
+                      `
+                    : nothing}
+                </div>
               </div>
-            </div>
-          </wy-overlay>
-        `
-      : nothing;
-
-    return portal(
-      previewOverlay,
-      this.settings.submodals || this.weavyContext.modalRoot === undefined
-        ? this.settings.component.renderRoot
-        : this.weavyContext.modalRoot
-    );
+            `
+          : nothing}
+      </wy-overlay>
+    `;
   }
 
   override updated() {

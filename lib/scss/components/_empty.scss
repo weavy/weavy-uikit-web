@@ -1,3 +1,5 @@
+@use "./base/var";
+
 .wy-empty {
     display: flex;
     align-items: center;
@@ -5,4 +7,6 @@
     flex: 1;
     min-width: 0;
     position: relative;
+    flex-direction: column;
+    gap: var.default(--wy-gap-lg);
 }

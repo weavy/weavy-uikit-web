@@ -1,10 +1,17 @@
 @use "base/var";
 
 .wy-meeting {
-  flex: 1 1 100%;
-  align-items: flex-start;
-}
+  .wy-item-title {
+    font-weight: bold;
+  }
 
-.wy-meeting-actions {
-    margin-top: var.wy-rem(.5);
+  .wy-item-text {
+    font-size: var.default(--wy-font-size);
+  }
+
+  &.wy-disabled {
+    .wy-item-title {
+      font-weight: normal;
+    }
+  }
 }

@@ -17,7 +17,7 @@ import bouncerCss from "../scss/wrappers/bouncer";
 import "./wy-avatar";
 
 @customElement("wy-message-typing")
-export default class WyTyping extends LitElement {
+export default class WyMessageTyping extends LitElement {
   static override styles = [rebootCss, bouncerCss, messagesCss];
 
   protected exportParts = new ShadowPartsController(this);

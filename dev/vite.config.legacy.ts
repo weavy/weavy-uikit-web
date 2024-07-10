@@ -100,6 +100,13 @@ export default defineConfig(({ mode }) => {
         ],
         output: [
           {
+            format: "esm",
+            entryFileNames: "weavy.esm.bundle.js",
+            minifyInternalExports: false,
+            preserveModules: false,
+            inlineDynamicImports: true,
+          },
+          {
             format: "umd",
             entryFileNames: "weavy.js",
             minifyInternalExports: false,

@@ -1,0 +1,18 @@
+/** 
+ Definitions for css variables.
+ These need to be available globally outside any component.
+ Mandatory to be able to animate/transition css variables smoothly.
+ @see https://developer.mozilla.org/en-US/docs/Web/API/CSS_Properties_and_Values_API
+*/
+
+@property --wy-component-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --wy-component-background-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}

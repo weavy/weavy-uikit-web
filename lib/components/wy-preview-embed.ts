@@ -5,6 +5,7 @@ import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type { FileProviderType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import type { iconNamesType } from "../utils/icons";
 
 import "./wy-spinner";
 import "./wy-preview-icon";
@@ -33,7 +34,7 @@ export class WyPreviewEmbed extends LitElement {
   name!: string;
 
   @property()
-  icon!: string;
+  icon!: iconNamesType;
 
   @property()
   provider?: FileProviderType;

@@ -1,20 +1,21 @@
 import { ConversationTypeGuid } from "./conversations.types";
+import { MetadataType, TagsType } from "./lists.types";
 import { MembersResultType } from "./members.types";
 //import { UserType } from "./users.types";
 
 export type AppType = {
   id: number;
-  type: AppTypeGuid | ConversationTypeGuid;
-  access: AccessType,
-  permissions: PermissionType[],
+  type: ContextualTypeGuids | ConversationTypeGuid;
+  access: AccessTypes;
+  permissions: PermissionTypes[];
   uid: string;
   display_name: string;
   name: string;
   description: string;
   archive_url: string;
   avatar_url: string;
-  metadata?: { [key: string]: unknown };
-  tags?: string[];
+  metadata?: MetadataType;
+  tags?: TagsType;
   created_at: string;
   updated_at?: string;
   members: MembersResultType;
@@ -24,42 +25,50 @@ export type AppType = {
 };
 
 export type AppRef = {
-  id: number,
-  uid?: string
+  id: number;
+  uid?: string;
+  type?: AppType["type"]; // client side addition
 };
 
-export enum AccessType {
+export type AppUpProperties = {
+  access?: AccessTypes;
+  directory?: string;
+  name?: string;
+  description?: string;
+  metadata?: MetadataType;
+  picture?: string;
+  tags?: TagsType;
+};
+
+export type AppInProperties = AppUpProperties & {
+  type: ContextualTypeGuids
+}
+
+export enum AccessTypes {
   None = "none",
   Read = "read",
   Write = "write",
   Admin = "admin",
-} 
+}
 
-export enum PermissionType {
+export enum PermissionTypes {
   List = "list",
   Read = "read",
-  Create = "create",  
+  Create = "create",
   Update = "update",
   Delete = "delete",
   Admin = "admin",
 }
 
-export enum ContextualAppTypes {
+export enum ContextualTypes {
+  Unknown = "unknown", // (readonly)
   Chat = "chat",
   Comments = "comments",
   Files = "files",
   Posts = "posts",
 }
 
-export enum AppTypes {
-  Chat = "chat",
-  Comments = "comments",
-  Files = "files",
-  Messenger = "messenger",
-  Posts = "posts",
-}
-
-export enum AppTypeGuid {
+export enum ContextualTypeGuids {
   Chat = "d65dd4bc-418e-403c-9f56-f9cf4da931ed",
   Comments = "88f96a08-c6c1-4eac-a0bd-5bf8fba1a3fd",
   Files = "523edd88-4bbf-4547-b60f-2859a6d2ddc1",
@@ -78,6 +87,6 @@ export enum EntityTypes {
 export type EntityType = {
   id: number;
   type: EntityTypes;
+  app?: AppRef;
+  parent?: EntityType;
 };
-
-//export type ConversationAppType = typeof ConversationTypes[keyof typeof ConversationTypes]

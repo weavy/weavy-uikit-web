@@ -1,4 +1,4 @@
 import { unsafeCSS } from "lit";
 import allCss from "./all.scss?inline";
-const all = unsafeCSS(allCss);
-export default all;
+const allStyles = unsafeCSS(allCss);
+export default allStyles;

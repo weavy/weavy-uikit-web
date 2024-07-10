@@ -215,74 +215,76 @@ export function updateQueryData<TDataItem extends PlainObjectType>(
     | InfiniteQueryResultType<TDataItem>
     | QueryResultType<TDataItem>
     | undefined,
-  select: number | ((item: TDataItem & PlainObjectType) => boolean),
-  fnUpdater: Function
+  select: number | ((item: TDataItem & PlainObjectType) => boolean) | undefined,
+  fnUpdater: (item: TDataItem & PlainObjectType) => void
 ) {
-  if (select !== undefined) {
-    const predicate = select instanceof Function ? select : (item: TDataItem & PlainObjectType) => item.id === select;
+  const predicate =
+    select === undefined
+      ? () => true
+      : select instanceof Function
+      ? select
+      : (item: TDataItem & PlainObjectType) => item.id === select;
 
-    if (queryData) {
-      // True immutable copy
-      queryData = JSON.parse(JSON.stringify(queryData));
+  if (queryData) {
+    // True immutable copy
+    queryData = JSON.parse(JSON.stringify(queryData));
 
-      if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages) {
-        const newPagesArray =
-          (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages.map((page) => {
-            // update item
-            if (page.data) {
-              page.data = [
-                ...page.data.map((item) => {
-                  if (predicate(item)) {
-                    item = { ...item }; // Immutable copy
-                    fnUpdater(item);
-                  }
-                  return item;
-                }),
-              ];
-            }
+    if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages) {
+      const newPagesArray =
+        (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages.map((page) => {
+          // update item
+          if (page.data) {
+            page.data = [
+              ...page.data.map((item) => {
+                if (predicate(item)) {
+                  item = { ...item }; // Immutable copy
+                  fnUpdater(item);
+                }
+                return item;
+              }),
+            ];
+          }
 
-            return page;
-          }) ?? [];
+          return page;
+        }) ?? [];
 
-        return {
-          pages: newPagesArray,
-          pageParams: (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pageParams,
-        };
-      } else if ((queryData as QueryResultType<TDataItem>).data?.length) {
-        return {
-          ...queryData,
-          data: [
-            ...((queryData as QueryResultType<TDataItem>).data?.map((item) => {
-              if (predicate(item)) {
-                item = { ...item }; // Immutable copy
-                fnUpdater(item);
-              }
-              return item;
-            }) || []),
-          ],
-        };
-      } else if ((queryData as InfiniteQueryResultType<TDataItem>).data) {
-        const newData = [
-          ...(queryData as InfiniteQueryResultType<TDataItem> & { data: [] }).data.map((item) => {
+      return {
+        pages: newPagesArray,
+        pageParams: (queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pageParams,
+      };
+    } else if ((queryData as QueryResultType<TDataItem>).data?.length) {
+      return {
+        ...queryData,
+        data: [
+          ...((queryData as QueryResultType<TDataItem>).data?.map((item) => {
             if (predicate(item)) {
               item = { ...item }; // Immutable copy
               fnUpdater(item);
             }
             return item;
-          }),
-        ];
+          }) || []),
+        ],
+      };
+    } else if ((queryData as InfiniteQueryResultType<TDataItem>).data) {
+      const newData = [
+        ...(queryData as InfiniteQueryResultType<TDataItem> & { data: [] }).data.map((item) => {
+          if (predicate(item)) {
+            item = { ...item }; // Immutable copy
+            fnUpdater(item);
+          }
+          return item;
+        }),
+      ];
 
-        return {
-          data: newData,
-          count: (queryData as InfiniteQueryResultType<TDataItem>).count,
-        };
-      } else {
-        fnUpdater(queryData);
-
-        return queryData;
-      }
+      return {
+        data: newData,
+        count: (queryData as InfiniteQueryResultType<TDataItem>).count,
+      };
+    } else {
+      return queryData;
     }
   }
+
   return queryData;
 }
 
@@ -339,7 +341,7 @@ export const addCacheItem = <T extends PlainObjectType>(
   sorting?: { by?: string; descending?: boolean }
 ): T | void => {
   return queryClient.setQueryData(key, (data: unknown) => {
-    return addToQueryData(
+    return addToQueryData<T>(
       data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> | undefined,
       item,
       sorting,
@@ -363,11 +365,11 @@ export const addCacheItems = <T extends PlainObjectType>(
 export const updateCacheItem = <T extends PlainObjectType>(
   queryClient: QueryClient,
   key: QueryKey,
-  select: number | ((item: T) => boolean),
-  fnUpdater: Function
+  select: number | ((item: T) => boolean) | undefined,
+  fnUpdater: (item: T) => void
 ): T | void => {
   return queryClient.setQueryData(key, (data: unknown) => {
-    return updateQueryData(
+    return updateQueryData<T>(
       data as
         | InfiniteQueryResultType<T>
         | InfiniteData<InfiniteQueryResultType<T>, unknown>
@@ -382,11 +384,11 @@ export const updateCacheItem = <T extends PlainObjectType>(
 export const updateCacheItems = <T extends PlainObjectType>(
   queryClient: QueryClient,
   filters: QueryFilters,
-  select: number | ((item: T) => boolean),
-  fnUpdater: Function
+  select: number | ((item: T) => boolean) | undefined,
+  fnUpdater: (item: T) => void
 ): T | void => {
   queryClient.setQueriesData(filters, (data: unknown) => {
-    return updateQueryData(
+    return updateQueryData<T>(
       data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>,
       select,
       fnUpdater
@@ -400,9 +402,10 @@ export const removeCacheItem = <T extends PlainObjectType>(
   select: number | ((item: T) => boolean)
 ): T | void => {
   return queryClient.setQueryData(key, (data: unknown) => {
-    return removeQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select) as
-      | NoInfer<void | T>
-      | undefined;
+    return removeQueryData<T>(
+      data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>,
+      select
+    ) as NoInfer<void | T> | undefined;
   });
 };
 
@@ -412,9 +415,31 @@ export const removeCacheItems = <T extends PlainObjectType>(
   select: number | ((item: T) => boolean)
 ): T | void => {
   queryClient.setQueriesData(filters, (data: unknown) => {
-    return removeQueryData(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select);
+    return removeQueryData<T>(data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>, select);
   });
 };
+
+export const updateCacheItemCount = <T extends PlainObjectType>(
+  queryClient: QueryClient,
+  key: QueryKey,
+  fnUpdater: (count: number) => number
+): T | void => {
+  return queryClient.setQueryData(key, (data: unknown) => {
+    const { count } = data as QueryResultType<T>;
+    return { count: fnUpdater(count) } as unknown as NoInfer<void | T> | undefined;
+  });
+}
+
+export const updateCacheItemsCount = <T extends PlainObjectType>(
+  queryClient: QueryClient,
+  filters: QueryFilters,
+  fnUpdater: (count: number) => number
+): T | void => {
+  queryClient.setQueriesData(filters, (data: unknown) => {
+    const { count } = data as QueryResultType<T>;
+    return { count: fnUpdater(count) } as unknown as NoInfer<void | T> | undefined;
+  });
+}
 
 // export const setCacheItem = (queryClient: QueryClient, key: QueryKey, id: number, updated: any) => {
 //     const data = queryClient.getQueryData<any>(key);

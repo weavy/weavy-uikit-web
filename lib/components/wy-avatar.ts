@@ -9,7 +9,7 @@ import { Presence, type PresenceType } from "../types/presence.types";
 import { consume } from "@lit/context";
 import { userContext } from "../contexts/user-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { shadowPartMap } from "../utils/directives/shadow-part-map";
+import { partMap } from "../utils/directives/shadow-part-map";
 import { S4 } from "../utils/data";
 
 import rebootCss from "../scss/wrappers/base/reboot";
@@ -62,7 +62,7 @@ export default class WyAvatar extends LitElement {
             <img
               alt=""
               title="${ifDefined(this.title || this.name)}"
-              part=${shadowPartMap(avatarParts)}
+              part=${partMap(avatarParts)}
               style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
               height="${this.size}"
               width="${this.size}"
@@ -73,7 +73,7 @@ export default class WyAvatar extends LitElement {
           `
         : html`
             <div
-              part=${shadowPartMap(avatarParts)}
+              part=${partMap(avatarParts)}
               style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
               title="${ifDefined(this.title || this.name)}"
             >

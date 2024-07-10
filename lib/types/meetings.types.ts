@@ -1,13 +1,18 @@
+import { MetadataType } from "./lists.types";
+
 export type MeetingType = {
   id: number;
-  provider: string;
+  provider: MeetingProviderType;
   provider_id: string;
-  uuid: string;
+  code: string,
   join_url: string;
-  recording_url: string;
-  ended_at: string;
+  created_at: string;
+  metadata?: MetadataType;
+  auth_url: string;
 };
 
 export type MutateMeetingProps = {
-  provider: string;
+  provider: MeetingProviderType;
 };
+
+export type MeetingProviderType = "zoom" | "microsoft" | "google";

@@ -1,5 +1,5 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { PermissionType } from "../types/app.types";
+import { PermissionTypes } from "../types/app.types";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
@@ -23,14 +23,13 @@ import type {
 } from "../types/files.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { openUrl } from "../utils/urls";
-import { portal } from "lit-modal-portal";
 import { MutationState } from "@tanstack/query-core";
 import { toUpperCaseFirst } from "../utils/strings";
 
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
 import { WeavyContextProps } from "../types/weavy.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { hasPermission } from "../utils/permission";
 
@@ -39,14 +38,14 @@ import "./wy-dropdown";
 import "./wy-icon";
 import "./wy-spinner";
 import "./wy-sheet";
-
 import "./wy-file-item";
 import "./wy-cloud-files";
 import "./wy-confluence";
+import "./wy-notification-button-list";
 
 @customElement("wy-files-appbar")
 @localized()
-export class WyFilesAppbar extends AppConsumerMixin(LitElement) {
+export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
   static override styles = [filesCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -213,7 +212,7 @@ export class WyFilesAppbar extends AppConsumerMixin(LitElement) {
     return html`
       <nav class="wy-toolbar">
         <div class="wy-toolbar-buttons">
-          ${hasPermission(PermissionType.Create, this.app?.permissions)
+          ${hasPermission(PermissionTypes.Create, this.app?.permissions)
             ? html`
                 <wy-dropdown title=${msg("Add files")}>
                   <span slot="button">${msg("Add files")}</span>
@@ -241,8 +240,7 @@ export class WyFilesAppbar extends AppConsumerMixin(LitElement) {
                         </wy-dropdown-item>
                       `
                     : nothing}
-                  ${this.hasFeatures?.confluence &&
-                  this.weavyContext?.confluenceAuthenticationUrl
+                  ${this.hasFeatures?.confluence && this.weavyContext?.confluenceAuthenticationUrl
                     ? html`<wy-confluence
                         dropdown
                         @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}
@@ -337,6 +335,8 @@ export class WyFilesAppbar extends AppConsumerMixin(LitElement) {
             </wy-dropdown-option>
           </wy-dropdown>
 
+          <wy-notification-button-list></wy-notification-button-list>
+
           <wy-dropdown directionX="left" ?disabled=${!this.app}>
             ${this.app?.is_subscribed
               ? html`<wy-dropdown-item @click=${() => this.dispatchSubscribe(false)}>
@@ -359,54 +359,46 @@ export class WyFilesAppbar extends AppConsumerMixin(LitElement) {
         </div>
       </nav>
 
-      ${this.weavyContext && this.settings
-        ? portal(
-            this.showUploadSheet && Boolean(fileMutationResults?.length)
-              ? html`
-                  <wy-sheet
-                    .contexts=${this.contexts}
-                    .show=${this.showUploadSheet}
-                    @close=${() => this.showUploadSheet = false}
-                    @release-focus=${() =>
-                      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-                  >
-                    <wy-button
-                      kind="icon"
-                      slot="appbar-buttons"
-                      @click=${() => {
-                        fileMutationResults?.forEach((mutation) => this.handleRemoveMutation(mutation));
-                      }}
-                      title=${msg("Remove all", { desc: "Button action to remove all" })}
-                    >
-                      <wy-icon name="trashcan"></wy-icon>
-                    </wy-button>
-                    <span slot="appbar-text">${msg("File actions")}</span>
-                    ${failedFileMutations.length
-                      ? html`
-                          ${repeat(
-                            failedFileMutations,
-                            (mutation) => "mutation" + mutation.submittedAt,
-                            (mutation) => this.renderFileMutation(mutation)
-                          )}
-                          ${fileMutations.length ? html`<hr />` : nothing}
-                        `
-                      : nothing}
-                    ${fileMutations.length
-                      ? html`
-                          ${repeat(
-                            fileMutations,
-                            (mutation) => "mutation" + mutation.submittedAt,
-                            (mutation) => this.renderFileMutation(mutation)
-                          )}
-                        `
-                      : nothing}
-                  </wy-sheet>
-                `
-              : nothing,
-              this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+      ${this.weavyContext
+        ? html`
+            <wy-sheet
+              .show=${this.showUploadSheet}
+              @close=${() => (this.showUploadSheet = false)}
+              @release-focus=${() =>
+                this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+            >
+              <wy-button
+                kind="icon"
+                slot="appbar-buttons"
+                @click=${() => {
+                  fileMutationResults?.forEach((mutation) => this.handleRemoveMutation(mutation));
+                }}
+                title=${msg("Remove all", { desc: "Button action to remove all" })}
+              >
+                <wy-icon name="trashcan"></wy-icon>
+              </wy-button>
+              <span slot="appbar-text">${msg("File actions")}</span>
+              ${failedFileMutations.length
+                ? html`
+                    ${repeat(
+                      failedFileMutations,
+                      (mutation) => "mutation" + mutation.submittedAt,
+                      (mutation) => this.renderFileMutation(mutation)
+                    )}
+                    ${fileMutations.length ? html`<hr />` : nothing}
+                  `
+                : nothing}
+              ${fileMutations.length
+                ? html`
+                    ${repeat(
+                      fileMutations,
+                      (mutation) => "mutation" + mutation.submittedAt,
+                      (mutation) => this.renderFileMutation(mutation)
+                    )}
+                  `
+                : nothing}
+            </wy-sheet>
+          `
         : nothing}
 
       <wy-cloud-files

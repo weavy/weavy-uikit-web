@@ -12,9 +12,9 @@ import { WeavyAuthenticationMixin, WeavyAuthenticationProps } from "./authentica
 import { WeavyConnectionMixin, WeavyConnectionProps } from "./connection";
 import { WeavyQueryMixin, WeavyQueryProps } from "./query";
 import { WeavyVersionMixin, WeavyVersionProps } from "./version";
-import { WeavyModalsMixin, WeavyModalsProps } from "./modals";
 import { WeavyFetchMixin, WeavyFetchProps } from "./fetch";
 import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
+import { WeavyRealtimeMixin, WeavyRealtimeProps } from "./realtime";
 
 export type WeavyContextMixins = WeavyContextBase &
   WeavyNetworkProps &
@@ -23,9 +23,9 @@ export type WeavyContextMixins = WeavyContextBase &
   WeavyConnectionProps &
   WeavyQueryProps &
   WeavyVersionProps &
-  WeavyModalsProps &
   WeavyFetchProps &
-  WeavyStylesProps;
+  WeavyStylesProps &
+  WeavyRealtimeProps;
 
 /**
  * Context for Weavy that handles communication with the server, data handling and common options.
@@ -51,8 +51,8 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
     disableEnvironmentImports: false,
     gcTime: 1000 * 60 * 60 * 24, // 24h,
     locale: SOURCE_LOCALE,
-    modalParent: "body",
     reactions: ["😍", "😎", "😉", "😜", "👍"],
+    notificationEvents: false,
     scrollBehavior: chrome ? "instant" : "smooth",
     staleTime: 1000 * 1, // 1s
     tokenFactoryRetryDelay: 2000,
@@ -82,7 +82,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   staleTime = WeavyContextBase.defaults.staleTime;
   tokenFactoryRetryDelay = WeavyContextBase.defaults.tokenFactoryRetryDelay;
   tokenFactoryTimeout = WeavyContextBase.defaults.tokenFactoryTimeout;
-  
+
   // Promises
 
   // whenUrl
@@ -161,6 +161,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 
     const validOptions: typeof options = {};
 
+    // constructor options
     for (const option in options) {
       // Check for valid properties
       const optionKey = option as keyof typeof options;
@@ -179,7 +180,6 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
     }
 
     // Context root
-
     if (this.host !== document.documentElement) {
       globalContextProvider.detachListeners();
       this.#hostContextProvider = new ContextProvider(this.host, {
@@ -205,11 +205,13 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 }
 
 export class WeavyContext
-  extends WeavyLocalizationMixin(
-    WeavyConnectionMixin(
-      WeavyNetworkMixin(
-        WeavyAuthenticationMixin(
-          WeavyQueryMixin(WeavyVersionMixin(WeavyModalsMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyContextBase)))))
+  extends WeavyRealtimeMixin(
+    WeavyLocalizationMixin(
+      WeavyConnectionMixin(
+        WeavyNetworkMixin(
+          WeavyAuthenticationMixin(
+            WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyContextBase))))
+          )
         )
       )
     )

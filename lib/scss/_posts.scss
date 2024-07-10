@@ -1,28 +1,26 @@
 // weavy reboot
 @use "components/base/reboot";
 @use "components/base/scroll";
-@use "components/base/color";
 
 // weavy ui components 
 @use "components/appbar";
 //@use "components/avatar";
-@use "components/badge";
 @use "components/buttons";
 @use "components/code";
 @use "components/content";
 //@use "components/dropdown";
 @use "components/emoji";
+@use "components/empty";
 @use "components/icons";
 @use "components/image-grid";
 @use "components/input";
 @use "components/item";
 @use "components/list";
-@use "components/messages";
+@use "components/post";
 @use "components/meta";
 @use "components/overlays";
-@use "components/pager";
+//@use "components/pager";
 @use "components/pane";
-@use "components/panels";
 @use "components/picker-list";
 @use "components/preview";
 @use "components/preview-code";
@@ -35,10 +33,16 @@
 @use "components/reactions";
 @use "components/sheet";
 //@use "components/spinner";
-@use "components/tab";
+@use "components/poll";
+@use "components/embed";
 @use "components/type";
-@use "components/toasts";
+//@use "components/toasts";
 @use "components/meeting";
-@use "components/message-editor";
-@use "components/message-editor-cm";
-@use "components/conversations";
+@use "components/placeholder";
+@use "components/post-editor";
+@use "components/post-editor-cm";
+@use "components/comments";
+@use "components/comment-editor";
+@use "components/comment-editor-cm";
+
+    

@@ -1,6 +1,7 @@
 @use "base/var";
 @use "base/color";
 @use "base/svg";
+@use "base/const";
 
 // basic unstyled button with support for icon and text
 [part~="wy-button"] {
@@ -175,4 +176,15 @@
 
 [part~="wy-buttons-reverse"] {
   flex-direction: row-reverse;
+}
+
+[part~="wy-buttons-floating"] {
+  position: sticky;
+  padding: var.default(--wy-gap-lg) var.default(--wy-gap-lg) 0;
+  top: 0;
+  height: 0;
+  margin-bottom: calc(-1 * var.default(--wy-gap-lg));
+  z-index: const.$zindex-fixed;
+  --wy-component-background-color: #{color.token(--wy-surface-variant)};
+  --wy-component-color: #{color.token(--wy-on-surface-variant)};
 }

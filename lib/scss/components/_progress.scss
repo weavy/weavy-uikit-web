@@ -7,6 +7,9 @@
     justify-content: center;
     flex: 0 0 auto;
     position: relative;
+
+    width: var(--wy-component-icon-width);
+    height: var(--wy-component-icon-height);
   
     &:not([width]), &[width="24"] {
       width: var(--wy-component-icon-width, var.wy-rem(1.5));
@@ -15,9 +18,6 @@
     &:not([height]), &[height="24"] {
       height: var(--wy-component-icon-height, var.wy-rem(1.5));
     }
-  
-    width: var(--wy-component-icon-width);
-    height: var(--wy-component-icon-height);
 }
 
 [part~=wy-progress-padded] {

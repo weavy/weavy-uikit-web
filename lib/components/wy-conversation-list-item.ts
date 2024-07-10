@@ -153,15 +153,29 @@ export default class WyConversationListItem extends LitElement {
     return this.dispatchEvent(event);
   }
 
+  #unsubscribeToRealtime?: () => void;
+
   override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       this.deliveredConversationMutation = getDeliveredConversationMutation(this.weavyContext);
 
+      this.#unsubscribeToRealtime?.();
+
       // realtime
-      this.weavyContext.subscribe(`a${this.conversationId}`, "app_updated", this.handleConversationUpdated);
-      this.weavyContext.subscribe(`a${this.conversationId}`, "member_added", this.handleConversationUpdated);
-      this.weavyContext.subscribe(`a${this.conversationId}`, "message_created", this.handleMessageCreated);
-      this.weavyContext.subscribe(`a${this.conversationId}`, "conversation_marked", this.handleConversationMarked);
+      const subscribeGroup = `a${this.conversationId}`;
+
+      this.weavyContext.subscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
+      this.weavyContext.subscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
+      this.weavyContext.subscribe(subscribeGroup, "message_created", this.handleMessageCreated);
+      this.weavyContext.subscribe(subscribeGroup, "conversation_marked", this.handleConversationMarked);
+
+      this.#unsubscribeToRealtime = () => {
+        this.weavyContext?.unsubscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "message_created", this.handleMessageCreated);
+        this.weavyContext?.unsubscribe(subscribeGroup, "conversation_marked", this.handleConversationMarked);
+        this.#unsubscribeToRealtime = undefined;
+      };
 
       // set as delivered ?
       if (this.unread) {
@@ -199,12 +213,15 @@ export default class WyConversationListItem extends LitElement {
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
-
         ${this.type !== ConversationTypeGuid.BotChat
           ? this.avatarUrl
             ? html`<wy-avatar .size=${48} src=${this.avatarUrl}></wy-avatar>`
             : this.type == ConversationTypeGuid.ChatRoom
-            ? html` <wy-avatar-group .members=${this.members?.data} title=${this.displayName} .size=${48}></wy-avatar-group>`
+            ? html` <wy-avatar-group
+                .members=${this.members?.data}
+                title=${this.displayName}
+                .size=${48}
+              ></wy-avatar-group>`
             : html`
                 <wy-avatar
                   src=${ifDefined(otherMember?.avatar_url)}
@@ -246,7 +263,7 @@ export default class WyConversationListItem extends LitElement {
                         ? html`<wy-icon kind="text-icon" name="attachment"></wy-icon>`
                         : nothing}
                       ${!this.lastMessage?.text && this.lastMessage?.meeting?.id
-                        ? html`<wy-icon kind="text-icon" name="zoom"></wy-icon>`
+                        ? html`<wy-icon kind="text-icon" name="video"></wy-icon>`
                         : nothing}
                       ${!this.lastMessage ? html`&nbsp;` : nothing}
                     </wy-typing>
@@ -269,7 +286,7 @@ export default class WyConversationListItem extends LitElement {
               <wy-dropdown directionX="left">
                 ${!this.selected
                   ? html`<wy-dropdown-item @click=${() => this.dispatchMarked(this.unread)}>
-                      <wy-icon name=${this.unread ? "unread" : "read"}></wy-icon>
+                      <wy-icon name=${this.unread ? "read" : "unread"}></wy-icon>
                       ${this.unread ? msg("Mark as read") : msg("Mark as unread")}
                     </wy-dropdown-item>`
                   : nothing}
@@ -303,14 +320,8 @@ export default class WyConversationListItem extends LitElement {
     `;
   }
 
-  // override disconnectedCallback(): void {
-  //   // realtime
-  //   if (this.weavyContext) {
-  //     this.weavyContext.unsubscribe(`a${this.conversationId}`, "app_updated", this.handleConversationUpdated);
-  //     this.weavyContext.unsubscribe(`a${this.conversationId}`, "member_added", this.handleConversationUpdated);
-  //     this.weavyContext.unsubscribe(`a${this.conversationId}`, "message_created", this.handleMessageCreated);
-  //     this.weavyContext.unsubscribe(`a${this.conversationId}`, "conversation_marked", this.handleConversationMarked);
-  //   }
-  //   super.disconnectedCallback();
-  // }
+  override disconnectedCallback(): void {
+    this.#unsubscribeToRealtime?.();
+    super.disconnectedCallback();
+  }
 }

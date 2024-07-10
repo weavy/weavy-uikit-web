@@ -2,54 +2,62 @@
 @use "base/color";
 @use "base/text";
 
-$badge-padding-y: .35em !default;
-$badge-padding-x: .65em !default;
-$badge-font-size: .75em !default;
-$badge-font-weight: var.default(--wy-font-weight-bold) !default;
+$badge-padding-y: 0.35em !default;
+$badge-padding-x: 0.65em !default;
 
 .wy-badge {
   display: inline-block;
   padding: $badge-padding-y $badge-padding-x;
-  font-size: $badge-font-size;
-  font-weight: $badge-font-weight;
+  font-size: var.default(--wy-font-size-xs);
+  font-weight: var.default(--wy-font-weight-bold);
   line-height: 1;
   color: color.token(--wy-on-primary);
   text-align: center;
   white-space: nowrap;
   vertical-align: baseline;
 
+  border-radius: var.default(--wy-border-radius-pill);
+  background-color: color.token(--wy-primary);
+
   // Empty badges collapse automatically
   &:empty {
     display: none;
   }
-
-  border-radius: var.default(--wy-border-radius-pill);
-  background-color: color.token(--wy-primary);
 }
 
-.wy-button {
-  position: relative; // so that we can position .badge
+.wy-button-badge {
+  position: absolute;
+  right: 0;
+  top: 0;
+  //border-radius: var.wy-rem(1);
+  margin: calc(var.default(--wy-button-padding-y) * .5);
+  padding: var.default(--wy-padding-sm);
+  min-width: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
+  max-width: calc(var.default(--wy-font-size-xs) * 3 + var.default(--wy-padding-sm) * 2);
+  height: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
+  line-height: calc(var.default(--wy-font-size-xs) - var.default(--wy-padding-sm));
+  display: block;
+  text-align: center;
 
-  // badge, e.g. notification count
-  .wy-badge {
-    font-size: var.default(--wy-font-size-xs);
-    position: absolute;
-    right: 0;
-    top: 0;
-    border-radius: var.wy-rem(1);
-    margin: 0;
-    padding: var.wy-rem(.25);
-    min-width: var.wy-rem(1);
-    max-width: var.wy-rem(2);
-    height: var.wy-rem(1);
-    line-height: var.wy-rem(.5);
-    display: block;
-    text-align: center;
-    
-    @include text.truncate;
+  @include text.truncate;
 
-    &:empty {
-      display: none;
-    }
+  &:empty {
+    display: none;
+  }
+}
+
+.wy-button-dot {
+  position: absolute;
+  right: 0;
+  top: 0;
+  content-visibility: hidden;
+  padding: var.default(--wy-padding-sm);
+  margin: var.default(--wy-button-padding-y);
+  line-height: 0;
+  min-width: 0;
+  height: 0;
+
+  &:empty {
+    display: none;
   }
 }

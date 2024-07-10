@@ -30,7 +30,6 @@ describe("WeavyContext class", () => {
     expect(Weavy.defaults).to.have.property("disableEnvironmentImports", false);
     expect(Weavy.defaults).to.have.property("gcTime", 86400000);
     expect(Weavy.defaults).to.have.property("locale", "en");
-    expect(Weavy.defaults).to.have.property("modalParent", "body");
     expect(Weavy.defaults).to.have.property("reactions").to.be.an("array").that.is.not.empty;
     expect(Weavy.defaults).to.have.property("scrollBehavior").to.be.oneOf(["smooth", "instant"]);
     expect(Weavy.defaults).to.have.property("staleTime", 1000);

@@ -1,83 +1,44 @@
-import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
 import type { MeetingType } from "../types/meetings.types";
-import chatCss from "../scss/all"
-import { localized, msg, str } from "@lit/localize";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { relativeTime } from "../utils/datetime";
+import chatCss from "../scss/all";
+import { localized, msg } from "@lit/localize";
 import "./wy-icon";
 import "./wy-button";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
 
 @customElement("wy-meeting-card")
 @localized()
 export default class WyMeetingCard extends LitElement {
-  
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
-
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   meeting!: MeetingType;
 
   override render() {
-    const dateFull = this.meeting.ended_at
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
-          new Date(this.meeting.ended_at)
-        )
-      : "";
-    const dateFromNow = this.meeting.ended_at
-      ? relativeTime(this.weavyContext?.locale, new Date(this.meeting.ended_at))
-      : "";
+    // NOTE: meeting considered ended if created more than 2 hours ago
+    const meetingHasEnded = (new Date().getTime() - new Date(this.meeting.created_at).getTime()) / (1000 * 60 * 60) > 2;
 
     return html`
       <div class="wy-list">
-        ${this.meeting.ended_at
-          ? html`
-              <div class="wy-item wy-meeting">
-                <wy-icon name="zoom" size="96"></wy-icon>
+        ${meetingHasEnded
+          ? html`<div class="wy-item wy-meeting wy-disabled" title="${msg("Meeting ended")}">
+                <wy-icon svg="${getMeetingIconName(this.meeting.provider)}" size="48" ></wy-icon>                
                 <div class="wy-item-body">
-                  <div class="wy-item-title">${msg("Zoom meeting")}</div>
-                  <div class="wy-item-body">
-                    <time datetime=${this.meeting.ended_at} title=${dateFull}>${msg(str`Ended ${dateFromNow}`)}</time>
-                    ${this.meeting.ended_at
-                      ? html`
-                          <div class="wy-meeting-actions">
-                            <a href=${this.meeting.recording_url} target="_blank" class="wy-button wy-button-primary"
-                              >${msg("Play recording")}</a
-                            >
-                          </div>
-                        `
-                      : nothing}
-                  </div>
-                </div>
+                  <div class="wy-item-title">${getMeetingTitle(this.meeting.provider)}</div>
+                  <div class="wy-item-text">${this.meeting.code}</div>
+                </div> 
+              </div>`
+          : html`<a class="wy-item wy-meeting" href=${this.meeting.join_url} target="_blank"  title="${msg("Join meeting")}">
+              <wy-icon svg="${getMeetingIconName(this.meeting.provider)}" size="48" color="native"></wy-icon>
+              <div class="wy-item-body">
+                <div class="wy-item-title">${getMeetingTitle(this.meeting.provider)}</div>
+                <div class="wy-item-text">${this.meeting.code}</div>                
               </div>
-            `
-          : html`
-              <a class="wy-item wy-meeting" href=${this.meeting.join_url} target="_blank">
-                <wy-icon name="zoom" size="96" color="native"></wy-icon>
-                <div class="wy-item-body">
-                  <div class="wy-item-title">${msg("Zoom meeting")}</div>
-                  <div class="wy-item-body">
-                    <div
-                      >ID:
-                      ${this.meeting.provider_id.substring(0, 3)}-${this.meeting.provider_id.substring(
-                        3,
-                        6
-                      )}-${this.meeting.provider_id.substring(6)}</div
-                    >
-                    <div class="wy-meeting-actions">
-                      <wy-button color="primary">${msg("Join meeting")}</wy-button>
-                    </div>
-                  </div>
-                </div>
-              </a>
-            `}
+            </a>`}
       </div>
     `;
   }

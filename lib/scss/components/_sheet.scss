@@ -51,6 +51,10 @@
   }
 }
 
+.wy-sheet-no-padding {
+  padding: 0;
+}
+
 // Transitions
 .wy-sheet {
   &:not(.wy-show) {

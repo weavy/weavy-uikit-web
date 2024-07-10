@@ -1,6 +1,6 @@
-import { PermissionType } from "../types/app.types";
+import { PermissionTypes } from "../types/app.types";
 
-export const hasPermission = (permission: PermissionType, permissions?: PermissionType[]) => {  
+export const hasPermission = (permission: PermissionTypes, permissions?: PermissionTypes[]) => {  
   if (permission && permissions && permissions.indexOf(permission) !== -1) {
     return true;
   }

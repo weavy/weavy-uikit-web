@@ -1,0 +1,9 @@
+@use "base/var";
+@use "base/color";
+
+.wy-notification {
+  &.wy-read {
+    opacity: var.default(--wy-opacity-muted);
+    --wy-component-color: #{color.token(--wy-outline)};
+  }
+}

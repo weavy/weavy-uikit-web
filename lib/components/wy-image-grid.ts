@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ref } from "lit/directives/ref.js";
-import type { FileType } from "../types/files.types";
+import type { FileOpenEventType, FileType } from "../types/files.types";
 
 import chatCss from "../scss/all"
 import { checkImageLoad, imageLoaded } from "../utils/images";
@@ -27,7 +27,7 @@ export default class WyImageGrid extends LitElement {
   dispatchFileOpen(e: Event, file: FileType) {
     e.preventDefault();
     if (!file.is_trashed) {
-      const event = new CustomEvent("file-open", { detail: { file } });
+      const event: FileOpenEventType = new CustomEvent("file-open", { detail: { fileId: file.id } });
       this.dispatchEvent(event);
     }
   }

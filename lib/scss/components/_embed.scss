@@ -97,17 +97,18 @@
   a[target=_blank] {
     pointer-events: none;
   }
+  
   // add som margins and borders in preview
   .wy-embed {
+    //margin: var.wy-rem(.75);
+    border: var.default(--wy-border) solid color.token(--wy-outline-variant);
+    border-radius: var.default(--wy-border-radius);
+
     display: none;
 
     &:first-child {
       display: block;
     }
-
-    //margin: var.wy-rem(.75);
-    border: var.default(--wy-border) solid color.token(--wy-outline-variant);
-    border-radius: var.default(--wy-border-radius);
   }
 
   .wy-embed-caption {

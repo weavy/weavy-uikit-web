@@ -20,9 +20,8 @@
 @use "components/messages";
 @use "components/meta";
 @use "components/overlays";
-@use "components/pager";
+//@use "components/pager";
 @use "components/pane";
-@use "components/panels";
 @use "components/picker-list";
 @use "components/preview";
 @use "components/preview-code";
@@ -36,7 +35,7 @@
 @use "components/sheet";
 //@use "components/spinner";
 @use "components/type";
-@use "components/toasts";
+@use "components/toast";
 @use "components/placeholder";
 @use "components/meeting";
 @use "components/message-editor";

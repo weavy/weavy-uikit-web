@@ -30,7 +30,6 @@
     @return calc(#{$size} * var(--wy-size, 1rem));
 }
 
-
 /*
  * INSTRUCTIONS:
  * - variables cannot reference themselves
@@ -108,7 +107,7 @@
 
   /* Opacity */
   --wy-opacity-backdrop:          95%,
-  --wy-opacity-muted:             38%,
+  --wy-opacity-muted:             60%,
   --wy-opacity-disabled:          38%,
   /*
   --wy-opacity-disabled:          12%,

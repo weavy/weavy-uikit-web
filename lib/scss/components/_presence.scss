@@ -3,10 +3,6 @@
 
 // presence indicator
 [part~=wy-presence] {
-  &:not([part~=wy-presence-active]) {
-    display: none; // initially hidden
-  }
-
   //background-color: var(--wy-component-background-color, transparent);
   width: var.wy-rem(.75);
   height: var.wy-rem(.75);
@@ -16,6 +12,10 @@
   bottom: 0;
   right: -5%;
   box-sizing: border-box;
+
+  &:not([part~=wy-presence-active]) {
+    display: none; // initially hidden
+  }
 
   &::after {
     content: "";

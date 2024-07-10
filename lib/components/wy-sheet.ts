@@ -1,82 +1,45 @@
-import { LitElement, type PropertyValues, html } from "lit";
+import { LitElement, type PropertyValues, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import { AppContextProviderMixin } from "../mixins/app-provider-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import overlayStyles from "../scss/all"
+import overlayStyles from "../scss/all";
 
 import "./wy-button";
 import "./wy-icon";
 
 @customElement("wy-sheet")
-export default class WySheet extends AppContextProviderMixin(LitElement) {
-  static override styles = overlayStyles;
+export default class WySheet extends LitElement {
+  static override styles = [
+    overlayStyles,
+    css`
+    :host {
+      display: contents;
+    }
+    `
+  ];
 
   protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Boolean })
+  noPadding: boolean = false;
+
+  @property({ type: Boolean })
   show = false;
 
-  @property({ attribute: false })
-  sheetId: string = "";
-
-  private viewportRef = createRef<HTMLDivElement>();
+  private viewportRef = createRef<HTMLDialogElement>();
 
   close() {
     this.show = false;
-    this.dispatchEvent(new CustomEvent("close"));
-    this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
+    this.viewportRef.value?.hidePopover();
   }
 
-  private handleGlobalClose: (e: Event) => void;
-
-  constructor() {
-    super();
-    this.handleGlobalClose = (e: Event) => {
-      if (this.show) {
-        const sheet = (e as CustomEvent).detail?.sheet;
-
-        if (sheet instanceof WySheet && sheet !== this) {
-          //console.log('global removemodal', sheet, sheet instanceof WySheet, sheet !== this)
-          this.close();
-        }
-      }
-    };
-  }
-
-  handleKeys = (e: KeyboardEvent) => {
-    if (this.show) {
-      if (e.key === "Escape") {
-        //console.log("The Escape from Sheet Island");
-        e.stopImmediatePropagation();
-        this.close();
-      }
+  handleClose(e: ToggleEvent) {
+    if (e.newState === "closed") {
+      this.show = false;
+      this.dispatchEvent(new CustomEvent("close"));
+      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
     }
-  };
-
-  regainFocus(e: Event) {
-    if (this.show && e.composedPath()[0] !== this) {
-      e.stopImmediatePropagation();
-      //console.log("Time to focus!");
-      this.viewportRef.value?.focus();
-    }
-  }
-
-  checkFocus(e: FocusEvent) {
-    const target = e.target as HTMLElement;
-    requestAnimationFrame(() => {
-      if (!target || !target.isConnected) {
-        this.regainFocus(e);
-      }
-    })
-  }
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-    this.whenWeavyContext().then(() => {
-      this.weavyContext?.host.addEventListener("wy-sheets-close", this.handleGlobalClose);
-    })
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
@@ -84,54 +47,48 @@ export default class WySheet extends AppContextProviderMixin(LitElement) {
 
     if (changedProperties.has("show")) {
       if (this.show) {
-        this.weavyContext?.host.dispatchEvent(
-          new CustomEvent("wy-sheets-close", { bubbles: true, composed: true, detail: { sheet: this } })
-        );
-        this.addEventListener("keyup", this.handleKeys);
-        this.addEventListener("release-focus", this.regainFocus);
-        this.addEventListener("focusout", this.checkFocus);
+        this.viewportRef.value?.showPopover();
       } else {
-        this.removeEventListener("keyup", this.handleKeys);
-        this.removeEventListener("release-focus", this.regainFocus);
-        this.removeEventListener("focusout", this.checkFocus);
+        this.viewportRef.value?.hidePopover();
       }
     }
   }
 
   override render() {
     return html`
-      <section class="wy-viewport" tabindex="0" ${ref(this.viewportRef)}>
+      <dialog class="wy-dialog" tabindex="0" ${ref(this.viewportRef)} popover>
         <div class="wy-sheet ${this.show ? "wy-show" : ""}">
           <slot name="header">
             <header class="wy-appbars">
               <nav class="wy-appbar">
-                <slot name="appbar-buttons" class="wy-appbar-buttons"></slot>
-                <slot name="appbar-text" class="wy-appbar-text"></slot>
                 <wy-button kind="icon" @click=${() => this.close()}>
                   <wy-icon name="close"></wy-icon>
                 </wy-button>
+                <slot name="appbar-text" class="wy-appbar-text"></slot>
+                <slot name="appbar-buttons" class="wy-appbar-buttons wy-appbar-buttons-last"></slot>
               </nav>
             </header>
           </slot>
-          <div class="wy-sheet-body wy-scroll-y">
+          <div class="wy-sheet-body wy-scroll-y ${this.noPadding ? "wy-sheet-no-padding" : ""}">
             <slot></slot>
           </div>
         </div>
-      </section>
+      </dialog>
     `;
   }
 
   override updated(changedProperties: PropertyValues<this>) {
-    this.exportParts.addPartsFrom(this.viewportRef.value);
-
     if (changedProperties.has("show") && this.show) {
       this.viewportRef.value?.focus();
     }
   }
 
-  override disconnectedCallback(): void {
+  protected override firstUpdated(_changedProperties: PropertyValues<this>) {
+    this.viewportRef.value?.addEventListener("toggle", (e: Event) => this.handleClose(e as ToggleEvent))
+  }
+
+  override disconnectedCallback() {
     super.disconnectedCallback();
-    this.weavyContext?.host.removeEventListener("wy-sheets-close", this.handleGlobalClose);
     this.close();
   }
 }

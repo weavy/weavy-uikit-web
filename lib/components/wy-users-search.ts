@@ -10,7 +10,7 @@ import { getInfiniteSearchMemberOptions } from "../data/members";
 import { localized, msg } from "@lit/localize";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
-import { clickOnEnterAndConsumeOnSpace, inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
+import { clickOnEnterAndConsumeOnSpace, inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -162,7 +162,7 @@ export default class WyUsersSearch extends LitElement {
           </div>`;
           }) ?? nothing}`);
     }
-    templateResults.push(html`<div ${ref(this.pagerRef)} class="wy-pager"></div>`);
+    templateResults.push(html`<div ${ref(this.pagerRef)} part="wy-pager"></div>`);
     return templateResults;
   }
 
@@ -177,7 +177,8 @@ export default class WyUsersSearch extends LitElement {
             .value=${this.text || ""}
             ${ref(this.inputRef)}
             @input=${() => this.throttledSearch()}
-            @keyup=${inputConsumeWithClearAndBlurOnEscape}
+            @keydown=${inputClearAndBlurOnEscape}
+            @keyup=${inputConsume}
             placeholder=${msg("Search...")}
           />
           <wy-button
@@ -198,18 +199,21 @@ export default class WyUsersSearch extends LitElement {
           ?active=${this.botFilter === undefined}
           @click=${() => (this.botFilter = undefined)}
           kind="tab"
+          small
           >${msg("All")}</wy-button
         >
         <wy-button
           ?active=${this.botFilter === false}
           @click=${() => (this.botFilter = false)}
           kind="tab"
+          small
           >${msg("People")}</wy-button
         >
         <wy-button
           ?active=${this.botFilter === true}
           @click=${() => (this.botFilter = true)}
           kind="tab"
+          small
           >${msg("Bots")}</wy-button
         >
       </wy-buttons>

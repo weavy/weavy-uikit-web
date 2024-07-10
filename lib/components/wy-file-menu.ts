@@ -7,11 +7,12 @@ import { getIcon } from "../utils/files";
 import { type FileType } from "../types/files.types";
 import { openUrl } from "../utils/urls";
 import { toKebabCase } from "../utils/strings";
-import { type FeaturesType, featuresContext } from "../contexts/features-context";
+import { type ProductFeaturesType, productFeaturesContext } from "../contexts/features-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-icon";
 import "./wy-dropdown";
+import { iconNamesType } from "../utils/icons";
 
 @customElement("wy-file-menu")
 @localized()
@@ -19,9 +20,9 @@ export default class WyFileMenu extends LitElement {
   
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: featuresContext, subscribe: true })
+  @consume({ context: productFeaturesContext, subscribe: true })
   @state()
-  protected hasFeatures?: FeaturesType;
+  protected hasFeatures?: ProductFeaturesType;
 
   @property({ type: Object })
   file!: FileType;
@@ -158,7 +159,7 @@ export default class WyFileMenu extends LitElement {
                     ${this.file.application_url && this.hasFeatures?.webDAV
                       ? html`
                           <wy-dropdown-item @click=${() => this.triggerApplication()}>
-                            <wy-icon name=${this.file.provider ? toKebabCase(this.file.provider) : icon}></wy-icon>
+                            <wy-icon name=${this.file.provider ? toKebabCase<iconNamesType>(this.file.provider) : icon}></wy-icon>
                             ${msg(str`Open in ${fileAppProvider}`)}
                           </wy-dropdown-item>
                         `

@@ -12,7 +12,7 @@ import { PollOptionType } from "../types/polls.types";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdatePostMutationOptions } from "../data/posts";
 import { WeavyContextProps } from "../types/weavy.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all"
@@ -29,7 +29,7 @@ import "./wy-embed";
 
 @customElement("wy-post-edit")
 @localized()
-export default class WyPostEdit extends AppConsumerMixin(LitElement) {
+export default class WyPostEdit extends BlockConsumerMixin(LitElement) {
   
   static override styles = chatCss;
 

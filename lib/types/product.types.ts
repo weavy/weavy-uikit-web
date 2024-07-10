@@ -1,4 +1,12 @@
-export enum Feature {
+export enum ProductTypes {
+  Chat = "chat",
+  Comments = "comments",
+  Feeds = "feeds",
+  Files = "files",
+  Messenger = "messenger",
+}
+
+export enum ProductFeatures {
   Attachments = "attachments",
   CloudFiles = "cloud_files",
   Comments = "comments",
@@ -17,7 +25,7 @@ export enum Feature {
   //Webhooks = "webhooks",
 }
 
-export type FeaturesListType = Feature[];
+export type ProductFeaturesListType = ProductFeatures[];
 
 /**
  * The `features` config is an opt-out config only.
@@ -25,7 +33,7 @@ export type FeaturesListType = Feature[];
  * You can only disable features that are available.
  * You can never enable a feature if it's not included in the license model.
  */
-export type FeaturesType = {
+export type ProductFeaturesType = {
   /**
    * Disable the possibility to upload local files.
    */
@@ -94,7 +102,7 @@ export type FeaturesType = {
  * You can only disable features that are available.
  * You can never enable a feature if it's not included in the license model.
  */
-export type FeatureProps = {
+export type ProductFeatureProps = {
   /**
    * Disable the possibility to upload local files.
    */
@@ -157,16 +165,7 @@ export type FeatureProps = {
   noWebDAV?: boolean;
 };
 
-
-export enum FeaturesProductType {
-  Chat = "chat",
-  Comments = "comments",
-  Feeds = "feeds",
-  Files = "files",
-  Messenger = "messenger"
-}
-
-export const FeatureMapping: { [key: string]: keyof FeaturesType} = {
+export const ProductFeatureMapping: { [key: string]: keyof ProductFeaturesType} = {
   "attachments": "attachments",
   "cloud_files": "cloudFiles",
   "comments": "comments",
@@ -184,7 +183,7 @@ export const FeatureMapping: { [key: string]: keyof FeaturesType} = {
   "web_dav": "webDAV",
 }
 
-export const FeaturePropMapping: { [key: string]: keyof FeatureProps} = {
+export const ProductFeaturePropMapping: { [key: string]: keyof ProductFeatureProps} = {
   "attachments": "noAttachments",
   "cloud_files": "noCloudFiles",
   "comments": "noComments",

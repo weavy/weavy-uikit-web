@@ -1,6 +1,5 @@
 import { LitElement, html, type PropertyValueMap, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { portal } from "lit-modal-portal";
 
 import allStyles from "../scss/all";
 import { MemberType } from "../types/members.types";
@@ -8,7 +7,7 @@ import { AddConversationMutationType, getAddConversationMutation } from "../data
 import { localized, msg } from "@lit/localize";
 import { WeavyContextProps } from "../types/weavy.types";
 import { ConversationTypeString } from "../types/conversations.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-users-search";
@@ -18,10 +17,8 @@ import "./wy-icon";
 
 @customElement("wy-conversation-new")
 @localized()
-export default class WyConversationNew extends AppConsumerMixin(LitElement) {
-  static override styles = [
-    allStyles
-  ];
+export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
+  static override styles = [allStyles];
 
   protected exportParts = new ShadowPartsController(this);
 
@@ -72,31 +69,27 @@ export default class WyConversationNew extends AppConsumerMixin(LitElement) {
         <wy-icon name="plus"></wy-icon>
       </wy-button>
 
-      ${!this.bot && this.weavyContext && this.settings
-        ? portal(
-            this.show
-              ? html`<wy-overlay
-                  .contexts=${this.contexts}
-                  @close=${() => this.close()}
-                  @release-focus=${() =>
-                    this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-                >
-                  <header class="wy-appbars">
-                    <nav class="wy-appbar">
-                      <wy-button kind="icon" @click=${() => this.close()}>
-                        <wy-icon name="close"></wy-icon>
-                      </wy-button>
-                      <div class="wy-appbar-text">${msg("New conversation")}</div>
-                    </nav>
-                  </header>
-
-                  <wy-users-search @submit=${(e: CustomEvent) => this.submit(e.detail.members)}></wy-users-search>
-                </wy-overlay>`
-              : nothing,
-              this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+      ${!this.bot && this.weavyContext
+        ? html`<wy-overlay
+            .show=${this.show}
+            @close=${() => {
+              this.show = false;
+            }}
+            @release-focus=${() =>
+              this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+          >
+            <header class="wy-appbars">
+              <nav class="wy-appbar">
+                <wy-button kind="icon" @click=${() => this.close()}>
+                  <wy-icon name="close"></wy-icon>
+                </wy-button>
+                <div class="wy-appbar-text">${msg("New conversation")}</div>
+              </nav>
+            </header>
+            ${this.show
+              ? html` <wy-users-search @submit=${(e: CustomEvent) => this.submit(e.detail.members)}></wy-users-search> `
+              : nothing}
+          </wy-overlay>`
         : nothing}
     `;
   }

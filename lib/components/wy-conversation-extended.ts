@@ -15,7 +15,7 @@ import { WeavyContextProps } from "../types/weavy.types";
 import { hasPermission } from "../utils/permission";
 import { ref } from "lit/directives/ref.js";
 import { QueryController } from "../controllers/query-controller";
-import { PermissionType } from "../types/app.types";
+import { PermissionTypes } from "../types/app.types";
 
 import WyConversation from "./wy-conversation";
 import "./wy-empty";
@@ -76,18 +76,7 @@ export default class WyConversationExtended extends WyConversation {
     );
   };
 
-  protected override unsubscribeToRealtime(conversationId: number) {
-    super.unsubscribeToRealtime(conversationId);
-
-    if (!this.weavyContext) {
-      return;
-    }
-
-    //console.log("unsubscribing conversation realtime", conversation.id);
-    this.weavyContext.unsubscribe(`a${conversationId}`, "conversation_marked", this.handleRealtimeSeenBy);
-    this.weavyContext.unsubscribe(`a${conversationId}`, "app_updated", this.handleRealtimeAppUpdated);
-    this.weavyContext.unsubscribe(`a${conversationId}`, "conversation_delivered", this.handleRealtimeDelivered);
-  }
+  #unsubscribeToRealtime?: () => void;
 
   protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
     super.willUpdate(changedProperties);
@@ -128,10 +117,21 @@ export default class WyConversationExtended extends WyConversation {
         this.membersQuery.untrackQuery();
       }
 
+      this.#unsubscribeToRealtime?.();
+
       if (this.conversationId) {
-        this.weavyContext.subscribe(`a${this.conversationId}`, "app_updated", this.handleRealtimeAppUpdated);
-        this.weavyContext.subscribe(`a${this.conversationId}`, "conversation_marked", this.handleRealtimeSeenBy);
-        this.weavyContext.subscribe(`a${this.conversationId}`, "conversation_delivered", this.handleRealtimeDelivered);
+        const subscribeGroup = `a${this.conversationId}`;
+
+        this.weavyContext.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+        this.weavyContext.subscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
+        this.weavyContext.subscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
+
+        this.#unsubscribeToRealtime = () => {
+          this.weavyContext?.unsubscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
+          this.weavyContext?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+          this.weavyContext?.unsubscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
+          this.#unsubscribeToRealtime = undefined;
+        };
       }
     }
   }
@@ -188,7 +188,7 @@ export default class WyConversationExtended extends WyConversation {
                 });
               }}
             >
-              <div slot="start" ${ref(this.pagerRef)} class="wy-pager"></div>
+              <div slot="start" ${ref(this.pagerRef)} part="wy-pager"></div>
               <wy-message-typing
                 slot="end"
                 .conversationId=${this.conversation.id}
@@ -208,7 +208,7 @@ export default class WyConversationExtended extends WyConversation {
               </wy-empty>
             </div>
           `}
-      ${this.conversation && hasPermission(PermissionType.Create, this.conversation?.permissions)
+      ${this.conversation && hasPermission(PermissionTypes.Create, this.conversation?.permissions)
         ? html`
             <div class="wy-footerbar wy-footerbar-sticky">
               <wy-message-editor
@@ -221,5 +221,10 @@ export default class WyConversationExtended extends WyConversation {
           `
         : nothing}
     `;
+  }
+
+  override disconnectedCallback() {
+    this.#unsubscribeToRealtime?.();
+    super.disconnectedCallback();
   }
 }

@@ -20,7 +20,7 @@ import {
 } from "../types/files.types";
 import { toUpperCaseFirst } from "../utils/strings";
 import { getUploadBlobMutationOptions } from "../data/blob-upload";
-import { AccessType } from "../types/app.types";
+import { AccessTypes } from "../types/app.types";
 import type { UsersResultType, UserType } from "../types/users.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { repeat } from "lit/directives/repeat.js";
@@ -32,14 +32,14 @@ import { PollOptionType } from "../types/polls.types";
 import { clearEmbeds, getEmbeds, initEmbeds, isFetchingEmbeds } from "../utils/embeds";
 import type { EmbedType } from "../types/embeds.types";
 import { DropZoneController } from "../controllers/dropzone-controller";
-
-import { inputConsume, inputConsumeWithBlurOnEscape } from "../utils/keyboard";
+import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
+import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
 import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
 import type { EditorState, Extension } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { desktop } from "../utils/browser";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import WeavyAvatar from "./wy-avatar";
@@ -52,7 +52,7 @@ import chatCss from "../scss/all";
 
 @customElement("wy-editor")
 @localized()
-export default class WyEditor extends AppConsumerMixin(LitElement) {
+export default class WyEditor extends BlockConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -160,6 +160,8 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
     { leading: true, trailing: false }
   );
 
+  protected authWindow?: WindowProxy | null;
+
   private throttledDrafting = throttle(
     async () => {
       this.saveDraft();
@@ -172,7 +174,8 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
     super();
 
     this.addEventListener("drop-files", this.handleDropFiles);
-    this.addEventListener("keyup", inputConsumeWithBlurOnEscape);
+    this.addEventListener("keydown", inputBlurOnEscape);
+    this.addEventListener("keyup", inputConsume);
   }
 
   override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
@@ -299,7 +302,9 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
               dropCursor(),
               mentions,
               autocompletion({
-                override: this.hasFeatures?.mentions ? [(context: CompletionContext) => this.autocomplete(context)] : null, //showMention
+                override: this.hasFeatures?.mentions
+                  ? [(context: CompletionContext) => this.autocomplete(context)]
+                  : null, //showMention
                 closeOnBlur: false,
                 aboveCursor: this.editorType !== "posts",
                 icons: false,
@@ -310,7 +315,7 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
                       div.classList.add("wy-item");
                       div.classList.add("wy-item-hover");
 
-                      if (!completion.item?.access || completion.item.access === AccessType.None) {
+                      if (!completion.item?.access || completion.item.access === AccessTypes.None) {
                         div.classList.add("wy-disabled");
                       }
 
@@ -416,21 +421,6 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
     // remove meetings event listener
     window.removeEventListener("message", this.createMeeting);
   }
-
-  private createMeeting = async (e: MessageEvent) => {
-    if (!this.weavyContext) {
-      return;
-    }
-
-    switch (e.data.name) {
-      case "zoom-signed-in": {
-        const mutation = addMeetingMutation(this.weavyContext, "zoom");
-        const meeting = await mutation.mutate();
-        this.meeting = meeting;
-        break;
-      }
-    }
-  };
 
   protected handleRemoveMeeting() {
     this.meeting = undefined;
@@ -631,16 +621,35 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
     clearEmbeds();
   }
 
-  protected handleZoomClick() {
-    if (!this.weavyContext || !this.user || !this.configuration?.zoom_authentication_url) {
+  private createMeeting = async (e: MessageEvent) => {
+    if (!this.weavyContext) {
+      return;
+    }
+  
+    if (e.source === this.authWindow && (this.weavyContext.url as URL).origin === e.origin && e.data && e.data.name && e.data.name.endsWith("-authorized")) {
+      const name = e.data.name.slice(0, -"-authorized".length);
+      const mutation = addMeetingMutation(this.weavyContext, name);
+      const meeting = await mutation.mutate();
+
+      if (!meeting.auth_url) {
+        this.meeting = meeting;
+      }
+    }
+  };
+
+  protected async handleMeetingClick(name: string) {
+    if (!this.weavyContext || !this.user) {
       return;
     }
 
-    window.open(
-      `${this.configuration.zoom_authentication_url}&state=${this.user.id}`,
-      "zoomAuthWin",
-      "height=640,width=480"
-    );
+    const mutation = addMeetingMutation(this.weavyContext, name);
+    const meeting = await mutation.mutate();
+
+    if (meeting.auth_url) {
+      this.authWindow = window.open(meeting.auth_url, "oauthwin", "height=640,width=480");
+    } else {
+      this.meeting = meeting;
+    }
   }
 
   protected setEmbeds(embed: EmbedType) {
@@ -738,10 +747,20 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
                 @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
               ></wy-confluence>`
             : nothing}
-          ${this.hasFeatures?.meetings && this.configuration?.zoom_authentication_url
-            ? html`<wy-button kind="icon" @click=${this.handleZoomClick} title=${msg("Zoom meeting")}>
-                <wy-icon name="zoom"></wy-icon>
-              </wy-button>`
+          ${this.hasFeatures?.meetings
+            ? html`<wy-button kind="icon" @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
+                  <wy-icon svg="zoom-meetings"></wy-icon>
+                </wy-button>
+                <wy-button kind="icon" @click=${() => this.handleMeetingClick("google")} title=${msg("Google Meet")}>
+                  <wy-icon svg="google-meet"></wy-icon>
+                </wy-button>
+                <wy-button
+                  kind="icon"
+                  @click=${() => this.handleMeetingClick("microsoft")}
+                  title=${msg("Microsoft Teams")}
+                >
+                  <wy-icon svg="microsoft-teams"></wy-icon>
+                </wy-button>`
             : nothing}
           ${this.hasFeatures?.polls
             ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")}>
@@ -751,9 +770,7 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
         </div>
 
         <!-- Button -->
-        <wy-button @click="${this.submit}" color="primary" title=${this.buttonText}>
-          ${this.buttonText}
-        </wy-button>
+        <wy-button @click="${this.submit}" color="primary" title=${this.buttonText}> ${this.buttonText} </wy-button>
       </div>
     `;
   }
@@ -787,13 +804,15 @@ export default class WyEditor extends AppConsumerMixin(LitElement) {
 
       <!-- meetings -->
       ${this.hasFeatures?.meetings && this.meeting
-        ? html`<div class="wy-item">
-            <wy-icon name="zoom"></wy-icon>
-            <div class="wy-item-body">${msg("Zoom meeting")}</div>
-            <wy-button kind="icon" @click=${this.handleRemoveMeeting}>
-              <wy-icon name="close-circle"></wy-icon>
-            </wy-button>
-          </div>`
+        ? html`
+            <div class="wy-item">
+              <wy-icon svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
+              <div class="wy-item-body">${getMeetingTitle(this.meeting.provider)}</div>
+              <wy-button kind="icon" @click=${this.handleRemoveMeeting}>
+                <wy-icon name="close-circle"></wy-icon>
+              </wy-button>
+            </div>
+          `
         : nothing}
 
       <!-- blobs -->

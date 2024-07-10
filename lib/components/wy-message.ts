@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -8,14 +8,14 @@ import { keyed } from "lit/directives/keyed.js";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
-import type { FileType } from "../types/files.types";
+import type { FileOpenEventType, FileType } from "../types/files.types";
 
 import chatCss from "../scss/all";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { type ConversationType } from "../types/conversations.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -30,10 +30,13 @@ import "./wy-meeting-card";
 import "./wy-skeleton";
 import "./wy-preview";
 import "./wy-poll";
+import { isEntityChainMatch } from "../utils/notifications";
+import { EntityTypes } from "../types/app.types";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 @customElement("wy-message")
 @localized()
-export default class WyMessage extends AppConsumerMixin(LitElement) {
+export default class WyMessage extends BlockConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -95,11 +98,20 @@ export default class WyMessage extends AppConsumerMixin(LitElement) {
   @property({ type: Array })
   seenBy: MemberType[] = [];
 
+  @property({ type: Boolean })
+  highlight: boolean = false;
+
   private previewRef: Ref<WeavyPreview> = createRef();
 
   private dispatchVote(id: number) {
     const event = new CustomEvent("vote", { detail: { id: id, parentId: this.messageId } });
     return this.dispatchEvent(event);
+  }
+
+  protected override willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("link")) {
+      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Message, { id: this.messageId }));
+    }
   }
 
   override render() {
@@ -116,7 +128,11 @@ export default class WyMessage extends AppConsumerMixin(LitElement) {
       : "";
 
     return html`
-      <div class=${classMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-bot": this.isBot })}>
+      <div
+        class=${classMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-bot": this.isBot })}
+        part=${partMap({ "wy-highlight": this.highlight })}
+        ${ref((el) => this.highlight && requestAnimationFrame(() => el?.scrollIntoView({ block: "nearest" })))}
+      >
         ${!this.me
           ? html`
               <div class="wy-message-author">
@@ -144,8 +160,8 @@ export default class WyMessage extends AppConsumerMixin(LitElement) {
                   ${images && !!images.length
                     ? html`<wy-image-grid
                         .images=${images}
-                        @file-open=${(e: CustomEvent) => {
-                          this.previewRef.value?.open(e.detail.file);
+                        @file-open=${(e: FileOpenEventType) => {
+                          this.previewRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-image-grid>`
                     : ``}
@@ -175,8 +191,8 @@ export default class WyMessage extends AppConsumerMixin(LitElement) {
                   ${files && !!files.length
                     ? html`<wy-attachments-list
                         .files=${files}
-                        @file-open=${(e: CustomEvent) => {
-                          this.previewRef.value?.open(e.detail.file);
+                        @file-open=${(e: FileOpenEventType) => {
+                          this.previewRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-attachments-list>`
                     : ``}
@@ -191,7 +207,7 @@ export default class WyMessage extends AppConsumerMixin(LitElement) {
                               lineBelow
                               ?lineReverse=${!this.me}
                               small
-                              directionX=${this.me ? "right" : "left" }
+                              directionX=${this.me ? "right" : "left"}
                               .reactions=${this.reactions}
                               parentId=${this.conversation.id}
                               entityId=${this.messageId}

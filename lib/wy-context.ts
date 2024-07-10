@@ -1,15 +1,14 @@
 import { css, html, LitElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-
 import { WeavyContext } from "./client/weavy";
 import type { WeavyTokenFactory, WeavyOptions } from "./types/weavy.types";
-
 import { indirectEvalObject } from "./converters/indirect-eval-object";
 import { toUrl } from "./converters/url";
 import { LocaleModule } from "@lit/localize";
-
-import portalStyles from "./scss/portal";
 import { Constructor } from "./types/generic.types";
+
+import allStyles from "./scss/all";
+import colorModesStyles from "./scss/color-modes";
 
 function acceptedValue(value: unknown) {
   return value !== undefined && value !== null && value !== false;
@@ -18,7 +17,8 @@ function acceptedValue(value: unknown) {
 @customElement("wy-context")
 export class WyContext extends LitElement implements WeavyOptions {
   static override styles = [
-    portalStyles,
+    allStyles,
+    colorModesStyles,
     css`
       :host {
         display: contents;
@@ -70,6 +70,12 @@ export class WyContext extends LitElement implements WeavyOptions {
 
   @property({ attribute: true, type: Array })
   reactions?: string[];
+
+  @property({ type: Boolean })
+  notificationEvents?: boolean;
+
+  @property({ type: Boolean })
+  notificationToasts?: boolean;
 
   @property({ attribute: true })
   scrollBehavior?: "smooth" | "instant" | "auto";
@@ -148,7 +154,7 @@ export class WyContext extends LitElement implements WeavyOptions {
       const validProperties = {} as WeavyOptions;
 
       Array.from(changedProperties.keys()).forEach((key) => {
-        if (key !== "weavyContext" && acceptedValue(this[key as keyof this & WeavyOptions])) {
+        if (key !== "weavyContext" && (acceptedValue(this[key as keyof this & WeavyOptions]) || acceptedValue(changedProperties.get(key as keyof WyContext)))) {
           Object.assign(validProperties, { [key as string]: this[key as keyof WeavyOptions] });
         }
       });

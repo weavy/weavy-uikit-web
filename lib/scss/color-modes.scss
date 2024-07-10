@@ -7,8 +7,8 @@
   & :where(wy-comments),
   & :where(wy-files),
   & :where(wy-messenger),
+  & :where(wy-notifications),
   & :where(wy-posts),
-  & :where(wy-portal),
   :host(&),
   :host &,
   ::slotted(&) {
@@ -22,8 +22,8 @@
   & :where(wy-comments),
   & :where(wy-files),
   & :where(wy-messenger),
+  & :where(wy-notifications),
   & :where(wy-posts),
-  & :where(wy-portal),
   :host(&),
   :host &,
   ::slotted(&) {

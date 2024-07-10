@@ -1,11 +1,21 @@
 @use "base/color";
 @use "base/var";
+@use "base/scroll";
 
 [part~=wy-tabs] {
     display: flex;
-    justify-content: space-evenly;
-    padding: var.default(--wy-padding-sm);
+    //justify-content: space-evenly;
+    //gap: var.default(--wy-gap-sm);
+    //justify-items: flex-start;
+    //container-type: inline-size;
+    overflow-y: hidden;
+    padding: var.default(--wy-padding);
+
+    @include scroll.scroll-x;    
+    @include scroll.thin-scrollbar;
 }
+
+
 
 [part~=wy-tab] {
     --wy-component-color: #{color.token(--wy-primary)};
@@ -15,7 +25,8 @@
     background: var(--wy-component-background-color);
 
     border: none;
-    border-radius: var.default(--wy-border-radius);
+    border-radius: var.default(--wy-border-radius-pill);
+    padding: var.default(--wy-button-padding-y) var.default(--wy-button-padding-x);
 
     display: inline-flex;
     flex-direction: column;
@@ -68,5 +79,16 @@
     
         font-size: var.default(--wy-font-size-xs);
         font-weight: var.default(--wy-font-weight);
+    }
+}
+
+
+[part~="wy-button-state-layer"][part~=wy-button-sm][part~="wy-tab-sm"] {
+    padding: var.default(--wy-button-padding-y) calc(var.default(--wy-button-padding-x) * .5);
+    margin: var.default(--wy-padding) auto;
+    font-size: var.default(--wy-font-size-sm);
+    height: calc(var.default(--wy-button-size) * .625);
+    &::before {
+        margin: calc(var.default(--wy-button-padding-x) * -.25) calc(var.default(--wy-button-padding-x) * 0);
     }
 }

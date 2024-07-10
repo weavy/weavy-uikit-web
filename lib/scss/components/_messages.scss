@@ -1,5 +1,6 @@
 @use "base/var";
 @use "base/color";
+@use "base/highlight";
 
 .wy-messages {
   padding: var.default(--wy-message-padding);
@@ -35,6 +36,11 @@
   margin-bottom: calc(var.default(--wy-padding) + .5 * var.default(--wy-button-size)); // Account for reaction button
   scroll-margin-block: 6rem;
 
+  --wy-component-background-color: #{color.token(--wy-surface-variant)};
+  --wy-component-color: #{color.token(--wy-on-surface-variant)};
+
+  @include highlight.flash;
+
   .wy-image-grid,
   .wy-attachments {
     border-radius: var.default(--wy-border-radius-sm);
@@ -48,8 +54,6 @@
 }
 
 .wy-message-bubble {
-  --wy-component-background-color: #{color.token(--wy-surface-variant)};
-  --wy-component-color: #{color.token(--wy-on-surface-variant)};
   //--wy-component-border-radius: #{var.default(--wy-border-radius)};
 
   background-color: var(--wy-component-background-color);
@@ -93,15 +97,8 @@
 
 // override some styles for message by chat bot
 .wy-message-bot{
-  .wy-message-bubble {
-    --wy-component-background-color: #{color.token(--wy-tertiary-container)};
-    --wy-component-color: #{color.token(--wy-on-tertiary-container)};
-    //--wy-component-border-radius: #{var.default(--wy-border-radius)};
-
-    background-color: var(--wy-component-background-color);
-    color: var(--wy-component-color);
-    //border-radius: var(--wy-component-border-radius);
-  }
+  --wy-component-background-color: #{color.token(--wy-tertiary-container)};
+  --wy-component-color: #{color.token(--wy-on-tertiary-container)};
 }
 
 // override some styles for message by current user
@@ -109,6 +106,8 @@
   margin-right: 0;
   margin-left: var.wy-rem(2.5);
   align-items: flex-end;
+  --wy-component-background-color: #{color.token(--wy-primary-container)};
+  --wy-component-color: #{color.token(--wy-on-primary-container)};
 
   .wy-message-meta {
     margin: 0 calc(.5 * var.default(--wy-gap)) calc(.5 * var.default(--wy-gap)) 0;
@@ -121,17 +120,8 @@
   .wy-message-content-row {
     flex-direction: row-reverse;
   }
+}
 
-  .wy-message-bubble {
-    --wy-component-background-color: #{color.token(--wy-primary-container)};
-    --wy-component-color: #{color.token(--wy-on-primary-container)};
-    //--wy-component-border-radius: #{var.default(--wy-border-radius)};
-
-    background-color: var(--wy-component-background-color);
-    color: var(--wy-component-color);
-    //border-radius: var(--wy-component-border-radius);
-  }
-}ß
 // override some styles for message that contains only emoji
 .wy-message-emoji {
   .wy-message-bubble {

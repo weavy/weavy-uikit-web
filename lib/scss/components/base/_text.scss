@@ -1,13 +1,32 @@
-// Text truncate
-// Requires inline-block or block for proper styling
+/**
+ * Text truncate.
+ * Requires inline-block or block for proper styling.
+ */
 @mixin truncate {
+  & {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
 }
 
-// Use stretched-link on links to to make its containing block clickable via a ::after pseudo element.
-// In most cases, this means that an element with position: relative; that contains a link is clickable.
+/**
+ * Multi-line text truncate
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/-webkit-line-clamp
+ */
+@mixin truncate-lines($lines: 1) {
+  & {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/**
+ * Use stretched-link on links to to make its containing block clickable via a ::after pseudo element.
+ * In most cases, this means that an element with position: relative; that contains a link is clickable.
+ */
 @mixin stretched-link {
   &::after {
     position: absolute;

@@ -1,34 +1,36 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
-import type { FileOrderType, FileType, FileViewType } from "../types/files.types"
+import type { FileOpenEventType, FileOrderType, FileType, FileViewType } from "../types/files.types";
 import { repeat } from "lit/directives/repeat.js";
-import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import { EntityTypes } from "../types/app.types";
+import { getEntityChainMatch, hasEntityChildType } from "../utils/notifications";
 
 import { renderFileCard } from "./wy-file-grid";
 import { renderFileTable } from "./wy-file-table";
+
+import allCss from "../scss/all";
+import { hostScrollYStyles } from "../scss/host";
+
+// wy-file-grid
+import gridCss from "../scss/wrappers/grid";
+import cardCss from "../scss/wrappers/card";
+
+// wy-file-table
+
 import "./wy-icon";
 import "./wy-dropdown";
 import "./wy-file-menu";
-import allCss from "../scss/all"
-import { hostScrollYStyles } from "../scss/host";
 
 @customElement("wy-files-list")
 @localized()
-export class WyFilesList extends LitElement {
-  static override styles = [
-    allCss,
-    hostScrollYStyles,
-  ];
+export class WyFilesList extends BlockConsumerMixin(LitElement) {
+  static override styles = [allCss, hostScrollYStyles, gridCss, cardCss];
 
   protected exportParts = new ShadowPartsController(this);
-
-  // Used in renderFileTable & renderFileCard
-  @consume({ context: weavyContextDefinition, subscribe: true })
-  @state()
-  private weavyContext?: WeavyContextType;
 
   @property({ attribute: false })
   files?: FileType[];
@@ -42,11 +44,17 @@ export class WyFilesList extends LitElement {
   @property()
   view: FileViewType = "list";
 
-  @property({ type: Number })
+  @state()
   isRenamingId?: number = NaN;
 
-  dispatchFileOpen(file: FileType) {
-    const event = new CustomEvent("file-open", { detail: { file } });
+  @state()
+  highlightId?: number = NaN;
+
+  @state()
+  highlightComment: boolean = false;
+
+  dispatchFileOpen(fileId: number, tab?: "comments" | "versions") {
+    const event: FileOpenEventType = new CustomEvent("file-open", { detail: { fileId, tab } });
     return this.dispatchEvent(event);
   }
 
@@ -95,20 +103,33 @@ export class WyFilesList extends LitElement {
     });
   }
 
+  protected override willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("link")) {
+      this.highlightId = this.link && getEntityChainMatch(this.link, EntityTypes.File)?.id;
+      this.highlightComment = this.link && this.highlightId
+        ? hasEntityChildType(this.link, EntityTypes.File, { id: this.highlightId }, EntityTypes.Comment)
+        : false;
+    }
+
+    if (changedProperties.has("highlightComment") && this.highlightComment && this.highlightId) {
+      this.dispatchFileOpen(this.highlightId, "comments");
+    }
+  }
+
   override render() {
     if (this.files && this.files.length) {
       if (this.view === "grid") {
         return html`
-          <div class="wy-grid wy-pane-group">
+          <div part="wy-grid">
             ${repeat(
               this.files,
               (file) => file.id,
-              (file) => renderFileCard.call(this, this.weavyContext, { file }, this.isRenamingId)
+              (file) => renderFileCard.call(this, file, this.isRenamingId, this.highlightId)
             )}
           </div>
         `;
       } else {
-        return renderFileTable.call(this, this.weavyContext, this.files, this.order, this.isRenamingId);
+        return renderFileTable.call(this, this.files, this.order, this.isRenamingId, this.highlightId);
       }
     }
 

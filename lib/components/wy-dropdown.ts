@@ -5,6 +5,7 @@ import { styleMap } from "lit/directives/style-map.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import type { iconNamesType } from "../utils/icons";
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
 
 import rebootStyles from "../scss/wrappers/base/reboot";
@@ -33,7 +34,7 @@ export default class WyDropdown extends LitElement {
   directionY: "up" | "down" = "down";
 
   @property()
-  icon: string = "dots-vertical";
+  icon: iconNamesType = "dots-vertical";
 
   @property({ type: Boolean })
   small: boolean = false;

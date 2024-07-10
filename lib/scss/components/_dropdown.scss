@@ -64,6 +64,10 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
   border: 0; // For `<button>`s
   gap: var.default(--wy-dropdown-gap);
 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+
   &:hover,
   &:focus {
     --wy-component-color: #{color.token(--wy-on-surface-variant)};
@@ -94,10 +98,6 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
     pointer-events: none;
     opacity: var.default(--wy-opacity-disabled);
   }
-
-  cursor: pointer;
-  display: flex;
-  align-items: center;
 
   > img, > wy-icon {
     margin-right: var.wy-rem(.5);

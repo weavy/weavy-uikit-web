@@ -7,18 +7,12 @@
 @use "base/text";
 
 .wy-appbars {
-  @include position.sticky-top;
-
-  /*@include backdrop.filter {
-    > .wy-appbar {
-      backdrop-filter: none;
-    }
-  }*/
-
   --wy-component-background-color: #{color.token(--wy-surface-1)};
   background-color: var(--wy-component-background-color);
 
   box-shadow: #{color.token(--wy-outline-variant)} 0px calc(-1 * #{var.default(--wy-border)}) 0px 0px inset;
+
+  @include position.sticky-top;
 
   > .wy-appbar, > .wy-toolbar {
     background-color: transparent;
@@ -37,8 +31,9 @@
   height: var.default(--wy-appbar-height);
   padding: calc(.5 * var.default(--wy-padding));
   flex: 0 0 var.default(--wy-appbar-height);
-  grid-template-columns: minmax(#{var.default(--wy-button-size)}, max-content) minmax(0, max-content) minmax(#{var.default(--wy-button-size)}, max-content);
-  column-gap: var.default(--wy-gap);
+  //grid-template-columns: minmax(#{var.default(--wy-button-size)}, max-content) minmax(0, max-content) minmax(#{var.default(--wy-button-size)}, max-content);
+  grid-template-columns: #{var.default(--wy-button-size)} minmax(0, max-content) #{var.default(--wy-button-size)};
+  column-gap: calc(2 * var.default(--wy-gap) + var.default(--wy-button-size));
   line-height: var.default(--wy-line-height);
 
   background-color: var(--wy-component-background-color);
@@ -62,17 +57,26 @@
   max-width: 100%;
 }
 
+.wy-appbar-buttons-first {
+  justify-content: flex-start;
+}
+
+.wy-appbar-buttons-last {
+  justify-content: flex-end;
+}
+
 .wy-toolbar-buttons-last {
   margin-inline-start: auto;
 }
 
 .wy-appbar-text {
-  @include text.truncate;
   max-width: 100%;
   display: block;
   
   color: inherit !important;
   user-select: none;
+  
+  @include text.truncate;
 
   a {
     color: inherit;

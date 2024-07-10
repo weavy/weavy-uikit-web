@@ -1,5 +1,4 @@
 import { html, nothing } from "lit";
-import { classMap } from "lit/directives/class-map.js";
 
 import "./wy-icon";
 import "./wy-file-menu";
@@ -8,33 +7,24 @@ import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilen
 import type { FileType } from "../types/files.types";
 
 import { WyFilesList } from "./wy-files-list";
-import { type WeavyContextType } from "../contexts/weavy-context";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { checkImageLoad, imageLoaded } from "../utils/images";
+import { partMap } from "../utils/directives/shadow-part-map";
 
-export function renderFileCard(
-  this: WyFilesList,
-  weavyContext: WeavyContextType | undefined,
-  { file }: { file: FileType },
-  isRenamingId?: number
-) {
+export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?: number, highlightId?: number) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
-  const fileDate = new Intl.DateTimeFormat(weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+  const fileDate = new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
     new Date(fileChangedAt)
   );
   const isRenaming = Boolean(isRenamingId && isRenamingId === file.id);
 
-  let { icon } = getIcon(file.name);
+  const { icon } = getIcon(file.name);
   const ext = getExtension(file.name);
   const provider = getProvider(file.provider);
-
-  if (provider) {
-    icon = `${icon}+${provider}`;
-  }
 
   const handleRename = (e: Event) => {
     e.stopImmediatePropagation();
@@ -60,21 +50,30 @@ export function renderFileCard(
     }
   };
 
+  const trashedPart = {
+    "wy-trashed": file.is_trashed
+  };
+
+  const highlight = Boolean(highlightId && highlightId === file.id);
+
   return html`
     <div
-      class="wy-card ${classMap({
+      part=${partMap({
+        "wy-card": true,
         "wy-card-trashed": file.is_trashed,
         "wy-card-hover": !file.is_trashed && !isRenaming,
-      })}"
+        "wy-highlight": highlight,
+      })}
       title="${file.name} • ${fileSize} • ${fileDate}"
       tabindex="0"
       @click=${(e: Event) => {
-        !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file);
+        !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file.id);
       }}
       @keydown=${clickOnEnterAndConsumeOnSpace}
       @keyup=${clickOnSpace}
+      ${ref((el) => highlight && el?.scrollIntoView({ block: "nearest" }))}
     >
-      <div class="wy-card-actions">
+      <div part="wy-card-actions">
         <wy-file-menu
           small
           .file=${file}
@@ -88,8 +87,9 @@ export function renderFileCard(
       ${!file.is_trashed && file.thumbnail_url
         ? html`
             <img
-              class="wy-card-top wy-card-content wy-card-image ${classMap({
+              part="wy-card-top wy-card-content wy-card-image ${partMap({
                 "wy-card-top-image": file.kind === "image",
+                ...trashedPart
               })}"
               width=${ifDefined(file.width)}
               height=${ifDefined(file.height)}
@@ -102,11 +102,11 @@ export function renderFileCard(
             />
           `
         : html`
-            <div class="wy-card-top wy-card-content wy-card-icon">
-              <wy-icon name=${icon} size="96" kind=${file.kind} ext=${ext}></wy-icon>
+            <div part="wy-card-top wy-card-content wy-card-icon ${partMap(trashedPart)}">
+              <wy-icon name=${icon} .overlayName=${provider} size="96" kind=${file.kind} ext=${ext}></wy-icon>
             </div>
           `}
-      <div class="wy-card-content wy-filename">
+      <div part="wy-card-content wy-filename ${partMap(trashedPart)}">
         ${isRenaming
           ? html`
               <input

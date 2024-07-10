@@ -1,5 +1,6 @@
 @use "base/color";
 @use "base/var";
+@use "base/highlight";
 
 .wy-posts {
   display: flex;
@@ -20,6 +21,8 @@
   --wy-component-border-radius: #{var.default(--wy-border-radius)};
   border-radius: var(--wy-component-border-radius);
 
+  @include highlight.flash;
+
   .wy-image-grid {
     border-radius: 0;
   }
@@ -34,12 +37,11 @@
   flex-direction: column;
 
   padding: var.default(--wy-padding) var.default(--wy-padding-lg);
+  gap: var.default(--wy-gap-lg);
 
   &:empty {
     display: none;
   }
-
-  gap: var.default(--wy-gap-lg);
 }
 
 .wy-post-footer {

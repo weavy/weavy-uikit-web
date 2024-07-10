@@ -21,19 +21,18 @@ const apiKey = process.env.WEAVY_APIKEY;
 
 /// USERS AND BOTS
 const users = [
-  { name: "Marvin Acme", username: "marvin", email: "marvin@acme.corp", avatar: "https://i.pravatar.cc/150?u=marvin" },
-  { name: "Road Runner", username: "meepmeep", email: "roadrunner@acme.corp", avatar: "https://i.pravatar.cc/150?u=meepmeep" },
-  { name: "Bugs Bunny", username: "bugs", email: "bugs@acme.corp", avatar: "https://i.pravatar.cc/150?u=bugs" },
-  { name: "Daffy Duck", username: "daffy", email: "daffy@acme.corp", avatar: "https://i.pravatar.cc/150?u=daffy" },
-  { name: "Porky Pig", username: "porky", email: "porky@acme.corp", avatar: "https://i.pravatar.cc/150?u=porky" },
-  { name: "Tweety Bird", username: "tweety", email: "tweety@acme.corp", avatar: "https://i.pravatar.cc/150?u=tweety" },
-  { name: "Wile E. Coyote", username: "wile", email: "wile@acme.corp", avatar: "https://i.pravatar.cc/150?u=wile" },
+  { name: "Marvin Acme", username: "marvin", email: "marvin@acme.corp", picture: "https://i.pravatar.cc/150?u=marvin" },
+  { name: "Road Runner", username: "meepmeep", email: "roadrunner@acme.corp", picture: "https://i.pravatar.cc/150?u=meepmeep" },
+  { name: "Bugs Bunny", username: "bugs", email: "bugs@acme.corp", picture: "https://i.pravatar.cc/150?u=bugs" },
+  { name: "Daffy Duck", username: "daffy", email: "daffy@acme.corp", picture: "https://i.pravatar.cc/150?u=daffy" },
+  { name: "Porky Pig", username: "porky", email: "porky@acme.corp", picture: "https://i.pravatar.cc/150?u=porky" },
+  { name: "Tweety Bird", username: "tweety", email: "tweety@acme.corp", picture: "https://i.pravatar.cc/150?u=tweety" },
+  { name: "Wile E. Coyote", username: "wile", email: "wile@acme.corp", picture: "https://i.pravatar.cc/150?u=wile" },
   { name: "Claude", username: "claude", metadata: { family: "claude", api_key: process.env.CLAUDE_APIKEY }, is_bot: true },
   { name: "Gemini", username: "gemini", metadata: { family: "gemini", api_key: process.env.GEMINI_APIKEY }, is_bot: true },
   { name: "Kapa", username: "kapa", metadata: { family: "kapa", api_key: process.env.KAPA_APIKEY }, is_bot: true },
   { name: "OpenAI", username: "openai", metadata: { family: "openai", model: "gpt-4o", api_key: process.env.OPENAI_APIKEY }, is_bot: true },
 ];
-
 
 function getUser(username) {
   // try to get user with specified name, otherwise return the first user
@@ -70,18 +69,6 @@ app.use(
   })
 );
 
-// syncusers to weavy
-[users].forEach((u) => {
-  console.log("Syncing", u.username);
-  fetch(new URL("/api/users/" + u.username, weavyUrl), {
-    method: "PUT",
-    headers: {
-      "content-type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(u)
-  });
-});
 
 // list users
 app.get("/api/users", async (req, res) => {
@@ -175,4 +162,19 @@ app.get("/api/token", async (req, res) => {
 app.listen(PORT, (_server) => {
   console.log(`Environment: ${weavyUrl}`);
   console.log(`Auth server: http://localhost:${PORT}/`);
+    
+  // sync users to weavy
+  users.forEach((u) => {
+    console.log("Syncing", u.username);
+    fetch(new URL("/api/users/" + u.username, weavyUrl), {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(u)
+    });
+  });
 });
+
+

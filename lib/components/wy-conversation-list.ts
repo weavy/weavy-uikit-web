@@ -26,10 +26,10 @@ import { updateCacheItem } from "../utils/query-cache";
 import { ConversationType } from "../types/conversations.types";
 import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
-import { inputConsumeWithClearAndBlurOnEscape } from "../utils/keyboard";
+import { inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyContextProps } from "../types/weavy.types";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-conversation-list-item";
@@ -41,7 +41,7 @@ import "./wy-spinner";
 
 @customElement("wy-conversation-list")
 @localized()
-export default class WeavyConversationList extends AppConsumerMixin(LitElement) {
+export default class WeavyConversationList extends BlockConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -62,7 +62,7 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
   conversationId?: number;
 
   @property({ type: Array })
-  types?: ConversationTypeGuid[] = [ConversationTypeGuid.ChatRoom, ConversationTypeGuid.PrivateChat];
+  conversationTypes?: ConversationTypeGuid[] = [ConversationTypeGuid.ChatRoom, ConversationTypeGuid.PrivateChat];
 
   @property()
   bot?: string;
@@ -99,8 +99,9 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
 
     //console.info("presence", data)
 
+    // payload returns a single id as a string instead of number[]
     if (!Array.isArray(data)) {
-      data = [data];
+      data = [parseInt(data)];
     }
 
     updateCacheItem(
@@ -154,12 +155,14 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
     this.searchText = "";
   }
 
+  #unsubscribeToRealtime?: () => void;
+
   protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("types")) && this.weavyContext) {
-     this.conversationsQuery.trackInfiniteQuery(
-        getConversationsOptions(this.weavyContext, {}, () => this.searchText, this.types, this.bot)
+    if ((changedProperties.has("weavyContext") || changedProperties.has("conversationTypes")) && this.weavyContext) {
+      this.conversationsQuery.trackInfiniteQuery(
+        getConversationsOptions(this.weavyContext, {}, () => this.searchText, this.conversationTypes, this.bot)
       );
 
       this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
@@ -168,13 +171,22 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
       this.leaveConversationMutation = getLeaveConversationMutation(this.weavyContext);
       this.trashConversationMutation = getTrashConversationMutation(this.weavyContext);
 
+      this.#unsubscribeToRealtime?.();
+
       // realtime
       this.weavyContext.subscribe(null, "app_created", this.handleRefresh);
       this.weavyContext.subscribe(null, "member_added", this.handleRefresh);
       this.weavyContext.subscribe(null, "online", this.handlePresenceChange);
+
+      this.#unsubscribeToRealtime = () => {
+        this.weavyContext?.unsubscribe(null, "app_created", this.handleRefresh);
+        this.weavyContext?.unsubscribe(null, "member_added", this.handleRefresh);
+        this.weavyContext?.unsubscribe(null, "online", this.handlePresenceChange);
+        this.#unsubscribeToRealtime = undefined;
+      };
     }
 
-    if(changedProperties.has("user") && this.user) {
+    if (changedProperties.has("user") && this.user) {
       if (!this.bot) {
         this.avatarUser ??= this.user;
       }
@@ -230,17 +242,22 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
 
   override render() {
     const { data: infiniteData, isPending } = this.conversationsQuery.result ?? {};
+    const avatarIsPending = !this.avatarUser;
 
     return html`
       ${this.user
         ? html`
             <header class="wy-appbars">
               <nav class="wy-appbar">
-                <wy-avatar
-                  .src=${this.avatarUser?.avatar_url}
-                  .name=${this.avatarUser?.display_name}
-                  .size=${24}
-                ></wy-avatar>
+                ${avatarIsPending
+                  ? html` <wy-spinner></wy-spinner> `
+                  : html`
+                      <wy-avatar
+                        .src=${this.avatarUser?.avatar_url}
+                        .name=${this.avatarUser?.display_name}
+                        .size=${24}
+                      ></wy-avatar>
+                    `}
                 <div class="wy-appbar-text"
                   >${this.name ?? (this.bot ? this.avatarUser?.display_name : msg("Messenger"))}</div
                 >
@@ -262,15 +279,11 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
                           .value=${this.searchText || ""}
                           ${ref(this.inputRef)}
                           @input=${() => this.throttledSearch()}
-                          @keyup=${inputConsumeWithClearAndBlurOnEscape}
+                          @keydown=${inputClearAndBlurOnEscape}
+                          @keyup=${inputConsume}
                           placeholder=${msg("Search for conversations...")}
                         />
-                        <wy-button
-                          type="reset"
-                          @click=${this.clear}
-                          kind="icon"
-                          class="wy-input-group-button-icon"
-                        >
+                        <wy-button type="reset" @click=${this.clear} kind="icon" class="wy-input-group-button-icon">
                           <wy-icon name="close-circle"></wy-icon>
                         </wy-button>
                         <wy-button kind="icon" class="wy-input-group-button-icon">
@@ -293,7 +306,7 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
                       </div>
                     `
                 : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-              <div ${ref(this.pagerRef)} class="wy-pager"></div>
+              <div ${ref(this.pagerRef)} part="wy-pager"></div>
             </div>
           `
         : html`<wy-empty class="wy-pane"><wy-spinner overlay></wy-spinner></wy-empty>`}
@@ -301,11 +314,7 @@ export default class WeavyConversationList extends AppConsumerMixin(LitElement) 
   }
 
   override disconnectedCallback(): void {
-    if (this.weavyContext) {
-      this.weavyContext.unsubscribe(null, "app_created", this.handleRefresh);
-      this.weavyContext.unsubscribe(null, "member_added", this.handleRefresh);
-      this.weavyContext.unsubscribe(null, "online", this.handlePresenceChange);
-    }
+    this.#unsubscribeToRealtime?.();
     super.disconnectedCallback();
   }
 }

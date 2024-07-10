@@ -6,9 +6,8 @@ import type { ExternalBlobType } from "../types/files.types";
 import chatCss from "../scss/all";
 import type { ConfluencePageProps } from "../types/confluence.types";
 
-import { portal } from "lit-modal-portal";
 import { localized, msg } from "@lit/localize";
-import { AppConsumerMixin } from "../mixins/app-consumer-mixin";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-dropdown";
@@ -18,7 +17,7 @@ import "./wy-confluence-picker";
 
 @customElement("wy-confluence")
 @localized()
-export default class WyConfluence extends AppConsumerMixin(LitElement) {
+export default class WyConfluence extends BlockConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -88,40 +87,36 @@ export default class WyConfluence extends AppConsumerMixin(LitElement) {
               ><wy-icon name="confluence" color="native"></wy-icon
             ></wy-button>
           `}
-      ${this.weavyContext && this.settings
-        ? portal(
-            this.showPicker
-              ? html`
-                  <wy-overlay
-                    .contexts=${this.contexts}
-                    @close=${() => this.close()}
-                    @release-focus=${() =>
-                      this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
-                  >
-                    <slot name="header">
-                      <header class="wy-appbars">
-                        <nav class="wy-appbar">
-                          <slot name="appbar-buttons" class="wy-appbar-buttons"></slot>
-                          <slot name="appbar-text" class="wy-appbar-text">${msg("Confluence Page Picker")}</slot>
-                          <wy-button kind="icon" @click=${() => this.close()}>
-                            <wy-icon name="close"></wy-icon>
-                          </wy-button>
-                        </nav>
-                      </header>
-                    </slot>
-
+      ${this.weavyContext
+        ? html`
+            <wy-overlay
+              .show=${this.showPicker}
+              @close=${() => this.close()}
+              @release-focus=${() =>
+                this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
+            >
+              <slot name="header">
+                <header class="wy-appbars">
+                  <nav class="wy-appbar">
+                    <slot name="appbar-buttons" class="wy-appbar-buttons wy-appbar-buttons-first"></slot>
+                    <slot name="appbar-text" class="wy-appbar-text">${msg("Confluence Page Picker")}</slot>
+                    <wy-button kind="icon" @click=${() => this.close()}>
+                      <wy-icon name="close"></wy-icon>
+                    </wy-button>
+                  </nav>
+                </header>
+              </slot>
+              ${this.showPicker
+                ? html`
                     <wy-confluence-picker
                       @submit=${(e: CustomEvent) => this.handleAddPage(e.detail)}
                       @close=${() => this.close()}
                       @unauthorized=${() => this.handleUnauthorized()}
                     ></wy-confluence-picker>
-                  </wy-overlay>
-                `
-              : nothing,
-            this.settings.submodals || this.weavyContext.modalRoot === undefined
-              ? this.settings.component.renderRoot
-              : this.weavyContext.modalRoot
-          )
+                  `
+                : nothing}
+            </wy-overlay>
+          `
         : nothing}
     `;
   }

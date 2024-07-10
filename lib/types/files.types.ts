@@ -1,7 +1,6 @@
 import { AppRef, EntityType } from "./app.types";
 import { CommentsResultType } from "./comments.types";
-import type { SortOrderType } from "./lists.types";
-import { MetadataType } from "./msg.types";
+import type { MetadataType, SortOrderType } from "./lists.types";
 import { InfiniteQueryResultType } from "./query.types";
 import type { UserType } from "./users.types";
 import { type Mutation } from "@tanstack/query-core";
@@ -137,3 +136,5 @@ export type FileMutationType = Mutation<
   MutateFileProps,
   FileMutationContextType | undefined
 >;
+
+export type FileOpenEventType = CustomEvent<{ fileId: number, tab?: "comments" | "versions" }>

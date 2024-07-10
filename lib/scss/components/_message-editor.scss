@@ -12,17 +12,15 @@
 */
 
 .wy-message-editor-top {
-  @include position.sticky-top;
-
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
+  @include position.sticky-top;
 }
 
 .wy-message-editor-bottom {
-  @include position.sticky-bottom;
-
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
+  @include position.sticky-bottom;
 }
 
 .wy-message-form {

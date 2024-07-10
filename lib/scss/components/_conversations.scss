@@ -34,8 +34,8 @@
 
   .wy-item-text {
     .wy-typing-show {
-      @include text.truncate;
       font-weight: var.default(--wy-font-weight);
+      @include text.truncate;
     }
   }
 }

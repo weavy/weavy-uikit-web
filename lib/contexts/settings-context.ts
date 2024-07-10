@@ -1,8 +1,9 @@
 import { createContext } from "@lit/context";
-import { AppSettingProps } from "../mixins/app-mixin";
+import { BlockSettingProps } from "../mixins/block-mixin";
 import { LitElement } from "lit";
+import { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
 
-export class AppSettings implements AppSettingProps {
+export class BlockSettings implements BlockSettingProps {
   #component: LitElement;
 
   /**
@@ -13,7 +14,9 @@ export class AppSettings implements AppSettingProps {
   }
 
   // SETTINGS
-  submodals: boolean = false;
+  notifications: NotificationsAppearanceType = "button-list";
+  notificationsBadge: NotificationsBadgeType = "count";
+  //notificationsToasts: NotificationsToastsType = "browser";
 
   // PROPERTY INIT
   constructor(host: LitElement) {
@@ -21,13 +24,13 @@ export class AppSettings implements AppSettingProps {
 
     const settingKeys = Object.keys(this);
 
-    settingKeys.forEach((appSetting) => {
-      if (appSetting in host) {
-        Object.assign(this, { [appSetting]: host[appSetting as keyof typeof host] });
+    settingKeys.forEach((blockSetting) => {
+      if (blockSetting in host) {
+        Object.assign(this, { [blockSetting]: host[blockSetting as keyof typeof host] });
       }
     });
   }
 }
 
-export type AppSettingsType = AppSettings;
-export const appSettingsContext = createContext<AppSettings | undefined>(Symbol.for("weavy-app-settings"));
+export type BlockSettingsType = BlockSettings;
+export const blockSettingsContext = createContext<BlockSettings | undefined>(Symbol.for("weavy-block-settings"));

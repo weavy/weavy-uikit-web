@@ -1,7 +1,7 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { Presence, type PresenceType } from "../types/presence.types";
-import { shadowPartMap } from "../utils/directives/shadow-part-map";
+import { partMap } from "../utils/directives/shadow-part-map";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import rebootCss from "../scss/wrappers/base/reboot";
@@ -34,6 +34,6 @@ export default class WyPresence extends LitElement {
       "wy-presence-in-text": this.placement === "text",
     };
 
-    return html` <span part=${shadowPartMap(presenceParts)} data-presence-id=${this.id}></span> `;
+    return html` <span part=${partMap(presenceParts)} data-presence-id=${this.id}></span> `;
   }
 }

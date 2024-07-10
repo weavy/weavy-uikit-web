@@ -7,6 +7,7 @@ export function getApiOptions<T>(weavyContext: WeavyContextType, apiKey: QueryKe
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: apiKey,
     queryFn: async () => {
+      //console.log("API", (apiPath ? apiPath : "/api/" + apiKey.join("/")));
       const response = await weavyContext.post((apiPath ? apiPath : "/api/" + apiKey.join("/")), method, body);
 
       if (response.ok){

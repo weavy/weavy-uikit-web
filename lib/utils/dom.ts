@@ -45,7 +45,7 @@ export const observeConnected = (target: Element, callback: (isConnected: boolea
   return connectObserver;
 };
 
-export async function whenVisible() {
+export async function whenDocumentVisible() {
   if (document.hidden) {
     await new Promise((resolve) => {
       window.addEventListener(
@@ -61,6 +61,37 @@ export async function whenVisible() {
   }
 }
 
+export const defaultVisibilityCheckOptions: CheckVisibilityOptions = {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  /* @ts-ignore */
+  opacityProperty: true,
+  visibilityProperty: true,
+  // Legacy compatibility
+  checkOpacity: true,
+  checkVisibilityCSS: true,
+};
+
+export function untilVisibility(target: HTMLElement, visibility: boolean = true, options: CheckVisibilityOptions = defaultVisibilityCheckOptions, callBack: (value: unknown) => void) {
+  if(target.checkVisibility(options) === visibility) {
+    callBack(visibility);
+  } else {
+    requestAnimationFrame(() => untilVisibility(target, visibility, options, callBack))
+  }
+}
+
+export async function whenElementVisible(target: HTMLElement, visibility: boolean = true, options: CheckVisibilityOptions = defaultVisibilityCheckOptions) {
+  if (target.checkVisibility(options) !== visibility) {
+    const whenVisible = new Promise((r) => {
+      untilVisibility(target, visibility, options, r);
+    });
+    await whenVisible;
+  }
+}
+
 export function isInShadowDom(node: Node) {
   return node.getRootNode() instanceof ShadowRoot;
+}
+
+export function supportsPopover() {
+  return HTMLElement.prototype.hasOwnProperty("popover");
 }

@@ -1,9 +1,10 @@
-import { MutationObserver } from "@tanstack/query-core";
+import { InfiniteData, MutationObserver } from "@tanstack/query-core";
 import { type WeavyContextType } from "../client/weavy";
-import { ConversationType } from "../types/conversations.types";
+import { ConversationType, ConversationTypeGuid, ConversationsResultType } from "../types/conversations.types";
 import { ConversationMutationContextType } from "../types/conversations.types";
 import { removeCacheItem, updateCacheItem, updateCacheItems } from "../utils/query-cache";
-import { AccessType } from "../types/app.types";
+import { AccessTypes, AppRef, AppType } from "../types/app.types";
+import { getApi, getApiOptions } from "./api";
 
 export type MutateDeliveredConversationVariables = {
   id: number;
@@ -33,7 +34,7 @@ export type MutateLeaveConversationVariables = {
 export type MutateUpdateMemberVariables = {
   id: number;
   userId: number;
-  access: AccessType;
+  access: AccessTypes;
 };
 
 export type MutateAddMembersToConversationVariables = {
@@ -110,7 +111,7 @@ export function getDeliveredConversationMutationOptions(weavyContext: WeavyConte
   const options = {
     mutationFn: async ({ id }: MutateDeliveredConversationVariables) => {
       const url = `/api/conversations/${id}/delivered`;
-      await weavyContext.post(url, "PUT", "");      
+      await weavyContext.post(url, "PUT", "");
     },
     onMutate: async () => {
       return <ConversationMutationContextType>{};
@@ -124,14 +125,18 @@ export function getMarkConversationMutationOptions(weavyContext: WeavyContextTyp
   const options = {
     mutationFn: async ({ id, markAsRead, messageId }: MutateMarkConversationVariables) => {
       const url = markAsRead ? `/api/conversations/${id}/mark?messageId=${messageId}` : `/api/conversations/${id}/mark`;
-      await weavyContext.post(url, markAsRead ? "PUT" : "DELETE", "");      
+      await weavyContext.post(url, markAsRead ? "PUT" : "DELETE", "");
     },
     onMutate: async (variables: MutateMarkConversationVariables) => {
+      updateCacheItems(
+        weavyContext.queryClient,
+        { queryKey: ["conversations", "list"], exact: false },
+        variables.id,
+        (item: ConversationType) => {
+          item.is_unread = !variables.markAsRead;
+        }
+      );
 
-      updateCacheItems(weavyContext.queryClient, { queryKey: ["conversations", "list"], exact: false }, variables.id, (item: ConversationType) => {
-        item.is_unread = !variables.markAsRead;
-      });
-      
       updateCacheItem(weavyContext.queryClient, ["conversations", variables.id], -1, (item: ConversationType) => {
         item.is_unread = !variables.markAsRead;
         if (variables.messageId) {
@@ -145,10 +150,15 @@ export function getMarkConversationMutationOptions(weavyContext: WeavyContextTyp
     },
     onError: (error: Error, variables: MutateMarkConversationVariables) => {
       console.error(error.message);
-      updateCacheItems(weavyContext.queryClient, { queryKey: ["conversations", "list"], exact: false }, variables.id, (item: ConversationType) => {
-        item.is_unread = variables.markAsRead;
-      });
-    }
+      updateCacheItems(
+        weavyContext.queryClient,
+        { queryKey: ["conversations", "list"], exact: false },
+        variables.id,
+        (item: ConversationType) => {
+          item.is_unread = variables.markAsRead;
+        }
+      );
+    },
   };
 
   return options;
@@ -160,17 +170,27 @@ export function getStarConversationMutationOptions(weavyContext: WeavyContextTyp
       await weavyContext.post(`/api/apps/${id}/stars`, star ? "POST" : "DELETE", "");
     },
     onMutate: async (variables: MutateStarConversationVariables) => {
-      updateCacheItems(weavyContext.queryClient, { queryKey: ["conversations", "list"], exact: false }, variables.id, (item: ConversationType) => {
-        item.is_starred = variables.star;
-      });
+      updateCacheItems(
+        weavyContext.queryClient,
+        { queryKey: ["conversations", "list"], exact: false },
+        variables.id,
+        (item: ConversationType) => {
+          item.is_starred = variables.star;
+        }
+      );
       return <ConversationMutationContextType>{};
     },
     onError: (error: Error, variables: MutateStarConversationVariables) => {
       console.error(error.message);
-      updateCacheItems(weavyContext.queryClient, { queryKey: ["conversations", "list"], exact: false }, variables.id, (item: ConversationType) => {
-        item.is_starred = !variables.star;
-      });
-    }
+      updateCacheItems(
+        weavyContext.queryClient,
+        { queryKey: ["conversations", "list"], exact: false },
+        variables.id,
+        (item: ConversationType) => {
+          item.is_starred = !variables.star;
+        }
+      );
+    },
   };
 
   return options;
@@ -178,18 +198,23 @@ export function getStarConversationMutationOptions(weavyContext: WeavyContextTyp
 
 export function getPinConversationMutationOptions(weavyContext: WeavyContextType) {
   const options = {
-    mutationFn: async ({ id, pin }: MutatePinConversationVariables) => {      
+    mutationFn: async ({ id, pin }: MutatePinConversationVariables) => {
       await weavyContext.post(`/api/conversations/${id}/pin`, pin ? "PUT" : "DELETE", "");
     },
     onMutate: async (variables: MutatePinConversationVariables) => {
-      updateCacheItems(weavyContext.queryClient, { queryKey: ["conversations", "list"], exact: false }, variables.id, (item: ConversationType) => {
-        item.is_pinned = variables.pin;
-      });
+      updateCacheItems(
+        weavyContext.queryClient,
+        { queryKey: ["conversations", "list"], exact: false },
+        variables.id,
+        (item: ConversationType) => {
+          item.is_pinned = variables.pin;
+        }
+      );
       return <ConversationMutationContextType>{};
     },
     onSettled: async () => {
       await weavyContext.queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    }
+    },
   };
 
   return options;
@@ -212,13 +237,7 @@ export function getLeaveConversationMutationOptions(weavyContext: WeavyContextTy
 export function getUpdateMemberMutationOptions(weavyContext: WeavyContextType) {
   const options = {
     mutationFn: async ({ id, userId, access }: MutateUpdateMemberVariables) => {
-      await weavyContext.post(
-        `/api/apps/${id}/members/${userId}`,
-        "PUT",
-        JSON.stringify(
-          { access }
-        )
-      );
+      await weavyContext.post(`/api/apps/${id}/members/${userId}`, "PUT", JSON.stringify({ access }));
     },
     onMutate: async (variables: MutateUpdateMemberVariables) => {
       removeCacheItem(weavyContext.queryClient, ["conversations"], variables.id);
@@ -258,7 +277,7 @@ export function getUpdateConversationMutationOptions(weavyContext: WeavyContextT
         "PATCH",
         JSON.stringify({
           name: name,
-          Picture: blobId
+          Picture: blobId,
         })
       );
       return response.json();
@@ -268,14 +287,14 @@ export function getUpdateConversationMutationOptions(weavyContext: WeavyContextT
         item.display_name = variables.name!;
         if (typeof variables?.thumbnailUrl !== "undefined") {
           item.avatar_url = variables.thumbnailUrl!;
-        }        
+        }
       });
 
       updateCacheItem(weavyContext.queryClient, ["conversations", variables.id], -1, (item: ConversationType) => {
         item.display_name = variables.name!;
         if (typeof variables?.thumbnailUrl !== "undefined") {
           item.avatar_url = variables.thumbnailUrl!;
-        }        
+        }
       });
       return <ConversationMutationContextType>{};
     },
@@ -335,4 +354,48 @@ export function getUpdateConversationMutation(weavyContext: WeavyContextType): U
 
 export function getTrashConversationMutation(weavyContext: WeavyContextType): TrashConversationMutationType {
   return new MutationObserver(weavyContext.queryClient, getTrashConversationMutationOptions(weavyContext));
+}
+
+export function getConversationOptions(weavyContext: WeavyContextType, conversationId: number) {
+  return getApiOptions<ConversationType>(weavyContext, ["conversations", conversationId], undefined, {
+    initialData: () => {
+      // Use any data from the conversation-list query as the initial data for the conversation query
+      return weavyContext?.queryClient
+        .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
+        ?.pages.flatMap((cPage) => cPage.data)
+        .find((c) => c?.id === conversationId);
+    },
+  });
+}
+
+export function getConversation(weavyContext: WeavyContextType, conversationId: number) {
+  return getApi<ConversationType>(weavyContext, ["conversations", conversationId], undefined, {
+    initialData: () => {
+      // Use any data from the conversation-list query as the initial data for the conversation query
+      return weavyContext?.queryClient
+        .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
+        ?.pages.flatMap((cPage) => cPage.data)
+        .find((c) => c?.id === conversationId);
+    },
+  });
+}
+
+export async function resolveConversation(
+  weavyContext: WeavyContextType,
+  conversation: AppRef | AppType | number,
+  types: ConversationTypeGuid[] = Object.values(ConversationTypeGuid)
+): Promise<ConversationType | undefined> {
+  let checkConversation: ConversationType;
+
+  if (typeof conversation === "number") {
+    checkConversation = await getConversation(weavyContext, conversation);
+  } else if (typeof conversation.id === "number" && !conversation.type) {
+    checkConversation = await getConversation(weavyContext, conversation.id);
+  } else if (typeof conversation.type === "string") {
+    checkConversation = conversation as ConversationType;
+  } else {
+    return undefined;
+  }
+
+  return types.includes(checkConversation.type) ? checkConversation : undefined;
 }

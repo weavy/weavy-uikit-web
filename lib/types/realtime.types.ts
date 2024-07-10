@@ -1,4 +1,4 @@
-import { AppType, EntityType } from "./app.types";
+import { AppRef, AppType, EntityType } from "./app.types";
 import { ConversationType } from "./conversations.types";
 import { CommentType } from "./comments.types";
 import { FileType } from "./files.types";
@@ -7,6 +7,7 @@ import { MemberType } from "./members.types";
 import { MessageType } from "./messages.types";
 import { PostType } from "./posts.types";
 import { UserType } from "./users.types";
+import { NotificationType } from "./notifications.types";
 
 export type RealtimeDataType =  PlainObjectType | number | string | Array<PlainObjectType | number | string>;
 
@@ -70,4 +71,15 @@ export type RealtimeTypingEventType = RealtimeEventType & {
 };
 
 // PRESENCE
-export type RealtimePresenceEventType = number | number[];
+export type RealtimePresenceEventType = string | number[];
+
+// NOTIFICATIONS
+export type RealtimeNotificationEventType = RealtimeEventType & {
+  action: "notification_created" | "notification_updated" | "notification_deleted";
+  notification: NotificationType;
+}
+
+export type RealtimeNotificationsEventType = RealtimeEventType & {
+  action: "notifications_marked";
+  app?: AppRef;
+}

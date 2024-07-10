@@ -105,9 +105,9 @@ class ShadowPartMapDirective extends Directive {
    * For example `{foo: bar}` applies the part `foo` if the value of `bar` is
    * truthy.
    *
-   * @param shadowPartMap
+   * @param partMap
    */
-  export const shadowPartMap = directive(ShadowPartMapDirective);
+  export const partMap = directive(ShadowPartMapDirective);
   
   /**
    * The type of the class that powers this directive. Necessary for naming the
