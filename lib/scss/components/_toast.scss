@@ -83,6 +83,7 @@
   border-radius: var.default(--wy-border-radius-pill);
   font-size: var.default(--wy-font-size-xs);
   width: max-content;
+  min-height: 0;
   max-width: calc(100% - var.wy-rem(3));
   height: auto;
   align-self: center;
