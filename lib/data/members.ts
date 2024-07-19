@@ -22,22 +22,6 @@ export function getMemberOptions(weavyContext: WeavyContextType, appId: number, 
   };
 }
 
-export function getSearchMemberOptions(weavyContext: WeavyContextType, text: () => string) {
-  const PAGE_SIZE = 25;
-
-  return {
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps
-    queryKey: ["searchmembers"],
-    enabled: false,
-    queryFn: async () => {
-      const query = text() || "*";
-      const response = await weavyContext.get(`/api/users/autocomplete?q=${query}&skip=0&take=${PAGE_SIZE}`);
-      const result: MembersResultType = await response.json();
-      return result;
-    },
-  };
-}
-
 export function getInfiniteSearchMemberOptions(
   weavyContext: WeavyContextType,
   text: () => string,
@@ -53,8 +37,7 @@ export function getInfiniteSearchMemberOptions(
     queryFn: <QueryFunction<MembersResultType, QueryKey, number | unknown>>(async (
       opt: QueryFunctionContext<QueryKey, number>
     ) => {
-      const inputText = text();
-      const query = inputText || "*";
+      const query = text();
       const skip = opt.pageParam;
       let response;
       
