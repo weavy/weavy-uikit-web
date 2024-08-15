@@ -39,7 +39,7 @@ export default class WyUsersSearch extends LitElement {
   private weavyContext?: WeavyContextType;
 
   @property({ attribute: false})
-  appId?: Number;
+  appId?: number;
 
   @property({ attribute: false })
   buttonTitle?: string;

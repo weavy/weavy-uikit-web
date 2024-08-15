@@ -439,7 +439,7 @@ export default class WyPdfViewer extends LitElement {
     try {
       this.close();
       this.pdfViewer?.cleanup();
-    } catch (e) {
+    } catch {
       /* No worries */
     }
 

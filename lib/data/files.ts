@@ -8,7 +8,7 @@ export function getInfiniteFileListOptions(
   weavyContext: WeavyContextType,
   appId: number | null,
   filters: { order?: FileOrderType; trashed?: boolean } = {},
-  options: Object = {}
+  options: object = {}
 ): InfiniteQueryObserverOptions<FilesResultType, Error, InfiniteData<FilesResultType>> {
   const PAGE_SIZE = 25;
 

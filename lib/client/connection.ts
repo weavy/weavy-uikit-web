@@ -53,7 +53,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
     // RTM CONNECTION
 
     _connection?: HubConnection;
-    _connectionEventListeners: Array<{ name: string; callback: Function }> = [];
+    _connectionEventListeners: Array<{ name: string; callback: (realtimeEvent: never) => void }> = [];
 
     signalRAccessTokenRefresh = false;
 
@@ -247,7 +247,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
     async subscribe<T extends RealtimeEventType | RealtimeDataType>(
       group: string | null,
       event: string,
-      callback: (realTimeEvent: T) => void
+      callback: (realtimeEvent: T) => void
     ) {
       if (this.isDestroyed) {
         throw new DestroyError();
@@ -262,7 +262,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
           throw new Error("Duplicate subscribe: " + name);
         }
 
-        this._connectionEventListeners.push({ name, callback });
+        this._connectionEventListeners.push({ name, callback } );
 
         //console.log(this.weavyId, "Subscribing", name);
         await this.whenConnectionStarted();

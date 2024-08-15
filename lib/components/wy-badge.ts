@@ -71,6 +71,13 @@ export default class WyBadge extends LitElement {
     `;
   }
 
+  override connectedCallback(): void {
+      super.connectedCallback();
+      if (this.weavyContext) {
+        this.requestUpdate("weavyContext");
+      }
+  }
+
   override disconnectedCallback(): void {
     this.#unsubscribeToRealtime?.();
     super.disconnectedCallback();

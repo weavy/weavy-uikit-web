@@ -96,7 +96,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
 
         await persistQueryClientRestore(persistQueryClientOptions);
         this._unsubscribeQueryClient = persistQueryClientSubscribe(persistQueryClientOptions);
-      } catch (e) {
+      } catch {
         console.warn(this.weavyId, "Query cache persister not available.");
       }
 

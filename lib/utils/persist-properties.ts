@@ -8,7 +8,7 @@ const keyPrefix = "WEAVY_OFFLINE_CACHE";
 let storage: Storage | undefined;
 try {
   storage = window.sessionStorage;
-} catch(e) {
+} catch {
   console.warn("Session storage not available.");
 }
 const cache = new Map<PropertyKey, unknown>();

@@ -122,7 +122,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
       } else {
         throw -1;
       }
-    } catch (e) {
+    } catch {
       throw new TypeError("Invalid url");
     }
 

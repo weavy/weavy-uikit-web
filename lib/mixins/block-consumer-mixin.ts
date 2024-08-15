@@ -161,6 +161,39 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.#resolveWeavyContext?.(this.weavyContext);
       }
     }
+
+    override connectedCallback(): void {
+      super.connectedCallback();
+      
+      if (this.app) {
+        this.requestUpdate("app");
+      }
+
+      if (this.configuration) {
+        this.requestUpdate("configuration");
+      }
+
+      if (this.hasFeatures) {
+        this.requestUpdate("hasFeatures");
+      }
+
+      if (this.link) {
+        this.requestUpdate("link");
+      }
+
+      if (this.settings) {
+        this.requestUpdate("settings");
+      }
+
+      if (this.user) {
+        this.requestUpdate("user");
+      }
+
+      if (this.weavyContext) {
+        this.requestUpdate("weavyContext");
+      }
+    }
+
   }
 
   // Cast return type to your mixin's interface intersected with the Base type

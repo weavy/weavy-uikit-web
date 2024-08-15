@@ -180,7 +180,7 @@ export function getCreateFileMutationOptions(weavyContext: WeavyContextType, use
       let srcUrl: URL | undefined;
       try {
         srcUrl = (variables.blob.thumbnail_url && new URL(variables.blob.thumbnail_url)) || undefined;
-      } catch (e) {
+      } catch {
         // no worries
       }
 

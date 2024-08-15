@@ -19,7 +19,7 @@ import { PollOptionType } from "../types/polls.types";
 export function getMessagesOptions(
   weavyContext: WeavyContextType,
   appId: number | null,
-  options: Object = {}
+  options: object = {}
 ): InfiniteQueryObserverOptions<MessagesResultType, Error, InfiniteData<MessagesResultType>> {
   const PAGE_SIZE = 25;
 

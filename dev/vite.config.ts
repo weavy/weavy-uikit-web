@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
-import packageJson from "../package.json" assert { type: "json" };
+import packageJson from "../package.json" with { type: "json" };
 import dts from "vite-plugin-dts";
 import fs from "fs";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";

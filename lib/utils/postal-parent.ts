@@ -22,7 +22,7 @@ function extractOrigin(url: string) {
   let extractOrigin: string = "";
   try {
     extractOrigin = /^((?:https?:\/\/[^/]+)|(?:file:\/\/))\/?/.exec(url)?.[1] || "";
-  } catch (e) {
+  } catch {
     console.error(
       "Unable to resolve location origin. Make sure you are using http, https or file protocol and have a valid location URL."
     );
@@ -65,7 +65,7 @@ class WeavyPostalParent extends WeavyEvents {
               { name: "message-receipt", weavyId: e.data.weavyId, weavyMessageId: e.data.weavyMessageId },
               { targetOrigin: e.origin }
             );
-          } catch (error) {
+          } catch {
             console.error("could not post back message-receipt to source");
           }
         }
@@ -176,7 +176,7 @@ class WeavyPostalParent extends WeavyEvents {
         console.error("registerContentWindow() No valid contentWindow to register, must be a window and have a name.");
         return;
       }
-    } catch (e) {
+    } catch {
       console.error("registerContentWindow() cannot access contentWindowName");
     }
 
@@ -221,7 +221,7 @@ class WeavyPostalParent extends WeavyEvents {
             this.contentWindowNames.delete(contentWindow);
             this.contentWindowWeavyIds.delete(contentWindow);
             this.contentWindowOrigins.delete(contentWindow);
-          } catch (e) {
+          } catch {
             /* no need to delete contentwindow */
           }
         }
@@ -230,7 +230,7 @@ class WeavyPostalParent extends WeavyEvents {
       if (this.contentWindowsMapByWeavyId.get(weavyId)?.size === 0) {
         try {
           this.contentWindowsMapByWeavyId.delete(weavyId);
-        } catch (e) {
+        } catch {
           /* no need to delete weavyId */
         }
       }
@@ -297,7 +297,7 @@ class WeavyPostalParent extends WeavyEvents {
       if (targetOrigin === this.contentWindowDomain.get(contentWindow)) {
         try {
           contentWindow.postMessage(message, { targetOrigin, transfer });
-        } catch (e) {
+        } catch {
           console.warn(
             "postToChildren() could not distribute message to " + this.contentWindowNames.get(contentWindow)
           );

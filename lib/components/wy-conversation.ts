@@ -194,20 +194,22 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
         this.setEmptyConversationTitle(realtimeEvent.message.plain);
       }
 
-      // display toast
-      if (!this.isAtBottom || document.hidden) {
-        //console.log("realtime showUnread", realtimeEvent.message.id);
-        this.showUnread("above", realtimeEvent.message.id);
-      }
-
-      if (this.isAtBottom) {
-        // mark as read
-        // TBD: instant?
-        this.markAsRead(realtimeEvent.message.id);
-
-        requestAnimationFrame(() => {
-          this.scrollToBottom();
-        });
+      if (realtimeEvent.actor.id !== this.user.id) {
+        // display toast
+        if (!this.isAtBottom || document.hidden) {
+          console.log("realtime showUnread", realtimeEvent.message.id);
+          this.showUnread("above", realtimeEvent.message.id);
+        }
+  
+        if (this.isAtBottom) {
+          // mark as read
+          // TBD: instant?
+          this.markAsRead(realtimeEvent.message.id);
+  
+          requestAnimationFrame(() => {
+            this.scrollToBottom();
+          });
+        }
       }
     }
   };
@@ -351,6 +353,11 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
         this.messagesQuery.untrackInfiniteQuery();
         this.addMessageMutation.untrackMutation();
       }
+    }
+
+    // Keep at bottom when new messages banner appear
+    if (changedProperties.has("lastReadMessageShow") && this.lastReadMessageShow) {
+      this.shouldBeAtBottom = this.isAtBottom;
     }
 
     // Always try to scroll to bottom when conversationId changed

@@ -24,4 +24,4 @@ export type ConversationType = AppType & {
 
 export type ConversationsResultType = InfiniteQueryResultType<ConversationType>;
 
-export type ConversationMutationContextType = {};
+export type ConversationMutationContextType = object;

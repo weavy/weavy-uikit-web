@@ -20,14 +20,14 @@ export function isObject(maybeObject: unknown) {
 /**
  * Checks if an object is a plain object {}, similar to jQuery.isPlainObject()
  *
- * @param {Object} maybePlainObject - The object to check
+ * @param {object} maybePlainObject - The object to check
  * @returns {boolean} True if the object is plain
  */
 export function isPlainObject(maybePlainObject: unknown) {
-  if (isObject(maybePlainObject as Object) === false) return false;
+  if (isObject(maybePlainObject as object) === false) return false;
 
   // If has modified constructor
-  const ctor = (maybePlainObject as Object).constructor;
+  const ctor = (maybePlainObject as object).constructor;
   if (ctor === undefined) return true;
 
   // If has modified prototype

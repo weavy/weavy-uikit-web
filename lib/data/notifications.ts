@@ -27,7 +27,7 @@ export function getNotificationsOptions(
   weavyContext: WeavyContextType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
-  options: Object = {}
+  options: object = {}
 ): InfiniteQueryObserverOptions<NotificationsResultType, Error, InfiniteData<NotificationsResultType>> {
   const PAGE_SIZE = 25;
   return {
@@ -210,7 +210,7 @@ export function getBadgeOptions(
   weavyContext: WeavyContextType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
-  options: Object = {}
+  options: object = {}
 ) {
   const queryParams = new URLSearchParams({
     type: type,

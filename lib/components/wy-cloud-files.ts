@@ -56,14 +56,14 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
         // This may fail due to cors
         origin = window.top.document.location.origin;
       }
-    } catch (e) {
+    } catch {
       /* No worries */
     }
 
     if (!origin) {
       try {
         origin = window.self.document.location.origin;
-      } catch (e) {
+      } catch {
         console.error("Filebrowser: Could not read current origin.");
       }
     }
@@ -71,9 +71,9 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
     return origin;
   }
 
-  private handleFiles?: Function;
-  private handleClose?: Function;
-  private handleGoogleSelected?: Function;
+  private handleFiles?: (message: { blobs: ExternalBlobType[] }, e: MessageEvent) => void;
+  private handleClose?: (message: unknown, e: MessageEvent) => void;
+  private handleGoogleSelected?: (message: unknown, e: MessageEvent) => void;
 
   private dispatchExternalBlobs(externalBlobs: ExternalBlobType[] | null) {
     const externalBlobsEvent = new CustomEvent("external-blobs", { detail: { externalBlobs } });

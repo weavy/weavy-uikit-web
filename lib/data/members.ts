@@ -25,8 +25,8 @@ export function getMemberOptions(weavyContext: WeavyContextType, appId: number, 
 export function getInfiniteSearchMemberOptions(
   weavyContext: WeavyContextType,
   text: () => string,
-  appId: Number | undefined,
-  bot: () => Boolean | undefined  
+  appId: number | undefined,
+  bot: () => boolean | undefined  
 ): InfiniteQueryObserverOptions<MembersResultType, Error, InfiniteData<MembersResultType>> {
   const PAGE_SIZE = 25;
 

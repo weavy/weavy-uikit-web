@@ -23,12 +23,12 @@ export function openUrl(url: string = "", target: string = "", name: string = ""
 
     try {
       a.click();
-    } catch (e) {
+    } catch {
       console.warn("Could not open link normally, trying fallback");
       if (!/^(?:blob:|data:)/.test(url)) {
         try {
           window.open(url, target);
-        } catch (e) {
+        } catch {
           console.error(`Could not ${download ? "download" : "open"} ${name}`);
         }
       } else {

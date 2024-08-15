@@ -106,7 +106,7 @@ export function getTextStreamFromResponse(response: Response) {
     const reader = response.body.getReader();
     return new ReadableStream({
       start(controller) {
-        const pump: Function = () => {
+        const pump: () => void = () => {
           return reader.read().then(({ done, value }) => {
             // When no more data needs to be consumed, close the stream
             if (done) {

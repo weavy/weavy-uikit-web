@@ -25,7 +25,7 @@ export type AddConversationMutationType = MutationObserver<
 
 export function getConversationsOptions(
   weavyContext: WeavyContextType,
-  options: Object = {},
+  options: object = {},
   searchText?: () => string | undefined,
   types: ConversationTypeGuid[] | null = [ConversationTypeGuid.ChatRoom, ConversationTypeGuid.PrivateChat],
   member?: string,

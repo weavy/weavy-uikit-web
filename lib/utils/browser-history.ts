@@ -67,7 +67,7 @@ export function restoreHistoryProperties<T = PlainObjectType>(parent: T, key: st
       if (itemHasChanged(currentValue, item)) {
         (parent[property] as unknown) = item;
       }
-    } catch (e) {
+    } catch {
       /* no worries */
     }
   });

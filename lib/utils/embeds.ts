@@ -31,7 +31,7 @@ async function fetchEmbed(url: string, weavyContext: WeavyContextType) {
     embed = await response.json();
     delete candidates[url];
     embeds = [...embeds, url];
-  } catch (error) {
+  } catch {
     // error, add to failed so that we don't fetch again
     failed = [...failed, url];
     delete candidates[url];

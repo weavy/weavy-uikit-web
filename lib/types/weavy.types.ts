@@ -115,6 +115,6 @@ export type WeavyContextOptionsType =
   | undefined;
 
 export interface Destructable {
-  readonly isDestroyed: Boolean;
+  readonly isDestroyed: boolean;
   destroy: () => void;
 }

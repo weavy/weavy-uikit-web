@@ -4,7 +4,7 @@ export function updateMutationContext(
   queryClient: QueryClient,
   mutationKey: MutationKey,
   variables: unknown,
-  contextMutation: (context: Object) => void
+  contextMutation: (context: object) => void
 ) {
   const mutationCache = queryClient.getMutationCache();
 

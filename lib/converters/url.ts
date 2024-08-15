@@ -3,7 +3,7 @@ export function toUrl(value?: string | null) {
   if (value) {
     try {
       return new URL(value, window.location.toString());
-    } catch(e) {
+    } catch {
       console.warn("Invalid url: ", value);
     }
   }

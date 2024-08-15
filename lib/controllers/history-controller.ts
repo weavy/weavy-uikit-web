@@ -28,7 +28,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
       this.prefixKey = prefixKey;
       try {
         this._backCount = getBrowserStateProperty(this.prefixKey, "_backCount") || this._backCount;
-      } catch (e) {
+      } catch {
         /* No worries */
       }
     }
@@ -54,7 +54,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
       this.prefixKey = prefixKey;
       try {
         this._backCount = getBrowserStateProperty(this.prefixKey, "_hasBack") || this._backCount;
-      } catch (e) {
+      } catch {
         /* No worries */
       }
     }
@@ -91,7 +91,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
       restoreHistoryProperties<T>(this.host as T, this.prefixKey, this.properties as (keyof T)[]);
       try {
         this._backCount = getBrowserStateProperty(this.prefixKey, "_backCount") || 0;
-      } catch (e) {
+      } catch {
         this._backCount = 0;
       }
       this.updatePrevPropertyValues();

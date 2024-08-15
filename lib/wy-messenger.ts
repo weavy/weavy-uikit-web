@@ -74,7 +74,7 @@ export class WyMessenger extends BlockProviderMixin(LitElement) {
    * @param conversation {AppRef | AppType | number} - The conversation or id to check if it belongs to Messenger.
    * @returns Promise<Boolean>
    */
-  async conversationBelongsToMessenger(conversation: AppRef | AppType | number): Promise<Boolean> {
+  async conversationBelongsToMessenger(conversation: AppRef | AppType | number): Promise<boolean> {
     if (!this.weavyContext) {
       return false;
     }

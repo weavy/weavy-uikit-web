@@ -2,7 +2,7 @@
 import { PlainObjectType } from "../types/generic.types";
 import { eqObjects } from "./objects";
 //console.debug("events.js");
-type Constructor = new (...args: any[]) => {};
+type Constructor = new (...args: any[]) => object;
 
 type EventHandlerType = {
   events: string;
@@ -248,7 +248,7 @@ export const MixinWeavyEvents = <TBase extends Constructor>(Base: TBase) =>
         const attachedHandler = (...attachedArguments: any[]) => {
           try {
             args.handler.apply(this, attachedArguments);
-          } catch (e) {
+          } catch {
             try {
               args.handler();
             } catch (e) {
@@ -405,7 +405,7 @@ export const MixinWeavyEvents = <TBase extends Constructor>(Base: TBase) =>
       if (data && typeof data === "string") {
         try {
           data = JSON.parse(data);
-        } catch (e) {
+        } catch {
           console.warn("Could not parse event data", name, data);
         }
       }

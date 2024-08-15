@@ -468,6 +468,34 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       super.connectedCallback();
       document.addEventListener("wy:link", this.linkEventHandler as unknown as EventListener);
       window.addEventListener("storage", this.storageLinkHandler);
+      
+      if (this.app) {
+        this.requestUpdate("app");
+      }
+
+      if (this.configuration) {
+        this.requestUpdate("configuration");
+      }
+
+      if (this.hasFeatures) {
+        this.requestUpdate("hasFeatures");
+      }
+
+      if (this.link) {
+        this.requestUpdate("link");
+      }
+
+      if (this.settings) {
+        this.requestUpdate("settings");
+      }
+
+      if (this.user) {
+        this.requestUpdate("user");
+      }
+
+      if (this.weavyContext) {
+        this.requestUpdate("weavyContext");
+      }
     }
 
     override disconnectedCallback(): void {

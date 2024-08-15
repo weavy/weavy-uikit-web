@@ -63,7 +63,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyContextBase>>(B
               }@${environmentVersion}`
             );
           }
-        } catch (e) {
+        } catch {
           throw new Error(
             `Version mismatch! ${WeavyContextBase.sourceName}@${this.version} ≠ ${
               (this.url as URL)?.hostname

@@ -2,7 +2,7 @@ import { MsgType } from "./msg.types";
 import { QueryResultType } from "./query.types";
 import { UsersResultType } from "./users.types";
 
-export type PollMutationContextType = {};
+export type PollMutationContextType = object;
 
 export type PollType = MsgType & {}
 
