@@ -5,6 +5,7 @@ import type { FileOpenEventType, FileOrderType, FileType, FileViewType } from ".
 import { repeat } from "lit/directives/repeat.js";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { createRef, Ref } from "lit/directives/ref.js";
 
 import { EntityTypes } from "../types/app.types";
 import { getEntityChainMatch, hasEntityChildType } from "../utils/notifications";
@@ -52,6 +53,8 @@ export class WyFilesList extends BlockConsumerMixin(LitElement) {
 
   @state()
   highlightComment: boolean = false;
+
+  private highlightRef: Ref<HTMLElement> = createRef();
 
   dispatchFileOpen(fileId: number, tab?: "comments" | "versions") {
     const event: FileOpenEventType = new CustomEvent("file-open", { detail: { fileId, tab } });
@@ -124,15 +127,21 @@ export class WyFilesList extends BlockConsumerMixin(LitElement) {
             ${repeat(
               this.files,
               (file) => file.id,
-              (file) => renderFileCard.call(this, file, this.isRenamingId, this.highlightId)
+              (file) => renderFileCard.call(this, file, this.isRenamingId, this.highlightId, this.highlightRef)
             )}
           </div>
         `;
       } else {
-        return renderFileTable.call(this, this.files, this.order, this.isRenamingId, this.highlightId);
+        return renderFileTable.call(this, this.files, this.order, this.isRenamingId, this.highlightId, this.highlightRef);
       }
     }
 
     return nothing;
+  }
+
+  protected override updated(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("highlightId") && this.highlightId) {
+      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
+    }
   }
 }

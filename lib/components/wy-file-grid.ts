@@ -8,13 +8,13 @@ import type { FileType } from "../types/files.types";
 
 import { WyFilesList } from "./wy-files-list";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
-import { ref } from "lit/directives/ref.js";
+import { Ref, ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { checkImageLoad, imageLoaded } from "../utils/images";
 import { partMap } from "../utils/directives/shadow-part-map";
 
-export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?: number, highlightId?: number) {
+export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?: number, highlightId?: number, highlightRef?: Ref<HTMLElement>) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
   const fileDate = new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
@@ -71,7 +71,7 @@ export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?:
       }}
       @keydown=${clickOnEnterAndConsumeOnSpace}
       @keyup=${clickOnSpace}
-      ${ref((el) => highlight && el?.scrollIntoView({ block: "nearest" }))}
+      ${highlight && highlightRef ? ref(highlightRef): nothing}
     >
       <div part="wy-card-actions">
         <wy-file-menu

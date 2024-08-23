@@ -19,7 +19,7 @@ import { getConversationOptions, resolveConversation } from "./data/conversation
 import allStyles from "./scss/all";
 import messengerStyles from "./scss/wrappers/messenger";
 import colorModesStyles from "./scss/color-modes";
-import { blockStyles } from "./scss/block";
+import { hostBlockStyles, hostFontStyles } from "./scss/host";
 
 import "./components/wy-empty";
 import "./components/wy-conversation-appbar";
@@ -33,7 +33,7 @@ import "./components/wy-spinner";
 @customElement("wy-messenger")
 @localized()
 export class WyMessenger extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, allStyles, messengerStyles, blockStyles];
+  static override styles = [colorModesStyles, allStyles, messengerStyles, hostBlockStyles, hostFontStyles];
 
   override productType = ProductTypes.Messenger;
 

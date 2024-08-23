@@ -1,0 +1,6 @@
+@use "./components/base/var";
+
+// General font settings using css variable
+:host {
+    font-family: var.default(--wy-font-family);
+}

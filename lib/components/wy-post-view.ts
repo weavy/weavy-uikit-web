@@ -106,6 +106,7 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
   isCommentLinked: boolean = false;
 
   private previewRef: Ref<WeavyPreview> = createRef();
+  private highlightRef: Ref<HTMLElement> = createRef();
 
   private dispatchVote(id: number) {
     const event = new CustomEvent("vote", { detail: { id: id } });
@@ -134,15 +135,17 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
-      if (changedProperties.has("link")) {
-        this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Post, { id: this.postId }));
-        this.isCommentLinked = Boolean(this.link && hasEntityChildType(this.link, EntityTypes.Post, { id: this.postId }, EntityTypes.Comment));
-      }
+    if (changedProperties.has("link")) {
+      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Post, { id: this.postId }));
+      this.isCommentLinked = Boolean(
+        this.link && hasEntityChildType(this.link, EntityTypes.Post, { id: this.postId }, EntityTypes.Comment)
+      );
+    }
 
-      if (changedProperties.has("isCommentLinked") && this.isCommentLinked) {
-        this.loadComments = true;
-        this.showComments = true;
-      }
+    if (changedProperties.has("isCommentLinked") && this.isCommentLinked) {
+      this.loadComments = true;
+      this.showComments = true;
+    }
   }
 
   override render() {
@@ -174,12 +177,12 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
             <div class="wy-item-rows">
               <div class="wy-item-row">
                 <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
-        </div>
-        <div class="wy-item-row">
-          <div class="wy-item-text">
-            <time class="wy-placeholder">${dateFromNow}</time>
-          </div>
-        </div>
+              </div>
+              <div class="wy-item-row">
+                <div class="wy-item-text">
+                  <time class="wy-placeholder">${dateFromNow}</time>
+                </div>
+              </div>
             </div>
           </div>
           <div class="wy-post-body">
@@ -187,7 +190,7 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
           </div>
         </div>`
       : html`
-          <div class="wy-post" part=${partMap({"wy-highlight": this.highlight && !this.isCommentLinked})} ${ref((el) => this.highlight && el?.scrollIntoView({ block: "nearest" }))}>
+          <div class="wy-post" part=${partMap({ "wy-highlight": this.highlight && !this.isCommentLinked })} ${ref(this.highlightRef)}>
             <div class="wy-item wy-item-lg">
               <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
           this.createdBy.display_name
@@ -340,5 +343,11 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
               ></wy-preview>
           </div>
         `;
+  }
+
+  protected override updated(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("highlight") && this.highlight) {
+      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
+    }
   }
 }

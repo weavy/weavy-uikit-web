@@ -13,7 +13,7 @@ import { WeavyContextProps } from "./types/weavy.types";
 import { dispatchLinkEvent, getNotificationText } from "./utils/notifications";
 
 import colorModesStyles from "./scss/color-modes";
-import { hostContents } from "./scss/host";
+import { hostContents, hostFontStyles } from "./scss/host";
 
 import "./components/wy-notification-list-item";
 import { WyToast } from "./components/wy-toast";
@@ -21,7 +21,7 @@ import { WyToast } from "./components/wy-toast";
 @customElement("wy-notification-toasts")
 @localized()
 export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, hostContents];
+  static override styles = [colorModesStyles, hostContents, hostFontStyles];
 
   override contextualType = ContextualTypes.Unknown;
 

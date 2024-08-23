@@ -102,6 +102,7 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
   highlight: boolean = false;
 
   private previewRef: Ref<WeavyPreview> = createRef();
+  private highlightRef: Ref<HTMLElement> = createRef();
 
   private dispatchVote(id: number) {
     const event = new CustomEvent("vote", { detail: { id: id, parentId: this.messageId } });
@@ -131,7 +132,7 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
       <div
         class=${classMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-bot": this.isBot })}
         part=${partMap({ "wy-highlight": this.highlight })}
-        ${ref((el) => this.highlight && requestAnimationFrame(() => el?.scrollIntoView({ block: "nearest" })))}
+        ${ref(this.highlightRef)}
       >
         ${!this.me
           ? html`
@@ -263,5 +264,11 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
           )
         : nothing}
     `;
+  }
+
+  protected override updated(changedProperties: PropertyValues<this>) {
+      if (changedProperties.has("highlight") && this.highlight) {
+        this.highlightRef.value?.scrollIntoView({ block: "nearest" })
+      } 
   }
 }

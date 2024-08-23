@@ -22,9 +22,8 @@ import { hasPermission } from "./utils/permission";
 import { addCacheItem, updateCacheItem } from "./utils/query-cache";
 
 import allStyles from "./scss/all";
-import { blockStyles } from "./scss/block";
 import colorModesStyles from "./scss/color-modes";
-import { hostScrollYStyles } from "./scss/host";
+import { hostBlockStyles, hostFontStyles, hostScrollYStyles } from "./scss/host";
 
 import "./components/wy-button";
 import "./components/wy-editor";
@@ -36,7 +35,7 @@ import "./components/wy-spinner";
 @customElement("wy-posts")
 @localized()
 export class WyPosts extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, allStyles, blockStyles, hostScrollYStyles];
+  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles];
 
   override productType = ProductTypes.Feeds;
   override contextualType = ContextualTypes.Posts;

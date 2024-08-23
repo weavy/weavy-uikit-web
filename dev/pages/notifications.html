@@ -39,7 +39,8 @@
     <wy-notification-toasts></wy-notification-toasts>
   </wy-context>
     <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
-    <script>
+    <script type="module">
+      import { ConversationTypes } from "/lib/index.ts";
       const wyContext = document.querySelector("wy-context");
       let linkWindow;
 
@@ -47,11 +48,13 @@
         // Prevents automatic sessionStorage link
         //e.preventDefault();
         
-        console.log("notification link!", e.detail);
         const appType = e.detail.app.type;
         const appUid = e.detail.app.uid;
         let linkUrl;
-        if (appType) {
+
+        console.log("notification link!", e.detail, ConversationTypes, ConversationTypes.has(appType));
+        
+        if (ConversationTypes.has(appType)) {
           linkUrl = new URL("./messenger.html", window.location);
 
         } else if (appUid && appUid.startsWith("acme-")) {

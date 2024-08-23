@@ -9,8 +9,7 @@ import { ProductTypes } from "./types/product.types";
 
 import colorModesStyles from "./scss/color-modes";
 import allStyles from "./scss/all";
-import { blockStyles } from "./scss/block";
-import { hostScrollYStyles } from "./scss/host";
+import { hostBlockStyles, hostScrollYStyles, hostFontStyles } from "./scss/host";
 
 import "./components/wy-comment-list";
 import "./components/wy-empty";
@@ -21,7 +20,7 @@ import "./components/wy-notification-button-list";
 @customElement("wy-comments")
 @localized()
 export class WyComments extends BlockProviderMixin(LitElement) {
-  static override styles = [allStyles, blockStyles, hostScrollYStyles, colorModesStyles];
+  static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
   override productType = ProductTypes.Comments;
   override contextualType = ContextualTypes.Comments;

@@ -11,7 +11,7 @@ import { WyFilesList } from "./wy-files-list";
 import { repeat } from "lit/directives/repeat.js";
 import { type WeavyContextType } from "../contexts/weavy-context";
 import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
-import { ref } from "lit/directives/ref.js";
+import { Ref, ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 import { classMap } from "lit/directives/class-map.js";
 import { partMap } from "../utils/directives/shadow-part-map";
@@ -24,6 +24,7 @@ export function renderFileTable(
   order?: FileOrderType,
   isRenamingId?: number,
   highlightId?: number,
+  highlightRef?: Ref
 ) {
   return files && files.length
     ? html`
@@ -33,7 +34,7 @@ export function renderFileTable(
             ${repeat(
               files,
               (file) => file.id,
-              (file) => renderFileTableRow.call(this, this.weavyContext, { file }, isRenamingId, highlightId)
+              (file) => renderFileTableRow.call(this, this.weavyContext, { file }, isRenamingId, highlightId, highlightRef)
             )}
           </tbody>
         </table>
@@ -84,6 +85,7 @@ export function renderFileTableRow(
   { file }: { file: FileType },
   isRenamingId?: number,
   highlightId?: number,
+  highlightRef?: Ref
 ) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
@@ -132,7 +134,7 @@ export function renderFileTableRow(
       @click=${(e: Event) => {
         !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file.id);
       }}
-      ${ref((el) => highlight && el?.scrollIntoView({ block: "nearest" }))}
+      ${highlight && highlightRef ? ref(highlightRef): nothing}
     >
       <td class="wy-table-cell-icon"><wy-icon name=${icon} .overlayName=${provider} size="24" kind=${file.kind} ext=${ext}></wy-icon></td>
       <td>

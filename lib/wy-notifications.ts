@@ -10,8 +10,7 @@ import { ContextualTypes } from "./types/app.types";
 
 import colorModesStyles from "./scss/color-modes";
 import allStyles from "./scss/all";
-import { blockStyles } from "./scss/block";
-import { hostScrollYStyles } from "./scss/host";
+import { hostBlockStyles, hostFontStyles, hostScrollYStyles } from "./scss/host";
 
 import "./components/wy-notification-list";
 import "./components/wy-empty";
@@ -20,7 +19,7 @@ import "./components/wy-spinner";
 @customElement("wy-notifications")
 @localized()
 export class WyNotifications extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, allStyles, blockStyles, hostScrollYStyles];
+  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles];
 
   /**
    * Unknown ContextualType will enable optional uid.

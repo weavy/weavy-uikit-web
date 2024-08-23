@@ -26,7 +26,6 @@ export interface WeavyConnectionProps {
 // WeavyConnection mixin/decorator
 export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
   return class WeavyConnection extends Base implements WeavyConnectionProps, Destructable {
-    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
       super(...args);
@@ -77,93 +76,92 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
         throw new DestroyError();
       }
 
-      if (this.url && this.tokenFactory) {
-        this.networkStateIsPending = true;
+      this.networkStateIsPending = true;
+      await this.whenUrlAndTokenFactory();
 
-        if (this._connection) {
-          const connectionUrl = new URL("/hubs/rtm", this.url);
-          if (this._connection.baseUrl !== connectionUrl.toString()) {
-            this.connectionState = "reconnecting";
-            console.log(
-              this.weavyId,
-              "Reconnecting due to changed url.",
-              this._connection.baseUrl,
-              "=>",
-              connectionUrl.toString()
-            );
-            await this.disconnect();
-            this._connection.baseUrl = connectionUrl.toString();
-            this.connect();
-          }
-        } else {
-          this.connectionState = "connecting";
-          //console.log(this.weavyId, "Creating connection");
-          const connectionUrl = new URL("/hubs/rtm", this.url);
-          this._connection = new HubConnectionBuilder()
-            .configureLogging(LogLevel.None)
-            .withUrl(connectionUrl.toString(), {
-              accessTokenFactory: async () => {
-                try {
-                  if (this.signalRAccessTokenRefresh) {
-                    //console.error(this.weavyId, "SignalR retrying with refreshed token.");
-                    const token = await this.getToken(true);
-                    this.signalRAccessTokenRefresh = false;
-                    return token;
-                  } else {
-                    //console.error(this.weavyId, "first attempt")
-                    const token = await this.getToken();
-                    return token;
-                  }
-                } catch (e) {
-                  console.error(e);
-                  throw e;
-                }
-              },
-            })
-            .withAutomaticReconnect({
-              nextRetryDelayInMilliseconds: (retryContext) => {
-                if (!this.isDestroyed && window.navigator.onLine && document?.visibilityState !== "hidden") {
-                  if (retryContext.elapsedMilliseconds < 60000) {
-                    // Keep retrying with these delays for a minute
-                    const reconnectDelays = [0, 2000, 10000];
-                    return reconnectDelays[retryContext.previousRetryCount] || 10000;
-                  }
-                }
-                return null;
-              },
-            })
-            .build();
-
-          this._connection.onclose(async () => {
-            console.info(this.weavyId, "SignalR closed.");
-            this.connectionState = "disconnected";
-
-            if (this.isDestroyed) {
-              return;
-            }
-
-            this.networkStateIsPending = true;
-            this._whenConnectionStarted = new Promise((resolve, reject) => {
-              this._whenConnectionStartedResolve = resolve;
-              this._whenConnectionStartedReject = reject;
-            });
-            this.connect();
-          });
-          this._connection.onreconnecting(() => {
-            console.log(this.weavyId, "SignalR reconnecting...");
-            this.connectionState = "reconnecting";
-            //this.networkStateIsPending = true;
-          });
-          this._connection.onreconnected(() => {
-            console.info(this.weavyId, "SignalR reconnected.");
-            this.connectionState = "connected";
-            this.networkStateIsPending = false;
-            for (let i = 0; i < this._connectionEventListeners.length; i++) {
-              this._connection?.invoke("Subscribe", this._connectionEventListeners[i].name);
-            }
-          });
+      if (this._connection) {
+        const connectionUrl = new URL("/hubs/rtm", this.url);
+        if (this._connection.baseUrl !== connectionUrl.toString()) {
+          this.connectionState = "reconnecting";
+          console.log(
+            this.weavyId,
+            "Reconnecting due to changed url.",
+            this._connection.baseUrl,
+            "=>",
+            connectionUrl.toString()
+          );
+          await this.disconnect();
+          this._connection.baseUrl = connectionUrl.toString();
           this.connect();
         }
+      } else {
+        this.connectionState = "connecting";
+        //console.log(this.weavyId, "Creating connection");
+        const connectionUrl = new URL("/hubs/rtm", this.url);
+        this._connection = new HubConnectionBuilder()
+          .configureLogging(LogLevel.None)
+          .withUrl(connectionUrl.toString(), {
+            accessTokenFactory: async () => {
+              try {
+                if (this.signalRAccessTokenRefresh) {
+                  //console.error(this.weavyId, "SignalR retrying with refreshed token.");
+                  const token = await this.getToken(true);
+                  this.signalRAccessTokenRefresh = false;
+                  return token;
+                } else {
+                  //console.error(this.weavyId, "first attempt")
+                  const token = await this.getToken();
+                  return token;
+                }
+              } catch (e) {
+                console.error(e);
+                throw e;
+              }
+            },
+          })
+          .withAutomaticReconnect({
+            nextRetryDelayInMilliseconds: (retryContext) => {
+              if (!this.isDestroyed && window.navigator.onLine && document?.visibilityState !== "hidden") {
+                if (retryContext.elapsedMilliseconds < 60000) {
+                  // Keep retrying with these delays for a minute
+                  const reconnectDelays = [0, 2000, 10000];
+                  return reconnectDelays[retryContext.previousRetryCount] || 10000;
+                }
+              }
+              return null;
+            },
+          })
+          .build();
+
+        this._connection.onclose(async () => {
+          console.info(this.weavyId, "SignalR closed.");
+          this.connectionState = "disconnected";
+
+          if (this.isDestroyed) {
+            return;
+          }
+
+          this.networkStateIsPending = true;
+          this._whenConnectionStarted = new Promise((resolve, reject) => {
+            this._whenConnectionStartedResolve = resolve;
+            this._whenConnectionStartedReject = reject;
+          });
+          this.connect();
+        });
+        this._connection.onreconnecting(() => {
+          console.log(this.weavyId, "SignalR reconnecting...");
+          this.connectionState = "reconnecting";
+          //this.networkStateIsPending = true;
+        });
+        this._connection.onreconnected(() => {
+          console.info(this.weavyId, "SignalR reconnected.");
+          this.connectionState = "connected";
+          this.networkStateIsPending = false;
+          for (let i = 0; i < this._connectionEventListeners.length; i++) {
+            this._connection?.invoke("Subscribe", this._connectionEventListeners[i].name);
+          }
+        });
+        this.connect();
       }
     }
 
@@ -262,7 +260,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
           throw new Error("Duplicate subscribe: " + name);
         }
 
-        this._connectionEventListeners.push({ name, callback } );
+        this._connectionEventListeners.push({ name, callback });
 
         //console.log(this.weavyId, "Subscribing", name);
         await this.whenConnectionStarted();

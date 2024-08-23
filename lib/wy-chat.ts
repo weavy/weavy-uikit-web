@@ -9,8 +9,7 @@ import { ProductTypes } from "./types/product.types";
 import { localized } from "@lit/localize";
 
 import allStyles from "./scss/all";
-import { blockStyles } from "./scss/block";
-import { hostScrollYStyles } from "./scss/host";
+import { hostBlockStyles, hostScrollYStyles, hostFontStyles } from "./scss/host";
 import colorModesStyles from "./scss/color-modes";
 
 import "./components/wy-conversation";
@@ -22,7 +21,7 @@ import "./components/wy-spinner";
 @customElement("wy-chat")
 @localized()
 export class WyChat extends BlockProviderMixin(LitElement) {
-  static override styles = [allStyles, blockStyles, hostScrollYStyles, colorModesStyles];
+  static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
   override productType = ProductTypes.Chat;
   override contextualType = ContextualTypes.Chat;

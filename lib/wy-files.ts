@@ -48,7 +48,7 @@ import { Constructor } from "./types/generic.types";
 import { ProductTypes } from "./types/product.types";
 
 import allStyles from "./scss/all";
-import { blockStyles } from "./scss/block";
+import { hostBlockStyles, hostFontStyles } from "./scss/host";
 import colorModesStyles from "./scss/color-modes";
 
 import "./components/wy-files-appbar";
@@ -67,7 +67,7 @@ import "./components/wy-icon";
 @customElement("wy-files")
 @localized()
 export class WyFiles extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, allStyles, blockStyles];
+  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostFontStyles];
 
   override productType = ProductTypes.Files;
   override contextualType = ContextualTypes.Files;

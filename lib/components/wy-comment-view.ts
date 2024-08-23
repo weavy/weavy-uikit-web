@@ -1,4 +1,4 @@
-import { LitElement, PropertyValueMap, html, nothing } from "lit";
+import { LitElement, PropertyValueMap, PropertyValues, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -81,10 +81,11 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
   reactions?: ReactableType[] = [];
 
   private previewRef: Ref<WeavyPreview> = createRef();
+  private highlightRef: Ref<HTMLElement> = createRef();
 
   @property({ type: Boolean })
   highlight: boolean = false;
-  
+
   private dispatchVote(id: number) {
     const event = new CustomEvent("vote", { detail: { id: id } });
     return this.dispatchEvent(event);
@@ -101,7 +102,7 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
   }
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>) {
-    if (changedProperties.has("link")) {  
+    if (changedProperties.has("link")) {
       this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Comment, { id: this.commentId }));
     }
 
@@ -112,7 +113,7 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
         this.part.remove("wy-highlight");
       }
     }
-}
+  }
 
   override render() {
     const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url);
@@ -144,7 +145,7 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
               ${this.html ? html`<div class="wy-content"><wy-skeleton .text=${this.text}></wy-skeleton></div>` : ``}
             </div>
           </div>`
-      : html`<div class="wy-item wy-item-sm wy-comment-header" ${ref((el) => this.highlight && el?.scrollIntoView({ block: "nearest" }))}>
+      : html`<div class="wy-item wy-item-sm wy-comment-header" ${ref(this.highlightRef)}>
             <wy-avatar
               .src=${this.createdBy.avatar_url}
               .size=${32}
@@ -224,15 +225,14 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
           </div>
 
           ${this.hasFeatures?.reactions
-            ? html` 
-                <wy-reactions
-                  lineBottom
-                  small
-                  .reactions=${this.reactions}
-                  parentId=${this.parentId}
-                  entityId=${this.commentId}
-                  messageType="comments"
-                ></wy-reactions>`
+            ? html` <wy-reactions
+                lineBottom
+                small
+                .reactions=${this.reactions}
+                parentId=${this.parentId}
+                entityId=${this.commentId}
+                messageType="comments"
+              ></wy-reactions>`
             : nothing}
 
           <wy-preview
@@ -241,5 +241,11 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
             .files=${this.attachments}
             .isAttachment=${true}
           ></wy-preview> `;
+  }
+
+  protected override updated(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("highlight") && this.highlight) {
+      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
+    }
   }
 }
