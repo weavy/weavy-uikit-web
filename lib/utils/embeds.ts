@@ -1,5 +1,6 @@
 import { type WeavyContextType } from "../client/weavy";
 import { EmbedType } from "../types/embeds.types";
+import { throwOnDomNotAvailable } from "./dom";
 
 const regexp = /(((https?|ftp):\/\/|(www|ftp)\.)[\w]+(.[\w]+)([\w\-.,@?^=%&amp;:/~+#]*[\w\-@?^=%&amp;/~+#]))/gim;
 
@@ -85,6 +86,8 @@ export const getEmbeds = async (content: string, callback: (embed: EmbedType) =>
         !rejected.includes(match) &&
         typeof candidates[match] === "undefined"
       ) {
+        throwOnDomNotAvailable();
+
         candidates[match] = window.setTimeout(async () => {
           const embed = await fetchEmbed(match, weavyContext);
           if (embed) {
@@ -104,6 +107,8 @@ export const getEmbeds = async (content: string, callback: (embed: EmbedType) =>
     // remove candidates
     for (const candidate in candidates) {
       if (!latest.includes(candidate)) {
+        throwOnDomNotAvailable();
+        
         window.clearTimeout(candidates[candidate]);
         delete candidates[candidate];
       }

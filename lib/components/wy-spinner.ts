@@ -3,9 +3,9 @@ import { customElement, property } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import spinnerCss from "../scss/wrappers/spinner";
-import progressCss from "../scss/wrappers/progress";
+import rebootCss from "../scss/components/base/reboot.scss";
+import spinnerCss from "../scss/components/spinner.scss";
+import progressCss from "../scss/components/progress.scss";
 
 @customElement("wy-spinner")
 export default class WySpinner extends LitElement {

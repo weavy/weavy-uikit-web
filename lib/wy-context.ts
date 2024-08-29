@@ -7,8 +7,8 @@ import { toUrl } from "./converters/url";
 import { LocaleModule } from "@lit/localize";
 import { Constructor } from "./types/generic.types";
 
-import allStyles from "./scss/all";
-import colorModesStyles from "./scss/color-modes";
+import allStyles from "./scss/all.scss";
+import colorModesStyles from "./scss/color-modes.scss";
 
 function acceptedValue(value: unknown) {
   return value !== undefined && value !== null && value !== false;

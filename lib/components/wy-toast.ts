@@ -5,7 +5,7 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { whenElementVisible } from "../utils/dom";
 import { clickOnEnterAndSpace } from "../utils/keyboard";
 
-import overlayStyles from "../scss/all";
+import overlayStyles from "../scss/all.scss";
 
 import "./wy-button";
 import "./wy-icon";

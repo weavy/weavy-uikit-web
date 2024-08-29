@@ -5,17 +5,21 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import allCss from "../scss/all";
+import allCss from "../scss/all.scss";
 
-import * as pdfjsLib from "pdfjs-dist";
-import { type PDFDocumentLoadingTask, type PDFDocumentProxy } from "pdfjs-dist";
-import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
+//import * as type pdfjsLibType from "pdfjs-dist";
+import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
+import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
+//import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
 
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { WeavyContextProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import "./wy-button";
 import "./wy-icon";
+
+type pdfjsLibType = typeof import("pdfjs-dist");
+type pdfjsViewerType = typeof import("pdfjs-dist/web/pdf_viewer.mjs");
 
 /**
  * PDF Viewer component based on pdfjs examples
@@ -41,6 +45,12 @@ export default class WyPdfViewer extends LitElement {
   @consume({ context: weavyContextDefinition, subscribe: true })
   @state()
   private weavyContext?: WeavyContextType;
+
+  whenPdfjsResolve?: (value: { pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }) => void
+  whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
+
+  pdfjsLib?: pdfjsLibType;
+  pdfjsViewer?: pdfjsViewerType;
 
   MAX_CANVAS_PIXELS = 0; // CSS-only zooming.
   TEXT_LAYER_MODE = 0; // DISABLE
@@ -78,15 +88,15 @@ export default class WyPdfViewer extends LitElement {
 
   //pdfLoadingTask: null,
   pdfDocument?: PDFDocumentProxy;
-  l10n?: pdfjsViewer.GenericL10n;
+  l10n?: GenericL10n;
 
-  pdfHistory?: pdfjsViewer.PDFHistory;
+  pdfHistory?: PDFHistory;
 
   @state()
-  pdfViewer?: pdfjsViewer.PDFViewer;
+  pdfViewer?: PDFViewer;
 
-  pdfEventBus?: pdfjsViewer.EventBus;
-  pdfLinkService?: pdfjsViewer.PDFLinkService;
+  pdfEventBus?: EventBus;
+  pdfLinkService?: PDFLinkService;
   /*pdfFindController: PDFFindController = new PDFFindController({
     eventBus: this.pdfEventBus,
     linkService: this.pdfLinkService,
@@ -96,6 +106,7 @@ export default class WyPdfViewer extends LitElement {
 
   ////////
   private async open() {
+    const { pdfjsLib } = await this.whenPdfjs;
     if (!this.pdfViewer || !this.pdfHistory || !this.l10n || !this.pdfLinkService) {
       return;
     }
@@ -115,7 +126,7 @@ export default class WyPdfViewer extends LitElement {
     });
     this.pdfLoadingTask = loadingTask;
 
-    loadingTask.onProgress = (_progressData: pdfjsLib.OnProgressParameters) => {
+    loadingTask.onProgress = (_progressData: OnProgressParameters) => {
       //self.progress(progressData.loaded / progressData.total);
     };
 
@@ -142,7 +153,7 @@ export default class WyPdfViewer extends LitElement {
         key = "pdfjs-unexpected-response-error";
       }
       this.l10n.get(key, undefined, undefined).then((errorMsg: string) => {
-        this.pdfViewError(errorMsg, { message: (reason as Error | undefined)?.message });
+        this.pdfViewError(pdfjsLib, errorMsg, { message: (reason as Error | undefined)?.message });
       });
       //this.loadingBar.hide();
     }
@@ -171,8 +182,8 @@ export default class WyPdfViewer extends LitElement {
     return await destructionPromise;
   }
 
-  private pdfViewError(message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
-    const moreInfoText = [`PDF.js v${pdfjsLib.version || "?"} (build: ${pdfjsLib.build || "?"})`];
+  private pdfViewError(pdfjsLib: pdfjsLibType ,message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
+    const moreInfoText = [`PDF.js v${pdfjsLib?.version || "?"} (build: ${pdfjsLib?.build || "?"})`];
     if (moreInfo) {
       moreInfoText.push(`Message: ${moreInfo.message}`);
 
@@ -299,12 +310,27 @@ export default class WyPdfViewer extends LitElement {
   //   }
   // }
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
-      if (!this.WORKER_URL) {
+      if (!this.pdfjsLib) {
+        await this.weavyContext.whenUrl();
+        const pdfjsLibImport = import("pdfjs-dist");
+        const pdfjsViewerImport = import("pdfjs-dist/web/pdf_viewer.mjs");
+        this.pdfjsLib = await pdfjsLibImport;
+        this.pdfjsViewer = await pdfjsViewerImport;
+        
+        // Assign to globalThis, otherwise it breaks
+        (globalThis as typeof globalThis & { pdfjsLib: pdfjsLibType }).pdfjsLib = this.pdfjsLib;
+        
+        this.whenPdfjsResolve?.({ 
+          pdfjsLib: this.pdfjsLib, 
+          pdfjsViewer: this.pdfjsViewer 
+        })
+      }
+      if (this.pdfjsLib && !this.WORKER_URL) {
         this.WORKER_URL = new URL(this.DEFAULT_WORKER_URL, this.weavyContext.url);
         // Setting worker path to worker bundle.
-        pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
+        this.pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
       }
 
       if (!this.CMAP_URL) {
@@ -326,9 +352,10 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  override updated() {
-    //console.log('wy-pdf-viewer updated', this.viewerContainerRef.value, this.pdfViewer)
+  override async updated() {
     if (this.weavyContext && this.viewerContainerRef.value && !this.pdfViewer) {
+      const { pdfjsLib, pdfjsViewer } = await this.whenPdfjs;
+
       // INIT PDF VIEWER
       //console.log("new pdf viewer", this.viewerContainerRef.value);
       this.pdfEventBus = new pdfjsViewer.EventBus();
@@ -351,28 +378,30 @@ export default class WyPdfViewer extends LitElement {
       });
       //pdfViewer!.MAX_AUTO_SCALE = 1.0;
 
-      this.pdfLinkService.setViewer(this.pdfViewer);
+      this.pdfLinkService?.setViewer(this.pdfViewer);
 
       this.pdfHistory = new pdfjsViewer.PDFHistory({
         eventBus: this.pdfEventBus,
         linkService: this.pdfLinkService,
       });
-      this.pdfLinkService.setHistory(this.pdfHistory);
+      this.pdfLinkService?.setHistory(this.pdfHistory);
 
-      this.pdfEventBus.on("scalechanging", () => {
+      this.pdfEventBus?.on("scalechanging", () => {
         //console.debug("scalechanging")
-        this.zoomLevelRef.value!.value = Math.round(this.pdfViewer!.currentScale * 100).toFixed(0) + "%";
+        if (this.zoomLevelRef.value) {
+          this.zoomLevelRef.value.value = Math.round(this.pdfViewer!.currentScale * 100).toFixed(0) + "%";
+        }
       });
 
-      this.pdfEventBus.on("pagechanging", () => {
+      this.pdfEventBus?.on("pagechanging", () => {
         //console.debug("pagechanging")
         this.pageNumberRef.value!.value = this.pdfViewer!.currentPageNumber.toFixed(0);
       });
 
-      this.pdfEventBus.on("pagesinit", () => {
+      this.pdfEventBus?.on("pagesinit", () => {
         // We can use pdfViewer now, e.g. let's change default scale.
-        if (this.isConnected) {
-          this.pdfViewer!.currentScaleValue = this.DEFAULT_SCALE_VALUE; //"auto";
+        if (this.isConnected && this.pdfViewer) {
+          this.pdfViewer.currentScaleValue = this.DEFAULT_SCALE_VALUE; //"auto";
           this.pageNumberRef.value!.value = "1";
           this.totalPagesRef.value!.innerText = this.pdfViewer!.pagesCount.toFixed(0);
         }

@@ -10,9 +10,9 @@ import { MemberType } from "../types/members.types";
 import { TypingUserType } from "../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import messagesCss from "../scss/wrappers/messages";
-import bouncerCss from "../scss/wrappers/bouncer";
+import rebootCss from "../scss/components/base/reboot.scss";
+import messagesCss from "../scss/components/messages.scss";
+import bouncerCss from "../scss/components/bouncer.scss";
 
 import "./wy-avatar";
 

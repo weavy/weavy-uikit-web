@@ -28,7 +28,7 @@ import "./wy-empty";
 import "./wy-file-menu";
 import "./wy-spinner";
 
-import filesCss from "../scss/all";
+import filesCss from "../scss/all.scss";
 
 @customElement("wy-file-versions")
 @localized()

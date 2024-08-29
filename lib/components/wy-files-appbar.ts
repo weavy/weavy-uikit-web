@@ -5,7 +5,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
-import filesCss from "../scss/all";
+import filesCss from "../scss/all.scss";
 
 import {
   getFileMutationsByConflictOrError,

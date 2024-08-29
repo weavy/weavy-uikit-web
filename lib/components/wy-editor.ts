@@ -48,7 +48,7 @@ import "./wy-dropdown";
 import "./wy-file-item";
 import "./wy-confluence";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 
 @customElement("wy-editor")
 @localized()

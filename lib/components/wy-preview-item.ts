@@ -15,7 +15,7 @@ import "./wy-preview-embed";
 import "./wy-pdf-viewer";
 import "./wy-confluence-viewer";
 
-import allCss from "../scss/all";
+import allCss from "../scss/all.scss";
 
 @customElement("wy-preview-item")
 export class WyPreviewItem extends LitElement {

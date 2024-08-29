@@ -2,7 +2,7 @@ import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import { QueryController } from "../controllers/query-controller";
 import { BadgeType } from "../types/badge.types";
 import { getApiOptions } from "../data/api";

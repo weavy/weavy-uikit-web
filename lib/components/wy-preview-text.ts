@@ -11,8 +11,8 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import "./wy-empty";
 import "./wy-spinner";
 
-import colorModeCss from "../scss/color-modes"
-import allCss from "../scss/all"
+import colorModeCss from "../scss/color-modes.scss"
+import allCss from "../scss/all.scss"
 
 @customElement("wy-preview-text")
 export class WyPreviewText extends LitElement {

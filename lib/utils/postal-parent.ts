@@ -2,6 +2,7 @@
 import WeavyEvents from "./events";
 
 import { S4 } from "./data";
+import { isDomAvailable, throwOnDomNotAvailable } from "./dom";
 
 //console.debug("postal.js", self.name);
 
@@ -30,7 +31,7 @@ function extractOrigin(url: string) {
   return extractOrigin;
 }
 
-class WeavyPostalParent extends WeavyEvents {
+export class WeavyPostalParent extends WeavyEvents {
   private contentWindows = new Set<MessageEventSource>();
   private contentWindowsMapByWeavyId = new Map<WeavyIdType, Map<string, MessageEventSource>>();
   private contentWindowOrigins = new WeakMap<MessageEventSource, string>();
@@ -38,7 +39,7 @@ class WeavyPostalParent extends WeavyEvents {
   private contentWindowWeavyIds = new WeakMap<MessageEventSource, WeavyIdType>();
   private contentWindowDomain = new WeakMap<MessageEventSource, string>();
 
-  private origin = extractOrigin(window.location.href);
+  private origin = isDomAvailable() ? extractOrigin(window.location.href) : "";
 
   timeout = 2000;
 
@@ -238,6 +239,8 @@ class WeavyPostalParent extends WeavyEvents {
   }
 
   private async whenPostMessage(contentWindow: MessageEventSource, message: PostMessageType, transfer?: Transferable[]) {
+    throwOnDomNotAvailable();
+    
     //var whenReceipt = new WeavyPromise();
 
     if (transfer === null) {
@@ -356,5 +359,3 @@ class WeavyPostalParent extends WeavyEvents {
     }
   }
 }
-
-export default new WeavyPostalParent();

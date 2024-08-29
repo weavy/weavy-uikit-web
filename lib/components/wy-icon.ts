@@ -12,8 +12,8 @@ import { toKebabCase } from "../utils/strings";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import iconCss from "../scss/wrappers/icon";
+import rebootCss from "../scss/components/base/reboot.scss";
+import iconCss from "../scss/components/icons.scss";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 

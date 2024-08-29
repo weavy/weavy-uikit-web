@@ -8,9 +8,11 @@ import { Constructor } from "./types/generic.types";
 import { ProductTypes } from "./types/product.types";
 import { localized } from "@lit/localize";
 
-import allStyles from "./scss/all";
-import { hostBlockStyles, hostScrollYStyles, hostFontStyles } from "./scss/host";
-import colorModesStyles from "./scss/color-modes";
+import allStyles from "./scss/all.scss";
+import hostBlockStyles from "./scss/host-block.scss";
+import hostScrollYStyles from "./scss/host-scroll-y.scss";
+import hostFontStyles from "./scss/host-font.scss";
+import colorModesStyles from "./scss/color-modes.scss";
 
 import "./components/wy-conversation";
 import "./components/wy-notification-button-list";

@@ -1,3 +1,8 @@
+/**
+ * This file is deprecated.
+ * Use isolated component styles and include in the component where it's used instead.
+ **/
+
 // weavy reboot
 @use "components/base/reboot";
 @use "components/base/scroll";
@@ -6,7 +11,7 @@
 // weavy ui components
 @use "components/appbar";
 //@use "components/avatar";
-@use "components/buttons";
+@use "components/button";
 @use "components/code";
 @use "components/content";
 //@use "components/dropdown";

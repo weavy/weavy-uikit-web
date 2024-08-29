@@ -1,6 +1,5 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import chatCss from "../scss/all";
 import { localized } from "@lit/localize";
 import { WeavyContextProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
@@ -10,15 +9,15 @@ import {
   getBadgeOptions,
 } from "../data/notifications";
 import { QueryController } from "../controllers/query-controller";
-import { hostContents } from "../scss/host";
-
+import allStyles from "../scss/all.scss";
+import hostContentsStyles from "../scss/host-contents.scss";
 
 @customElement("wy-notification-badge")
 @localized()
 export default class WyNotificationBadge extends BlockConsumerMixin(LitElement) {
   static override styles = [
-    chatCss,
-    hostContents
+    allStyles,
+    hostContentsStyles
   ];
   protected exportParts = new ShadowPartsController(this);
 

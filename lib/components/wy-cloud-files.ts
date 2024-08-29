@@ -3,11 +3,11 @@ import { customElement, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
-import WeavyPostal from "../utils/postal-parent";
+import { WeavyPostalParent } from "../utils/postal-parent";
 import type { ExternalBlobType } from "../types/files.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 
-import cloudFilesCss from "../scss/all";
+import cloudFilesCss from "../scss/all.scss";
 
 import "./wy-overlay";
 import "./wy-spinner";
@@ -29,6 +29,8 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
 
   @state()
   showOverlay = false;
+
+  private weavyPostal?: WeavyPostalParent;
 
   private isRegistered = false;
 
@@ -103,17 +105,21 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
       }
     };
 
-    WeavyPostal.on("add-external-blobs", this.handleFiles);
-    WeavyPostal.on("request:file-browser-close", this.handleClose);
-    WeavyPostal.on("google-selected", this.handleGoogleSelected);
+    if (!this.weavyPostal) {
+      this.weavyPostal = new WeavyPostalParent();
+    }
+
+    this.weavyPostal.on("add-external-blobs", this.handleFiles);
+    this.weavyPostal.on("request:file-browser-close", this.handleClose);
+    this.weavyPostal.on("google-selected", this.handleGoogleSelected);
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
 
-    WeavyPostal.off("add-external-blobs", this.handleFiles);
-    WeavyPostal.off("request:file-browser-close", this.handleClose);
-    WeavyPostal.off("google-selected", this.handleGoogleSelected);
+    this.weavyPostal?.off("add-external-blobs", this.handleFiles);
+    this.weavyPostal?.off("request:file-browser-close", this.handleClose);
+    this.weavyPostal?.off("google-selected", this.handleGoogleSelected);
   }
 
   override updated() {
@@ -128,9 +134,9 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
       );
     }
 
-    if (!this.isRegistered && this.showOverlay && this.src) {
+    if (this.weavyPostal && !this.isRegistered && this.showOverlay && this.src) {
       if (this.iframeElementRef.value?.contentWindow) {
-        WeavyPostal.registerContentWindow(
+        this.weavyPostal.registerContentWindow(
           this.iframeElementRef.value?.contentWindow.self,
           "weavy-filebrowser",
           "wy-filebrowser",
@@ -138,8 +144,8 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
         );
         this.isRegistered = true;
       }
-    } else if (this.isRegistered && !this.showOverlay && this.src) {
-      WeavyPostal.unregisterContentWindow("weavy-filebrowser", "wy-filebrowser");
+    } else if (this.weavyPostal && this.isRegistered && !this.showOverlay && this.src) {
+      this.weavyPostal.unregisterContentWindow("weavy-filebrowser", "wy-filebrowser");
       this.isRegistered = false;
       this.src = undefined;
     }

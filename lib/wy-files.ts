@@ -47,9 +47,10 @@ import { BlockProviderMixin } from "./mixins/block-mixin";
 import { Constructor } from "./types/generic.types";
 import { ProductTypes } from "./types/product.types";
 
-import allStyles from "./scss/all";
-import { hostBlockStyles, hostFontStyles } from "./scss/host";
-import colorModesStyles from "./scss/color-modes";
+import allStyles from "./scss/all.scss";
+import hostBlockStyles from "./scss/host-block.scss";
+import hostFontStyles from "./scss/host-font.scss";
+import colorModesStyles from "./scss/color-modes.scss";
 
 import "./components/wy-files-appbar";
 import "./components/wy-files-list";
@@ -100,7 +101,7 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
   //private history = new HistoryController<this>(this)
 
   private infiniteScroll = new InfiniteScrollController(this);
-  private pagerRef: Ref<Element> = createRef();
+  private pagerRef: Ref<HTMLElement> = createRef();
 
   private previewRef: Ref<WeavyPreview> = createRef();
 

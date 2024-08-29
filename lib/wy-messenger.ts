@@ -16,10 +16,11 @@ import { Constructor } from "./types/generic.types";
 import { ProductTypes } from "./types/product.types";
 import { getConversationOptions, resolveConversation } from "./data/conversation";
 
-import allStyles from "./scss/all";
-import messengerStyles from "./scss/wrappers/messenger";
-import colorModesStyles from "./scss/color-modes";
-import { hostBlockStyles, hostFontStyles } from "./scss/host";
+import allStyles from "./scss/all.scss";
+import messengerStyles from "./scss/components/messenger.scss";
+import colorModesStyles from "./scss/color-modes.scss";
+import hostBlockStyles from "./scss/host-block.scss";
+import hostFontStyles from "./scss/host-font.scss";
 
 import "./components/wy-empty";
 import "./components/wy-conversation-appbar";

@@ -2,8 +2,8 @@ import { WeavyContextBase } from "./weavy";
 import { adoptGlobalStyles } from "../utils/styles";
 import { Constructor } from "../types/generic.types";
 
-import colorModes from "../scss/color-modes";
-import definitionStyles from "../scss/definitions";
+import colorModes from "../scss/color-modes.scss";
+import definitionStyles from "../scss/definitions.scss";
 
 export interface WeavyStylesProps {}
 

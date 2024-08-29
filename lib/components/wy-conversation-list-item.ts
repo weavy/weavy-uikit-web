@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import type { MessageType } from "../types/messages.types";
 import type { UserType } from "../types/users.types";
 import { type MembersResultType } from "../types/members.types";

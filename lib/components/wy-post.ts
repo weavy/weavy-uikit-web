@@ -8,7 +8,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 
 import "./wy-post-trashed";
 import "./wy-post-view";

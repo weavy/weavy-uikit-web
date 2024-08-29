@@ -26,7 +26,7 @@ import { WeavyContextProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 
 import "./wy-comment";
 import "./wy-spinner";
@@ -58,7 +58,7 @@ export default class WyCommentList extends BlockConsumerMixin(LitElement) {
   private restoreCommentMutation?: RemoveCommentMutationType;
   private pollMutation?: PollMutationType;
   private infiniteScroll = new InfiniteScrollController(this);
-  private pagerRef: Ref<Element> = createRef();
+  private pagerRef: Ref<HTMLElement> = createRef();
 
   #unsubscribeToRealtime?: () => void;
 

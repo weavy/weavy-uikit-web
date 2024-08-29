@@ -8,9 +8,11 @@ import WyNotificationList from "./components/wy-notification-list";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ContextualTypes } from "./types/app.types";
 
-import colorModesStyles from "./scss/color-modes";
-import allStyles from "./scss/all";
-import { hostBlockStyles, hostFontStyles, hostScrollYStyles } from "./scss/host";
+import colorModesStyles from "./scss/color-modes.scss";
+import allStyles from "./scss/all.scss";
+import hostBlockStyles from "./scss/host-block.scss";
+import hostScrollYStyles from "./scss/host-scroll-y.scss";
+import hostFontStyles from "./scss/host-font.scss";
 
 import "./components/wy-notification-list";
 import "./components/wy-empty";

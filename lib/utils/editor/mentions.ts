@@ -1,5 +1,6 @@
 import { RangeSet } from "@codemirror/state";
 import { EditorView, MatchDecorator, Decoration, ViewPlugin, WidgetType, ViewUpdate } from "@codemirror/view";
+import { throwOnDomNotAvailable } from "../dom";
 
 const mentionMatcher = new MatchDecorator({
   regexp: /(\[(.+?)\])(\(@u(\d+)\))/g,
@@ -24,6 +25,8 @@ class MentionWidget extends WidgetType {
   }
 
   toDOM() {
+    throwOnDomNotAvailable();
+    
     const wrap = document.createElement("span");
     wrap.className = "wy-mention";
     wrap.innerHTML = typeof this.match[5] !== "undefined" ? this.match[5] : this.match[2];

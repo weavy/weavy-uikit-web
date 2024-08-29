@@ -11,7 +11,7 @@ import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import "./wy-message";
 
 @customElement("wy-messages")

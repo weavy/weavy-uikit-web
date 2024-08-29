@@ -15,6 +15,7 @@ import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 import { WeavyFetchMixin, WeavyFetchProps } from "./fetch";
 import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
 import { WeavyRealtimeMixin, WeavyRealtimeProps } from "./realtime";
+import { throwOnDomNotAvailable } from "../utils/dom";
 
 export type WeavyContextMixins = WeavyContextBase &
   WeavyNetworkProps &
@@ -66,7 +67,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   /**
    * The host where the Weavy context is provided.
    */
-  readonly host: HTMLElement = document.documentElement;
+  readonly host: HTMLElement;
 
   #hostContextProvider?: ContextProvider<typeof weavyContextDefinition>;
 
@@ -159,6 +160,10 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   constructor(options?: WeavyContextOptionsType) {
     console.info(`${WeavyContextBase.sourceName}@${WeavyContextBase.version} #${this.weavySid}`);
 
+    throwOnDomNotAvailable();
+
+    this.host = document.documentElement
+
     const validOptions: typeof options = {};
 
     // constructor options
@@ -181,13 +186,13 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 
     // Context root
     if (this.host !== document.documentElement) {
-      globalContextProvider.detachListeners();
+      globalContextProvider?.detachListeners();
       this.#hostContextProvider = new ContextProvider(this.host, {
         context: weavyContextDefinition,
         initialValue: this as unknown as WeavyContext,
       });
     } else {
-      globalContextProvider.setValue(this as unknown as WeavyContext);
+      globalContextProvider?.setValue(this as unknown as WeavyContext);
     }
   }
 

@@ -4,9 +4,9 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import buttonCss from "../scss/wrappers/button";
-import tabCss from "../scss/wrappers/tab";
+import rebootCss from "../scss/components/base/reboot.scss";
+import buttonCss from "../scss/components/button.scss";
+import tabCss from "../scss/components/tab.scss";
 
 @customElement("wy-button")
 export default class WyButton extends LitElement {

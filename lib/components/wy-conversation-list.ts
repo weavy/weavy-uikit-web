@@ -2,7 +2,7 @@ import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { ConversationTypeGuid, ConversationsResultType } from "../types/conversations.types";
@@ -86,7 +86,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
   private leaveConversationMutation?: LeaveConversationMutationType;
   private trashConversationMutation?: TrashConversationMutationType;
   private infiniteScroll = new InfiniteScrollController(this);
-  private pagerRef: Ref<Element> = createRef();
+  private pagerRef: Ref<HTMLElement> = createRef();
 
   private handleRefresh = () => {
     this.conversationsQuery.result.refetch();

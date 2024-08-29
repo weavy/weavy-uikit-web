@@ -4,8 +4,8 @@ import { Presence, type PresenceType } from "../types/presence.types";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import presenceCss from "../scss/wrappers/presence";
+import rebootCss from "../scss/components/base/reboot.scss";
+import presenceCss from "../scss/components/presence.scss";
 
 @customElement("wy-presence")
 export default class WyPresence extends LitElement {

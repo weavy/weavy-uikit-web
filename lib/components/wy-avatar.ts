@@ -12,9 +12,9 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { S4 } from "../utils/data";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import avatarCss from "../scss/wrappers/avatar";
-import presenceCss from "../scss/wrappers/presence";
+import rebootCss from "../scss/components/base/reboot.scss";
+import avatarCss from "../scss/components/avatar.scss";
+import presenceCss from "../scss/components/presence.scss";
 
 import "./wy-presence";
 import "./wy-icon";

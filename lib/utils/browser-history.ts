@@ -1,4 +1,5 @@
 import { PlainObjectType } from "../types/generic.types";
+import { throwOnDomNotAvailable } from "./dom";
 import { assign, eqObjects, isPlainObject } from "./objects";
 
 /**
@@ -9,6 +10,8 @@ import { assign, eqObjects, isPlainObject } from "./objects";
  * @returns {object}
  */
 export function getBrowserStateProperty<T>(prefix: string, property: PropertyKey) {
+  throwOnDomNotAvailable();
+
   const historyState = assign({} as PlainObjectType, window.history.state, true);
   if (!historyState.weavy || !(historyState.weavy as PlainObjectType)[prefix] || !Object.hasOwn((historyState.weavy as PlainObjectType)[prefix] as PlainObjectType, property)) {
     //console.log("property not found", window.history.state)
@@ -30,6 +33,8 @@ export function getBrowserStateProperty<T>(prefix: string, property: PropertyKey
  * @param {any} [url] - Any new url to use for the state. If omitted, the current location will be reused.
  */
 export function setBrowserState(prefix: string, state: unknown, action: "push" | "replace" = "push", url?: URL | string) {
+  throwOnDomNotAvailable();
+
   if (state) {
     //console.debug(action + ' browser state', state)
 
@@ -55,6 +60,8 @@ export function setBrowserState(prefix: string, state: unknown, action: "push" |
 }
 
 export function restoreHistoryProperties<T = PlainObjectType>(parent: T, key: string, properties: Array<keyof T>) {
+  throwOnDomNotAvailable();
+  
   const prefix = `${typeof parent}:${key}`;
 
   properties.forEach(async (property: keyof T) => {
@@ -79,6 +86,8 @@ export function pushHistoryProperties<T = object>(
   properties: Array<keyof T>,
   action: "push" | "replace" = "push"
 ) {
+  throwOnDomNotAvailable();
+  
   const prefix = `${typeof parent}:${key}`;
   const state: PlainObjectType = {};
 

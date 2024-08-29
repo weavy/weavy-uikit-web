@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { FileOpenEventType, FileType } from "../types/files.types";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 import "./wy-icon";
 import { ifDefined } from "lit/directives/if-defined.js";
 

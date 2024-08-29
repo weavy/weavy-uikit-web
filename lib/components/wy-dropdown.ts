@@ -8,8 +8,8 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { iconNamesType } from "../utils/icons";
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
 
-import rebootStyles from "../scss/wrappers/base/reboot";
-import dropdownStyles from "../scss/wrappers/dropdown";
+import rebootStyles from "../scss/components/base/reboot.scss";
+import dropdownStyles from "../scss/components/dropdown.scss";
 import WeavyIcon from "./wy-icon";
 import "./wy-button";
 

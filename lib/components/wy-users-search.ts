@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import throttle from "lodash.throttle";
 import type { MemberType } from "../types/members.types";
 import { getInfiniteSearchMemberOptions } from "../data/members";
@@ -60,7 +60,7 @@ export default class WyUsersSearch extends LitElement {
   private inputRef: Ref<HTMLInputElement> = createRef();
 
   private infiniteScroll = new InfiniteScrollController(this);
-  private pagerRef: Ref<Element> = createRef();
+  private pagerRef: Ref<HTMLElement> = createRef();
 
   private dispatchSubmit() {
     this.selected = [...this.selected, ...this.select];

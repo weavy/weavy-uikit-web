@@ -25,7 +25,7 @@ import "./wy-button";
 import "./wy-icon";
 import "./wy-editor";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-comment-edit")

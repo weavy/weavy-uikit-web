@@ -8,7 +8,7 @@ import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 
 import "./wy-comment-trashed";
 import "./wy-comment-view";

@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import overlayStyles from "../scss/all";
+import overlayStyles from "../scss/all.scss";
 
 import "./wy-button";
 import "./wy-icon";

@@ -41,7 +41,7 @@ export function weavyImportUrlPlugin() {
 }
 
 export function weavyChunkNames(chunkInfo) {
-  let name: String;
+  let name: string;
   if (chunkInfo.facadeModuleId) {
     name = chunkInfo.facadeModuleId.split("node_modules/")[1];
   } else if (chunkInfo.moduleIds.length === 1) {

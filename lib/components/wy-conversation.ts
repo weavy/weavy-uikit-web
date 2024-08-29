@@ -22,7 +22,7 @@ import { localized, msg } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import type { RealtimeMessageEventType, RealtimeReactionEventType } from "../types/realtime.types";
-import { whenDocumentVisible } from "../utils/dom";
+import { whenDocumentVisible, whenElementVisible } from "../utils/dom";
 import { ReactableType } from "../types/reactions.types";
 import { PollMutationType, getPollMutation } from "../data/poll";
 import { hasPermission } from "../utils/permission";
@@ -39,7 +39,7 @@ import { provide } from "@lit/context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { PermissionTypes } from "../types/app.types";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import "./wy-empty";
 import "./wy-messages";
 import "./wy-message-editor";
@@ -119,7 +119,7 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
 
   protected infiniteScroll = new ReverseInfiniteScrollController(this);
 
-  protected pagerRef: Ref<Element> = createRef();
+  protected pagerRef: Ref<HTMLElement> = createRef();
 
   protected shouldBeAtBottom = true;
 
@@ -257,7 +257,10 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
     return this.pagerRef.value ? isParentAtBottom(this.pagerRef.value) : true;
   }
 
-  scrollToBottom(smooth: boolean = false) {
+  async scrollToBottom(smooth: boolean = false) {
+    if (this.pagerRef.value) {
+      await whenElementVisible(this.pagerRef.value)
+    }
     if (hasScroll(this.pagerRef.value) && this.conversationId) {
       if (this.weavyContext) {
         keepFirstPage(this.weavyContext.queryClient, ["messages", this.conversationId]);

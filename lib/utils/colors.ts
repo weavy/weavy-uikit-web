@@ -1,3 +1,5 @@
+import { throwOnDomNotAvailable } from "./dom";
+
 export function hexFromRgba(rgba: string, opaque = false) {
   const parsedRgba = rgba
     .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
@@ -30,6 +32,8 @@ export function argbFromRgba(rgba: string, opaque: boolean = false) {
 }
 
 export function getComputedColor(color: string) {
+  throwOnDomNotAvailable();
+
   const computeNode = document.createElement("wy-compute-styles");
   computeNode.setAttribute("style", `color: ${color} !important;`);
   document.documentElement.append(computeNode);

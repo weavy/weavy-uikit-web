@@ -28,7 +28,7 @@ import { BlobType } from "../types/files.types";
 import { AccessTypes, PermissionTypes } from "../types/app.types";
 import { hasPermission } from "../utils/permission";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 
 import "./wy-presence";
 import "./wy-users-search";

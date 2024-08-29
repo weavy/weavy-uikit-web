@@ -4,7 +4,7 @@ import { styleMap } from "lit/directives/style-map.js";
 import { ref } from "lit/directives/ref.js";
 import type { FileOpenEventType, FileType } from "../types/files.types";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 import { checkImageLoad, imageLoaded } from "../utils/images";
 
 @customElement("wy-image-grid")

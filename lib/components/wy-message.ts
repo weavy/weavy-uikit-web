@@ -10,7 +10,7 @@ import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileOpenEventType, FileType } from "../types/files.types";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";

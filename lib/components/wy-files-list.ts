@@ -13,12 +13,12 @@ import { getEntityChainMatch, hasEntityChildType } from "../utils/notifications"
 import { renderFileCard } from "./wy-file-grid";
 import { renderFileTable } from "./wy-file-table";
 
-import allCss from "../scss/all";
-import { hostScrollYStyles } from "../scss/host";
+import allCss from "../scss/all.scss";
+import hostScrollYStyles from "../scss/host-scroll-y.scss";
 
 // wy-file-grid
-import gridCss from "../scss/wrappers/grid";
-import cardCss from "../scss/wrappers/card";
+import gridCss from "../scss/components/grid.scss";
+import cardCss from "../scss/components/card.scss";
 
 // wy-file-table
 

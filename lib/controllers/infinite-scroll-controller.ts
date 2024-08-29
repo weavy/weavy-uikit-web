@@ -7,7 +7,7 @@ export class InfiniteScrollController implements ReactiveController {
   reverse: boolean = false;
 
   scroller?: IntersectionObserver;
-  loadMoreRefElement?: Element;
+  loadMoreRefElement?: HTMLElement;
 
   private isObservePending = false;
 
@@ -17,7 +17,7 @@ export class InfiniteScrollController implements ReactiveController {
     this.reverse = reverse;
   }
 
-  observe(infiniteQueryResult?: InfiniteQueryObserverResult, loadMoreRefElement?: Element) {
+  observe(infiniteQueryResult?: InfiniteQueryObserverResult, loadMoreRefElement?: HTMLElement) {
     if (infiniteQueryResult && loadMoreRefElement) {
       if (!infiniteQueryResult.isLoading && !this.isObservePending) {
         this.isObservePending = true;

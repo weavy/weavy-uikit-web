@@ -10,10 +10,10 @@ import type { NotificationType } from "../types/notifications.types";
 import { dispatchLinkEvent, getNotificationText } from "../utils/notifications";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import itemCss from "../scss/wrappers/item";
-import metaCss from "../scss/wrappers/meta";
-import notificationsCss from "../scss/wrappers/notifications";
+import rebootCss from "../scss/components/base/reboot.scss";
+import itemCss from "../scss/components/item.scss";
+import metaCss from "../scss/components/meta.scss";
+import notificationsCss from "../scss/components/notifications.scss";
 
 import "./wy-avatar";
 import "./wy-icon";

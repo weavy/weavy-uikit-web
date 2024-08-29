@@ -4,7 +4,7 @@ import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from ".
 import type { FileProviderType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 import "./wy-icon";
 
 @customElement("wy-attachment")

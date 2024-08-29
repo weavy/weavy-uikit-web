@@ -2,7 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import filesCss from "../scss/all"
+import filesCss from "../scss/all.scss"
 
 import { getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
 import type { FileActionType, FileStatusType, FileType } from "../types/files.types";

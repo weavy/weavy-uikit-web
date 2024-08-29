@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 
 import "./wy-button";
 

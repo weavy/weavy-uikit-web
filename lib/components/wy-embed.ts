@@ -5,7 +5,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 import "./wy-button";
 import "./wy-icon";
 

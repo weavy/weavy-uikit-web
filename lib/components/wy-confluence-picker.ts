@@ -4,7 +4,7 @@ import { repeat } from "lit/directives/repeat.js";
 
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import { consume } from "@lit/context";
 import { localized, msg } from "@lit/localize";
 

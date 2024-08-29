@@ -2,10 +2,12 @@ import { defineConfig, loadEnv } from "vite";
 import packageJson from "../package.json" with { type: "json" };
 import dts from "vite-plugin-dts";
 import fs from "fs";
+import path from "path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import { utf8BomPlugin, weavyChunkNames, weavyImportUrlPlugin } from "./vite.plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
+import litCss from 'vite-plugin-lit-css';
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -50,6 +52,7 @@ export default defineConfig(({ mode }) => {
         lit: true,
       }),
       weavyImportUrlPlugin(),
+      litCss()
     ],
     define: {
       WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
@@ -62,9 +65,23 @@ export default defineConfig(({ mode }) => {
       },
     },
     resolve: {
-      alias: {
-        "@microsoft/signalr": "@microsoft/signalr/dist/browser/signalr.min.js",
-      },
+      alias: [
+        {
+          find: "@microsoft/signalr", replacement: "@microsoft/signalr/dist/browser/signalr.min.js",
+        },
+        {
+          find:/@lit\/reactive-element$/, replacement: path.resolve("./node_modules/@lit/reactive-element/node/reactive-element.js"),
+        },
+        {
+          find:/@lit\/reactive-element\/(.*)/, replacement: `${path.resolve("./node_modules/@lit/reactive-element/node")}${path.sep}$1`,
+        },
+        {
+          find:/lit-html$/, replacement: path.resolve("./node_modules/lit-html/node/lit-html.js"),
+        },
+        {
+          find:/lit-html\/(.)/, replacement: `${path.resolve("./node_modules/lit-html/node")}${path.sep}$1`,
+        },
+      ]
     },
     server: {
       proxy: {

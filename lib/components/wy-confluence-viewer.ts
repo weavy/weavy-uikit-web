@@ -2,7 +2,7 @@ import { LitElement, type PropertyValueMap, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 
-import allCss from "../scss/all";
+import allCss from "../scss/all.scss";
 import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
 import { consume } from "@lit/context";
 

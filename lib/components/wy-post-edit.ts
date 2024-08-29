@@ -15,7 +15,7 @@ import { WeavyContextProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all"
+import chatCss from "../scss/all.scss"
 
 import "./wy-avatar";
 import "./wy-attachment";

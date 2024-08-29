@@ -8,7 +8,7 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import "./wy-spinner";
 import "./wy-preview-icon";
 
-import allCss from "../scss/all";
+import allCss from "../scss/all.scss";
 
 @customElement("wy-preview-media")
 export class WyPreviewMedia extends LitElement {

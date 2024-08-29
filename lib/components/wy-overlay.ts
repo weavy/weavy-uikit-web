@@ -5,8 +5,8 @@ import { classMap } from "lit/directives/class-map.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import overlayStyles from "../scss/all"
-import colorModesStyles from "../scss/color-modes";
+import overlayStyles from "../scss/all.scss"
+import colorModesStyles from "../scss/color-modes.scss";
 
 import "./wy-button";
 import "./wy-icon";

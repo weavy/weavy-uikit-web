@@ -1,3 +1,4 @@
+import { throwOnDomNotAvailable } from "./dom";
 import { getNextPositionedChild, getScrollParent } from "./scroll-position";
 
 const THRESHOLD = 0; // as soon as even one pixel is visible, the callback will be run
@@ -6,11 +7,13 @@ const ROOT_MARGIN = "512px"; // margin around the root, used to grow or shrink t
 /**
  * Creates a new regular scroll listener
  *
- * @param {Element} observeElement
+ * @param {HTMLElement} observeElement
  * @param {Function} whenNext
  * @returns IntersectionObserver
  */
-export function createScroller(observeElement: Element, whenNext: () => Promise<void>, reverse: boolean = false) {
+export function createScroller(observeElement: HTMLElement, whenNext: () => Promise<void>, reverse: boolean = false) {
+  throwOnDomNotAvailable();
+
   // inverted infinite scroll (e.g. for messages)
   let prevSleep = false;
 
@@ -105,10 +108,10 @@ export function createScroller(observeElement: Element, whenNext: () => Promise<
 /**
  * Creates a new reverse scroll listener
  *
- * @param {Element} observeElement
+ * @param {HTMLElement} observeElement
  * @param {Function} whenNext
  * @returns IntersectionObserver
  */
-export function createReverseScroller(observeElement: Element, whenNext: () => Promise<void>) {
+export function createReverseScroller(observeElement: HTMLElement, whenNext: () => Promise<void>) {
   return createScroller(observeElement, whenNext, true);
 }

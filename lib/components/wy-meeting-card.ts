@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import type { MeetingType } from "../types/meetings.types";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import { localized, msg } from "@lit/localize";
 import "./wy-icon";
 import "./wy-button";

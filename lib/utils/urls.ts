@@ -1,4 +1,8 @@
+import { throwOnDomNotAvailable } from "./dom";
+
 export function openUrl(url: string = "", target: string = "", name: string = "", download: boolean = false) {
+  throwOnDomNotAvailable();
+  
   if (url) {
     // a is needed for downloading object urls
     const a = document.createElement("a");

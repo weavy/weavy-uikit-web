@@ -26,7 +26,7 @@ import "./wy-file-menu";
 import "./wy-comment-list";
 import "./wy-file-versions";
 
-import allCss from "../scss/all";
+import allCss from "../scss/all.scss";
 
 @customElement("wy-preview")
 @localized()

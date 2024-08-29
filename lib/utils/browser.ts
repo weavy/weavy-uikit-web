@@ -1,4 +1,6 @@
-const userAgent = window.navigator.userAgent;
+import { isDomAvailable } from "./dom";
+
+const userAgent = isDomAvailable() ? window.navigator.userAgent : "";
 
 // mobile or tablet
 // Tablet should also be treated as mobile normally

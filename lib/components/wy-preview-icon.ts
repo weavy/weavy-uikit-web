@@ -8,7 +8,7 @@ import type { iconNamesType } from "../utils/icons";
 
 import "./wy-icon";
 
-import allCss from "../scss/all"
+import allCss from "../scss/all.scss"
 
 @customElement("wy-preview-icon")
 @localized()

@@ -2,7 +2,7 @@ import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import type { UserType } from "../types/users.types";
@@ -66,7 +66,7 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
   private markNotificationsMutation?: ReturnType<typeof getMarkNotificationsMutation>;
   private markNotificationMutation?: ReturnType<typeof getMarkNotificationMutation>;
   private infiniteScroll = new InfiniteScrollController(this);
-  private pagerRef: Ref<Element> = createRef();
+  private pagerRef: Ref<HTMLElement> = createRef();
 
   private handleRefresh = (_e: RealtimeNotificationEventType) => {
     //console.log("realtime notification, refresh", e)

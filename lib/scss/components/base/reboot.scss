@@ -45,7 +45,7 @@
       cursor: inherit;
     }
 
-    &[hidden] {
+    @at-root :where(:host([hidden])), &[hidden] {
       display: none !important;
     }
 

@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 
 import type { ExternalBlobType } from "../types/files.types";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import type { ConfluencePageProps } from "../types/confluence.types";
 
 import { localized, msg } from "@lit/localize";

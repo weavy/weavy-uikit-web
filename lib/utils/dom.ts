@@ -5,6 +5,8 @@
  * @param {Function} callback - The function to execute when ready.
  */
 export function defer(callback: () => void) {
+  throwOnDomNotAvailable();
+  
   if (document.readyState !== "loading") {
     callback();
   } else {
@@ -46,6 +48,8 @@ export const observeConnected = (target: Element, callback: (isConnected: boolea
 };
 
 export async function whenDocumentVisible() {
+  throwOnDomNotAvailable();
+
   if (document.hidden) {
     await new Promise((resolve) => {
       window.addEventListener(
@@ -94,4 +98,16 @@ export function isInShadowDom(node: Node) {
 
 export function supportsPopover() {
   return HTMLElement.prototype.hasOwnProperty("popover");
+}
+
+export function isDomAvailable() {
+  // SSR friendly check
+  return typeof window !== 'undefined'
+}
+
+export function throwOnDomNotAvailable() {
+  // SSR friendly check
+  if (typeof window === 'undefined') {
+    throw Error("DOM not available");
+  }
 }

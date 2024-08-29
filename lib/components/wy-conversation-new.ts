@@ -1,7 +1,7 @@
 import { LitElement, html, type PropertyValueMap, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import allStyles from "../scss/all";
+import allStyles from "../scss/all.scss";
 import { MemberType } from "../types/members.types";
 import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
 import { localized, msg } from "@lit/localize";

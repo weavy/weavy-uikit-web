@@ -5,6 +5,7 @@ import { Blend } from "@material/material-color-utilities";
 import { TonalPalette } from "@material/material-color-utilities";
 import { argbFromRgba, getComputedColor } from "./colors";
 import { type CSSResult, type CSSResultOrNative, supportsAdoptingStyleSheets } from "lit";
+import { throwOnDomNotAvailable } from "./dom";
 
 export function getCSSThemeColor(element: Element) {
   // By inherited --wy-theme
@@ -38,6 +39,8 @@ export function observeCSSThemeColor(element: Element, callback: (themeColor?: s
 }
 
 export function getMetaThemeColor() {
+  throwOnDomNotAvailable();
+
   // By meta theme-color
   const metaThemeColors = Array.from(document.head.querySelectorAll("meta[name='theme-color']"));
   const themeColor = metaThemeColors
@@ -53,6 +56,8 @@ export function getMetaThemeColor() {
 }
 
 export function observeMetaThemeColor(callback: (themeColor?: string) => void) {
+  throwOnDomNotAvailable();
+  
   const metaThemeColors = Array.from(document.head.querySelectorAll("meta[name='theme-color']"));
 
   if (!metaThemeColors) {
@@ -275,6 +280,8 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
 export const adoptGlobalStyles = (
   styles: Array<CSSResultOrNative>
 ) => {
+  throwOnDomNotAvailable();
+
   if (supportsAdoptingStyleSheets) {
     document.adoptedStyleSheets = styles.map((s) =>
       s instanceof CSSStyleSheet ? s : s.styleSheet!

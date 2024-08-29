@@ -21,9 +21,11 @@ import { WeavyContextProps } from "./types/weavy.types";
 import { hasPermission } from "./utils/permission";
 import { addCacheItem, updateCacheItem } from "./utils/query-cache";
 
-import allStyles from "./scss/all";
-import colorModesStyles from "./scss/color-modes";
-import { hostBlockStyles, hostFontStyles, hostScrollYStyles } from "./scss/host";
+import allStyles from "./scss/all.scss";
+import colorModesStyles from "./scss/color-modes.scss";
+import hostBlockStyles from "./scss/host-block.scss";
+import hostScrollYStyles from "./scss/host-scroll-y.scss";
+import hostFontStyles from "./scss/host-font.scss";
 
 import "./components/wy-button";
 import "./components/wy-editor";
@@ -43,7 +45,7 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
   protected postsQuery = new InfiniteQueryController<PostsResultType>(this);
 
   private infiniteScroll = new InfiniteScrollController(this);
-  private pagerRef: Ref<Element> = createRef();
+  private pagerRef: Ref<HTMLElement> = createRef();
   private addPostMutation = new MutationController<PostType, Error, MutatePostProps, MutatePostContextType>(this);
   private subscribePostMutation?: SubscribePostMutationType;
   private removePostMutation?: RemovePostMutationType;

@@ -2,6 +2,7 @@ import { WeavyContextBase, WeavyContextMixins } from "./weavy";
 import { Constructor } from "../types/generic.types";
 import { RealtimeEventType } from "../types/realtime.types";
 import { WyNotificationsEventType } from "../types/notifications.types";
+import { throwOnDomNotAvailable } from "../utils/dom";
 
 export interface WeavyRealtimeProps {
   /**
@@ -25,6 +26,8 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyContextBase>>(
     }
 
     dispatchRealtimeEvent = (realtimeEvent: RealtimeEventType) => {
+      throwOnDomNotAvailable()
+
       const eventOptions: EventInit = this.host !== document.documentElement ? { composed: true } : { bubbles: true };
 
       switch (realtimeEvent.action) {

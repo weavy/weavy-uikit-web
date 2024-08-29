@@ -18,6 +18,7 @@ import { WeavyContextProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
+import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
 
 import "./wy-spinner";
 import "./wy-button";
@@ -25,11 +26,10 @@ import "./wy-sheet";
 import "./wy-icon";
 import "./wy-avatar";
 
-import rebootCss from "../scss/wrappers/base/reboot";
-import reactionCss from "../scss/wrappers/reactions";
-import itemCss from "../scss/wrappers/item";
-import emojiCss from "../scss/wrappers/emoji";
-import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
+import rebootCss from "../scss/components/base/reboot.scss";
+import reactionCss from "../scss/components/reactions.scss";
+import itemCss from "../scss/components/item.scss";
+import emojiCss from "../scss/components/emoji.scss";
 
 @customElement("wy-reactions")
 @localized()

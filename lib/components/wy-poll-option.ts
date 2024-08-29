@@ -1,6 +1,6 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
 import { getVotesOptions } from "../data/poll";

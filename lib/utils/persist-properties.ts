@@ -1,3 +1,5 @@
+import { throwOnDomNotAvailable } from "./dom";
+
 interface Storage {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
@@ -7,6 +9,8 @@ interface Storage {
 const keyPrefix = "WEAVY_OFFLINE_CACHE";
 let storage: Storage | undefined;
 try {
+  throwOnDomNotAvailable();
+  
   storage = window.sessionStorage;
 } catch {
   console.warn("Session storage not available.");

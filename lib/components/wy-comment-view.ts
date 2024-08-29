@@ -15,7 +15,7 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypes } from "../types/app.types";
 import { isEntityChainMatch } from "../utils/notifications";
 
-import chatCss from "../scss/all";
+import chatCss from "../scss/all.scss";
 
 import "./wy-avatar";
 import "./wy-attachment";
