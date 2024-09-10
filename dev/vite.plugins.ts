@@ -58,6 +58,11 @@ export function weavyChunkNames(chunkInfo) {
   if (name?.endsWith(".js")) {
     name = name.slice(0, -1 * ".js".length);
   }
+
+  /*if (name?.endsWith(".mjs")) {
+    name = name.slice(0, -1 * ".mjs".length);
+  }*/
+
   //return `esm/${chunkInfo.isDynamicEntry ? "dynamic/" : ""}${name}.js`;
   return `[format]/${name}.${chunkInfo.format === "cjs" ? "cjs" : "js"}`;
 }

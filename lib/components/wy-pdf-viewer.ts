@@ -314,13 +314,13 @@ export default class WyPdfViewer extends LitElement {
     if (changedProperties.has("weavyContext") && this.weavyContext) {
       if (!this.pdfjsLib) {
         await this.weavyContext.whenUrl();
-        const pdfjsLibImport = import("pdfjs-dist");
-        const pdfjsViewerImport = import("pdfjs-dist/web/pdf_viewer.mjs");
-        this.pdfjsLib = await pdfjsLibImport;
-        this.pdfjsViewer = await pdfjsViewerImport;
         
+        this.pdfjsLib = await import("pdfjs-dist");
         // Assign to globalThis, otherwise it breaks
         (globalThis as typeof globalThis & { pdfjsLib: pdfjsLibType }).pdfjsLib = this.pdfjsLib;
+        
+        // Must await after globalThis.pdfjsLib, otherwise it breaks
+        this.pdfjsViewer = await import("pdfjs-dist/web/pdf_viewer.mjs");
         
         this.whenPdfjsResolve?.({ 
           pdfjsLib: this.pdfjsLib, 

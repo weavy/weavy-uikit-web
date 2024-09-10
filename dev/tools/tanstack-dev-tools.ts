@@ -7,7 +7,7 @@ import { type WeavyContextType, weavyContextDefinition } from "../../lib/context
 
 import { onlineManager } from "@tanstack/query-core";
 import * as TanstackQueryDevtools from "@tanstack/query-devtools";
-import type { DevToolsErrorType, DevtoolsButtonPosition, DevtoolsPosition } from "@tanstack/query-devtools";
+import type { DevtoolsButtonPosition, DevtoolsErrorType, DevtoolsPosition } from "@tanstack/query-devtools";
 import { whenParentsDefined } from "../../lib/utils/dom";
 
 @customElement("tanstack-dev-tools")
@@ -46,7 +46,7 @@ export default class TanstackDevTools extends LitElement {
    * Use this so you can define custom errors that can be shown in the devtools.
    */
   @property({ attribute: false })
-  errorTypes: Array<DevToolsErrorType> = [];
+  errorTypes: Array<DevtoolsErrorType> = [];
 
   private containerRef: Ref<HTMLElement> = createRef();
 
