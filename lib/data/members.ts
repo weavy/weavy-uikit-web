@@ -1,5 +1,5 @@
 import { MembersResultType } from "../types/members.types";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type {
   InfiniteData,
   InfiniteQueryObserverOptions,
@@ -10,11 +10,11 @@ import type {
   QueryOptions,
 } from "@tanstack/query-core";
 
-export function getMemberOptions(weavyContext: WeavyContextType, appId: number, options: QueryOptions<MembersResultType>) {
+export function getMemberOptions(weavy: WeavyType, appId: number, options: QueryOptions<MembersResultType>) {
   return <QueryObserverOptions<MembersResultType>> {
     queryKey: ["members", appId],
     queryFn: async () => {
-      const response = await weavyContext.get("/api/apps/" + appId + "/members");
+      const response = await weavy.get("/api/apps/" + appId + "/members");
       const result: MembersResultType = await response.json();
       return result;
     },
@@ -23,7 +23,7 @@ export function getMemberOptions(weavyContext: WeavyContextType, appId: number, 
 }
 
 export function getInfiniteSearchMemberOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   text: () => string,
   appId: number | undefined,
   bot: () => boolean | undefined  
@@ -42,9 +42,9 @@ export function getInfiniteSearchMemberOptions(
       let response;
       
       if (appId) {
-        response = await weavyContext.get(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.get(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
       } else {
-        response = await weavyContext.get(`/api/users?q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.get(`/api/users?q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
       }          
 
       const result = await response.json();

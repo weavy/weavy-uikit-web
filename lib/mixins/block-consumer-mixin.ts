@@ -1,49 +1,49 @@
 import { LitElement, PropertyValueMap } from "lit";
 import { state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type BlockSettingsType, blockSettingsContext } from "../contexts/settings-context";
+import { type BlockSettingsType, BlockSettingsContext } from "../contexts/settings-context";
 import { Constructor } from "../types/generic.types";
 import type { ServerConfigurationType } from "../types/server.types";
-import { serverConfigurationsContext } from "../contexts/configuration-context";
-import { weavyContextDefinition, type WeavyContextType } from "../contexts/weavy-context";
+import { ServerConfigurationsContext } from "../contexts/configuration-context";
+import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 
 import type { UserType } from "../types/users.types";
-import { type AppType, appContext } from "../contexts/app-context";
-import { type EntityType, linkContext } from "../contexts/link-context";
-import { userContext } from "../contexts/user-context";
-import { type ProductFeaturesType, productFeaturesContext } from "../contexts/features-context";
+import { type AppType, AppContext } from "../contexts/app-context";
+import { type EntityType, LinkContext } from "../contexts/link-context";
+import { UserContext } from "../contexts/user-context";
+import { type ProductFeaturesType, ProductFeaturesContext } from "../contexts/features-context";
 import { BlockContextProps, BlockContextProviderProps } from "./block-mixin";
 
 export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) => {
   class BlockConsumer extends Base implements BlockContextProviderProps, BlockContextProps {
     // CONTEXT PROVIDERS
-    @consume({ context: appContext, subscribe: true })
+    @consume({ context: AppContext, subscribe: true })
     @state()
     app: AppType | undefined;
 
-    @consume({ context: serverConfigurationsContext, subscribe: true })
+    @consume({ context: ServerConfigurationsContext, subscribe: true })
     @state()
     configuration: ServerConfigurationType | undefined = {};
 
-    @consume({ context: productFeaturesContext, subscribe: true })
+    @consume({ context: ProductFeaturesContext, subscribe: true })
     @state()
     hasFeatures: ProductFeaturesType | undefined;
 
-    @consume({ context: linkContext, subscribe: true })
+    @consume({ context: LinkContext, subscribe: true })
     @state()
     link: EntityType | undefined;
 
-    @consume({ context: blockSettingsContext, subscribe: true })
+    @consume({ context: BlockSettingsContext, subscribe: true })
     @state()
     settings: BlockSettingsType | undefined;
 
-    @consume({ context: userContext, subscribe: true })
+    @consume({ context: UserContext, subscribe: true })
     @state()
     user: UserType | undefined;
 
-    @consume({ context: weavyContextDefinition, subscribe: true })
+    @consume({ context: WeavyContext, subscribe: true })
     @state()
-    weavyContext: WeavyContextType | undefined;
+    weavy: WeavyType | undefined;
 
     // PROMISES
     // TODO: Switch to Promise.withResolvers() when allowed by typescript
@@ -96,12 +96,12 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
       return await this.#whenUser;
     }
 
-    #resolveWeavyContext?: (weavyContext: WeavyContextType) => void;
-    #whenWeavyContext = new Promise<WeavyContextType>((r) => {
-      this.#resolveWeavyContext = r;
+    #resolveWeavy?: (weavy: WeavyType) => void;
+    #whenWeavy = new Promise<WeavyType>((r) => {
+      this.#resolveWeavy = r;
     });
-    async whenWeavyContext() {
-      return await this.#whenWeavyContext;
+    async whenWeavy() {
+      return await this.#whenWeavy;
     }
 
     // All contexts for convenience
@@ -119,7 +119,7 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
         link: this.link,
         settings: this.settings,
         user: this.user,
-        weavyContext: this.weavyContext,
+        weavy: this.weavy,
       };
     }
 
@@ -157,8 +157,8 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.#resolveUser?.(this.user);
       }
 
-      if (changedProperties.has("weavyContext") && this.weavyContext) {
-        this.#resolveWeavyContext?.(this.weavyContext);
+      if (changedProperties.has("weavy") && this.weavy) {
+        this.#resolveWeavy?.(this.weavy);
       }
     }
 
@@ -189,8 +189,8 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.requestUpdate("user");
       }
 
-      if (this.weavyContext) {
-        this.requestUpdate("weavyContext");
+      if (this.weavy) {
+        this.requestUpdate("weavy");
       }
     }
 

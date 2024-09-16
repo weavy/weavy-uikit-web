@@ -1,12 +1,12 @@
 import type { InfiniteQueryObserverOptions, MutationKey, InfiniteData } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { MutatePostProps, PostType, PostsResultType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";
 
 export function getPostsOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   appId: number | null
 ): InfiniteQueryObserverOptions<PostsResultType, Error, InfiniteData<PostsResultType>> {
   const PAGE_SIZE = 25;
@@ -18,7 +18,7 @@ export function getPostsOptions(
       const skip = opt.pageParam;
       const url = "/api/apps/" + appId + "/posts?orderby=id+desc&skip=" + skip + "&take=" + PAGE_SIZE;
 
-      const response = await weavyContext.get(url);
+      const response = await weavy.get(url);
       const result = await response.json();
       result.data = result.data || [];
       return result;
@@ -32,10 +32,10 @@ export function getPostsOptions(
   };
 }
 
-export function getUpdatePostMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
+export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
   const options = {
     mutationFn: async (variables: MutatePostProps) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         "/api/posts/" + variables.id!,
         "PATCH",
         JSON.stringify({
@@ -55,14 +55,14 @@ export function getUpdatePostMutationOptions(weavyContext: WeavyContextType, mut
     },
     mutationKey: mutationKey,
     onMutate: async (variables: MutatePostProps) => {
-      updateCacheItem(weavyContext.queryClient, ["posts", variables.appId], variables.id!, (item: PostType) => {
+      updateCacheItem(weavy.queryClient, ["posts", variables.appId], variables.id!, (item: PostType) => {
         item.text = variables.text;
         item.html = variables.text;
       });
     },
     onSuccess: (data: PostType, variables: MutatePostProps) => {
       if (variables.id) {
-        updateCacheItem(weavyContext.queryClient, ["posts", variables.appId], variables.id, (item: PostType) => {
+        updateCacheItem(weavy.queryClient, ["posts", variables.appId], variables.id, (item: PostType) => {
           item.text = data.text;
           item.html = data.html;
           item.attachments = data.attachments;
@@ -80,12 +80,12 @@ export function getUpdatePostMutationOptions(weavyContext: WeavyContextType, mut
 }
 export type MutatePostContextType = { tempId: number };
 
-export function getAddPostMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
-  const queryClient = weavyContext.queryClient;
+export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
+  const queryClient = weavy.queryClient;
 
   const options = {
     mutationFn: async (variables: MutatePostProps) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         "/api/apps/" + variables.appId + "/posts",
         "POST",
         JSON.stringify({

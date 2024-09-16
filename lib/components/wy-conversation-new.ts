@@ -5,7 +5,7 @@ import allStyles from "../scss/all.scss";
 import { MemberType } from "../types/members.types";
 import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
 import { localized, msg } from "@lit/localize";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { ConversationTypeString } from "../types/conversations.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -57,9 +57,9 @@ export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
     return this.dispatchEvent(eventSelect);
   }
 
-  protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.addConversationMutation = getAddConversationMutation(this.weavyContext);
+  protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
+    if (changedProperties.has("weavy") && this.weavy) {
+      this.addConversationMutation = getAddConversationMutation(this.weavy);
     }
   }
 
@@ -69,7 +69,7 @@ export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
         <wy-icon name="plus"></wy-icon>
       </wy-button>
 
-      ${!this.bot && this.weavyContext
+      ${!this.bot && this.weavy
         ? html`<wy-overlay
             .show=${this.show}
             @close=${() => {

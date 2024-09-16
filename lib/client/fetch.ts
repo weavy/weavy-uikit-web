@@ -1,5 +1,5 @@
 import { DestroyError } from "../utils/errors";
-import { WeavyContextBase, WeavyContextMixins } from "./weavy";
+import { WeavyClient, type WeavyClientType } from "./weavy";
 import { assign } from "../utils/objects";
 import { defaultFetchSettings } from "../utils/data";
 import type { Constructor, PlainObjectType } from "../types/generic.types";
@@ -26,17 +26,17 @@ export interface WeavyFetchProps {
 }
 
 // WeavyFetch mixin/decorator
-export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyFetch extends Base implements WeavyFetchProps {
     // FETCH
 
-    async fetchOptions(this: this & WeavyContextMixins, authorized: boolean = true): Promise<RequestInit> {
+    async fetchOptions(this: this & WeavyClientType, authorized: boolean = true): Promise<RequestInit> {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
 
       const headers: PlainObjectType = {
-        "X-Weavy-Source": `${WeavyContextBase.sourceName}@${WeavyContextBase.version}`,
+        "X-Weavy-Source": `${WeavyClient.sourceName}@${WeavyClient.version}`,
       };
 
       if (authorized) {
@@ -52,12 +52,12 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
       );
     }
 
-    async get(this: this & WeavyContextMixins, url: string | URL): Promise<Response> {
+    async get(this: this & WeavyClientType, url: string | URL): Promise<Response> {
       return await this.post(url, "GET");
     }
 
     async post(
-      this: this & WeavyContextMixins,
+      this: this & WeavyClientType,
       url: string | URL,
       method: HttpMethodType,
       body?: BodyInit,
@@ -104,7 +104,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
     }
 
     async upload(
-      this: this & WeavyContextMixins,
+      this: this & WeavyClientType,
       url: string | URL,
       method: HttpUploadMethodType,
       body: string | FormData,
@@ -123,7 +123,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
         const xhr = new XMLHttpRequest();
         xhr.open(method, new URL(url, this.url), true);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
-        xhr.setRequestHeader("X-Weavy-Source", `${WeavyContextBase.sourceName}@${WeavyContextBase.version}`);
+        xhr.setRequestHeader("X-Weavy-Source", `${WeavyClient.sourceName}@${WeavyClient.version}`);
         if (contentType) {
           xhr.setRequestHeader("content-type", contentType);
         }

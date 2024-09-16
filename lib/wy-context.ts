@@ -1,6 +1,6 @@
 import { css, html, LitElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { WeavyContext } from "./client/weavy";
+import { Weavy, type WeavyType } from "./client/weavy";
 import type { WeavyTokenFactory, WeavyOptions } from "./types/weavy.types";
 import { indirectEvalObject } from "./converters/indirect-eval-object";
 import { toUrl } from "./converters/url";
@@ -122,20 +122,20 @@ export class WyContext extends LitElement implements WeavyOptions {
   zoomAuthenticationUrl?: string | URL;
 
   @state()
-  protected weavyContext?: WeavyContext;
+  protected weavy?: WeavyType;
 
   /**
    * The semver version of the package.
    */
   get version() {
-    return WeavyContext.version;
+    return Weavy.version;
   }
 
   /**
    * The Weavy source name; package name.
    */
   get sourceName() {
-    return WeavyContext.sourceName;
+    return Weavy.sourceName;
   }
 
   constructor() {
@@ -144,23 +144,23 @@ export class WyContext extends LitElement implements WeavyOptions {
       this.provider = true;
     }
 
-    this.weavyContext ??= new WeavyContext({ host: this.provider ? this : undefined });
+    this.weavy ??= new Weavy({ host: this.provider ? this : undefined });
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
     super.willUpdate(changedProperties);
     
-    if (this.weavyContext) {
+    if (this.weavy) {
       const validProperties = {} as WeavyOptions;
 
       Array.from(changedProperties.keys()).forEach((key) => {
-        if (key !== "weavyContext" && (acceptedValue(this[key as keyof this & WeavyOptions]) || acceptedValue(changedProperties.get(key as keyof WyContext)))) {
+        if (key !== "weavy" && (acceptedValue(this[key as keyof this & WeavyOptions]) || acceptedValue(changedProperties.get(key as keyof WyContext)))) {
           Object.assign(validProperties, { [key as string]: this[key as keyof WeavyOptions] });
         }
       });
       //console.log("wy-context props", validProperties);
 
-      Object.assign(this.weavyContext, validProperties);
+      Object.assign(this.weavy, validProperties);
     }
   }
 

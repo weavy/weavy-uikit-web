@@ -9,7 +9,7 @@ import {
 } from "../types/files.types";
 import { UserType } from "../types/users.types";
 import { type ServerErrorResponseType } from "../types/server.types";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { AppType } from "../types/app.types";
 import { removeSuccessfulUploadBlobMutations } from "./blob-upload";
 import { updateMutationContext } from "../utils/mutation-cache";
@@ -99,8 +99,8 @@ export function getFileMutationsByConflictOrError(
   );
 }
 
-/*export function useRemoveMutatingFileUpload(weavyContext: WeavyContextType, filesKey: MutationKey) {
-    const queryClient = weavyContext.queryClient;
+/*export function useRemoveMutatingFileUpload(weavy: WeavyType, filesKey: MutationKey) {
+    const queryClient = weavy.queryClient;
     const mutationKey: MutationKey = filesKey;
 
     return (mutation: FileMutationType) => {
@@ -110,8 +110,8 @@ export function getFileMutationsByConflictOrError(
     }
 }*/
 
-/*export function useClearMutatingFileUpload(weavyContext: WeavyContextType, filesKey: MutationKey) {
-    const queryClient = weavyContext.queryClient;
+/*export function useClearMutatingFileUpload(weavy: WeavyType, filesKey: MutationKey) {
+    const queryClient = weavy.queryClient;
     const mutationKey: MutationKey = filesKey;
 
     return () => {
@@ -123,8 +123,8 @@ export function getFileMutationsByConflictOrError(
     }
 }*/
 
-export function removeSettledFileMutations(weavyContext: WeavyContextType, app: AppType, name: string) {
-  const queryClient = weavyContext.queryClient;
+export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name: string) {
+  const queryClient = weavy.queryClient;
 
   // Remove any file create mutations
   queryClient
@@ -141,13 +141,13 @@ export function removeSettledFileMutations(weavyContext: WeavyContextType, app: 
 }
 
 /// Mutation for adding a <BlobType> to a <FileType> query
-export function getCreateFileMutationOptions(weavyContext: WeavyContextType, user: UserType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, app: AppType) {
+  const queryClient = weavy.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
   const options = {
     mutationFn: async ({ blob, replace = false }: CreateFileProps) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         "/api/apps/" + app.id + "/files",
         "POST",
         JSON.stringify({ blob_id: blob.id, replace: replace })
@@ -165,8 +165,8 @@ export function getCreateFileMutationOptions(weavyContext: WeavyContextType, use
       await queryClient.cancelQueries({ queryKey: filesKey, exact: true });
 
       // Remove previous mutations
-      removeSuccessfulUploadBlobMutations(weavyContext, app, variables.blob.name);
-      removeSettledFileMutations(weavyContext, app, variables.blob.name);
+      removeSuccessfulUploadBlobMutations(weavy, app, variables.blob.name);
+      removeSettledFileMutations(weavy, app, variables.blob.name);
 
       //let files = queryClient.getQueryData<InfiniteData<FilesResultType>>(filesKey);
       /*let file =  findAnyExistingItem<FileType>(files, "name", variables.blob.name, true) || variables.file;

@@ -47,7 +47,7 @@ export default class WyConfluence extends BlockConsumerMixin(LitElement) {
     }
 
     window.open(
-      `${this.weavyContext?.confluenceAuthenticationUrl}&state=${this.user.id}`,
+      `${this.weavy?.confluenceAuthenticationUrl}&state=${this.user.id}`,
       "confluenceAuthWin",
       "height=640,width=480"
     );
@@ -62,7 +62,7 @@ export default class WyConfluence extends BlockConsumerMixin(LitElement) {
       raw: {
         contentId: id,
         hostname: hostname,
-        parentProduct: this.weavyContext?.confluenceProductName,
+        parentProduct: this.weavy?.confluenceProductName,
         spaceKey: spaceKey,
       },
     };
@@ -71,7 +71,7 @@ export default class WyConfluence extends BlockConsumerMixin(LitElement) {
   }
 
   override render() {
-    if (!this.weavyContext?.confluenceAuthenticationUrl) {
+    if (!this.weavy?.confluenceAuthenticationUrl) {
       return nothing;
     }
 
@@ -87,7 +87,7 @@ export default class WyConfluence extends BlockConsumerMixin(LitElement) {
               ><wy-icon name="confluence" color="native"></wy-icon
             ></wy-button>
           `}
-      ${this.weavyContext
+      ${this.weavy
         ? html`
             <wy-overlay
               .show=${this.showPicker}

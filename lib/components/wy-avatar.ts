@@ -7,7 +7,7 @@ import { type UserType } from "../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { Presence, type PresenceType } from "../types/presence.types";
 import { consume } from "@lit/context";
-import { userContext } from "../contexts/user-context";
+import { UserContext } from "../contexts/user-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { S4 } from "../utils/data";
@@ -113,7 +113,7 @@ export class WyAvatarGroup extends LitElement {
   })
   members?: MemberType[];
 
-  @consume({ context: userContext, subscribe: true })
+  @consume({ context: UserContext, subscribe: true })
   @state()
   user: UserType | undefined;
 

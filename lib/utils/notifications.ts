@@ -2,7 +2,7 @@ import { TemplateResult, html, nothing } from "lit";
 import { EntityType, EntityTypes } from "../types/app.types";
 import { WyLinkEventType, NotificationType } from "../types/notifications.types";
 import { msg, str } from "@lit/localize";
-import { WeavyContextType } from "../contexts/weavy-context";
+import { WeavyType } from "../contexts/weavy-context";
 
 export function getEntityChain(entity?: EntityType) {
   const chain = [entity];
@@ -49,7 +49,7 @@ export function hasEntityChildType(
 
 export function dispatchLinkEvent(
   target: EventTarget,
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   notification: NotificationType
 ) {
   const event: WyLinkEventType = new CustomEvent("wy:link", {

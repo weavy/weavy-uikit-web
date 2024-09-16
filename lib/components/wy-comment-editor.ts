@@ -53,7 +53,7 @@ export default class WyCommentEditor extends WyEditor {
                   <span>${msg("From cloud")}</span>
                 </wy-dropdown-item>`
               : nothing}
-            ${this.hasFeatures?.confluence && this.weavyContext?.confluenceAuthenticationUrl
+            ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
               ? html`<wy-confluence
                   dropdown
                   @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}

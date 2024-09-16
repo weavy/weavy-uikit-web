@@ -76,11 +76,11 @@ export class WyMessenger extends BlockProviderMixin(LitElement) {
    * @returns Promise<Boolean>
    */
   async conversationBelongsToMessenger(conversation: AppRef | AppType | number): Promise<boolean> {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return false;
     }
 
-    return Boolean(await resolveConversation(this.weavyContext, conversation, this.conversationTypes));
+    return Boolean(await resolveConversation(this.weavy, conversation, this.conversationTypes));
   }
 
   /**
@@ -111,10 +111,10 @@ export class WyMessenger extends BlockProviderMixin(LitElement) {
   protected override async willUpdate(changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("bot")) && this.weavyContext && this.bot) {
+    if ((changedProperties.has("weavy") || changedProperties.has("bot")) && this.weavy && this.bot) {
       this.persistState.prefixKey = this.bot || "messenger";
       this.conversationTypes = [ConversationTypeGuid.BotChat];
-      this.botQuery.trackQuery(getApiOptions<BotType>(this.weavyContext, ["users", this.bot]));
+      this.botQuery.trackQuery(getApiOptions<BotType>(this.weavy, ["users", this.bot]));
       this.conversationId = null;
     }
 
@@ -135,9 +135,9 @@ export class WyMessenger extends BlockProviderMixin(LitElement) {
   protected override update(changedProperties: PropertyValueMap<this>) {
     super.update(changedProperties);
 
-    if ((changedProperties.has("conversationId") || changedProperties.has("weavyContext")) && this.weavyContext) {
+    if ((changedProperties.has("conversationId") || changedProperties.has("weavy")) && this.weavy) {
       if (this.conversationId) {
-        this.conversationQuery.trackQuery(getConversationOptions(this.weavyContext, this.conversationId));
+        this.conversationQuery.trackQuery(getConversationOptions(this.weavy, this.conversationId));
       } else {
         this.conversationQuery.untrackQuery();
       }
@@ -145,7 +145,7 @@ export class WyMessenger extends BlockProviderMixin(LitElement) {
   }
 
   override render() {
-    const { isPending: networkIsPending } = this.weavyContext?.network ?? { isPending: true };
+    const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: conversation, isPending } = this.conversationQuery.result ?? { isPending: networkIsPending };
 
     return html`

@@ -123,14 +123,14 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
   }
 
   override updated() {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return;
     }
 
     if (this.showOverlay && !this.src) {
       this.src = new URL(
         "?origin=" + this.origin + "&v=X&t=" + Date.now().toString() + "&weavyId=wy-filebrowser",
-        this.weavyContext.cloudFilePickerUrl
+        this.weavy.cloudFilePickerUrl
       );
     }
 
@@ -152,7 +152,7 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
   }
 
   override render() {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return nothing;
     }
 

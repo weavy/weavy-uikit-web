@@ -1,4 +1,4 @@
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { EmbedType } from "../types/embeds.types";
 import { throwOnDomNotAvailable } from "./dom";
 
@@ -16,14 +16,14 @@ export function isFetchingEmbeds() {
   return Boolean(Object.keys(candidates).length);
 }
 
-async function fetchEmbed(url: string, weavyContext: WeavyContextType) {
+async function fetchEmbed(url: string, weavy: WeavyType) {
   const data = new FormData();
   data.append("url", url);
 
   let embed: EmbedType | undefined = undefined;
 
   try {
-    const response = await weavyContext.post("/api/embeds", "POST", JSON.stringify({ url: url }));
+    const response = await weavy.post("/api/embeds", "POST", JSON.stringify({ url: url }));
 
     if (!response.ok) {
       throw new Error();
@@ -53,7 +53,7 @@ export const initEmbeds = (urls: string[]) => {
   embeds = urls;
 };
 
-export const getEmbeds = async (content: string, callback: (embed: EmbedType) => void, weavyContext: WeavyContextType) => {
+export const getEmbeds = async (content: string, callback: (embed: EmbedType) => void, weavy: WeavyType) => {
   let matches = content.match(regexp)?.map((match) => match) || null;
 
   if (matches !== null) {
@@ -89,7 +89,7 @@ export const getEmbeds = async (content: string, callback: (embed: EmbedType) =>
         throwOnDomNotAvailable();
 
         candidates[match] = window.setTimeout(async () => {
-          const embed = await fetchEmbed(match, weavyContext);
+          const embed = await fetchEmbed(match, weavy);
           if (embed) {
             callback(embed);
           }

@@ -1,11 +1,11 @@
 import { expect } from "@open-wc/testing";
 
 import "../../utils/version";
-import { Weavy, type WeavyContext } from "../../../lib";
+import { Weavy, type WeavyType } from "../../../lib";
 import { HubConnection } from "@microsoft/signalr";
 
 describe("WeavyConnectionMixin", () => {
-  let weavy: WeavyContext;
+  let weavy: WeavyType;
 
   afterEach(() => {
     weavy?.destroy();

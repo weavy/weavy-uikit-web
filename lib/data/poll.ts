@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
 import { PollMutationContextType, PollOptionType } from "../types/polls.types";
@@ -13,14 +13,14 @@ export type MutatePollVariables = {
 
 export type PollMutationType = MutationObserver<PostType, Error, MutatePollVariables, PollMutationContextType>;
 
-export function getPollMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
-  const queryClient = weavyContext.queryClient;
+export function getPollMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
+  const queryClient = weavy.queryClient;
   const key: MutationKey = mutationKey;
 
   const options = {
     mutationKey: key,
     mutationFn: async ({ optionId }: MutatePollVariables) => {
-      const response = await weavyContext.post(`/api/options/${optionId}/vote`, "POST", "");
+      const response = await weavy.post(`/api/options/${optionId}/vote`, "POST", "");
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -53,7 +53,7 @@ export function getPollMutationOptions(weavyContext: WeavyContextType, mutationK
       return <PollMutationContextType>{ id: variables.optionId };
     },
     onSuccess: async (data: PostType, variables: MutatePollVariables) => {
-      const response = await weavyContext.get("/api/" + variables.parentType + "/" + variables.parentId);
+      const response = await weavy.get("/api/" + variables.parentType + "/" + variables.parentId);
       const json = await response.json();
 
       updateCacheItems(queryClient, { queryKey: key, exact: false }, variables.parentId, (existingPost: PostType) =>
@@ -68,16 +68,16 @@ export function getPollMutationOptions(weavyContext: WeavyContextType, mutationK
   return options;
 }
 
-export function getPollMutation(weavyContext: WeavyContextType, mutationKey: MutationKey): PollMutationType {
-  return new MutationObserver(weavyContext.queryClient, getPollMutationOptions(weavyContext, mutationKey));
+export function getPollMutation(weavy: WeavyType, mutationKey: MutationKey): PollMutationType {
+  return new MutationObserver(weavy.queryClient, getPollMutationOptions(weavy, mutationKey));
 }
 
-export function getVotesOptions(weavyContext: WeavyContextType, id: number) {
+export function getVotesOptions(weavy: WeavyType, id: number) {
   return {
     queryKey: ["votes", id],
     enabled: false,
     queryFn: async () => {
-      const response = await weavyContext.get(`/api/options/${id}`);
+      const response = await weavy.get(`/api/options/${id}`);
       return await response.json();
     },
   };

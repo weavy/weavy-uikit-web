@@ -4,7 +4,7 @@ import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import allCss from "../scss/all.scss";
 
 //import * as type pdfjsLibType from "pdfjs-dist";
@@ -13,7 +13,7 @@ import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } fro
 //import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
 
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import "./wy-button";
 import "./wy-icon";
@@ -42,9 +42,9 @@ export default class WyPdfViewer extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   whenPdfjsResolve?: (value: { pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }) => void
   whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
@@ -310,10 +310,10 @@ export default class WyPdfViewer extends LitElement {
   //   }
   // }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+    if (changedProperties.has("weavy") && this.weavy) {
       if (!this.pdfjsLib) {
-        await this.weavyContext.whenUrl();
+        await this.weavy.whenUrl();
         
         this.pdfjsLib = await import("pdfjs-dist");
         // Assign to globalThis, otherwise it breaks
@@ -328,23 +328,23 @@ export default class WyPdfViewer extends LitElement {
         })
       }
       if (this.pdfjsLib && !this.WORKER_URL) {
-        this.WORKER_URL = new URL(this.DEFAULT_WORKER_URL, this.weavyContext.url);
+        this.WORKER_URL = new URL(this.DEFAULT_WORKER_URL, this.weavy.url);
         // Setting worker path to worker bundle.
         this.pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
       }
 
       if (!this.CMAP_URL) {
-        this.CMAP_URL = new URL("/cmaps/", this.weavyContext.url);
+        this.CMAP_URL = new URL("/cmaps/", this.weavy.url);
       }
     }
   }
 
-  override update(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  override update(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.update(changedProperties);
 
     if (
-      (changedProperties.has("weavyContext") || changedProperties.has("src") || changedProperties.has("pdfViewer")) &&
-      this.weavyContext &&
+      (changedProperties.has("weavy") || changedProperties.has("src") || changedProperties.has("pdfViewer")) &&
+      this.weavy &&
       this.src &&
       this.pdfViewer
     ) {
@@ -353,7 +353,7 @@ export default class WyPdfViewer extends LitElement {
   }
 
   override async updated() {
-    if (this.weavyContext && this.viewerContainerRef.value && !this.pdfViewer) {
+    if (this.weavy && this.viewerContainerRef.value && !this.pdfViewer) {
       const { pdfjsLib, pdfjsViewer } = await this.whenPdfjs;
 
       // INIT PDF VIEWER
@@ -364,7 +364,7 @@ export default class WyPdfViewer extends LitElement {
         eventBus: this.pdfEventBus,
       });
 
-      this.l10n = new pdfjsViewer.GenericL10n(this.weavyContext?.locale);
+      this.l10n = new pdfjsViewer.GenericL10n(this.weavy?.locale);
 
       this.pdfViewer = new pdfjsViewer.PDFViewer({
         container: this.viewerContainerRef.value,

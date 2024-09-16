@@ -119,11 +119,11 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
     const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url);
     const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url);
 
-    const dateFull = new Intl.DateTimeFormat(this.weavyContext?.locale, {
+    const dateFull = new Intl.DateTimeFormat(this.weavy?.locale, {
       dateStyle: "full",
       timeStyle: "short",
     }).format(new Date(this.createdAt));
-    const dateFromNow = relativeTime(this.weavyContext?.locale, new Date(this.createdAt));
+    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.createdAt));
 
     return this.temp
       ? html`<div class="wy-item wy-item-sm wy-comment-header">

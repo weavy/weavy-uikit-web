@@ -166,49 +166,49 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
   }
 
   protected handleRealtimeFileCreated = (realtimeEvent: RealtimeFileEventType) => {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return;
     }
 
     realtimeEvent.file.created_by = realtimeEvent.actor;
-    //addCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    //addCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
+    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileUpdated = (_realtimeEvent: RealtimeFileEventType) => {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return;
     }
 
-    //updatedCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    //updatedCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
+    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileTrashed = (_realtimeEvent: RealtimeFileEventType) => {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return;
     }
 
-    //updatedCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    //updatedCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
+    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileRestored = (_realtimeEvent: RealtimeFileEventType) => {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return;
     }
 
-    //updatedCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    //updatedCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
+    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileDeleted = (_realtimeEvent: RealtimeFileEventType) => {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return;
     }
 
-    //removeCacheItem(this.weavyContext.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavyContext.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    //removeCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
+    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   #unsubscribeToRealtime?: () => void;
@@ -222,22 +222,22 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
   protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType; user: UserType }>) {
     super.willUpdate(changedProperties);
 
-    //console.log("files willUpdate", Array.from(changedProperties.keys()), this.uid, this.weavyContext)
-    if ((changedProperties.has("uid") || changedProperties.has("weavyContext")) && this.uid && this.weavyContext) {
+    //console.log("files willUpdate", Array.from(changedProperties.keys()), this.uid, this.weavy)
+    if ((changedProperties.has("uid") || changedProperties.has("weavy")) && this.uid && this.weavy) {
       this.persistState.observe(["view", "order", "showTrashed"], this.uid);
       //this.history.observe(['view'], this.uid)
     }
 
     if (
-      (changedProperties.has("weavyContext") ||
+      (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
         changedProperties.has("order") ||
         changedProperties.has("showTrashed")) &&
-      this.weavyContext &&
+      this.weavy &&
       this.app
     ) {
       this.filesQuery.trackInfiniteQuery(
-        getInfiniteFileListOptions(this.weavyContext, this.app.id, {
+        getInfiniteFileListOptions(this.weavy, this.app.id, {
           order: this.order,
           trashed: this.showTrashed,
         })
@@ -245,41 +245,41 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
     }
 
     if (
-      (changedProperties.has("weavyContext") || changedProperties.has("app") || changedProperties.has("user")) &&
-      this.weavyContext &&
+      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("user")) &&
+      this.weavy &&
       this.app &&
       this.user
     ) {
-      this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavyContext, this.app));
+      this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
 
-      this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavyContext, this.user, this.app));
-      this.createFileMutation.trackMutation(getCreateFileMutationOptions(this.weavyContext, this.user, this.app));
-      this.externalBlobMutation = getExternalBlobMutation(this.weavyContext, this.user, this.app);
+      this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavy, this.user, this.app));
+      this.createFileMutation.trackMutation(getCreateFileMutationOptions(this.weavy, this.user, this.app));
+      this.externalBlobMutation = getExternalBlobMutation(this.weavy, this.user, this.app);
 
-      this.renameFileMutation = getRenameFileMutation(this.weavyContext, this.app);
-      this.subscribeFileMutation = getSubscribeFileMutation(this.weavyContext, this.app);
+      this.renameFileMutation = getRenameFileMutation(this.weavy, this.app);
+      this.subscribeFileMutation = getSubscribeFileMutation(this.weavy, this.app);
 
-      this.trashFileMutation = getTrashFileMutation(this.weavyContext, this.app);
-      this.restoreFileMutation = getRestoreFileMutation(this.weavyContext, this.app);
-      this.deleteForeverFileMutation = getDeleteForeverFileMutation(this.weavyContext, this.app);
+      this.trashFileMutation = getTrashFileMutation(this.weavy, this.app);
+      this.restoreFileMutation = getRestoreFileMutation(this.weavy, this.app);
+      this.deleteForeverFileMutation = getDeleteForeverFileMutation(this.weavy, this.app);
 
       this.#unsubscribeToRealtime?.();
 
       // realtime
       const subscribeGroup = `a${this.app.id}`;
 
-      this.weavyContext.subscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
-      this.weavyContext.subscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
-      this.weavyContext.subscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
-      this.weavyContext.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
-      this.weavyContext.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+      this.weavy.subscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
+      this.weavy.subscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
+      this.weavy.subscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
+      this.weavy.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
+      this.weavy.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
 
       this.#unsubscribeToRealtime = () => {    
-        this.weavyContext?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
-        this.weavyContext?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
-        this.weavyContext?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+        this.weavy?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
+        this.weavy?.unsubscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
+        this.weavy?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
+        this.weavy?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
+        this.weavy?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
         this.#unsubscribeToRealtime = undefined;
       }
     }
@@ -290,7 +290,7 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
   }
 
   protected override render() {
-    const { isPending: networkIsPending } = this.weavyContext?.network ?? { isPending: true };
+    const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data, isPending, dataUpdatedAt } = this.filesQuery.result ?? { isPending: networkIsPending };
     const isDragActive = this.dropZone.isDragActive;
 

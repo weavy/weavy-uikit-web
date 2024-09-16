@@ -6,7 +6,7 @@ import {
   MutationObserver,
 } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { NotificationType, NotificationTypes, NotificationsResultType } from "../types/notifications.types";
 import { updateCacheItems, updateCacheItemsCount } from "../utils/query-cache";
 import { getApiOptions } from "./api";
@@ -24,7 +24,7 @@ export type MutateMarkNotificationContext = {
 };
 
 export function getNotificationsOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
   options: object = {}
@@ -44,7 +44,7 @@ export function getNotificationsOptions(
 
       const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
-      const response = await weavyContext.get(url);
+      const response = await weavy.get(url);
       const result = await response.json();
       result.data = result.data || [];
       return result;
@@ -58,9 +58,9 @@ export function getNotificationsOptions(
   };
 }
 
-export function getLastNotification(weavyContext: WeavyContextType, type: NotificationTypes = NotificationTypes.All,
+export function getLastNotification(weavy: WeavyType, type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,) {
-  const notificationsData = weavyContext.queryClient
+  const notificationsData = weavy.queryClient
     .getQueryData<InfiniteData<NotificationsResultType>>(["notifications", "list", appIdOrUid, type])
     ?.pages.flatMap((page) => page.data);
   let lastNotification: NotificationType | undefined;
@@ -71,19 +71,19 @@ export function getLastNotification(weavyContext: WeavyContextType, type: Notifi
   return lastNotification;
 }
 
-export function getMarkNotificationsMutationOptions(weavyContext: WeavyContextType, appIdOrUid?: string | number) {
+export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid?: string | number) {
   const options = {
     mutationFn: async ({ notificationId }: MutateMarkNotificationsVariables) => {
-      const url = new URL(`/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications/mark`, weavyContext.url);
+      const url = new URL(`/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications/mark`, weavy.url);
       if (notificationId) {
         url.searchParams.append("id", notificationId.toString());
       }
-      await weavyContext.post(url, "PUT", "");
+      await weavy.post(url, "PUT", "");
     },
     onMutate: async (_variables: MutateMarkNotificationsVariables) => {
       const changedNotifications: Partial<NotificationType>[] = [];
       updateCacheItems<NotificationType>(
-        weavyContext.queryClient,
+        weavy.queryClient,
         { queryKey: appIdOrUid ? ["notifications", "list", appIdOrUid] : ["notifications", "list"], exact: false },
         undefined,
         (item) => {
@@ -94,7 +94,7 @@ export function getMarkNotificationsMutationOptions(weavyContext: WeavyContextTy
 
       if (appIdOrUid && changedNotifications.length) {
         updateCacheItems<NotificationType>(
-          weavyContext.queryClient,
+          weavy.queryClient,
           { queryKey: ["notifications", "list"], exact: false },
           (item) => Boolean(changedNotifications.find((n) => n.id === item.id && item.is_unread)),
           (item) => {
@@ -105,14 +105,14 @@ export function getMarkNotificationsMutationOptions(weavyContext: WeavyContextTy
 
       if (!appIdOrUid) {
         updateCacheItemsCount<NotificationsResultType>(
-          weavyContext.queryClient,
+          weavy.queryClient,
           { queryKey: ["notifications", "badge"], exact: false },
           () => 0
         );
       }
 
       updateCacheItemsCount<NotificationsResultType>(
-        weavyContext.queryClient,
+        weavy.queryClient,
         { queryKey: appIdOrUid ? ["apps", "notifications", "badge", appIdOrUid] : ["apps", "notifications", "badge"], exact: false },
         () => 0
       );
@@ -121,13 +121,13 @@ export function getMarkNotificationsMutationOptions(weavyContext: WeavyContextTy
     },
     onSuccess: () => {
       if (appIdOrUid) {
-        weavyContext.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
+        weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
       }
     },
     onSettled: () => {
-      weavyContext.queryClient.invalidateQueries({ queryKey: ["notifications", "list"], exact: false });
-      weavyContext.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
-      weavyContext.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
+      weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "list"], exact: false });
+      weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
     },
     onError: (error: Error, _variables: MutateMarkNotificationsVariables, _context?: MutateMarkNotificationContext) => {
       console.error(error.message);
@@ -137,20 +137,20 @@ export function getMarkNotificationsMutationOptions(weavyContext: WeavyContextTy
   return options;
 }
 
-export function getMarkNotificationsMutation(weavyContext: WeavyContextType, appIdOrUid?: string | number) {
-  return new MutationObserver(weavyContext.queryClient, getMarkNotificationsMutationOptions(weavyContext, appIdOrUid));
+export function getMarkNotificationsMutation(weavy: WeavyType, appIdOrUid?: string | number) {
+  return new MutationObserver(weavy.queryClient, getMarkNotificationsMutationOptions(weavy, appIdOrUid));
 }
 
-export function getMarkNotificationMutationOptions(weavyContext: WeavyContextType) {
+export function getMarkNotificationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ markAsRead, notificationId }: MutateMarkNotificationVariables) => {
       const url = `/api/notifications/${notificationId}/mark`;
-      await weavyContext.post(url, markAsRead ? "PUT" : "DELETE", "");
+      await weavy.post(url, markAsRead ? "PUT" : "DELETE", "");
     },
     onMutate: async (variables: MutateMarkNotificationVariables) => {
       const itemsChanged: Map<number, NotificationType> = new Map();
       updateCacheItems<NotificationType>(
-        weavyContext.queryClient,
+        weavy.queryClient,
         { queryKey: ["notifications", "list"], exact: false },
         variables.notificationId,
         (item) => {
@@ -163,7 +163,7 @@ export function getMarkNotificationMutationOptions(weavyContext: WeavyContextTyp
 
       if (itemsChanged.size) {
         updateCacheItemsCount<NotificationsResultType>(
-          weavyContext.queryClient,
+          weavy.queryClient,
           { queryKey: ["notifications", "badge"], exact: false },
           (count) => Math.max(0, count + (variables.markAsRead ? -1 : 1))
         );
@@ -171,7 +171,7 @@ export function getMarkNotificationMutationOptions(weavyContext: WeavyContextTyp
         itemsChanged.forEach((item) => {
           if (item.link.app) {
             updateCacheItemsCount<NotificationsResultType>(
-              weavyContext.queryClient,
+              weavy.queryClient,
               {
                 queryKey: ["apps", "notifications", "badge"],
                 predicate: (query) =>
@@ -186,7 +186,7 @@ export function getMarkNotificationMutationOptions(weavyContext: WeavyContextTyp
     },
     onError: (error: Error, variables: MutateMarkNotificationVariables) => {
       updateCacheItems<NotificationType>(
-        weavyContext.queryClient,
+        weavy.queryClient,
         { queryKey: ["notifications", "list"], exact: false },
         variables.notificationId,
         (item) => {
@@ -194,20 +194,20 @@ export function getMarkNotificationMutationOptions(weavyContext: WeavyContextTyp
         }
       );
 
-      weavyContext.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
-      weavyContext.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
+      weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
     },
   };
 
   return options;
 }
 
-export function getMarkNotificationMutation(weavyContext: WeavyContextType) {
-  return new MutationObserver(weavyContext.queryClient, getMarkNotificationMutationOptions(weavyContext));
+export function getMarkNotificationMutation(weavy: WeavyType) {
+  return new MutationObserver(weavy.queryClient, getMarkNotificationMutationOptions(weavy));
 }
 
 export function getBadgeOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
   options: object = {}
@@ -222,5 +222,5 @@ export function getBadgeOptions(
 
   const queryKey = appIdOrUid ? ["apps", "notifications", "badge", appIdOrUid, type] : ["notifications", "badge", type];
 
-  return getApiOptions<NotificationsResultType>(weavyContext, queryKey, url, options);
+  return getApiOptions<NotificationsResultType>(weavy, queryKey, url, options);
 }

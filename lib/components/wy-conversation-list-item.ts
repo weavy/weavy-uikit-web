@@ -2,7 +2,7 @@ import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import chatCss from "../scss/all.scss";
 import type { MessageType } from "../types/messages.types";
 import type { UserType } from "../types/users.types";
@@ -12,10 +12,10 @@ import { DeliveredConversationMutationType, getDeliveredConversationMutation } f
 import { relativeTime } from "../utils/datetime";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { RealtimeConversationMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { ConversationTypeGuid } from "../types/conversations.types";
-import { userContext } from "../contexts/user-context";
+import { UserContext } from "../contexts/user-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-avatar";
@@ -30,9 +30,9 @@ export default class WyConversationListItem extends LitElement {
   static override styles = chatCss;
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property({ attribute: true, type: Number })
   conversationId!: number;
@@ -67,7 +67,7 @@ export default class WyConversationListItem extends LitElement {
   @property({ attribute: false })
   lastMessage?: MessageType;
 
-  @consume({ context: userContext, subscribe: true })
+  @consume({ context: UserContext, subscribe: true })
   @state()
   user: UserType | undefined;
 
@@ -155,25 +155,25 @@ export default class WyConversationListItem extends LitElement {
 
   #unsubscribeToRealtime?: () => void;
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.deliveredConversationMutation = getDeliveredConversationMutation(this.weavyContext);
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+    if (changedProperties.has("weavy") && this.weavy) {
+      this.deliveredConversationMutation = getDeliveredConversationMutation(this.weavy);
 
       this.#unsubscribeToRealtime?.();
 
       // realtime
       const subscribeGroup = `a${this.conversationId}`;
 
-      this.weavyContext.subscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
-      this.weavyContext.subscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
-      this.weavyContext.subscribe(subscribeGroup, "message_created", this.handleMessageCreated);
-      this.weavyContext.subscribe(subscribeGroup, "conversation_marked", this.handleConversationMarked);
+      this.weavy.subscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
+      this.weavy.subscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
+      this.weavy.subscribe(subscribeGroup, "message_created", this.handleMessageCreated);
+      this.weavy.subscribe(subscribeGroup, "conversation_marked", this.handleConversationMarked);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavyContext?.unsubscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "message_created", this.handleMessageCreated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "conversation_marked", this.handleConversationMarked);
+        this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
+        this.weavy?.unsubscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
+        this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleMessageCreated);
+        this.weavy?.unsubscribe(subscribeGroup, "conversation_marked", this.handleConversationMarked);
         this.#unsubscribeToRealtime = undefined;
       };
 
@@ -188,12 +188,12 @@ export default class WyConversationListItem extends LitElement {
 
   override render() {
     const dateFull = this.lastMessage?.created_at
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
           new Date(this.lastMessage.created_at)
         )
       : "";
     const dateFromNow = this.lastMessage?.created_at
-      ? relativeTime(this.weavyContext?.locale, new Date(this.lastMessage.created_at))
+      ? relativeTime(this.weavy?.locale, new Date(this.lastMessage.created_at))
       : "";
 
     const otherMember =
@@ -322,8 +322,8 @@ export default class WyConversationListItem extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    if (this.weavyContext) {
-      this.requestUpdate("weavyContext");
+    if (this.weavy) {
+      this.requestUpdate("weavy");
     }
   }
 

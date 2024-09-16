@@ -38,7 +38,7 @@ describe("wy-context", () => {
       html` <wy-context tokenUrl="/not/valid/token-url"></wy-context> `
     );
     await el.updateComplete;
-    expect(el).to.have.property("weavyContext").that.respondTo("tokenFactory");
+    expect(el).to.have.property("weavy").that.respondTo("tokenFactory");
   });
 
   it('has a "tokenFactory" attribute with unreflected property that can be invoked', async () => {
@@ -105,10 +105,10 @@ describe("wy-context", () => {
 
 
 
-  /*it('has an "_weavyContext" property that is unaccessible from the outside', async () => {
+  /*it('has an "_weavy" property that is unaccessible from the outside', async () => {
     const el = await fixture<WeavyProvider>(html` <wy-provider></wy-provider> `)
     await el.updateComplete
-    expect(el).property("_weavyContext").property("version").to.throw
-    expect(el).property("_weavyContext").to.not.have.property("version").that.equals(el.version)
+    expect(el).property("_weavy").property("version").to.throw
+    expect(el).property("_weavy").to.not.have.property("version").that.equals(el.version)
   })*/
 });

@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
 
@@ -18,14 +18,14 @@ export type SubscribePostMutationType = MutationObserver<
   PostMutationContextType
 >;
 
-export function getSubscribePostMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) {
+  const queryClient = weavy.queryClient;
   const postsKey: MutationKey = ["posts", app.id];
 
   const options = {
     mutationKey: postsKey,
     mutationFn: async ({ id, subscribe }: MutatePostSubscribeVariables) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         `/api/posts/${id}/${subscribe ? "subscribe" : "unsubscribe"}`,
         "POST",
         ""
@@ -55,6 +55,6 @@ export function getSubscribePostMutationOptions(weavyContext: WeavyContextType, 
   return options;
 }
 
-export function getSubscribePostMutation(weavyContext: WeavyContextType, app: AppType): SubscribePostMutationType {
-  return new MutationObserver(weavyContext.queryClient, getSubscribePostMutationOptions(weavyContext, app));
+export function getSubscribePostMutation(weavy: WeavyType, app: AppType): SubscribePostMutationType {
+  return new MutationObserver(weavy.queryClient, getSubscribePostMutationOptions(weavy, app));
 }

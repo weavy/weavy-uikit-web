@@ -45,16 +45,20 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
   }
 
   private async dispatchLink(_e: Event) {
-    const weavyContext = await this.whenWeavyContext();
-    return dispatchLinkEvent(this, weavyContext, this.notification);
+    const weavy = await this.whenWeavy();
+    return dispatchLinkEvent(this, weavy, this.notification);
   }
 
   private dispatchMark(e: Event, markAsRead: boolean) {
     e.stopPropagation();
-    const event = new CustomEvent("mark", {
-      detail: { notificationId: this.notificationId, markAsRead: markAsRead },
-    });
-    return this.dispatchEvent(event);
+    // Note: comparing read with unread
+    if (markAsRead === Boolean(this.notification.is_unread)) {
+      const event = new CustomEvent("mark", {
+        detail: { notificationId: this.notificationId, markAsRead: markAsRead },
+      });
+      return this.dispatchEvent(event);
+    }
+    return true
   }
 
   private dispatchClose() {
@@ -69,12 +73,12 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
 
   override render() {
     const dateFull = this.notification.created_at
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
           new Date(this.notification.created_at)
         )
       : "";
     const dateFromNow = this.notification.created_at
-      ? relativeTime(this.weavyContext?.locale, new Date(this.notification.created_at))
+      ? relativeTime(this.weavy?.locale, new Date(this.notification.created_at))
       : "";
 
     const otherMember = this.notification.actor;

@@ -40,11 +40,11 @@ export default class WyBlobUpload extends BlockConsumerMixin(LitElement) {
   ];
 
   private async handleBlobChange(files: FileList | null, input: HTMLInputElement) {
-    if (files) {
+    if (files && this.weavy) {
       const file = files[0];
       const fileProps = { file: file };
 
-      this.uploadBlobMutation.trackMutation(getSimpleUploadBlobMutationOptions(this.weavyContext!));
+      this.uploadBlobMutation.trackMutation(getSimpleUploadBlobMutationOptions(this.weavy));
 
       const blob = await this.uploadBlobMutation.mutate(fileProps);
 

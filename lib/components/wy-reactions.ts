@@ -14,7 +14,7 @@ import {
 } from "../data/reactions";
 
 import { QueryController } from "../controllers/query-controller";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
@@ -123,14 +123,14 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   }
 
   private handleReaction = async (emoji: string) => {
-    if (!this.weavyContext || !this.parentId || !this.user) {
+    if (!this.weavy || !this.parentId || !this.user) {
       return;
     }
 
     if (this.reactedEmoji === emoji) {
       this.reactedEmoji = undefined;
       const mutation = await removeReactionMutation(
-        this.weavyContext,
+        this.weavy,
         this.parentId,
         this.entityId,
         this.messageType,
@@ -141,7 +141,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     } else if (this.reactedEmoji === undefined) {
       this.reactedEmoji = emoji;
       const mutation = await addReactionMutation(
-        this.weavyContext,
+        this.weavy,
         this.parentId,
         this.entityId,
         this.messageType,
@@ -153,7 +153,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     } else {
       this.reactedEmoji = emoji;
       const mutation = await replaceReactionMutation(
-        this.weavyContext,
+        this.weavy,
         this.parentId,
         this.entityId,
         this.messageType,
@@ -171,7 +171,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     this.show = false;
   }
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("reactions") || changedProperties.has("user")) && this.user) {
@@ -231,11 +231,11 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     }
 
     if (
-      changedProperties.has("weavyContext") &&
-      this.weavyContext?.reactions &&
-      this.emojis != this.weavyContext.reactions
+      changedProperties.has("weavy") &&
+      this.weavy?.reactions &&
+      this.emojis != this.weavy.reactions
     ) {
-      this.emojis = this.weavyContext.reactions;
+      this.emojis = this.weavy.reactions;
     }
   }
 
@@ -310,7 +310,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     `;
 
     const reactionSheet = html`
-      ${this.weavyContext
+      ${this.weavy
         ? html`
             <wy-sheet
               .show=${this.showSheet}
@@ -347,13 +347,13 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     this.menuRef.value?.addEventListener("toggle", (e: Event) => this.handleClose(e as ToggleEvent));
   }
   
-  protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
+  protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>): void {
     if (
-      (changedProperties.has("weavyContext") || changedProperties.has("entityId")) &&
-      this.weavyContext &&
+      (changedProperties.has("weavy") || changedProperties.has("entityId")) &&
+      this.weavy &&
       this.entityId
     ) {
-      this.reactionListQuery.trackQuery(getReactionListOptions(this.weavyContext, this.messageType, this.entityId));
+      this.reactionListQuery.trackQuery(getReactionListOptions(this.weavy, this.messageType, this.entityId));
     }
   }
 

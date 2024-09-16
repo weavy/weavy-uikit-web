@@ -2,10 +2,10 @@
  * THIS IS UNUSED/DISABLED
  */
 
-import { WeavyContextBase, WeavyContextMixins } from "./weavy";
+import { WeavyClient, type WeavyClientType } from "./weavy";
 import { Constructor } from "../types/generic.types";
 import { WyNotificationToasts } from "../wy-notification-toasts";
-import { WeavyContextOptionsType } from "../types/weavy.types";
+import { WeavyClientOptionsType } from "../types/weavy.types";
 
 export interface WeavyNotificationsProps {
   /**
@@ -15,7 +15,7 @@ export interface WeavyNotificationsProps {
 }
 
 // WeavyNotifications mixin/decorator
-export const WeavyNotificationsMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyNotificationsMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyNotifications extends Base implements WeavyNotificationsProps {
     _notificationToastsComponent?: WyNotificationToasts;
 
@@ -39,10 +39,10 @@ export const WeavyNotificationsMixin = <TBase extends Constructor<WeavyContextBa
     constructor(...args: any[]) {
       super(...args);
 
-      const options: WeavyContextOptionsType = args[0];
+      const options: WeavyClientOptionsType = args[0];
 
       this.notificationToasts =
-        options?.notificationToasts ?? WeavyContextBase.defaults.notificationToasts ?? this.notificationToasts;
+        options?.notificationToasts ?? WeavyClient.defaults.notificationToasts ?? this.notificationToasts;
     }
 
     _addNotificationToastsComponent() {
@@ -55,7 +55,7 @@ export const WeavyNotificationsMixin = <TBase extends Constructor<WeavyContextBa
       this._notificationToastsComponent = undefined;
     }
 
-    override destroy(this: this & WeavyContextMixins): void {
+    override destroy(this: this & WeavyClientType): void {
       super.destroy();
     }
   };

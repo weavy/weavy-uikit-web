@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
@@ -18,15 +18,15 @@ export type RenameFileMutationType = MutationObserver<
   FileMutationContextType
 >;
 
-export function getRenameFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getRenameFileMutationOptions(weavy: WeavyType, app: AppType) {
+  const queryClient = weavy.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
   const options = {
     mutationKey: filesKey,
     mutationFn: async ({ file, name }: MutateFileNameVariables): Promise<FileType> => {
       if (file.id >= 1) {
-        const response = await weavyContext.post(
+        const response = await weavy.post(
           "/api/files/" + file.id,
           "PATCH",
           JSON.stringify({
@@ -82,6 +82,6 @@ export function getRenameFileMutationOptions(weavyContext: WeavyContextType, app
   return options;
 }
 
-export function getRenameFileMutation(weavyContext: WeavyContextType, app: AppType): RenameFileMutationType {
-  return new MutationObserver(weavyContext.queryClient, getRenameFileMutationOptions(weavyContext, app));
+export function getRenameFileMutation(weavy: WeavyType, app: AppType): RenameFileMutationType {
+  return new MutationObserver(weavy.queryClient, getRenameFileMutationOptions(weavy, app));
 }

@@ -1,18 +1,18 @@
 import { QueryFunctionContext, QueryKey, InfiniteQueryObserverOptions, InfiniteData } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { FileOrderType, FilesResultType } from "../types/files.types";
 //import { addToQueryData, findAnyExistingItem, updateQueryData } from "../utils/query-cache";
 
 /// GET all files in an app
 export function getInfiniteFileListOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   appId: number | null,
   filters: { order?: FileOrderType; trashed?: boolean } = {},
   options: object = {}
 ): InfiniteQueryObserverOptions<FilesResultType, Error, InfiniteData<FilesResultType>> {
   const PAGE_SIZE = 25;
 
-  if (!weavyContext) {
+  if (!weavy) {
     throw new Error("useFileList must be used within a WeavyContext");
   }
 
@@ -32,7 +32,7 @@ export function getInfiniteFileListOptions(
         url += "&trashed=null";
       }
 
-      const response = await weavyContext.get(url);
+      const response = await weavy.get(url);
       return await response.json();
     },
     getNextPageParam: (lastPage, pages) => {

@@ -17,7 +17,7 @@ import {
 } from "../data/file-versions";
 import { openUrl } from "../utils/urls";
 import { relativeTime } from "../utils/datetime";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -74,25 +74,25 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
     openUrl(file.download_url, "_top", file.name, true);
   }
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     if (
-      (changedProperties.has("weavyContext") || changedProperties.has("file") || changedProperties.has("app")) &&
-      this.weavyContext &&
+      (changedProperties.has("weavy") || changedProperties.has("file") || changedProperties.has("app")) &&
+      this.weavy &&
       this.file &&
       this.app
     ) {
       this.fileVersionsQuery.trackQuery(
         getApiOptions<FilesResultType>(
-          this.weavyContext,
+          this.weavy,
           getFileVersionsKey(this.app, this.file),
           `/api/files/${this.file.id}/versions`
         )
       );
 
-      this.fileVersionRestoreMutation = getFileVersionRestoreMutation(this.weavyContext, this.app, this.file);
-      this.fileVersionDeleteMutation = getFileVersionDeleteMutation(this.weavyContext, this.app, this.file);
+      this.fileVersionRestoreMutation = getFileVersionRestoreMutation(this.weavy, this.app, this.file);
+      this.fileVersionDeleteMutation = getFileVersionDeleteMutation(this.weavy, this.app, this.file);
     }
   }
 
@@ -116,11 +116,11 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
                 const modifiedAt = new Date(versionFile.updated_at || versionFile.created_at);
                 const isExternal = Boolean(this.file.external_url);
 
-                const dateFull = new Intl.DateTimeFormat(this.weavyContext?.locale, {
+                const dateFull = new Intl.DateTimeFormat(this.weavy?.locale, {
                   dateStyle: "full",
                   timeStyle: "short",
                 }).format(modifiedAt);
-                const dateFromNow = relativeTime(this.weavyContext?.locale, new Date(modifiedAt));
+                const dateFromNow = relativeTime(this.weavy?.locale, new Date(modifiedAt));
 
                 return isExternal
                   ? html`

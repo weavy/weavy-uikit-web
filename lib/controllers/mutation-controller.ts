@@ -10,12 +10,12 @@ import {
 } from "@tanstack/query-core";
 
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { whenParentsDefined } from "../utils/dom";
 
 export class MutationController<TData, TError, TVariables, TContext> implements ReactiveController {
   host: ReactiveControllerHost;
-  context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
+  context?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
   whenContext: Promise<void>;
   resolveContext?: (value: void | PromiseLike<void>) => void;
   whenObserver: Promise<MutationObserver<TData, TError, TVariables, TContext>>;
@@ -37,7 +37,7 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
 
   async setContext() {
     await whenParentsDefined(this.host as LitElement);
-    this.context = new ContextConsumer(this.host as LitElement, { context: weavyContextDefinition, subscribe: true });
+    this.context = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
   }
 
   hostUpdate(): void {

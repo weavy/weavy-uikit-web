@@ -151,14 +151,14 @@ export default class WyPreview extends BlockConsumerMixin(LitElement) {
   scrollToPrev() {
     if (this.prevRef.value) {
       this.unblockSwipeScroll();
-      this.prevRef.value.scrollIntoView({ behavior: this.weavyContext?.scrollBehavior });
+      this.prevRef.value.scrollIntoView({ behavior: this.weavy?.scrollBehavior });
     }
   }
 
   scrollToNext() {
     if (this.nextRef.value) {
       this.unblockSwipeScroll();
-      this.nextRef.value.scrollIntoView({ behavior: this.weavyContext?.scrollBehavior });
+      this.nextRef.value.scrollIntoView({ behavior: this.weavy?.scrollBehavior });
     }
   }
 
@@ -351,7 +351,7 @@ export default class WyPreview extends BlockConsumerMixin(LitElement) {
       "wy-preview-swiper-disabled": this.disableSwipeScroll,
     };
 
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return nothing;
     }
 

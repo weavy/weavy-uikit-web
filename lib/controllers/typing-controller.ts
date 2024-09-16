@@ -2,16 +2,16 @@ import { LitElement, ReactiveController, ReactiveControllerHost } from "lit";
 import { RealtimeEventType, RealtimeTypingEventType } from "../types/realtime.types";
 import type { TypingUserType, UserType } from "../types/users.types";
 import { ContextConsumer } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { whenParentsDefined } from "../utils/dom";
 
 export class TypingController implements ReactiveController {
   host: ReactiveControllerHost & LitElement;
-  context?: ContextConsumer<{ __context__: WeavyContextType }, LitElement>;
-  whenContext?: Promise<WeavyContextType>;
-  resolveContext?: (value: WeavyContextType | PromiseLike<WeavyContextType>) => void;
+  context?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
+  whenContext?: Promise<WeavyType>;
+  resolveContext?: (value: WeavyType | PromiseLike<WeavyType>) => void;
   
-  get weavyContext() {
+  get weavy() {
     return this.context?.value;
   }
 
@@ -62,7 +62,7 @@ export class TypingController implements ReactiveController {
   async setContext() {
     this.whenContext = new Promise((r) => this.resolveContext = r)
     await whenParentsDefined(this.host as LitElement);
-    this.context = new ContextConsumer(this.host as LitElement, { context: weavyContextDefinition, subscribe: true });
+    this.context = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
   }
 
   hostUpdate(): void {
@@ -75,8 +75,8 @@ export class TypingController implements ReactiveController {
     if (this.appId && this._userId) {
       await this.whenContext;
       //console.log("typing subscribe", this.appId)
-      this.weavyContext?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
-      this.weavyContext?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
+      this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+      this.weavy?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
 
     }
   }
@@ -84,8 +84,8 @@ export class TypingController implements ReactiveController {
   async unregisterRealtime() {
     if (this.appId && this.userId) {
       await this.whenContext;
-      this.weavyContext?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
-      this.weavyContext?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
+      this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+      this.weavy?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
     }
   }
 

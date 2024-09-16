@@ -1,7 +1,7 @@
 import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { localized, msg } from "@lit/localize";
 
 import type { ReactableType } from "../types/reactions.types";
@@ -14,7 +14,7 @@ import { PollOptionType } from "../types/polls.types";
 import { MutationController } from "../controllers/mutation-controller";
 import { CommentMutationContextType, CommentType, MutateCommentProps } from "../types/comments.types";
 import { getUpdateCommentMutationOptions } from "../data/comments";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 
 import "./wy-attachment";
 import "./wy-image-grid";
@@ -36,9 +36,9 @@ export default class WyCommentEdit extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property({ type: Number })
   parentId!: number;
@@ -114,10 +114,10 @@ export default class WyCommentEdit extends LitElement {
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if ((changedProperties.has("parentId") || changedProperties.has("weavyContext")) && this.parentId && this.weavyContext) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+    if ((changedProperties.has("parentId") || changedProperties.has("weavy")) && this.parentId && this.weavy) {
       this.updateCommentMutation.trackMutation(
-        getUpdateCommentMutationOptions(this.weavyContext, ["comments", this.parentId])
+        getUpdateCommentMutationOptions(this.weavy, ["comments", this.parentId])
       );
     }
   }

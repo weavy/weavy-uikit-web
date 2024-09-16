@@ -1,7 +1,7 @@
 import { LitElement, css, html, TemplateResult, nothing, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import chatCss from "../scss/all.scss";
 import throttle from "lodash.throttle";
@@ -11,7 +11,7 @@ import { localized, msg } from "@lit/localize";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { clickOnEnterAndConsumeOnSpace, inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-button";
@@ -34,9 +34,9 @@ export default class WyUsersSearch extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property({ attribute: false})
   appId?: number;
@@ -236,13 +236,13 @@ export default class WyUsersSearch extends LitElement {
     </div>`;
   }
 
-  protected override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): Promise<void> {
+  protected override async updated(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     this.infiniteScroll.observe(this.peopleQuery.result, this.pagerRef.value);    
 
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
+    if (changedProperties.has("weavy") && this.weavy) {
       this.peopleQuery.trackInfiniteQuery(
         getInfiniteSearchMemberOptions(
-          this.weavyContext,          
+          this.weavy,          
           () => this.text!,
           this.appId,
           () => this.botFilter

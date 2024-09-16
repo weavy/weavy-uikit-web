@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type { FileMutationContextType, FileType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { removeCacheItems, updateCacheItems } from "../utils/query-cache";
@@ -13,15 +13,15 @@ export type MutateFileVariables = {
 export type RemoveFileMutationType = MutationObserver<void, Error, MutateFileVariables, FileMutationContextType>;
 export type DeleteForeverFileMutationType = MutationObserver<void, Error, MutateFileVariables, FileMutationContextType>;
 
-export function getTrashFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getTrashFileMutationOptions(weavy: WeavyType, app: AppType) {
+  const queryClient = weavy.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
   const options = {
     mutationKey: filesKey,
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1) {
-        const response = await weavyContext.post("/api/files/" + file.id + "/trash", "POST", "");
+        const response = await weavy.post("/api/files/" + file.id + "/trash", "POST", "");
 
         if (!response.ok) {
           throw new Error();
@@ -67,19 +67,19 @@ export function getTrashFileMutationOptions(weavyContext: WeavyContextType, app:
   return options;
 }
 
-export function getTrashFileMutation(weavyContext: WeavyContextType, app: AppType): RemoveFileMutationType {
-  return new MutationObserver(weavyContext.queryClient, getTrashFileMutationOptions(weavyContext, app));
+export function getTrashFileMutation(weavy: WeavyType, app: AppType): RemoveFileMutationType {
+  return new MutationObserver(weavy.queryClient, getTrashFileMutationOptions(weavy, app));
 }
 
-export function getRestoreFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getRestoreFileMutationOptions(weavy: WeavyType, app: AppType) {
+  const queryClient = weavy.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
   const options = {
     mutationKey: filesKey,
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1) {
-        const response = await weavyContext.post("/api/files/" + file.id + "/restore", "POST", "");
+        const response = await weavy.post("/api/files/" + file.id + "/restore", "POST", "");
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -127,19 +127,19 @@ export function getRestoreFileMutationOptions(weavyContext: WeavyContextType, ap
   return options;
 }
 
-export function getRestoreFileMutation(weavyContext: WeavyContextType, app: AppType): RemoveFileMutationType {
-  return new MutationObserver(weavyContext.queryClient, getRestoreFileMutationOptions(weavyContext, app));
+export function getRestoreFileMutation(weavy: WeavyType, app: AppType): RemoveFileMutationType {
+  return new MutationObserver(weavy.queryClient, getRestoreFileMutationOptions(weavy, app));
 }
 
-export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppType) {
+  const queryClient = weavy.queryClient;
   const filesKey: MutationKey = ["apps", app.id, "files"];
 
   const options = {
     mutationKey: filesKey,
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1 && file.is_trashed) {
-        const response = await weavyContext.post("/api/files/" + file.id, "DELETE", "");
+        const response = await weavy.post("/api/files/" + file.id, "DELETE", "");
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -183,8 +183,8 @@ export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContextTy
 }
 
 export function getDeleteForeverFileMutation(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   app: AppType
 ): DeleteForeverFileMutationType {
-  return new MutationObserver(weavyContext.queryClient, getDeleteForeverFileMutationOptions(weavyContext, app));
+  return new MutationObserver(weavy.queryClient, getDeleteForeverFileMutationOptions(weavy, app));
 }

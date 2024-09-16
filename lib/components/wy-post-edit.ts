@@ -11,7 +11,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdatePostMutationOptions } from "../data/posts";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -100,11 +100,11 @@ export default class WyPostEdit extends BlockConsumerMixin(LitElement) {
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
-      this.updatePostMutation.trackMutation(getUpdatePostMutationOptions(this.weavyContext, ["posts", this.app.id]));
+    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
+      this.updatePostMutation.trackMutation(getUpdatePostMutationOptions(this.weavy, ["posts", this.app.id]));
     }
   }
 

@@ -77,7 +77,7 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
 
                 let dateContent = html``;
                 if (lastDate?.toDateString() !== messageDate.toDateString()) {
-                  const messageDateShort = new Intl.DateTimeFormat(this.weavyContext?.locale, {
+                  const messageDateShort = new Intl.DateTimeFormat(this.weavy?.locale, {
                     dateStyle: "short",
                   }).format(messageDate);
                   lastDate = messageDate;

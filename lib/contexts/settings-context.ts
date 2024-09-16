@@ -33,4 +33,4 @@ export class BlockSettings implements BlockSettingProps {
 }
 
 export type BlockSettingsType = BlockSettings;
-export const blockSettingsContext = createContext<BlockSettings | undefined>(Symbol.for("weavy-block-settings"));
+export const BlockSettingsContext = createContext<BlockSettings | undefined>(Symbol.for("weavy-block-settings"));

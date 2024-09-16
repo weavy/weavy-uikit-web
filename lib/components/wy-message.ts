@@ -120,12 +120,12 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
     const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url) || [];
 
     const dateFull = this.createdAt
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
           new Date(this.createdAt)
         )
       : "";
     const timeShort = this.createdAt
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { timeStyle: "short" }).format(new Date(this.createdAt))
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { timeStyle: "short" }).format(new Date(this.createdAt))
       : "";
 
     return html`
@@ -228,7 +228,7 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
               ? html`
                   ${this.seenBy.map((member: MemberType) => {
                     const dateSeenFull = member.marked_at
-                      ? new Intl.DateTimeFormat(this.weavyContext?.locale, {
+                      ? new Intl.DateTimeFormat(this.weavy?.locale, {
                           dateStyle: "full",
                           timeStyle: "short",
                         }).format(new Date(member.marked_at))

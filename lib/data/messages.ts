@@ -6,7 +6,7 @@ import type {
   InfiniteData,
 } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import {
   MessageType,
   MutateMessageProps,
@@ -17,7 +17,7 @@ import { addCacheItem } from "../utils/query-cache";
 import { PollOptionType } from "../types/polls.types";
 
 export function getMessagesOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   appId: number | null,
   options: object = {}
 ): InfiniteQueryObserverOptions<MessagesResultType, Error, InfiniteData<MessagesResultType>> {
@@ -33,7 +33,7 @@ export function getMessagesOptions(
       const skip = opt.pageParam;
       const url = "/api/apps/" + appId + "/messages?orderby=id+desc&skip=" + skip + "&take=" + PAGE_SIZE;
 
-      const response = await weavyContext.get(url);
+      const response = await weavy.get(url);
       const result = (await response.json()) as MessagesResultType;
       result.data = result.data?.reverse() || [];
       return result;
@@ -52,12 +52,12 @@ export function getMessagesOptions(
   };
 }
 
-export function getAddMessageMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
-  const queryClient = weavyContext.queryClient;
+export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
+  const queryClient = weavy.queryClient;
 
   const options = {
     mutationFn: async (variables: MutateMessageProps) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         "/api/apps/" + variables.app_id + "/messages",
         "POST",
         JSON.stringify({

@@ -1,4 +1,4 @@
-import { WeavyContextBase } from "./weavy";
+import { WeavyClient } from "./weavy";
 import { QueryClient, type Mutation } from "@tanstack/query-core";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
@@ -18,7 +18,7 @@ export interface WeavyQueryProps {
 }
 
 // WeavyQuery mixin/decorator
-export const WeavyQueryMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyQuery extends Base implements WeavyQueryProps {
     // QUERY CLIENT
 
@@ -84,7 +84,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyContextBase>>(Bas
           queryClient: this._queryClient,
           persister: this._sessionStoragePersister,
           maxAge: this.gcTime, // 24h - should match gcTime
-          buster: WeavyContextBase.version, // Cache busting parameter (build hash or similar)
+          buster: WeavyClient.version, // Cache busting parameter (build hash or similar)
           hydrateOptions: undefined,
           dehydrateOptions: {
             shouldDehydrateMutation: (mutation: Mutation) => {

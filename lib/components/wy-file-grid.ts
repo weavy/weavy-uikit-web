@@ -17,7 +17,7 @@ import { partMap } from "../utils/directives/shadow-part-map";
 export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?: number, highlightId?: number, highlightRef?: Ref<HTMLElement>) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
-  const fileDate = new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+  const fileDate = new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
     new Date(fileChangedAt)
   );
   const isRenaming = Boolean(isRenamingId && isRenamingId === file.id);

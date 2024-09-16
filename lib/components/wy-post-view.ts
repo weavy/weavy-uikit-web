@@ -153,14 +153,14 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
     const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url);
     //const date = dayjs.utc(this.createdAt).tz(dayjs.tz.guess());
 
-    const dateFull = new Intl.DateTimeFormat(this.weavyContext?.locale, {
+    const dateFull = new Intl.DateTimeFormat(this.weavy?.locale, {
       dateStyle: "full",
       timeStyle: "short",
     }).format(new Date(this.createdAt));
-    const dateFromNow = relativeTime(this.weavyContext?.locale, new Date(this.createdAt));
+    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.createdAt));
     const modifiedDateFull =
-      this.modifiedAt && this.weavyContext
-        ? new Intl.DateTimeFormat(this.weavyContext.locale, { dateStyle: "full", timeStyle: "short" }).format(
+      this.modifiedAt && this.weavy
+        ? new Intl.DateTimeFormat(this.weavy.locale, { dateStyle: "full", timeStyle: "short" }).format(
             new Date(this.modifiedAt)
           )
         : "";

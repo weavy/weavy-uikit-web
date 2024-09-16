@@ -9,7 +9,7 @@ import { PostType } from "./posts.types";
 import { UserType } from "./users.types";
 import { NotificationType } from "./notifications.types";
 
-export type RealtimeDataType =  PlainObjectType | number | string | Array<PlainObjectType | number | string>;
+export type RealtimeDataType = PlainObjectType | number | string | Array<PlainObjectType | number | string>;
 
 export type RealtimeEventType = {
   id: number;
@@ -25,7 +25,7 @@ export type RealtimeAppEventType = RealtimeEventType & {
 export type RealtimeMemberEventType = RealtimeEventType & {
   app: AppType;
   member: MemberType;
-}
+};
 
 // REACTIONS
 export type RealtimeReactionEventType = RealtimeEventType & {
@@ -77,9 +77,15 @@ export type RealtimePresenceEventType = string | number[];
 export type RealtimeNotificationEventType = RealtimeEventType & {
   action: "notification_created" | "notification_updated" | "notification_deleted";
   notification: NotificationType;
-}
+};
 
 export type RealtimeNotificationsEventType = RealtimeEventType & {
   action: "notifications_marked";
   app?: AppRef;
-}
+};
+
+export type RealtimeNotificationsEventDetailType = {
+  action: "notification_created" | "notification_updated" | "notification_deleted" | "notifications_marked";
+  notification?: NotificationType;
+  app?: AppRef;
+};

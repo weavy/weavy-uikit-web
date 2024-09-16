@@ -34,7 +34,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { DropZoneController } from "../controllers/dropzone-controller";
 import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
 import type { EditorState, Extension } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
@@ -148,11 +148,11 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   private throttledTyping = throttle(
     async () => {
       if (
-        this.weavyContext &&
+        this.weavy &&
         this.app &&
         (this.app.type === ConversationTypeGuid.ChatRoom || this.app.type === ConversationTypeGuid.PrivateChat)
       ) {
-        const mutation = await typingMutation(this.weavyContext, this.app.id);
+        const mutation = await typingMutation(this.weavy, this.app.id);
         await mutation.mutate();
       }
     },
@@ -178,22 +178,22 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
     this.addEventListener("keyup", inputConsume);
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     if (
-      (changedProperties.has("weavyContext") ||
+      (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
         changedProperties.has("user") ||
         changedProperties.has("parentId")) &&
-      this.weavyContext &&
+      this.weavy &&
       this.app &&
       this.user
     ) {
       this.draftKey = `draft-${this.editorType}-${this.parentId || this.app.id}`;
       this.uploadBlobMutation.trackMutation(
         getUploadBlobMutationOptions(
-          this.weavyContext,
+          this.weavy,
           this.user,
           this.app,
           `${this.editorLocation}-${this.parentId || this.app.id}`
@@ -209,10 +209,10 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
 
       this.mutatingFiles.trackMutationState(
         { filters: { mutationKey: mutateFileTrackKey, exact: true } },
-        this.weavyContext.queryClient
+        this.weavy.queryClient
       );
       this.externalBlobMutation = getExternalBlobMutation(
-        this.weavyContext,
+        this.weavy,
         this.user,
         this.app,
         `${this.editorLocation}-${this.parentId || this.app.id}`
@@ -256,18 +256,18 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
     }
   }
 
-  protected override updated(changedProperties: PropertyValues<this & WeavyContextProps>): void {
+  protected override updated(changedProperties: PropertyValues<this & WeavyProps>): void {
     if (
-      (changedProperties.has("weavyContext") ||
+      (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
         changedProperties.has("user") ||
         changedProperties.has("parentId")) &&
-      this.weavyContext &&
+      this.weavy &&
       this.app &&
       this.user &&
       this.editorRef.value
     ) {
-      this.weavyContext.whenUrl().then(() => {
+      this.weavy.whenUrl().then(() => {
         import("../utils/editor/editor").then(
           ({
             defaultHighlightStyle,
@@ -427,7 +427,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   }
 
   protected async autocomplete(context: CompletionContext): Promise<CompletionResult | null> {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return null;
     }
 
@@ -444,7 +444,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
     before = context.matchBefore(/@[^@]+/);
 
     const typed = before?.text.substring(1);
-    const response = await this.weavyContext.get(`/api/apps/${this.app.id}/members?member=null&q=${typed}`);
+    const response = await this.weavy.get(`/api/apps/${this.app.id}/members?member=null&q=${typed}`);
     const result: UsersResultType = await response?.json();
 
     let completions: {
@@ -520,12 +520,12 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   }
 
   protected handleRemoveUpload(mutation: MutationState<BlobType, Error, MutateFileProps, FileMutationContextType>) {
-    if (!this.weavyContext || !this.app) {
+    if (!this.weavy || !this.app) {
       return;
     }
 
     removeMutation(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["apps", this.app.id, "blobs", `${this.editorLocation}-${this.parentId || this.app.id}`],
       (m) =>
         (m as Mutation<BlobType, Error, MutateFileProps, FileMutationContextType>).state.data?.id === mutation.data?.id
@@ -599,8 +599,8 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   protected resetEditor() {
     this.clearEditor();
 
-    if (this.weavyContext && this.app) {
-      removeMutations(this.weavyContext.queryClient, [
+    if (this.weavy && this.app) {
+      removeMutations(this.weavy.queryClient, [
         "apps",
         this.app.id,
         "blobs",
@@ -622,13 +622,13 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   }
 
   private createMeeting = async (e: MessageEvent) => {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return;
     }
   
-    if (e.source === this.authWindow && (this.weavyContext.url as URL).origin === e.origin && e.data && e.data.name && e.data.name.endsWith("-authorized")) {
+    if (e.source === this.authWindow && (this.weavy.url as URL).origin === e.origin && e.data && e.data.name && e.data.name.endsWith("-authorized")) {
       const name = e.data.name.slice(0, -"-authorized".length);
-      const mutation = addMeetingMutation(this.weavyContext, name);
+      const mutation = addMeetingMutation(this.weavy, name);
       const meeting = await mutation.mutate();
 
       if (!meeting.auth_url) {
@@ -638,11 +638,11 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   };
 
   protected async handleMeetingClick(name: string) {
-    if (!this.weavyContext || !this.user) {
+    if (!this.weavy || !this.user) {
       return;
     }
 
-    const mutation = addMeetingMutation(this.weavyContext, name);
+    const mutation = addMeetingMutation(this.weavy, name);
     const meeting = await mutation.mutate();
 
     if (meeting.auth_url) {
@@ -658,11 +658,11 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   }
 
   protected async handleEmbeds(content: string) {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return;
     }
 
-    await getEmbeds(content, this.setEmbeds.bind(this), this.weavyContext);
+    await getEmbeds(content, this.setEmbeds.bind(this), this.weavy);
   }
 
   protected removeEmbed(e: CustomEvent) {
@@ -742,7 +742,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                 <wy-icon name="cloud"></wy-icon>
               </wy-button>`
             : nothing}
-          ${this.hasFeatures?.confluence && this.weavyContext?.confluenceAuthenticationUrl
+          ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
             ? html`<wy-confluence
                 @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
               ></wy-confluence>`

@@ -6,7 +6,7 @@ import {
   MutationObserver,
 } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 
 import { ConversationMutationContextType, ConversationTypeGuid, ConversationTypeString, ConversationsResultType } from "../types/conversations.types";
 import { ConversationType } from "../types/conversations.types";
@@ -24,7 +24,7 @@ export type AddConversationMutationType = MutationObserver<
 >;
 
 export function getConversationsOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   options: object = {},
   searchText?: () => string | undefined,
   types: ConversationTypeGuid[] | null = [ConversationTypeGuid.ChatRoom, ConversationTypeGuid.PrivateChat],
@@ -47,7 +47,7 @@ export function getConversationsOptions(
 
       const url = `/api/conversations?${queryParams.toString()}`;
 
-      const response = await weavyContext.get(url);
+      const response = await weavy.get(url);
       const result = await response.json();
       result.data = result.data || [];
       return result;
@@ -61,10 +61,10 @@ export function getConversationsOptions(
   };
 }
 
-export function getAddConversationMutationOptions(weavyContext: WeavyContextType) {
+export function getAddConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ members, type }: MutateAddConversationVariables) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         `/api/conversations`,
         "POST",
         JSON.stringify({
@@ -82,14 +82,14 @@ export function getAddConversationMutationOptions(weavyContext: WeavyContextType
   return options;
 }
 
-export function getAddConversationMutation(weavyContext: WeavyContextType): AddConversationMutationType {
-  return new MutationObserver(weavyContext.queryClient, getAddConversationMutationOptions(weavyContext));
+export function getAddConversationMutation(weavy: WeavyType): AddConversationMutationType {
+  return new MutationObserver(weavy.queryClient, getAddConversationMutationOptions(weavy));
 }
 
-// export function getUpdatePostMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
+// export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
 //     const options = {
 //         mutationFn: async (variables: MutatePostProps) => {
-//             const response = await weavyContext.post(
+//             const response = await weavy.post(
 //                 '/api/posts/' + variables.id!,
 //                 'PATCH',
 //                 JSON.stringify({
@@ -109,7 +109,7 @@ export function getAddConversationMutation(weavyContext: WeavyContextType): AddC
 //         },
 //         mutationKey: mutationKey,
 //         onSuccess: (data: PostType, variables: any, context: any) => {
-//             updateCacheItem(weavyContext.queryClient, ['posts', variables.appId], variables.id, (item: PostType) => {
+//             updateCacheItem(weavy.queryClient, ['posts', variables.appId], variables.id, (item: PostType) => {
 //                 item.text = data.text
 //                 item.html = data.html
 //                 item.attachment_ids = data.attachment_ids
@@ -127,12 +127,12 @@ export function getAddConversationMutation(weavyContext: WeavyContextType): AddC
 //     return options
 // }
 
-// export function getAddPostMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
-//     const queryClient = weavyContext.queryClient
+// export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
+//     const queryClient = weavy.queryClient
 
 //     const options = {
 //         mutationFn: async (variables: MutatePostProps) => {
-//             const response = await weavyContext.post(
+//             const response = await weavy.post(
 //                 '/api/apps/' + variables.appId + '/posts',
 //                 'POST',
 //                 JSON.stringify({

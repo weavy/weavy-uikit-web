@@ -1,9 +1,9 @@
 import { S4 } from "../utils/data";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
-import { globalContextProvider, weavyContextDefinition } from "../contexts/weavy-context";
+import { globalContextProvider, WeavyContext } from "../contexts/weavy-context";
 
 import { chrome } from "../utils/browser";
-import type { WeavyOptions, Destructable, WeavyContextOptionsType } from "../types/weavy.types";
+import type { WeavyOptions, Destructable, WeavyClientOptionsType } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
 
 import { SOURCE_LOCALE, WeavyLocalizationMixin, WeavyLocalizationProps } from "./localization";
@@ -14,10 +14,10 @@ import { WeavyQueryMixin, WeavyQueryProps } from "./query";
 import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 import { WeavyFetchMixin, WeavyFetchProps } from "./fetch";
 import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
-import { WeavyRealtimeMixin, WeavyRealtimeProps } from "./realtime";
+import { WeavyRealtimeMixin, WeavyRealtimeProps, type WyNotificationsEventType } from "./realtime";
 import { throwOnDomNotAvailable } from "../utils/dom";
 
-export type WeavyContextMixins = WeavyContextBase &
+export type WeavyClientType = WeavyClient &
   WeavyNetworkProps &
   WeavyAuthenticationProps &
   WeavyLocalizationProps &
@@ -32,7 +32,7 @@ export type WeavyContextMixins = WeavyContextBase &
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
  */
-export class WeavyContextBase implements WeavyOptions, Destructable {
+export class WeavyClient implements WeavyOptions, Destructable {
   /**
    * The semver version of the package.
    */
@@ -62,27 +62,27 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   };
 
   readonly weavySid: string = S4();
-  readonly weavyId: string = `${WeavyContextBase.sourceName}#${this.weavySid}`;
+  readonly weavyId: string = `${WeavyClient.sourceName}#${this.weavySid}`;
 
   /**
    * The host where the Weavy context is provided.
    */
   readonly host: HTMLElement;
 
-  #hostContextProvider?: ContextProvider<typeof weavyContextDefinition>;
+  #hostContextProvider?: ContextProvider<typeof WeavyContext>;
 
   // OPTIONS
 
-  cloudFilePickerUrl = WeavyContextBase.defaults.cloudFilePickerUrl;
-  confluenceAuthenticationUrl = WeavyContextBase.defaults.confluenceAuthenticationUrl;
-  confluenceProductName = WeavyContextBase.defaults.confluenceProductName;
-  disableEnvironmentImports = WeavyContextBase.defaults.disableEnvironmentImports;
-  gcTime = WeavyContextBase.defaults.gcTime;
-  reactions = WeavyContextBase.defaults.reactions;
-  scrollBehavior = WeavyContextBase.defaults.scrollBehavior;
-  staleTime = WeavyContextBase.defaults.staleTime;
-  tokenFactoryRetryDelay = WeavyContextBase.defaults.tokenFactoryRetryDelay;
-  tokenFactoryTimeout = WeavyContextBase.defaults.tokenFactoryTimeout;
+  cloudFilePickerUrl = WeavyClient.defaults.cloudFilePickerUrl;
+  confluenceAuthenticationUrl = WeavyClient.defaults.confluenceAuthenticationUrl;
+  confluenceProductName = WeavyClient.defaults.confluenceProductName;
+  disableEnvironmentImports = WeavyClient.defaults.disableEnvironmentImports;
+  gcTime = WeavyClient.defaults.gcTime;
+  reactions = WeavyClient.defaults.reactions;
+  scrollBehavior = WeavyClient.defaults.scrollBehavior;
+  staleTime = WeavyClient.defaults.staleTime;
+  tokenFactoryRetryDelay = WeavyClient.defaults.tokenFactoryRetryDelay;
+  tokenFactoryTimeout = WeavyClient.defaults.tokenFactoryTimeout;
 
   // Promises
 
@@ -147,7 +147,7 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   #zoomAuthenticationUrl?: string | URL;
 
   get zoomAuthenticationUrl() {
-    return this.#zoomAuthenticationUrl ?? WeavyContextBase.defaults.zoomAuthenticationUrl;
+    return this.#zoomAuthenticationUrl ?? WeavyClient.defaults.zoomAuthenticationUrl;
   }
 
   set zoomAuthenticationUrl(url: string | URL | undefined) {
@@ -157,8 +157,8 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
 
   // CONSTRUCTOR
 
-  constructor(options?: WeavyContextOptionsType) {
-    console.info(`${WeavyContextBase.sourceName}@${WeavyContextBase.version} #${this.weavySid}`);
+  constructor(options?: WeavyClientOptionsType) {
+    console.info(`${WeavyClient.sourceName}@${WeavyClient.version} #${this.weavySid}`);
 
     throwOnDomNotAvailable();
 
@@ -188,11 +188,11 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
     if (this.host !== document.documentElement) {
       globalContextProvider?.detachListeners();
       this.#hostContextProvider = new ContextProvider(this.host, {
-        context: weavyContextDefinition,
-        initialValue: this as unknown as WeavyContext,
+        context: WeavyContext,
+        initialValue: this as unknown as Weavy,
       });
     } else {
-      globalContextProvider?.setValue(this as unknown as WeavyContext);
+      globalContextProvider?.setValue(this as unknown as Weavy);
     }
   }
 
@@ -209,19 +209,20 @@ export class WeavyContextBase implements WeavyOptions, Destructable {
   }
 }
 
-export class WeavyContext
+export class Weavy
   extends WeavyRealtimeMixin(
     WeavyLocalizationMixin(
       WeavyConnectionMixin(
         WeavyNetworkMixin(
           WeavyAuthenticationMixin(
-            WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyContextBase))))
+            WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyClient))))
           )
         )
       )
     )
   )
-  implements WeavyContextMixins {}
+  implements WeavyClientType {}
 
-export class Weavy extends WeavyContext {}
-export type WeavyContextType = WeavyContext;
+export type WeavyType = Weavy;
+
+export type { WyNotificationsEventType }

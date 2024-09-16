@@ -1,14 +1,14 @@
 import { expect } from "@open-wc/testing";
 
 import "../../utils/version";
-import { Weavy, type WeavyContext } from "../../../lib";
+import { Weavy, type WeavyType } from "../../../lib";
 import { LocaleModule } from "@lit/localize";
 import { testReadOnly } from "../../utils/properties";
 
 // Note: lit-localize can only be configured once  
 
 describe("WeavyLocalesMixin", () => {
-  let weavy: WeavyContext;
+  let weavy: WeavyType;
 
   before(() => {
     weavy = new Weavy();

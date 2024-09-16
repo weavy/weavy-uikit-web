@@ -28,7 +28,7 @@ import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
 import { inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { RealtimePresenceEventType } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -93,7 +93,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
   };
 
   private handlePresenceChange = (data: RealtimePresenceEventType) => {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return;
     }
 
@@ -105,7 +105,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["conversations"],
       () => true,
       (item: ConversationType) => {
@@ -157,31 +157,31 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("conversationTypes")) && this.weavyContext) {
+    if ((changedProperties.has("weavy") || changedProperties.has("conversationTypes")) && this.weavy) {
       this.conversationsQuery.trackInfiniteQuery(
-        getConversationsOptions(this.weavyContext, {}, () => this.searchText, this.conversationTypes, this.bot)
+        getConversationsOptions(this.weavy, {}, () => this.searchText, this.conversationTypes, this.bot)
       );
 
-      this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
-      this.starConversationMutation = getStarConversationMutation(this.weavyContext);
-      this.pinConversationMutation = getPinConversationMutation(this.weavyContext);
-      this.leaveConversationMutation = getLeaveConversationMutation(this.weavyContext);
-      this.trashConversationMutation = getTrashConversationMutation(this.weavyContext);
+      this.markConversationMutation = getMarkConversationMutation(this.weavy);
+      this.starConversationMutation = getStarConversationMutation(this.weavy);
+      this.pinConversationMutation = getPinConversationMutation(this.weavy);
+      this.leaveConversationMutation = getLeaveConversationMutation(this.weavy);
+      this.trashConversationMutation = getTrashConversationMutation(this.weavy);
 
       this.#unsubscribeToRealtime?.();
 
       // realtime
-      this.weavyContext.subscribe(null, "app_created", this.handleRefresh);
-      this.weavyContext.subscribe(null, "member_added", this.handleRefresh);
-      this.weavyContext.subscribe(null, "online", this.handlePresenceChange);
+      this.weavy.subscribe(null, "app_created", this.handleRefresh);
+      this.weavy.subscribe(null, "member_added", this.handleRefresh);
+      this.weavy.subscribe(null, "online", this.handlePresenceChange);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavyContext?.unsubscribe(null, "app_created", this.handleRefresh);
-        this.weavyContext?.unsubscribe(null, "member_added", this.handleRefresh);
-        this.weavyContext?.unsubscribe(null, "online", this.handlePresenceChange);
+        this.weavy?.unsubscribe(null, "app_created", this.handleRefresh);
+        this.weavy?.unsubscribe(null, "member_added", this.handleRefresh);
+        this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
         this.#unsubscribeToRealtime = undefined;
       };
     }

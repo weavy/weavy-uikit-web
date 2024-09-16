@@ -4,8 +4,8 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 import { getTextStreamFromResponse } from "../utils/data";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { WeavyContextProps } from "../types/weavy.types";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
+import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-empty";
@@ -29,9 +29,9 @@ export class WyPreviewText extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property()
   src!: string;
@@ -48,10 +48,10 @@ export class WyPreviewText extends LitElement {
   @state()
   loading = true;
 
-  override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if ((changedProperties.has("weavyContext") || changedProperties.has("src")) && this.weavyContext) {
+  override async updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
+    if ((changedProperties.has("weavy") || changedProperties.has("src")) && this.weavy) {
       this.loading = true;
-      fetch(this.src, await this.weavyContext.fetchOptions())
+      fetch(this.src, await this.weavy.fetchOptions())
         .then(getTextStreamFromResponse)
         // Create a new response out of the stream
         .then((stream) => new Response(stream))

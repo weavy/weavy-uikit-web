@@ -9,7 +9,7 @@ import type { FileOrderByType, FileOrderType, FileType } from "../types/files.ty
 import { WyFilesList } from "./wy-files-list";
 
 import { repeat } from "lit/directives/repeat.js";
-import { type WeavyContextType } from "../contexts/weavy-context";
+import { type WeavyType } from "../contexts/weavy-context";
 import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { Ref, ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
@@ -34,7 +34,7 @@ export function renderFileTable(
             ${repeat(
               files,
               (file) => file.id,
-              (file) => renderFileTableRow.call(this, this.weavyContext, { file }, isRenamingId, highlightId, highlightRef)
+              (file) => renderFileTableRow.call(this, this.weavy, { file }, isRenamingId, highlightId, highlightRef)
             )}
           </tbody>
         </table>
@@ -81,7 +81,7 @@ export function renderFileTableHeaders(this: WyFilesList, order?: FileOrderType)
 
 export function renderFileTableRow(
   this: WyFilesList,
-  weavyContext: WeavyContextType | undefined,
+  weavy: WeavyType | undefined,
   { file }: { file: FileType },
   isRenamingId?: number,
   highlightId?: number,
@@ -89,10 +89,10 @@ export function renderFileTableRow(
 ) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
-  const fileDateFull = new Intl.DateTimeFormat(weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+  const fileDateFull = new Intl.DateTimeFormat(weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
     new Date(fileChangedAt)
   );
-  const fileDateShort = new Intl.DateTimeFormat(weavyContext?.locale, { dateStyle: "short" }).format(
+  const fileDateShort = new Intl.DateTimeFormat(weavy?.locale, { dateStyle: "short" }).format(
     new Date(fileChangedAt)
   );
   const isRenaming = Boolean(isRenamingId && isRenamingId === file.id);

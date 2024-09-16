@@ -1,4 +1,4 @@
-import { WeavyContextBase, WeavyContextMixins } from "./weavy";
+import { WeavyClient, type WeavyClientType } from "./weavy";
 import type { RealtimeDataType, RealtimeEventType } from "../types/realtime.types";
 import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
 import { DestroyError } from "../utils/errors";
@@ -24,7 +24,7 @@ export interface WeavyConnectionProps {
 }
 
 // WeavyConnection mixin/decorator
-export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyConnection extends Base implements WeavyConnectionProps, Destructable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
@@ -33,7 +33,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
       this.whenConnectionRequested().then(() => {
         if (!this.isDestroyed) {
           //console.log(this.weavyId, "Weavy url and tokenFactory configured.");
-          (this as this & WeavyContextMixins).createConnection();
+          (this as this & WeavyClientType).createConnection();
         }
       });
     }
@@ -71,7 +71,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
       await this._whenConnectionStarted;
     }
 
-    async createConnection(this: this & WeavyContextMixins) {
+    async createConnection(this: this & WeavyClientType) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -165,14 +165,14 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
       }
     }
 
-    async disconnect(this: this & WeavyContextMixins) {
+    async disconnect(this: this & WeavyClientType) {
       if (this._connection) {
         await this._connection.stop();
         this.connectionState = "disconnected";
       }
     }
 
-    async connect(this: this & WeavyContextMixins) {
+    async connect(this: this & WeavyClientType) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -312,7 +312,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyContextBase>
       }
     }
 
-    override destroy(this: this & WeavyContextMixins) {
+    override destroy(this: this & WeavyClientType) {
       super.destroy();
 
       this.disconnect();

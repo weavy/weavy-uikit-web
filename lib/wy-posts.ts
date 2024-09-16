@@ -17,7 +17,7 @@ import { Constructor } from "./types/generic.types";
 import type { MutatePostProps, PostType, PostsResultType } from "./types/posts.types";
 import { ProductTypes } from "./types/product.types";
 import { RealtimeCommentEventType, RealtimePostEventType, RealtimeReactionEventType } from "./types/realtime.types";
-import { WeavyContextProps } from "./types/weavy.types";
+import { WeavyProps } from "./types/weavy.types";
 import { hasPermission } from "./utils/permission";
 import { addCacheItem, updateCacheItem } from "./utils/query-cache";
 
@@ -73,7 +73,7 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
 
   handleRealtimePostCreated = (realtimeEvent: RealtimePostEventType) => {
     if (
-      !this.weavyContext ||
+      !this.weavy ||
       realtimeEvent.post.app.id !== this.app!.id ||
       realtimeEvent.post.created_by?.id === this.user!.id
     ) {
@@ -81,18 +81,18 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
     }
 
     realtimeEvent.post.created_by = realtimeEvent.actor;
-    addCacheItem(this.weavyContext.queryClient, ["posts", this.app!.id], realtimeEvent.post, undefined, {
+    addCacheItem(this.weavy.queryClient, ["posts", this.app!.id], realtimeEvent.post, undefined, {
       descending: true,
     });
   };
 
   handleRealtimeCommentCreated = (realtimeEvent: RealtimeCommentEventType) => {
-    if (!this.weavyContext || realtimeEvent.actor.id === this.user!.id) {
+    if (!this.weavy || realtimeEvent.actor.id === this.user!.id) {
       return;
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["posts", this.app!.id],
       realtimeEvent.comment.parent!.id,
       (item: PostType) => {
@@ -106,12 +106,12 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
   };
 
   handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavyContext || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "post") {
+    if (!this.weavy || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "post") {
       return;
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["posts", this.app!.id],
       realtimeEvent.entity.id,
       (item: PostType) => {
@@ -124,12 +124,12 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
   };
 
   handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavyContext || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "post") {
+    if (!this.weavy || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "post") {
       return;
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["posts", this.app!.id],
       realtimeEvent.entity.id,
       (item: PostType) => {
@@ -142,35 +142,35 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
 
   #unsubscribeToRealtime?: () => void;
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps & { app: AppType }>) {
+  override willUpdate(changedProperties: PropertyValues<this & WeavyProps & { app: AppType }>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
-      this.postsQuery.trackInfiniteQuery(getPostsOptions(this.weavyContext, this.app.id));
+    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
+      this.postsQuery.trackInfiniteQuery(getPostsOptions(this.weavy, this.app.id));
     }
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
-      this.addPostMutation.trackMutation(getAddPostMutationOptions(this.weavyContext, ["posts", this.app.id]));
-      this.subscribePostMutation = getSubscribePostMutation(this.weavyContext, this.app);
-      this.removePostMutation = getTrashPostMutation(this.weavyContext, this.app);
-      this.restorePostMutation = getRestorePostMutation(this.weavyContext, this.app);
-      this.pollMutation = getPollMutation(this.weavyContext, ["posts", this.app.id]);
+    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
+      this.addPostMutation.trackMutation(getAddPostMutationOptions(this.weavy, ["posts", this.app.id]));
+      this.subscribePostMutation = getSubscribePostMutation(this.weavy, this.app);
+      this.removePostMutation = getTrashPostMutation(this.weavy, this.app);
+      this.restorePostMutation = getRestorePostMutation(this.weavy, this.app);
+      this.pollMutation = getPollMutation(this.weavy, ["posts", this.app.id]);
 
       this.#unsubscribeToRealtime?.();
 
       // realtime
       const subscribeGroup = `a${this.app.id}`;
       
-      this.weavyContext.subscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
-      this.weavyContext.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavyContext.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavyContext.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+      this.weavy.subscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
+      this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+      this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+      this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavyContext?.unsubscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        this.weavy?.unsubscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
+        this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+        this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
         this.#unsubscribeToRealtime = undefined;
       };
     }

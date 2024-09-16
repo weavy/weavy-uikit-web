@@ -1,4 +1,4 @@
-import { WeavyContextBase, WeavyContextMixins } from "./weavy";
+import { WeavyClient, type WeavyClientType } from "./weavy";
 import type { WeavyTokenFactory } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
 import { Constructor } from "../types/generic.types";
@@ -12,7 +12,7 @@ export interface WeavyAuthenticationProps {
 }
 
 // WeavyAuthentication mixin/decorator
-export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyAuthentication extends Base implements WeavyAuthenticationProps {
     // AUTHENTICATION
 
@@ -65,7 +65,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyContextB
 
       if (this._tokenFactory && this._tokenFactory !== tokenFactory) {
         this.whenUrlAndTokenFactory().then(() => {
-          (this as unknown as WeavyContextMixins).queryClient.refetchQueries({ stale: true });
+          (this as unknown as WeavyClientType).queryClient.refetchQueries({ stale: true });
         });
       }
 

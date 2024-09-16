@@ -1,9 +1,9 @@
 import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { localized, msg, str } from "@lit/localize";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { TypingController } from "../controllers/typing-controller";
 
@@ -13,9 +13,9 @@ export default class WyTyping extends LitElement {
   protected exportParts = new ShadowPartsController(this);
   protected typing = new TypingController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property({ attribute: true, type: Number })
   appId?: number;
@@ -23,7 +23,7 @@ export default class WyTyping extends LitElement {
   @property({ attribute: true, type: Number })
   userId?: number;
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
     if (changedProperties.has("appId")) {
       this.typing.appId = this.appId;
     }
@@ -43,7 +43,7 @@ export default class WyTyping extends LitElement {
       typingText = msg(str`${name} is typing${ellipsis}`, { desc: "A is typing..." });
     } else if(names.length > 1) {
       // Multiple typing
-      const nameList = new Intl.ListFormat(this.weavyContext?.locale, { style: "long", type: "conjunction" }).format(
+      const nameList = new Intl.ListFormat(this.weavy?.locale, { style: "long", type: "conjunction" }).format(
         names
       );
       typingText = msg(str`${nameList} are typing${ellipsis}`, {

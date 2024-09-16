@@ -1,4 +1,4 @@
-import { WeavyContextBase } from "./weavy";
+import { WeavyClient } from "./weavy";
 import type { ConnectionState, NetworkState, NetworkStatus, ServerState } from "../types/server.types";
 import { Constructor } from "../types/generic.types";
 
@@ -14,7 +14,7 @@ export interface WeavyNetworkProps {
 }
 
 // WeavyNetwork mixin/decorator
-export const WeavyNetworkMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyNetworkMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyNetwork extends Base implements WeavyNetworkProps {
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

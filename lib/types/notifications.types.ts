@@ -1,7 +1,7 @@
 import { EntityType } from "./app.types";
 import { MetadataType } from "./lists.types";
 import { InfiniteQueryResultType } from "./query.types";
-import { RealtimeNotificationEventType, RealtimeNotificationsEventType } from "./realtime.types";
+import { RealtimeNotificationsEventDetailType } from "./realtime.types";
 import { UserType } from "./users.types";
 
 export type NotificationType = {
@@ -55,4 +55,18 @@ export type NotificationsToastsType = "browser" | "none";
 
 export type WyLinkEventType = CustomEvent<EntityType>;
 
-export type WyNotificationsEventType = CustomEvent<RealtimeNotificationEventType | RealtimeNotificationsEventType>;
+export type WyNotificationsEventType = CustomEvent<RealtimeNotificationsEventDetailType>;
+
+declare global {
+  interface HTMLElementEventMap {
+    /**
+     * A 'wy:notifications' event can be emitted by the Weavy client instance on it's host when realtime notification events occur.
+     */
+    "wy:notifications": WyNotificationsEventType;
+
+    /**
+     * A 'wy:link' event is emitted when navigation outside a weavy component is requested.
+     */
+    "wy:link": WyLinkEventType;
+  }
+}

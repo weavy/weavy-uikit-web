@@ -3,10 +3,10 @@ import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 
 import allCss from "../scss/all.scss";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { consume } from "@lit/context";
 
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { iconNamesType } from "../utils/icons";
@@ -38,9 +38,9 @@ export class WyConfluenceViewer extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property()
   src?: string;
@@ -76,9 +76,9 @@ export class WyConfluenceViewer extends LitElement {
     });
   }
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.productName ??= this.weavyContext.confluenceProductName;
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+    if (changedProperties.has("weavy") && this.weavy) {
+      this.productName ??= this.weavy.confluenceProductName;
     }
 
     if (changedProperties.has("raw") && this.raw) {
@@ -105,7 +105,7 @@ export class WyConfluenceViewer extends LitElement {
         `;
   }
 
-  protected override async updated(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  protected override async updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
     if (
       (changedProperties.has("contentId") ||
         changedProperties.has("PageComponent") ||

@@ -3,8 +3,8 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { TypingController } from "../controllers/typing-controller";
 import { consume } from "@lit/context";
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
-import { type WeavyContextProps } from "../types/weavy.types";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
+import { type WeavyProps } from "../types/weavy.types";
 import { classMap } from "lit/directives/class-map.js";
 import { MemberType } from "../types/members.types";
 import { TypingUserType } from "../types/users.types";
@@ -23,9 +23,9 @@ export default class WyMessageTyping extends LitElement {
   protected exportParts = new ShadowPartsController(this);
   protected typing = new TypingController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property({ attribute: true, type: Number })
   conversationId?: number;
@@ -51,7 +51,7 @@ export default class WyMessageTyping extends LitElement {
   @state()
   private typingTime?: Date;
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
     if (changedProperties.has("conversationId")) {
       this.typing.appId = this.conversationId;
     }
@@ -77,17 +77,17 @@ export default class WyMessageTyping extends LitElement {
     );
 
     // Make a readable list
-    const typingNames = new Intl.ListFormat(this.weavyContext?.locale, { style: "long", type: "conjunction" }).format(
+    const typingNames = new Intl.ListFormat(this.weavy?.locale, { style: "long", type: "conjunction" }).format(
       this.names
     );
 
     const dateFull = this.typingTime
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
           this.typingTime
         )
       : "";
     const timeShort = this.typingTime
-      ? new Intl.DateTimeFormat(this.weavyContext?.locale, { timeStyle: "short" }).format(this.typingTime)
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { timeStyle: "short" }).format(this.typingTime)
       : "";
 
     const bouncer = html`

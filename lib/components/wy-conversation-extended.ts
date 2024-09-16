@@ -11,7 +11,7 @@ import type {
   RealtimeConversationDeliveredEventType,
   RealtimeConversationMarkedEventType,
 } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { hasPermission } from "../utils/permission";
 import { ref } from "lit/directives/ref.js";
 import { QueryController } from "../controllers/query-controller";
@@ -41,12 +41,12 @@ export default class WyConversationExtended extends WyConversation {
   };
 
   private handleRealtimeSeenBy = (realtimeEvent: RealtimeConversationMarkedEventType) => {
-    if (!this.weavyContext || !this.conversation || realtimeEvent.conversation.id !== this.conversation.id) {
+    if (!this.weavy || !this.conversation || realtimeEvent.conversation.id !== this.conversation.id) {
       return;
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["members", this.conversation.id],
       realtimeEvent.actor.id,
       (item: MemberType) => {
@@ -58,7 +58,7 @@ export default class WyConversationExtended extends WyConversation {
 
   private handleRealtimeDelivered = (realtimeEvent: RealtimeConversationDeliveredEventType) => {
     if (
-      !this.weavyContext ||
+      !this.weavy ||
       !this.conversation ||
       realtimeEvent.actor.id === this.user!.id ||
       realtimeEvent.conversation.id !== this.conversation!.id
@@ -67,7 +67,7 @@ export default class WyConversationExtended extends WyConversation {
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["members", this.conversation.id],
       realtimeEvent.actor.id,
       (item: MemberType) => {
@@ -78,10 +78,10 @@ export default class WyConversationExtended extends WyConversation {
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("conversation")) && this.weavyContext) {
+    if ((changedProperties.has("weavy") || changedProperties.has("conversation")) && this.weavy) {
       // conversation object is updated
       if (changedProperties.has("conversation") && this.conversation) {
         this.conversationTitle = this.conversation.display_name;
@@ -94,17 +94,17 @@ export default class WyConversationExtended extends WyConversation {
     }
 
     if (
-      (changedProperties.has("weavyContext") || changedProperties.has("conversationId")) &&
-      this.weavyContext &&
+      (changedProperties.has("weavy") || changedProperties.has("conversationId")) &&
+      this.weavy &&
       this.conversationId !== changedProperties.get("conversationId")
     ) {
       if (this.conversationId && this.hasFeatures?.receipts) {
         this.membersQuery.trackQuery(
-          getMemberOptions(this.weavyContext, this.conversationId, {
+          getMemberOptions(this.weavy, this.conversationId, {
             initialData: () => {
               // Use any data from the conversation query as the initial data for the member query
               if (this.conversation?.id) {
-                return this.weavyContext?.queryClient.getQueryData<ConversationType>([
+                return this.weavy?.queryClient.getQueryData<ConversationType>([
                   "conversations",
                   this.conversation.id,
                 ])?.members;
@@ -122,14 +122,14 @@ export default class WyConversationExtended extends WyConversation {
       if (this.conversationId) {
         const subscribeGroup = `a${this.conversationId}`;
 
-        this.weavyContext.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
-        this.weavyContext.subscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
-        this.weavyContext.subscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
+        this.weavy.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+        this.weavy.subscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
+        this.weavy.subscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
 
         this.#unsubscribeToRealtime = () => {
-          this.weavyContext?.unsubscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
-          this.weavyContext?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
-          this.weavyContext?.unsubscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
+          this.weavy?.unsubscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
+          this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+          this.weavy?.unsubscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
           this.#unsubscribeToRealtime = undefined;
         };
       }
@@ -137,7 +137,7 @@ export default class WyConversationExtended extends WyConversation {
   }
 
   override render() {
-    const { isPending: networkIsPending } = this.weavyContext?.network ?? { isPending: true };
+    const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
     const { data: membersData, isPending: membersIsPending } = this.membersQuery.result ?? {};
 

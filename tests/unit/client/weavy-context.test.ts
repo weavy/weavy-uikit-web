@@ -2,14 +2,14 @@ import { defineCE, expect, fixture } from "@open-wc/testing";
 import { testReadOnly } from "../../utils/properties";
 
 import "../../utils/version";
-import { Weavy, type WeavyContext } from "../../../lib";
+import { Weavy, type WeavyType } from "../../../lib";
 import { isPlainObject } from "../../../lib/utils/objects";
 import { LitElement } from "lit";
-import { weavyContextDefinition } from "../../../lib/contexts/weavy-context";
+import { WeavyContext } from "../../../lib/contexts/weavy-context";
 import { ContextConsumer } from "@lit/context";
 import { DestroyError } from "../../../lib/utils/errors";
 
-describe("WeavyContext class", () => {
+describe("Weavy class", () => {
   it('has a "version"', async () => {
     expect(Weavy).to.have.property("version");
     expect(Weavy.version).to.have.length.above(0);
@@ -30,6 +30,7 @@ describe("WeavyContext class", () => {
     expect(Weavy.defaults).to.have.property("disableEnvironmentImports", false);
     expect(Weavy.defaults).to.have.property("gcTime", 86400000);
     expect(Weavy.defaults).to.have.property("locale", "en");
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(Weavy.defaults).to.have.property("reactions").to.be.an("array").that.is.not.empty;
     expect(Weavy.defaults).to.have.property("scrollBehavior").to.be.oneOf(["smooth", "instant"]);
     expect(Weavy.defaults).to.have.property("staleTime", 1000);
@@ -39,9 +40,9 @@ describe("WeavyContext class", () => {
   });
 });
 
-describe("WeavyContextBase", () => {
-  let weavy: WeavyContext;
-  let anotherWeavy: WeavyContext;
+describe("WeavyClient", () => {
+  let weavy: WeavyType;
+  let anotherWeavy: WeavyType;
 
   afterEach(() => {
     weavy?.destroy();
@@ -99,14 +100,14 @@ describe("WeavyContextBase", () => {
     weavy = new Weavy();
 
     const ContextConsumerCE = class extends LitElement {
-      weavyContext = new ContextConsumer(this, { context: weavyContextDefinition });
+      weavy = new ContextConsumer(this, { context: WeavyContext });
     };
 
     const tag = defineCE(ContextConsumerCE);
     const contextConsumer = await fixture<typeof ContextConsumerCE & LitElement>(`<${tag}></${tag}>`);
     await contextConsumer.updateComplete;
 
-    expect(contextConsumer).to.have.property("weavyContext").with.property("value").that.equals(weavy);
+    expect(contextConsumer).to.have.property("weavy").with.property("value").that.equals(weavy);
   });
 
   it("is destructible", async () => {

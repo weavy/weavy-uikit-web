@@ -28,9 +28,9 @@ describe("wy-messenger", () => {
   });*/
 
 
-  /*it('has a "weavyContext" property that is unaccessible from the outside', async () => {
+  /*it('has a "weavy" property that is unaccessible from the outside', async () => {
     const el = await fixture<WyMessenger>(html` <wy-messenger></wy-messenger> `)
     await el.updateComplete
-    expect(el).property("weavyContext").property("version").to.throw
+    expect(el).property("weavy").property("version").to.throw
   })*/
 });

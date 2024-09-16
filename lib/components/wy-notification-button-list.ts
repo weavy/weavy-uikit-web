@@ -38,8 +38,8 @@ export default class WyNotificationButtonList extends BlockConsumerMixin(LitElem
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
-    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
-      this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavyContext, this.app));
+    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
+      this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
     }
   }
 

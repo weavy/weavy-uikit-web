@@ -6,7 +6,7 @@ import type {
   InfiniteData,
 } from "@tanstack/query-core";
 
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { PostType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";
@@ -18,7 +18,7 @@ import {
 } from "../types/comments.types";
 
 export function getCommentsOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   type: string,
   parentId: number | null,
   options: object = {}
@@ -33,7 +33,7 @@ export function getCommentsOptions(
       const skip = opt.pageParam;
       const url = "/api/" + type + "/" + parentId + "/comments?orderby=id&skip=" + skip + "&take=" + PAGE_SIZE;
 
-      const response = await weavyContext.get(url);
+      const response = await weavy.get(url);
       const result = await response.json();
       result.data = result.data || [];
 
@@ -48,10 +48,10 @@ export function getCommentsOptions(
   };
 }
 
-export function getUpdateCommentMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
+export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
   const options = {
     mutationFn: async (variables: MutateCommentProps) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         "/api/comments/" + variables.id!,
         "PATCH",
         JSON.stringify({
@@ -73,7 +73,7 @@ export function getUpdateCommentMutationOptions(weavyContext: WeavyContextType, 
     onSuccess: (data: CommentType, variables: MutateCommentProps) => {
       if (variables.id) {
         updateCacheItem(
-          weavyContext.queryClient,
+          weavy.queryClient,
           ["comments", variables.parentId],
           variables.id,
           (item: CommentType) => {
@@ -94,12 +94,12 @@ export function getUpdateCommentMutationOptions(weavyContext: WeavyContextType, 
   return options;
 }
 
-export function getAddCommentMutationOptions(weavyContext: WeavyContextType, mutationKey: MutationKey) {
-  const queryClient = weavyContext.queryClient;
+export function getAddCommentMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
+  const queryClient = weavy.queryClient;
 
   const options = {
     mutationFn: async (variables: MutateCommentProps) => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         "/api/" + variables.type + "/" + variables.parentId + "/comments",
         "POST",
         JSON.stringify({

@@ -2,7 +2,7 @@ import { LitElement, type PropertyValueMap, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 
-import { type WeavyContextType, weavyContextDefinition } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 
 import chatCss from "../scss/all.scss";
 import { consume } from "@lit/context";
@@ -18,7 +18,7 @@ import type {
   ConfluenceResourceType,
 } from "../types/confluence.types";
 import type { UserType } from "../types/users.types";
-import type { WeavyContextProps } from "../types/weavy.types";
+import type { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-empty";
@@ -32,9 +32,9 @@ export default class WyConfluencePicker extends LitElement {
   
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: weavyContextDefinition, subscribe: true })
+  @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavyContext?: WeavyContextType;
+  private weavy?: WeavyType;
 
   @property({
     attribute: false,
@@ -109,11 +109,11 @@ export default class WyConfluencePicker extends LitElement {
     window.addEventListener("message", this.onMessage);
   }
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+    if (changedProperties.has("weavy") && this.weavy) {
       this.confluenceResourceQuery.trackQuery(
         getApiOptions<ConfluenceResourceResultType>(
-          this.weavyContext,
+          this.weavy,
           ["confluence", "resources"],
           "/confluence/resources"
         )
@@ -121,13 +121,13 @@ export default class WyConfluencePicker extends LitElement {
     }
 
     if (
-      (changedProperties.has("weavyContext") || changedProperties.has("cloudId") || changedProperties.has("spaceId")) &&
-      this.weavyContext &&
+      (changedProperties.has("weavy") || changedProperties.has("cloudId") || changedProperties.has("spaceId")) &&
+      this.weavy &&
       this.cloudId
     ) {
       this.confluenceQuery.trackQuery(
         getApiOptions<ConfluenceContentResultType>(
-          this.weavyContext,
+          this.weavy,
           ["confluence", this.cloudId, "spaces", this.spaceId != null ? this.spaceId + "/pages" : undefined],
           `/confluence/${this.cloudId}/spaces/${this.spaceId != null ? this.spaceId + "/pages" : ""}`
         )
@@ -136,7 +136,7 @@ export default class WyConfluencePicker extends LitElement {
   }
 
   override render() {
-    if (!this.weavyContext?.confluenceAuthenticationUrl) {
+    if (!this.weavy?.confluenceAuthenticationUrl) {
       return nothing;
     }
 
@@ -236,7 +236,7 @@ export default class WyConfluencePicker extends LitElement {
   
   }
 
-  protected override updated(_changedProperties: PropertyValueMap<this & WeavyContextProps>): void {    
+  protected override updated(_changedProperties: PropertyValueMap<this & WeavyProps>): void {    
     if (!this.unauthorized &&  this.confluenceResourceQuery.result && !this.confluenceResourceQuery.result.isPending && this.confluenceResourceQuery.result.data?.resources == undefined) {      
         this.unauthorized = true;              
     }

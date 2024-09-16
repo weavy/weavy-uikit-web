@@ -1,5 +1,5 @@
 import { type MutationKey, MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type { PostMutationContextType, PostType } from "../types/posts.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItem, updateCacheItems } from "../utils/query-cache";
@@ -20,14 +20,14 @@ export type RemoveCommentMutationType = MutationObserver<
   CommentMutationContextType
 >;
 
-export function getTrashCommentMutationOptions(weavyContext: WeavyContextType, parentId: number) {
-  const queryClient = weavyContext.queryClient;
+export function getTrashCommentMutationOptions(weavy: WeavyType, parentId: number) {
+  const queryClient = weavy.queryClient;
   const commentsKey: MutationKey = ["comments", parentId];
 
   const options = {
     mutationKey: commentsKey,
     mutationFn: async ({ id }: MutateCommentVariables) => {
-      const response = await weavyContext.post("/api/comments/" + id + "/trash", "POST", "");
+      const response = await weavy.post("/api/comments/" + id + "/trash", "POST", "");
       
       if (!response.ok) {
         throw new Error();
@@ -61,18 +61,18 @@ export function getTrashCommentMutationOptions(weavyContext: WeavyContextType, p
   return options;
 }
 
-export function getTrashCommentMutation(weavyContext: WeavyContextType, parentId: number): RemoveCommentMutationType {
-  return new MutationObserver(weavyContext.queryClient, getTrashCommentMutationOptions(weavyContext, parentId));
+export function getTrashCommentMutation(weavy: WeavyType, parentId: number): RemoveCommentMutationType {
+  return new MutationObserver(weavy.queryClient, getTrashCommentMutationOptions(weavy, parentId));
 }
 
-export function getRestoreCommentMutationOptions(weavyContext: WeavyContextType, parentId: number) {
-  const queryClient = weavyContext.queryClient;
+export function getRestoreCommentMutationOptions(weavy: WeavyType, parentId: number) {
+  const queryClient = weavy.queryClient;
   const postsKey: MutationKey = ["comments", parentId];
 
   const options = {
     mutationKey: postsKey,
     mutationFn: async ({ id }: MutateCommentVariables) => {
-      const response = await weavyContext.post("/api/comments/" + id + "/restore", "POST", "");
+      const response = await weavy.post("/api/comments/" + id + "/restore", "POST", "");
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -106,19 +106,19 @@ export function getRestoreCommentMutationOptions(weavyContext: WeavyContextType,
   return options;
 }
 
-export function getRestoreCommentMutation(weavyContext: WeavyContextType, parentId: number): RemoveCommentMutationType {
-  return new MutationObserver(weavyContext.queryClient, getRestoreCommentMutationOptions(weavyContext, parentId));
+export function getRestoreCommentMutation(weavy: WeavyType, parentId: number): RemoveCommentMutationType {
+  return new MutationObserver(weavy.queryClient, getRestoreCommentMutationOptions(weavy, parentId));
 }
 
-// export function getDeleteForeverFileMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-//     const queryClient = weavyContext.queryClient
+// export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppType) {
+//     const queryClient = weavy.queryClient
 //     const filesKey: MutationKey = ["apps", app.id, "files"]
 
 //     const options = {
 //         mutationKey: filesKey,
 //         mutationFn: async ({ file }: MutateFileVariables) => {
 //             if (file.id >= 1 && file.is_trashed) {
-//                 const response = await weavyContext.post("/api/files/" + file.id, "DELETE","")
+//                 const response = await weavy.post("/api/files/" + file.id, "DELETE","")
 //                 if (!response.ok) {
 //                     const serverError = <ServerErrorResponseType> await response.json()
 //                     throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -146,6 +146,6 @@ export function getRestoreCommentMutation(weavyContext: WeavyContextType, parent
 //     return options
 // }
 
-// export function getDeleteForeverFileMutation(weavyContext: WeavyContextType, app: AppType): DeleteForeverFileMutationType {
-//     return new MutationObserver(weavyContext.queryClient, getDeleteForeverFileMutationOptions(weavyContext, app))
+// export function getDeleteForeverFileMutation(weavy: WeavyType, app: AppType): DeleteForeverFileMutationType {
+//     return new MutationObserver(weavy.queryClient, getDeleteForeverFileMutationOptions(weavy, app))
 // }

@@ -1,12 +1,12 @@
 import { LitElement, PropertyValueMap } from "lit";
 import { property, state } from "lit/decorators.js";
 import { ContextConsumer, provide } from "@lit/context";
-import { type BlockSettingsType, blockSettingsContext, BlockSettings } from "../contexts/settings-context";
+import { type BlockSettingsType, BlockSettingsContext, BlockSettings } from "../contexts/settings-context";
 import { Constructor } from "../types/generic.types";
 import type { ServerConfigurationType } from "../types/server.types";
-import { serverConfigurationsContext } from "../contexts/configuration-context";
+import { ServerConfigurationsContext } from "../contexts/configuration-context";
 import { whenParentsDefined } from "../utils/dom";
-import { weavyContextDefinition, type WeavyContextType } from "../contexts/weavy-context";
+import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 import type { UserType } from "../types/users.types";
 import {
   ProductFeatureMapping,
@@ -19,11 +19,11 @@ import {
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { getAppOptions } from "../data/app";
-import { type AppType, appContext } from "../contexts/app-context";
-import { userContext } from "../contexts/user-context";
-import { productFeaturesContext } from "../contexts/features-context";
+import { type AppType, AppContext } from "../contexts/app-context";
+import { UserContext } from "../contexts/user-context";
+import { ProductFeaturesContext } from "../contexts/features-context";
 import { ContextualTypes, EntityType } from "../types/app.types";
-import { linkContext } from "../contexts/link-context";
+import { LinkContext } from "../contexts/link-context";
 import { getStorage } from "../utils/data";
 import type { NotificationsAppearanceType, NotificationsBadgeType, WyLinkEventType } from "../types/notifications.types";
 import { ConversationTypeGuid } from "../types/conversations.types";
@@ -105,7 +105,7 @@ export interface BlockContextProps {
   /**
    * The consumed weavy context.
    */
-  weavyContext: WeavyContextType | undefined;
+  weavy: WeavyType | undefined;
 }
 
 export interface BlockContextProviderProps {
@@ -120,7 +120,7 @@ export interface BlockContextProviderProps {
   whenLink: () => Promise<EntityType>;
   whenSettings: () => Promise<BlockSettingsType>;
   whenUser: () => Promise<UserType>;
-  whenWeavyContext: () => Promise<WeavyContextType>;
+  whenWeavy: () => Promise<WeavyType>;
 }
 
 export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) => {
@@ -129,36 +129,36 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     implements BlockProps, BlockContextProviderProps, BlockContextProps, BlockSettingProps, ProductFeatureProps
   {
     // CONTEXT CONSUMERS
-    weavyContextConsumer?: ContextConsumer<{ __context__: WeavyContextType }, this>;
+    weavyContextConsumer?: ContextConsumer<{ __context__: WeavyType }, this>;
 
     // Manually consumed in scheduleUpdate()
     @state()
-    weavyContext: WeavyContextType | undefined;
+    weavy: WeavyType | undefined;
 
     // CONTEXT PROVIDERS
-    @provide({ context: appContext })
+    @provide({ context: AppContext })
     @state()
     app: AppType | undefined;
 
-    @provide({ context: serverConfigurationsContext })
+    @provide({ context: ServerConfigurationsContext })
     @state()
     configuration: ServerConfigurationType = {};
 
-    @provide({ context: productFeaturesContext })
+    @provide({ context: ProductFeaturesContext })
     @state()
     hasFeatures: ProductFeaturesType | undefined;
 
-    @provide({ context: blockSettingsContext })
+    @provide({ context: BlockSettingsContext })
     @state()
     settings: BlockSettingsType;
 
-    @provide({ context: userContext })
+    @provide({ context: UserContext })
     @state()
     user: UserType | undefined;
 
     protected storage = getStorage("localStorage");
 
-    @provide({ context: linkContext })
+    @provide({ context: LinkContext })
     private _link: EntityType | undefined;
 
     @property({ type: Object })
@@ -427,12 +427,12 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       return await this.#whenUser;
     }
 
-    #resolveWeavyContext?: (weavyContext: WeavyContextType) => void;
-    #whenWeavyContext = new Promise<WeavyContextType>((r) => {
-      this.#resolveWeavyContext = r;
+    #resolveWeavy?: (weavy: WeavyType) => void;
+    #whenWeavy = new Promise<WeavyType>((r) => {
+      this.#resolveWeavy = r;
     });
-    async whenWeavyContext() {
-      return await this.#whenWeavyContext;
+    async whenWeavy() {
+      return await this.#whenWeavy;
     }
 
     // All contexts for convenience
@@ -460,7 +460,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         link: this.link,
         settings: this.settings,
         user: this.user,
-        weavyContext: this.weavyContext,
+        weavy: this.weavy,
       };
     }
 
@@ -493,8 +493,8 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.requestUpdate("user");
       }
 
-      if (this.weavyContext) {
-        this.requestUpdate("weavyContext");
+      if (this.weavy) {
+        this.requestUpdate("weavy");
       }
     }
 
@@ -512,10 +512,10 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     protected override willUpdate(changedProperties: PropertyValueMap<this>) {
       super.willUpdate(changedProperties);
 
-      this.weavyContextConsumer ??= new ContextConsumer(this, { context: weavyContextDefinition, subscribe: true });
+      this.weavyContextConsumer ??= new ContextConsumer(this, { context: WeavyContext, subscribe: true });
 
-      if (this.weavyContextConsumer?.value && this.weavyContext !== this.weavyContextConsumer?.value) {
-        this.weavyContext = this.weavyContextConsumer?.value;
+      if (this.weavyContextConsumer?.value && this.weavy !== this.weavyContextConsumer?.value) {
+        this.weavy = this.weavyContextConsumer?.value;
       }
 
       const settingKeys = Object.keys(this.settings);
@@ -523,11 +523,11 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.settings = new BlockSettings(this);
       }
 
-      if (changedProperties.has("weavyContext") && this.weavyContext) {
+      if (changedProperties.has("weavy") && this.weavy) {
         this.#configurationQuery.trackQuery(
-          getApiOptions<ServerConfigurationType>(this.weavyContext, ["configuration"])
+          getApiOptions<ServerConfigurationType>(this.weavy, ["configuration"])
         );
-        this.#userQuery.trackQuery(getApiOptions<UserType>(this.weavyContext, ["user"]));
+        this.#userQuery.trackQuery(getApiOptions<UserType>(this.weavy, ["user"]));
       }
 
       if (!this.#configurationQuery.result?.isPending && this.#configurationQuery.result?.data) {
@@ -537,7 +537,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       if (!this.#userQuery.result?.isPending) {
         if (this.user && this.#userQuery.result.data && this.user.id !== this.#userQuery.result.data.id) {
           console.warn("User changed, invalidating cache");
-          this.weavyContext?.queryClient.invalidateQueries();
+          this.weavy?.queryClient.invalidateQueries();
         }
       }
 
@@ -546,12 +546,12 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       }
 
       if (
-        (changedProperties.has("productType") || changedProperties.has("weavyContext")) &&
+        (changedProperties.has("productType") || changedProperties.has("weavy")) &&
         this.productType &&
-        this.weavyContext
+        this.weavy
       ) {
         this.#featuresQuery.trackQuery(
-          getApiOptions<ProductFeaturesListType>(this.weavyContext, ["features", this.productType])
+          getApiOptions<ProductFeaturesListType>(this.weavy, ["features", this.productType])
         );
       }
 
@@ -574,11 +574,11 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         changedProperties.has("contextualType") ||
         changedProperties.has("uid") ||
         changedProperties.has("name") ||
-        changedProperties.has("weavyContext")
+        changedProperties.has("weavy")
       ) {
-        if (this.contextualType && this.uid && this.weavyContext) {
+        if (this.contextualType && this.uid && this.weavy) {
           const appData = this.name ? { name: this.name } : undefined;
-          this.#appQuery.trackQuery(getAppOptions(this.weavyContext, this.uid, this.contextualType, appData));
+          this.#appQuery.trackQuery(getAppOptions(this.weavy, this.uid, this.contextualType, appData));
         } else {
           this.#appQuery.untrackQuery();
           this.app = undefined;
@@ -619,7 +619,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         changedProperties.has("link") ||
         changedProperties.has("settings") ||
         changedProperties.has("user") ||
-        changedProperties.has("weavyContext")
+        changedProperties.has("weavy")
       ) {
         this.contexts = {
           app: this.app,
@@ -628,7 +628,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
           link: this.link,
           settings: this.settings,
           user: this.user,
-          weavyContext: this.weavyContext,
+          weavy: this.weavy,
         };
       }
 
@@ -658,19 +658,19 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.#resolveUser?.(this.user);
       }
 
-      if (changedProperties.has("weavyContext") && this.weavyContext) {
-        this.#resolveWeavyContext?.(this.weavyContext);
+      if (changedProperties.has("weavy") && this.weavy) {
+        this.#resolveWeavy?.(this.weavy);
       }
 
       // BACKWARDS DEPRECATED COMPATIBILITY
       if (
-        (changedProperties.has("weavyContext") || changedProperties.has("configuration")) &&
-        this.weavyContext &&
+        (changedProperties.has("weavy") || changedProperties.has("configuration")) &&
+        this.weavy &&
         this.configuration
       ) {
-        if (!this.configuration.zoom_authentication_url && this.weavyContext.zoomAuthenticationUrl) {
+        if (!this.configuration.zoom_authentication_url && this.weavy.zoomAuthenticationUrl) {
           console.warn(`Using "zoomAuthenticationUrl" from WyContext.`);
-          this.configuration.zoom_authentication_url = this.weavyContext.zoomAuthenticationUrl.toString();
+          this.configuration.zoom_authentication_url = this.weavy.zoomAuthenticationUrl.toString();
         }
       }
     }

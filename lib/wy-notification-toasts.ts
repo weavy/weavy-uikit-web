@@ -9,7 +9,7 @@ import { NotificationType, NotificationTypes } from "./types/notifications.types
 import { repeat } from "lit/directives/repeat.js";
 import { getMarkNotificationMutation } from "./data/notifications";
 import { RealtimeNotificationEventType } from "./types/realtime.types";
-import { WeavyContextProps } from "./types/weavy.types";
+import { WeavyProps } from "./types/weavy.types";
 import { dispatchLinkEvent, getNotificationText } from "./utils/notifications";
 
 import colorModesStyles from "./scss/color-modes.scss";
@@ -123,7 +123,7 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
       const { title, detail } = getNotificationText(notification);
       const nativeNotification = new Notification(title, {
         tag: `wy-${notification.id}`,
-        lang: this.weavyContext?.locale,
+        lang: this.weavy?.locale,
         body: detail,
         icon: otherMember.avatar_url,
         // @ts-expect-error Property `renotify` not available in ts types yet
@@ -131,9 +131,9 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
       });
 
       nativeNotification.onclick = async () => {
-        const weavyContext = await this.whenWeavyContext();
+        const weavy = await this.whenWeavy();
         this.handleMark(true, notification.id);
-        dispatchLinkEvent(this, weavyContext, notification);
+        dispatchLinkEvent(this, weavy, notification);
       };
 
       nativeNotification.onclose = () => {
@@ -201,22 +201,22 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
     new ThemeController(this, WyNotificationToasts.styles);
   }
 
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.markNotificationMutation = getMarkNotificationMutation(this.weavyContext);
+    if (changedProperties.has("weavy") && this.weavy) {
+      this.markNotificationMutation = getMarkNotificationMutation(this.weavy);
 
       this.#unsubscribeToRealtime?.()
 
-      this.weavyContext.subscribe(null, "notification_created", this.handleEvent);
-      this.weavyContext.subscribe(null, "notification_updated", this.handleEvent);
-      //this.weavyContext.subscribe(null, "notification_deleted", this.handleEvent);
+      this.weavy.subscribe(null, "notification_created", this.handleEvent);
+      this.weavy.subscribe(null, "notification_updated", this.handleEvent);
+      //this.weavy.subscribe(null, "notification_deleted", this.handleEvent);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavyContext?.unsubscribe(null, "notification_created", this.handleEvent);
-        this.weavyContext?.unsubscribe(null, "notification_updated", this.handleEvent);
-        //this.weavyContext?.unsubscribe(null, "notification_deleted", this.handleEvent);
+        this.weavy?.unsubscribe(null, "notification_created", this.handleEvent);
+        this.weavy?.unsubscribe(null, "notification_updated", this.handleEvent);
+        //this.weavy?.unsubscribe(null, "notification_deleted", this.handleEvent);
         this.#unsubscribeToRealtime = undefined;
       }
     }

@@ -1,5 +1,5 @@
 import { MutationObserver } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { updateCacheItem } from "../utils/query-cache";
 import { MessageType } from "../types/messages.types";
 import { ReactableType } from "../types/reactions.types";
@@ -7,16 +7,16 @@ import { MemberType } from "../types/members.types";
 
 /// POST to add a reaction to a message
 export function addReactionMutation(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
   reaction: string,
   user: MemberType
 ) {
-  return new MutationObserver(weavyContext.queryClient, {
+  return new MutationObserver(weavy.queryClient, {
     mutationFn: async () => {
-      const response = await weavyContext.post(
+      const response = await weavy.post(
         `/api/${type}/${entityId}/reactions`,
         "POST",
         JSON.stringify({ content: reaction })
@@ -24,12 +24,12 @@ export function addReactionMutation(
       return response;
     },
     onMutate: () => {
-      updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
+      updateCacheItem(weavy.queryClient, [type, appId], entityId!, (item: MessageType) => {
         updateReaction(item, reaction, user, "add");
       });
     },
     onSuccess: () => {
-      updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
+      updateCacheItem(weavy.queryClient, [type, appId], entityId!, (item: MessageType) => {
         updateReaction(item, reaction, user, "add");
       });
     },
@@ -38,24 +38,24 @@ export function addReactionMutation(
 
 /// DELETE to remove a reaction from a message
 export function removeReactionMutation(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
   user: MemberType
 ) {
-  return new MutationObserver(weavyContext.queryClient, {
+  return new MutationObserver(weavy.queryClient, {
     mutationFn: async () => {
-      const response = await weavyContext.post(`/api/${type}/${entityId}/reactions`, "DELETE", JSON.stringify({}));
+      const response = await weavy.post(`/api/${type}/${entityId}/reactions`, "DELETE", JSON.stringify({}));
       return response;
     },
     onMutate: () => {
-      updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
+      updateCacheItem(weavy.queryClient, [type, appId], entityId!, (item: MessageType) => {
         updateReaction(item, "", user, "remove");              
       });
     },
     onSuccess: () => {
-      updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
+      updateCacheItem(weavy.queryClient, [type, appId], entityId!, (item: MessageType) => {
         updateReaction(item, "", user, "remove");              
       });
     },
@@ -64,18 +64,18 @@ export function removeReactionMutation(
 
 /// DELETE to remove a reaction from a message
 export function replaceReactionMutation(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   appId: number | null,
   entityId: number | null,
   type: "messages" | "posts" | "comments",
   reaction: string,
   user: MemberType
 ) {
-  return new MutationObserver(weavyContext.queryClient, {
+  return new MutationObserver(weavy.queryClient, {
     mutationFn: async () => {
-      await weavyContext.post(`/api/${type}/${entityId}/reactions`, "DELETE", JSON.stringify({}));
+      await weavy.post(`/api/${type}/${entityId}/reactions`, "DELETE", JSON.stringify({}));
 
-      const addResponse = await weavyContext.post(
+      const addResponse = await weavy.post(
         `/api/${type}/${entityId}/reactions`,
         "POST",
         JSON.stringify({ content: reaction })
@@ -83,24 +83,24 @@ export function replaceReactionMutation(
       return addResponse;
     },
     onMutate: () => {
-      updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
+      updateCacheItem(weavy.queryClient, [type, appId], entityId!, (item: MessageType) => {
         updateReaction(item, reaction, user, "replace");        
       });
     },
     onSuccess: () => {
-      updateCacheItem(weavyContext.queryClient, [type, appId], entityId!, (item: MessageType) => {
+      updateCacheItem(weavy.queryClient, [type, appId], entityId!, (item: MessageType) => {
         updateReaction(item, reaction, user, "replace");        
       });
     },
   });
 }
 
-export function getReactionListOptions(weavyContext: WeavyContextType, type: string, entityId: number) {
+export function getReactionListOptions(weavy: WeavyType, type: string, entityId: number) {
   return {
     queryKey: ["reactions", type, entityId],
     enabled: false,
     queryFn: async () => {
-      const response = await weavyContext.get("/api/" + type + "/" + entityId + "/reactions");
+      const response = await weavy.get("/api/" + type + "/" + entityId + "/reactions");
       return await response.json();
     },
   };

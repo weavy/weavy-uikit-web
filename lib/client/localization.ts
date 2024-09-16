@@ -1,6 +1,6 @@
 // LOCALIZATION
 import { LocaleModule, configureLocalization } from "@lit/localize";
-import { WeavyContextBase } from "./weavy";
+import { WeavyClient } from "./weavy";
 import { DestroyError } from "../utils/errors";
 import { Constructor } from "../types/generic.types";
 
@@ -17,7 +17,7 @@ export interface WeavyLocalizationProps {
 
 
 // WeavyLocalization mixin/decorator
-export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyContextBase>>(Base: TBase) => {
+export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyLocalization extends Base implements WeavyLocalizationProps {
     /**
      * The locale used in the Weavy source.
@@ -30,7 +30,7 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyContextBas
       }
     }
 
-    //#locales = WeavyContext.defaults.locales;
+    //#locales = WeavyClient.defaults.locales;
 
     _locales: Map<string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)> = new Map([
       ["sv-SE", () => import("../../locales/sv-SE")],

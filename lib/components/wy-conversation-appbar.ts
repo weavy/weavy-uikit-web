@@ -22,7 +22,7 @@ import {
 import { ifDefined } from "lit/directives/if-defined.js";
 import { inputBlurOnEnter } from "../utils/keyboard";
 import type { RealtimeAppEventType } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { BlobType } from "../types/files.types";
 import { AccessTypes, PermissionTypes } from "../types/app.types";
@@ -105,7 +105,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
     this.showAddMembers = false;
     this.showDetails = true;
 
-    if (!this.weavyContext || !this.conversationId) {
+    if (!this.weavy || !this.conversationId) {
       return;
     }
 
@@ -113,11 +113,11 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
     await this.addMembersMutation?.mutate({ id: this.conversationId, members: members.map((m) => m.id) });
     await this.membersQuery.result.refetch();
 
-    await this.weavyContext.queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    await this.weavy.queryClient.invalidateQueries({ queryKey: ["conversations"] });
   }
 
   private async handleSaveConversationName() {
-    if (!this.weavyContext || !this.conversationId) {
+    if (!this.weavy || !this.conversationId) {
       return;
     }
 
@@ -126,7 +126,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
   }
 
   private async handleAvatarUploaded(blob: BlobType) {
-    if (!this.weavyContext || !this.conversationId) {
+    if (!this.weavy || !this.conversationId) {
       return;
     }
     await this.updateConversationMutation?.mutate({
@@ -137,14 +137,14 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
   }
 
   private async clearAvatar() {
-    if (!this.weavyContext || !this.conversationId) {
+    if (!this.weavy || !this.conversationId) {
       return;
     }
     await this.updateConversationMutation?.mutate({ id: this.conversationId, blobId: null, thumbnailUrl: null });
   }
 
   private async updateMember(id: number, access: AccessTypes) {
-    if (!this.weavyContext || !this.conversationId) {
+    if (!this.weavy || !this.conversationId) {
       return;
     }
 
@@ -158,7 +158,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
   }
 
   private async leaveConversation(memberId?: number) {
-    if (!this.weavyContext || !this.conversationId || !this.user) {
+    if (!this.weavy || !this.conversationId || !this.user) {
       return;
     }
 
@@ -175,20 +175,20 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
       await this.membersQuery.result.refetch();
     }
 
-    await this.weavyContext.queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    await this.weavy.queryClient.invalidateQueries({ queryKey: ["conversations"] });
   }
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     // if context updated
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
-      this.leaveConversationMutation = getLeaveConversationMutation(this.weavyContext);
-      this.addMembersMutation = getAddMembersToConversationMutation(this.weavyContext);
-      this.updateConversationMutation = getUpdateConversationMutation(this.weavyContext);
-      this.updateMemberMutation = getUpdateMemberMutation(this.weavyContext);
+    if (changedProperties.has("weavy") && this.weavy) {
+      this.leaveConversationMutation = getLeaveConversationMutation(this.weavy);
+      this.addMembersMutation = getAddMembersToConversationMutation(this.weavy);
+      this.updateConversationMutation = getUpdateConversationMutation(this.weavy);
+      this.updateMemberMutation = getUpdateMemberMutation(this.weavy);
     }
 
     // ConversationId doesn't exist anymore
@@ -197,16 +197,16 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
     }
 
     // conversationId is changed
-    if ((changedProperties.has("weavyContext") || changedProperties.has("conversationId")) && this.weavyContext) {
+    if ((changedProperties.has("weavy") || changedProperties.has("conversationId")) && this.weavy) {
       this.#unsubscribeToRealtime?.();
 
       if (this.conversationId) {
         this.membersQuery.trackQuery(
-          getMemberOptions(this.weavyContext, this.conversationId, {
+          getMemberOptions(this.weavy, this.conversationId, {
             initialData: () => {
               // Use any data from the conversation query as the initial data for the member query
               if (this.conversationId) {
-                return this.weavyContext?.queryClient.getQueryData<ConversationType>([
+                return this.weavy?.queryClient.getQueryData<ConversationType>([
                   "conversations",
                   this.conversationId,
                 ])?.members;
@@ -217,10 +217,10 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
         );
 
         const subscribeGroup = `a${this.conversationId}`;
-        this.weavyContext.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+        this.weavy.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
 
         this.#unsubscribeToRealtime = () => {
-          this.weavyContext?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+          this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
@@ -271,7 +271,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
       </header>
 
       <!-- details modal -->
-      ${this.weavyContext
+      ${this.weavy
         ? html`
             <wy-overlay
               .show=${this.showDetails}
@@ -439,7 +439,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
         : nothing}
 
       <!-- add members modal -->
-      ${this.weavyContext
+      ${this.weavy
         ? html`
             <wy-overlay
               .show=${this.showAddMembers}

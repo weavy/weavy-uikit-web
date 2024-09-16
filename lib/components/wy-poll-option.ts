@@ -5,14 +5,14 @@ import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
 import { getVotesOptions } from "../data/poll";
 import { localized, msg, str } from "@lit/localize";
+import { WeavyProps } from "../types/weavy.types";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-sheet";
 import "./wy-avatar";
 import "./wy-icon";
-import { WeavyContextProps } from "../types/weavy.types";
-import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-poll-option")
 @localized()
@@ -32,9 +32,9 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
 
   getVotesQuery = new QueryController<PollOptionType>(this);
 
-  protected override updated(changedProperties: PropertyValueMap<this & WeavyContextProps>): void {
-    if (changedProperties.has("weavyContext") && this.weavyContext && this.option) {
-      this.getVotesQuery.trackQuery(getVotesOptions(this.weavyContext, this.option.id!));
+  protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+    if (changedProperties.has("weavy") && this.weavy && this.option) {
+      this.getVotesQuery.trackQuery(getVotesOptions(this.weavy, this.option.id!));
     }
   }
 
@@ -80,7 +80,7 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
           : nothing}
       </div>
 
-      ${this.weavyContext
+      ${this.weavy
         ? html`
             <wy-sheet
               .show=${this.showSheet}

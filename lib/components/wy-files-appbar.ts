@@ -28,7 +28,7 @@ import { toUpperCaseFirst } from "../utils/strings";
 
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { hasPermission } from "../utils/permission";
@@ -81,12 +81,12 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
   private handleRemoveMutation(
     mutationState: MutationState<BlobType | FileType, Error, unknown, FileMutationContextType>
   ) {
-    if (!this.weavyContext) {
+    if (!this.weavy) {
       return;
     }
 
     removeMutation(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["apps", this.app!.id, "files"],
       (mutation) => mutation.state.submittedAt === mutationState.submittedAt
     );
@@ -136,13 +136,13 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
     return this.dispatchEvent(subscribeEvent);
   }
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
+    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
       this.mutatingFiles.trackMutationState(
         { filters: { mutationKey: ["apps", this.app.id], exact: false } },
-        this.weavyContext.queryClient
+        this.weavy.queryClient
       );
     }
   }
@@ -240,7 +240,7 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
                         </wy-dropdown-item>
                       `
                     : nothing}
-                  ${this.hasFeatures?.confluence && this.weavyContext?.confluenceAuthenticationUrl
+                  ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
                     ? html`<wy-confluence
                         dropdown
                         @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}
@@ -359,7 +359,7 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
         </div>
       </nav>
 
-      ${this.weavyContext
+      ${this.weavy
         ? html`
             <wy-sheet
               .show=${this.showUploadSheet}

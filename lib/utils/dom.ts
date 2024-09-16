@@ -47,6 +47,22 @@ export const observeConnected = (target: Element, callback: (isConnected: boolea
   return connectObserver;
 };
 
+export async function whenConnected(target: Element) {
+    if (target.isConnected) {
+        return
+    } else {
+        let resolveConnectPromise: (value: unknown) => void
+        const connectPromise = new Promise((r) => resolveConnectPromise = r)
+        const observer = observeConnected(target, (isConnected) => {
+            if (isConnected) {
+                resolveConnectPromise?.(true);
+            }
+        })
+        await connectPromise;
+        observer.disconnect();
+    }
+}
+
 export async function whenDocumentVisible() {
   throwOnDomNotAvailable();
 

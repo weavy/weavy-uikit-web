@@ -1,4 +1,4 @@
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import type { BlobType, ExternalBlobType, FileMutationContextType } from "../types/files.types";
 import type { ServerErrorResponseType } from "../types/server.types";
 import type { AppType } from "../types/app.types";
@@ -18,8 +18,8 @@ export type ExternalBlobMutationType = MutationObserver<
   FileMutationContextType
 >;
 
-export function removeSuccessfulExternalBlobMutations(weavyContext: WeavyContextType, app: AppType, name: string) {
-  const queryClient = weavyContext.queryClient;
+export function removeSuccessfulExternalBlobMutations(weavy: WeavyType, app: AppType, name: string) {
+  const queryClient = weavy.queryClient;
 
   // Remove successful blobs
   queryClient
@@ -35,8 +35,8 @@ export function removeSuccessfulExternalBlobMutations(weavyContext: WeavyContext
     });
 }
 
-export async function externalBlob(weavyContext: WeavyContextType, externalBlob: ExternalBlobType) {
-  const response = await weavyContext.post("/api/blobs/external", "POST", JSON.stringify(externalBlob));
+export async function externalBlob(weavy: WeavyType, externalBlob: ExternalBlobType) {
+  const response = await weavy.post("/api/blobs/external", "POST", JSON.stringify(externalBlob));
 
   if (!response.ok) {
     const serverError = <ServerErrorResponseType>await response.json();
@@ -47,20 +47,20 @@ export async function externalBlob(weavyContext: WeavyContextType, externalBlob:
 }
 
 export function getExternalBlobMutationOptions(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   user: UserType,
   app: AppType,
   uniqueId?: string
 ) {
-  const queryClient = weavyContext.queryClient;
+  const queryClient = weavy.queryClient;
   const blobsKey: MutationKey = ["apps", app.id, "blobs", uniqueId];
 
   const options = {
     mutationFn: async (variables: MutateExternalBlobVariables) => {
-      const uploadedFile = await externalBlob(weavyContext, variables.externalBlob);
+      const uploadedFile = await externalBlob(weavy, variables.externalBlob);
 
       /*// Needed to be able to use the blob on errors?
-            setMutationContext(weavyContext.queryClient, mutationKey, variables, (context) => {
+            setMutationContext(weavy.queryClient, mutationKey, variables, (context) => {
                 context.blob = uploadedFile;
             })*/
 
@@ -109,13 +109,13 @@ export function getExternalBlobMutationOptions(
 }
 
 export function getExternalBlobMutation(
-  weavyContext: WeavyContextType,
+  weavy: WeavyType,
   user: UserType,
   app: AppType,
   uniqueId?: string
 ): ExternalBlobMutationType {
   return new MutationObserver(
-    weavyContext.queryClient,
-    getExternalBlobMutationOptions(weavyContext, user, app, uniqueId)
+    weavy.queryClient,
+    getExternalBlobMutationOptions(weavy, user, app, uniqueId)
   );
 }

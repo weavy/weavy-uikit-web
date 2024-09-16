@@ -1,5 +1,5 @@
 import { LocaleModule } from "@lit/localize";
-import { WeavyContextType } from "../client/weavy";
+import { WeavyType } from "../client/weavy";
 /**
  * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
  */
@@ -103,9 +103,9 @@ export interface WeavyOptions {
   zoomAuthenticationUrl?: string | URL;
 }
 
-export type WeavyContextProps = { weavyContext: WeavyContextType };
+export type WeavyProps = { weavy: WeavyType };
 
-export type WeavyContextOptionsType =
+export type WeavyClientOptionsType =
   | (WeavyOptions & {
       /**
        * The host where the Weavy context is provided.

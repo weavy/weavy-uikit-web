@@ -1,18 +1,18 @@
 import { MutationKey } from "@tanstack/query-core";
-import { type WeavyContextType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { AppUpProperties, ContextualTypes, type AppType } from "../types/app.types";
 import { getApi, getApiOptions } from "./api";
 
-export function getAppOptions<T = AppType>(weavyContext: WeavyContextType, uid: string, type: ContextualTypes, appData?: AppUpProperties) {
+export function getAppOptions<T = AppType>(weavy: WeavyType, uid: string, type: ContextualTypes, appData?: AppUpProperties) {
   return type === ContextualTypes.Unknown
-    ? getApiOptions<T>(weavyContext, ["apps", uid])
-    : getApiOptions<T>(weavyContext, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
+    ? getApiOptions<T>(weavy, ["apps", uid])
+    : getApiOptions<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
 
-export function getApp<T = AppType>(weavyContext: WeavyContextType, uid: string, type: ContextualTypes, appData?: AppUpProperties) {
+export function getApp<T = AppType>(weavy: WeavyType, uid: string, type: ContextualTypes, appData?: AppUpProperties) {
   return type === ContextualTypes.Unknown
-    ? getApi<T>(weavyContext, ["apps", uid])
-    : getApi<T>(weavyContext, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
+    ? getApi<T>(weavy, ["apps", uid])
+    : getApi<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
 
 export type MutateAppSubscribeProps = {
@@ -21,15 +21,15 @@ export type MutateAppSubscribeProps = {
 
 export type MutateAppSubscribeContextType = { previousSubscribe: boolean | undefined; subscribe: boolean } | undefined;
 
-export function getAppSubscribeMutationOptions(weavyContext: WeavyContextType, app: AppType) {
-  const queryClient = weavyContext.queryClient;
+export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
+  const queryClient = weavy.queryClient;
 
   const mutationKey: MutationKey = ["apps", app.uid];
 
   const options = {
     mutationFn: async ({ subscribe }: MutateAppSubscribeProps) => {
       if (app.id >= 1) {
-        const response = await weavyContext.post(
+        const response = await weavy.post(
           `/api/apps/${app.id}/${subscribe ? "subscribe" : "unsubscribe"}`,
           "POST",
           ""

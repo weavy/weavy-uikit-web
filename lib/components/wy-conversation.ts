@@ -32,9 +32,9 @@ import {
   getMarkConversationMutation,
   getUpdateConversationMutation,
 } from "../data/conversation";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
-import { appContext } from "../contexts/app-context";
+import { AppContext } from "../contexts/app-context";
 import { provide } from "@lit/context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { PermissionTypes } from "../types/app.types";
@@ -70,7 +70,7 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
   protected exportParts = new ShadowPartsController(this);
 
   // Override app context
-  @provide({ context: appContext })
+  @provide({ context: AppContext })
   @property({ attribute: false })
   conversation?: ConversationType;
 
@@ -168,7 +168,7 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
   }
 
   private handleRealtimeMessage = (realtimeEvent: RealtimeMessageEventType) => {
-    if (!this.weavyContext || !this.conversation || !this.conversationId || !this.user) {
+    if (!this.weavy || !this.conversation || !this.conversationId || !this.user) {
       return;
     }
 
@@ -177,13 +177,13 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
       ? parseFloat(realtimeEvent.message.metadata?.temp_id)
       : undefined;
     addCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["messages", realtimeEvent.message.app.id],
       realtimeEvent.message,
       tempId
     );
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["conversations"],
       this.conversationId,
       (conversation: ConversationType) => (conversation.last_message = realtimeEvent.message)
@@ -215,12 +215,12 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
   };
 
   private handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavyContext || !this.user || !this.conversation) {
+    if (!this.weavy || !this.user || !this.conversation) {
       return;
     }
 
     updateCacheItems(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       { queryKey: ["messages"], exact: false },
       realtimeEvent.entity.id,
       (item: MessageType) => {
@@ -236,11 +236,11 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
   };
 
   private handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavyContext || !this.conversation || !this.user) {
+    if (!this.weavy || !this.conversation || !this.user) {
       return;
     }
     updateCacheItems(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       { queryKey: ["messages"], exact: false },
       realtimeEvent.entity.id,
       (item: MessageType) => {
@@ -262,8 +262,8 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
       await whenElementVisible(this.pagerRef.value)
     }
     if (hasScroll(this.pagerRef.value) && this.conversationId) {
-      if (this.weavyContext) {
-        keepFirstPage(this.weavyContext.queryClient, ["messages", this.conversationId]);
+      if (this.weavy) {
+        keepFirstPage(this.weavy.queryClient, ["messages", this.conversationId]);
       }
       scrollParentToBottom(this.pagerRef.value, smooth);
     }
@@ -312,28 +312,28 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyContextProps>) {
+  protected override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     // if context updated
-    if (changedProperties.has("weavyContext") && this.weavyContext) {
+    if (changedProperties.has("weavy") && this.weavy) {
       //console.log("conversation context changed")
-      this.updateConversationMutation = getUpdateConversationMutation(this.weavyContext);
-      this.markConversationMutation = getMarkConversationMutation(this.weavyContext);
+      this.updateConversationMutation = getUpdateConversationMutation(this.weavy);
+      this.markConversationMutation = getMarkConversationMutation(this.weavy);
     }
 
     // conversationId is changed
-    if ((changedProperties.has("weavyContext") || changedProperties.has("conversationId")) && this.weavyContext) {
+    if ((changedProperties.has("weavy") || changedProperties.has("conversationId")) && this.weavy) {
       //console.log("context/conversationId changed", this.conversationId);
 
       this.#unsubscribeToRealtime?.();
 
       if (this.conversationId) {
-        this.messagesQuery.trackInfiniteQuery(getMessagesOptions(this.weavyContext, this.conversationId));
+        this.messagesQuery.trackInfiniteQuery(getMessagesOptions(this.weavy, this.conversationId));
         this.addMessageMutation.trackMutation(
-          getAddMessageMutationOptions(this.weavyContext, ["messages", this.conversationId])
+          getAddMessageMutationOptions(this.weavy, ["messages", this.conversationId])
         );
-        this.pollMutation = getPollMutation(this.weavyContext, ["messages", this.conversationId]);
+        this.pollMutation = getPollMutation(this.weavy, ["messages", this.conversationId]);
 
         // set initial value of unread messages banner
         this.lastReadMessageId = undefined;
@@ -341,14 +341,14 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
 
         const subscribeGroup = `a${this.conversationId}`;
 
-        this.weavyContext.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
-        this.weavyContext.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavyContext.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+        this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
 
         this.#unsubscribeToRealtime = () => {
-          this.weavyContext?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
-          this.weavyContext?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-          this.weavyContext?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+          this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+          this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+          this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
@@ -403,7 +403,7 @@ export default class WyConversation extends BlockConsumerMixin(LitElement) {
   }
 
   override render() {
-    const { isPending: networkIsPending } = this.weavyContext?.network ?? { isPending: true };
+    const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
 
     return html`

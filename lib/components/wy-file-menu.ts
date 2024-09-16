@@ -7,7 +7,7 @@ import { getIcon } from "../utils/files";
 import { type FileType } from "../types/files.types";
 import { openUrl } from "../utils/urls";
 import { toKebabCase } from "../utils/strings";
-import { type ProductFeaturesType, productFeaturesContext } from "../contexts/features-context";
+import { type ProductFeaturesType, ProductFeaturesContext } from "../contexts/features-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-icon";
@@ -20,7 +20,7 @@ export default class WyFileMenu extends LitElement {
   
   protected exportParts = new ShadowPartsController(this);
 
-  @consume({ context: productFeaturesContext, subscribe: true })
+  @consume({ context: ProductFeaturesContext, subscribe: true })
   @state()
   protected hasFeatures?: ProductFeaturesType;
 

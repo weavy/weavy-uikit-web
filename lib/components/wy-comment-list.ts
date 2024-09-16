@@ -22,7 +22,7 @@ import { PollMutationType, getPollMutation } from "../data/poll";
 
 import { addCacheItem, updateCacheItem } from "../utils/query-cache";
 import { RealtimeCommentEventType, RealtimeReactionEventType } from "../types/realtime.types";
-import { WeavyContextProps } from "../types/weavy.types";
+import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -62,38 +62,38 @@ export default class WyCommentList extends BlockConsumerMixin(LitElement) {
 
   #unsubscribeToRealtime?: () => void;
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyContextProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     if (
-      (changedProperties.has("parentId") || changedProperties.has("weavyContext")) &&
+      (changedProperties.has("parentId") || changedProperties.has("weavy")) &&
       this.parentId &&
-      this.weavyContext
+      this.weavy
     ) {
-      this.commentsQuery.trackInfiniteQuery(getCommentsOptions(this.weavyContext, this.location, this.parentId));
+      this.commentsQuery.trackInfiniteQuery(getCommentsOptions(this.weavy, this.location, this.parentId));
       this.addCommentMutation.trackMutation(
-        getAddCommentMutationOptions(this.weavyContext, ["comments", this.parentId])
+        getAddCommentMutationOptions(this.weavy, ["comments", this.parentId])
       );
-      this.removeCommentMutation = getTrashCommentMutation(this.weavyContext, this.parentId);
-      this.restoreCommentMutation = getRestoreCommentMutation(this.weavyContext, this.parentId);
-      this.pollMutation = getPollMutation(this.weavyContext, ["comments", this.parentId]);
+      this.removeCommentMutation = getTrashCommentMutation(this.weavy, this.parentId);
+      this.restoreCommentMutation = getRestoreCommentMutation(this.weavy, this.parentId);
+      this.pollMutation = getPollMutation(this.weavy, ["comments", this.parentId]);
     }
 
-    if ((changedProperties.has("weavyContext") || changedProperties.has("app")) && this.weavyContext && this.app) {
+    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
       // realtime
 
       this.#unsubscribeToRealtime?.();
 
       const subscribeGroup = `a${this.app.id}`;
 
-      this.weavyContext.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavyContext.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavyContext.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+      this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+      this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+      this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavyContext?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavyContext?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+        this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
         this.#unsubscribeToRealtime = undefined;
       };
     }
@@ -106,7 +106,7 @@ export default class WyCommentList extends BlockConsumerMixin(LitElement) {
 
   handleRealtimeCommentCreated = (realtimeEvent: RealtimeCommentEventType) => {
     if (
-      !this.weavyContext ||
+      !this.weavy ||
       realtimeEvent.actor.id === this.user!.id ||
       (realtimeEvent.comment.parent && realtimeEvent.comment.parent?.id !== this.parentId) ||
       (this.app && realtimeEvent.comment.app.id !== this.app.id)
@@ -115,18 +115,18 @@ export default class WyCommentList extends BlockConsumerMixin(LitElement) {
     }
 
     realtimeEvent.comment.created_by = realtimeEvent.actor;
-    addCacheItem(this.weavyContext.queryClient, ["comments", this.parentId], realtimeEvent.comment, undefined, {
+    addCacheItem(this.weavy.queryClient, ["comments", this.parentId], realtimeEvent.comment, undefined, {
       descending: false,
     });
   };
 
   handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavyContext || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "comment") {
+    if (!this.weavy || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "comment") {
       return;
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["comments", this.parentId],
       realtimeEvent.entity.id,
       (item: CommentType) => {
@@ -142,12 +142,12 @@ export default class WyCommentList extends BlockConsumerMixin(LitElement) {
   };
 
   handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavyContext || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "comment") {
+    if (!this.weavy || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "comment") {
       return;
     }
 
     updateCacheItem(
-      this.weavyContext.queryClient,
+      this.weavy.queryClient,
       ["comments", this.parentId],
       realtimeEvent.entity.id,
       (item: CommentType) => {
