@@ -72,6 +72,7 @@
   position: absolute;
   bottom: var.wy-rem(-1.125);
   right: var.wy-rem(0.25);
+  z-index: 1;
 }
 
 [part~="wy-reactions-line-below"] {

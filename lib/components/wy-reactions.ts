@@ -277,7 +277,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
           part="wy-reaction-menu-button"
           kind="icon"
           ?active=${this.show}
-          small
+          ?small=${this.small}
           @click=${this.handleClickToggle}
           @keydown=${clickOnEnterAndConsumeOnSpace}
           @keyup=${clickOnSpace}
