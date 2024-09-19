@@ -33,7 +33,7 @@ export function getMessagesOptions(
       const skip = opt.pageParam;
       const url = "/api/apps/" + appId + "/messages?orderby=id+desc&skip=" + skip + "&take=" + PAGE_SIZE;
 
-      const response = await weavy.get(url);
+      const response = await weavy.fetch(url);
       const result = (await response.json()) as MessagesResultType;
       result.data = result.data?.reverse() || [];
       return result;
@@ -57,10 +57,9 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
 
   const options = {
     mutationFn: async (variables: MutateMessageProps) => {
-      const response = await weavy.post(
-        "/api/apps/" + variables.app_id + "/messages",
-        "POST",
-        JSON.stringify({
+      const response = await weavy.fetch("/api/apps/" + variables.app_id + "/messages", {
+        method: "POST",
+        body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
           embed_id: variables.embed_id || null,
@@ -73,8 +72,8 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
           metadata: {
             temp_id: variables.temp_id?.toString(),
           },
-        })
-      );
+        }),
+      });
       return response.json();
     },
     mutationKey: mutationKey,
@@ -93,9 +92,9 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
           created_by: { id: variables.user_id, avatar_url: "", display_name: "", presence: undefined, name: "" },
           created_at: new Date().toUTCString(),
           attachments: { count: 0 },
-          reactions: {count: 0},
+          reactions: { count: 0 },
           is_starred: false,
-          is_subscribed: false
+          is_subscribed: false,
         };
         addCacheItem(queryClient, ["messages", variables.app_id], tempData);
       }

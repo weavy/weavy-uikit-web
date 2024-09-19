@@ -111,7 +111,7 @@ export function getDeliveredConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id }: MutateDeliveredConversationVariables) => {
       const url = `/api/conversations/${id}/delivered`;
-      await weavy.post(url, "PUT", "");
+      await weavy.fetch(url, { method: "PUT" });
     },
     onMutate: async () => {
       return <ConversationMutationContextType>{};
@@ -125,7 +125,7 @@ export function getMarkConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, markAsRead, messageId }: MutateMarkConversationVariables) => {
       const url = markAsRead ? `/api/conversations/${id}/mark?messageId=${messageId}` : `/api/conversations/${id}/mark`;
-      await weavy.post(url, markAsRead ? "PUT" : "DELETE", "");
+      await weavy.fetch(url, { method: markAsRead ? "PUT" : "DELETE" });
     },
     onMutate: async (variables: MutateMarkConversationVariables) => {
       updateCacheItems(
@@ -167,7 +167,7 @@ export function getMarkConversationMutationOptions(weavy: WeavyType) {
 export function getStarConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, star }: MutateStarConversationVariables) => {
-      await weavy.post(`/api/apps/${id}/stars`, star ? "POST" : "DELETE", "");
+      await weavy.fetch(`/api/apps/${id}/stars`, { method: star ? "POST" : "DELETE" });
     },
     onMutate: async (variables: MutateStarConversationVariables) => {
       updateCacheItems(
@@ -199,7 +199,7 @@ export function getStarConversationMutationOptions(weavy: WeavyType) {
 export function getPinConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, pin }: MutatePinConversationVariables) => {
-      await weavy.post(`/api/conversations/${id}/pin`, pin ? "PUT" : "DELETE", "");
+      await weavy.fetch(`/api/conversations/${id}/pin`, { method: pin ? "PUT" : "DELETE" });
     },
     onMutate: async (variables: MutatePinConversationVariables) => {
       updateCacheItems(
@@ -223,7 +223,7 @@ export function getPinConversationMutationOptions(weavy: WeavyType) {
 export function getLeaveConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, members }: MutateLeaveConversationVariables) => {
-      await weavy.post(`/api/apps/${id}/members/${members.join(",")}`, "DELETE", "");
+      await weavy.fetch(`/api/apps/${id}/members/${members.join(",")}`, { method: "DELETE" });
     },
     onMutate: async (variables: MutateLeaveConversationVariables) => {
       removeCacheItem(weavy.queryClient, ["conversations"], variables.id);
@@ -237,7 +237,7 @@ export function getLeaveConversationMutationOptions(weavy: WeavyType) {
 export function getUpdateMemberMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, userId, access }: MutateUpdateMemberVariables) => {
-      await weavy.post(`/api/apps/${id}/members/${userId}`, "PUT", JSON.stringify({ access }));
+      await weavy.fetch(`/api/apps/${id}/members/${userId}`, { method: "PUT", body: JSON.stringify({ access }) });
     },
     onMutate: async (variables: MutateUpdateMemberVariables) => {
       removeCacheItem(weavy.queryClient, ["conversations"], variables.id);
@@ -251,15 +251,14 @@ export function getUpdateMemberMutationOptions(weavy: WeavyType) {
 export function getAddMembersToConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, members }: MutateAddMembersToConversationVariables) => {
-      await weavy.post(
-        `/api/apps/${id}/members`,
-        "PUT",
-        JSON.stringify(
+      await weavy.fetch(`/api/apps/${id}/members`, {
+        method: "PUT",
+        body: JSON.stringify(
           members.map((id: number) => {
             return { id: id, access: "write" };
           })
-        )
-      );
+        ),
+      });
     },
     onMutate: async () => {
       return <ConversationMutationContextType>{};
@@ -272,14 +271,13 @@ export function getAddMembersToConversationMutationOptions(weavy: WeavyType) {
 export function getUpdateConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id, name, blobId }: MutateUpdateConversationVariables) => {
-      const response = await weavy.post(
-        `/api/apps/${id}`,
-        "PATCH",
-        JSON.stringify({
+      const response = await weavy.fetch(`/api/apps/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
           name: name,
-          Picture: blobId,
-        })
-      );
+          picture: blobId,
+        }),
+      });
       return response.json();
     },
     onMutate: async (variables: MutateUpdateConversationVariables) => {
@@ -306,7 +304,7 @@ export function getUpdateConversationMutationOptions(weavy: WeavyType) {
 export function getTrashConversationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ id }: MutateTrashConversationVariables) => {
-      await weavy.post(`/api/apps/${id}/trash`, "POST", "");
+      await weavy.fetch(`/api/apps/${id}/trash`, { method: "POST" });
     },
     onMutate: async (variables: MutateTrashConversationVariables) => {
       removeCacheItem(weavy.queryClient, ["conversations"], variables.id);
@@ -342,9 +340,7 @@ export function getUpdateMemberMutation(weavy: WeavyType): UpdateMemberMutationT
   return new MutationObserver(weavy.queryClient, getUpdateMemberMutationOptions(weavy));
 }
 
-export function getAddMembersToConversationMutation(
-  weavy: WeavyType
-): AddMembersToConversationMutationType {
+export function getAddMembersToConversationMutation(weavy: WeavyType): AddMembersToConversationMutationType {
   return new MutationObserver(weavy.queryClient, getAddMembersToConversationMutationOptions(weavy));
 }
 

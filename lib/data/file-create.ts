@@ -41,7 +41,7 @@ export const getTempFile = (
     created_at: new Date().toUTCString(),
     is_subscribed: false,
     is_trashed: false,
-    is_starred: false
+    is_starred: false,
   };
   return tempFile;
 };
@@ -90,12 +90,10 @@ export function getFileMutationsByConflictOrError(
   mutationStates?: MutationState<BlobType | FileType, Error, unknown, FileMutationContextType>[]
 ) {
   return (
-    mutationStates?.filter(
-      (mutationState) =>{
-        //console.log("mutationState", mutationState.context?.status.state, mutationState.status)
-        return mutationState.context?.status.state === "conflict" || mutationState.status === "error"
-      }
-    ) || []
+    mutationStates?.filter((mutationState) => {
+      //console.log("mutationState", mutationState.context?.status.state, mutationState.status)
+      return mutationState.context?.status.state === "conflict" || mutationState.status === "error";
+    }) || []
   );
 }
 
@@ -147,11 +145,10 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
 
   const options = {
     mutationFn: async ({ blob, replace = false }: CreateFileProps) => {
-      const response = await weavy.post(
-        "/api/apps/" + app.id + "/files",
-        "POST",
-        JSON.stringify({ blob_id: blob.id, replace: replace })
-      );
+      const response = await weavy.fetch("/api/apps/" + app.id + "/files", {
+        method: "POST",
+        body: JSON.stringify({ blob_id: blob.id, replace: replace }),
+      });
 
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();

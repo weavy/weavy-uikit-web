@@ -6,12 +6,12 @@ export const defaultFetchSettings: RequestInit = {
   //mode: 'cors', // no-cors, *cors, same-origin
   // cache: 'default' means the server is in control of the caching which is preferred instead of using 'reload'
   //cache: 'default', // *default, no-cache, reload, force-cache, only-if-cached
-  credentials: "omit", // include, *same-origin, omit
+  credentials: "omit" as RequestCredentials, // include, *same-origin, omit
   headers: {
     // https://stackoverflow.com/questions/8163703/cross-domain-ajax-doesnt-send-x-requested-with-header
     "X-Requested-With": "XMLHttpRequest",
-  },
-  redirect: "manual", // manual, *follow, error
+  } as HeadersInit & { "X-Requested-With": "XMLHttpRequest" },
+  redirect: "manual" as RequestRedirect, // manual, *follow, error
   //referrerPolicy: 'no-referrer-when-downgrade', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 };
 

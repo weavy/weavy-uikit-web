@@ -21,7 +21,7 @@ export function getTrashFileMutationOptions(weavy: WeavyType, app: AppType) {
     mutationKey: filesKey,
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1) {
-        const response = await weavy.post("/api/files/" + file.id + "/trash", "POST", "");
+        const response = await weavy.fetch("/api/files/" + file.id + "/trash", { method: "POST" });
 
         if (!response.ok) {
           throw new Error();
@@ -79,7 +79,7 @@ export function getRestoreFileMutationOptions(weavy: WeavyType, app: AppType) {
     mutationKey: filesKey,
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1) {
-        const response = await weavy.post("/api/files/" + file.id + "/restore", "POST", "");
+        const response = await weavy.fetch("/api/files/" + file.id + "/restore", { method: "POST" });
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -139,7 +139,7 @@ export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppTy
     mutationKey: filesKey,
     mutationFn: async ({ file }: MutateFileVariables) => {
       if (file.id >= 1 && file.is_trashed) {
-        const response = await weavy.post("/api/files/" + file.id, "DELETE", "");
+        const response = await weavy.fetch("/api/files/" + file.id, { method: "DELETE" });
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -182,9 +182,6 @@ export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppTy
   return options;
 }
 
-export function getDeleteForeverFileMutation(
-  weavy: WeavyType,
-  app: AppType
-): DeleteForeverFileMutationType {
+export function getDeleteForeverFileMutation(weavy: WeavyType, app: AppType): DeleteForeverFileMutationType {
   return new MutationObserver(weavy.queryClient, getDeleteForeverFileMutationOptions(weavy, app));
 }

@@ -14,7 +14,7 @@ export function getMemberOptions(weavy: WeavyType, appId: number, options: Query
   return <QueryObserverOptions<MembersResultType>> {
     queryKey: ["members", appId],
     queryFn: async () => {
-      const response = await weavy.get("/api/apps/" + appId + "/members");
+      const response = await weavy.fetch("/api/apps/" + appId + "/members");
       const result: MembersResultType = await response.json();
       return result;
     },
@@ -42,9 +42,9 @@ export function getInfiniteSearchMemberOptions(
       let response;
       
       if (appId) {
-        response = await weavy.get(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.fetch(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
       } else {
-        response = await weavy.get(`/api/users?q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.fetch(`/api/users?q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
       }          
 
       const result = await response.json();

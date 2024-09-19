@@ -11,7 +11,7 @@ export async function getFeatures<T>(weavy: WeavyType, type: string) {
   return await queryClient.fetchQuery<T>({
     queryKey: ["features", type],
     queryFn: async () => {
-      const response = await weavy.get("/api/features/" + type);
+      const response = await weavy.fetch("/api/features/" + type);
       return await response.json();
     },
   });

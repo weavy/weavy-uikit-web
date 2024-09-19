@@ -26,13 +26,12 @@ export function getRenameFileMutationOptions(weavy: WeavyType, app: AppType) {
     mutationKey: filesKey,
     mutationFn: async ({ file, name }: MutateFileNameVariables): Promise<FileType> => {
       if (file.id >= 1) {
-        const response = await weavy.post(
-          "/api/files/" + file.id,
-          "PATCH",
-          JSON.stringify({
+        const response = await weavy.fetch("/api/files/" + file.id, {
+          method: "PATCH",
+          body: JSON.stringify({
             name: name,
-          })
-        );
+          }),
+        });
 
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();

@@ -32,11 +32,9 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
     mutationKey: filesKey,
     mutationFn: async ({ versionFile }: MutateFileVersionVariables) => {
       if (versionFile.id >= 1 && versionFile.version) {
-        const response = await weavy.post(
-          `/api/files/${versionFile.id}/versions/${versionFile.version}/restore`,
-          "POST",
-          ""
-        );
+        const response = await weavy.fetch(`/api/files/${versionFile.id}/versions/${versionFile.version}/restore`, {
+          method: "POST",
+        });
         return response.json();
       } else {
         throw new Error(`Could not restore ${versionFile.name} to version ${versionFile.version}.`);
@@ -86,11 +84,7 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
   return options;
 }
 
-export function getFileVersionRestoreMutation(
-  weavy: WeavyType,
-  app: AppType,
-  file: FileType
-): FileVersionMutationType {
+export function getFileVersionRestoreMutation(weavy: WeavyType, app: AppType, file: FileType): FileVersionMutationType {
   return new MutationObserver(weavy.queryClient, getFileVersionRestoreMutationOptions(weavy, app, file));
 }
 
@@ -103,11 +97,9 @@ export function getFileVersionDeleteMutationOptions(weavy: WeavyType, app: AppTy
     mutationKey: fileVersionKey,
     mutationFn: async ({ versionFile }: MutateFileVersionVariables) => {
       if (versionFile.id >= 1 && versionFile.version) {
-        const response = await weavy.post(
-          `/api/files/${versionFile.id}/versions/${versionFile.version}`,
-          "DELETE",
-          ""
-        );
+        const response = await weavy.fetch(`/api/files/${versionFile.id}/versions/${versionFile.version}`, {
+          method: "DELETE",
+        });
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });

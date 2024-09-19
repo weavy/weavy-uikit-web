@@ -18,7 +18,7 @@ export function getPostsOptions(
       const skip = opt.pageParam;
       const url = "/api/apps/" + appId + "/posts?orderby=id+desc&skip=" + skip + "&take=" + PAGE_SIZE;
 
-      const response = await weavy.get(url);
+      const response = await weavy.fetch(url);
       const result = await response.json();
       result.data = result.data || [];
       return result;
@@ -35,10 +35,9 @@ export function getPostsOptions(
 export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
   const options = {
     mutationFn: async (variables: MutatePostProps) => {
-      const response = await weavy.post(
-        "/api/posts/" + variables.id!,
-        "PATCH",
-        JSON.stringify({
+      const response = await weavy.fetch("/api/posts/" + variables.id!, {
+        method: "PATCH",
+        body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
           attachments: variables.attachments,
@@ -49,8 +48,8 @@ export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: Muta
               return { id: o.id, text: o.text };
             }),
           embed_id: variables.embed || null,
-        })
-      );
+        }),
+      });
       return response.json();
     },
     mutationKey: mutationKey,
@@ -85,10 +84,9 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
 
   const options = {
     mutationFn: async (variables: MutatePostProps) => {
-      const response = await weavy.post(
-        "/api/apps/" + variables.appId + "/posts",
-        "POST",
-        JSON.stringify({
+      const response = await weavy.fetch("/api/apps/" + variables.appId + "/posts", {
+        method: "POST",
+        body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
           meeting_id: variables.meetingId,
@@ -98,8 +96,8 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
               return { text: o.text };
             }),
           embed_id: variables.embed,
-        })
-      );
+        }),
+      });
       return response.json();
     },
     mutationKey: mutationKey,
@@ -123,7 +121,7 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
           attachments: { count: 0 },
           reactions: { count: 0 },
           is_starred: false,
-          comments: { count: 0 }
+          comments: { count: 0 },
         };
         addCacheItem(queryClient, ["posts", variables.appId], tempData, undefined, { descending: true });
       }

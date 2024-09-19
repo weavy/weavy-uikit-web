@@ -26,15 +26,13 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
     mutationKey: filesKey,
     mutationFn: async ({ file, subscribe }: MutateFileSubscribeVariables) => {
       if (file.id >= 1) {
-        const response = await weavy.post(
-          `/api/files/${file.id}/${subscribe ? "subscribe" : "unsubscribe"}`,
-          "POST",
-          ""
-        );
+        const response = await weavy.fetch(`/api/files/${file.id}/${subscribe ? "subscribe" : "unsubscribe"}`, {
+          method: "POST",
+        });
         if (!response.ok) {
           const serverError = <ServerErrorResponseType>await response.json();
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
-        }        
+        }
       } else {
         throw new Error(`Could not ${subscribe ? "subscribe" : "unsubscribe"} to ${file.name}.`);
       }

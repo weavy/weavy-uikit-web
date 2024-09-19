@@ -9,3 +9,10 @@ export enum HeaderContentType {
     Text = "text/plain;charset=utf-8",
     Auto = "",
 }
+
+export type FetchOptions = RequestInit & {
+    headers?: HeadersInit & {
+      "Content-Type"?: HeaderContentType.JSON;
+    };
+    method?: HttpMethodType;
+  };

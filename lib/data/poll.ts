@@ -20,7 +20,7 @@ export function getPollMutationOptions(weavy: WeavyType, mutationKey: MutationKe
   const options = {
     mutationKey: key,
     mutationFn: async ({ optionId }: MutatePollVariables) => {
-      const response = await weavy.post(`/api/options/${optionId}/vote`, "POST", "");
+      const response = await weavy.fetch(`/api/options/${optionId}/vote`, { method: "POST" });
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -53,7 +53,7 @@ export function getPollMutationOptions(weavy: WeavyType, mutationKey: MutationKe
       return <PollMutationContextType>{ id: variables.optionId };
     },
     onSuccess: async (data: PostType, variables: MutatePollVariables) => {
-      const response = await weavy.get("/api/" + variables.parentType + "/" + variables.parentId);
+      const response = await weavy.fetch("/api/" + variables.parentType + "/" + variables.parentId);
       const json = await response.json();
 
       updateCacheItems(queryClient, { queryKey: key, exact: false }, variables.parentId, (existingPost: PostType) =>
@@ -77,7 +77,7 @@ export function getVotesOptions(weavy: WeavyType, id: number) {
     queryKey: ["votes", id],
     enabled: false,
     queryFn: async () => {
-      const response = await weavy.get(`/api/options/${id}`);
+      const response = await weavy.fetch(`/api/options/${id}`);
       return await response.json();
     },
   };

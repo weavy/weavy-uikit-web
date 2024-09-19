@@ -29,10 +29,9 @@ export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
   const options = {
     mutationFn: async ({ subscribe }: MutateAppSubscribeProps) => {
       if (app.id >= 1) {
-        const response = await weavy.post(
+        const response = await weavy.fetch(
           `/api/apps/${app.id}/${subscribe ? "subscribe" : "unsubscribe"}`,
-          "POST",
-          ""
+          { method: "POST" }
         );
         if (!response.ok) {
           throw await response.json();

@@ -33,7 +33,7 @@ export function getCommentsOptions(
       const skip = opt.pageParam;
       const url = "/api/" + type + "/" + parentId + "/comments?orderby=id&skip=" + skip + "&take=" + PAGE_SIZE;
 
-      const response = await weavy.get(url);
+      const response = await weavy.fetch(url);
       const result = await response.json();
       result.data = result.data || [];
 
@@ -51,10 +51,9 @@ export function getCommentsOptions(
 export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: MutationKey) {
   const options = {
     mutationFn: async (variables: MutateCommentProps) => {
-      const response = await weavy.post(
-        "/api/comments/" + variables.id!,
-        "PATCH",
-        JSON.stringify({
+      const response = await weavy.fetch("/api/comments/" + variables.id!, {
+        method: "PATCH",
+        body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
           attachments: variables.attachments,
@@ -65,28 +64,23 @@ export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: M
               return { id: o.id, text: o.text };
             }),
           embed_id: variables.embedId || null,
-        })
-      );
+        }),
+      });
       return response.json();
     },
     mutationKey: mutationKey,
     onSuccess: (data: CommentType, variables: MutateCommentProps) => {
       if (variables.id) {
-        updateCacheItem(
-          weavy.queryClient,
-          ["comments", variables.parentId],
-          variables.id,
-          (item: CommentType) => {
-            item.text = data.text;
-            item.html = data.html;
-            item.attachments = data.attachments;
-            item.meeting = data.meeting;
-            item.updated_at = data.updated_at;
-            item.updated_by = data.updated_by;
-            item.options = data.options;
-            item.embed = data.embed;
-          }
-        );
+        updateCacheItem(weavy.queryClient, ["comments", variables.parentId], variables.id, (item: CommentType) => {
+          item.text = data.text;
+          item.html = data.html;
+          item.attachments = data.attachments;
+          item.meeting = data.meeting;
+          item.updated_at = data.updated_at;
+          item.updated_by = data.updated_by;
+          item.options = data.options;
+          item.embed = data.embed;
+        });
       }
     },
   };
@@ -99,10 +93,9 @@ export function getAddCommentMutationOptions(weavy: WeavyType, mutationKey: Muta
 
   const options = {
     mutationFn: async (variables: MutateCommentProps) => {
-      const response = await weavy.post(
-        "/api/" + variables.type + "/" + variables.parentId + "/comments",
-        "POST",
-        JSON.stringify({
+      const response = await weavy.fetch("/api/" + variables.type + "/" + variables.parentId + "/comments", {
+        method: "POST",
+        body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
           meeting_id: variables.meetingId,
@@ -112,8 +105,8 @@ export function getAddCommentMutationOptions(weavy: WeavyType, mutationKey: Muta
               return { text: o.text };
             }),
           embed_id: variables.embedId,
-        })
-      );
+        }),
+      });
       return response.json();
     },
     mutationKey: mutationKey,

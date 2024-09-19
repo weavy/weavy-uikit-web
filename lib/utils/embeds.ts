@@ -23,7 +23,7 @@ async function fetchEmbed(url: string, weavy: WeavyType) {
   let embed: EmbedType | undefined = undefined;
 
   try {
-    const response = await weavy.post("/api/embeds", "POST", JSON.stringify({ url: url }));
+    const response = await weavy.fetch("/api/embeds", { method: "POST", body: JSON.stringify({ url: url }) });
 
     if (!response.ok) {
       throw new Error();
@@ -108,7 +108,7 @@ export const getEmbeds = async (content: string, callback: (embed: EmbedType) =>
     for (const candidate in candidates) {
       if (!latest.includes(candidate)) {
         throwOnDomNotAvailable();
-        
+
         window.clearTimeout(candidates[candidate]);
         delete candidates[candidate];
       }

@@ -48,20 +48,20 @@ export function isPlainObject(maybePlainObject: unknown) {
  *
  * The original options passed are left untouched.
  *
- * @param {Object} source - Original options.
- * @param {Object} properties - Merged options that will replace options from the source.
+ * @param {Object} target - Original options.
+ * @param {Object} properties - Merged options that will replace options from the target.
  * @param {boolean} [recursive=false] True will merge any sub-objects of the options recursively. Otherwise sub-objects are treated as data.
  * @returns {Object} A new object containing the merged options.
  */
-export function assign<TSource>(source: TSource | PlainObjectType, properties: TSource | PlainObjectType, recursive: boolean = false) {
-  source = source as PlainObjectType || {};
-  properties = properties as PlainObjectType || {};
+export function assign<TTarget>(target: TTarget, properties: TTarget, recursive: boolean = false) {
+  target = target || <TTarget>{};
+  properties = properties || <TTarget>{};
 
   // Make a copy
-  const copy: PlainObjectType = {};
-  for (const property in source) {
-    if (Object.prototype.hasOwnProperty.call(source, property)) {
-      copy[property] = source[property];
+  const copy = <TTarget>{};
+  for (const property in target) {
+    if (Object.prototype.hasOwnProperty.call(target, property)) {
+      copy[property] = target[property];
     }
   }
 
@@ -69,13 +69,13 @@ export function assign<TSource>(source: TSource | PlainObjectType, properties: T
   for (const property in properties) {
     if (Object.prototype.hasOwnProperty.call(properties, property)) {
       if (recursive && copy[property] && isPlainObject(copy[property]) && isPlainObject(properties[property])) {
-        copy[property] = assign(copy[property] as PlainObjectType, properties[property] as PlainObjectType, recursive);
+        copy[property] = assign(copy[property], properties[property] as TTarget[Extract<keyof TTarget, string>], recursive);
       } else {
         copy[property] = properties[property];
       }
     }
   }
-  return copy as TSource;
+  return copy;
 }
 
 /**

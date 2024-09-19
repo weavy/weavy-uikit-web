@@ -32,7 +32,7 @@ export function getInfiniteFileListOptions(
         url += "&trashed=null";
       }
 
-      const response = await weavy.get(url);
+      const response = await weavy.fetch(url);
       return await response.json();
     },
     getNextPageParam: (lastPage, pages) => {

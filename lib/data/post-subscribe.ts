@@ -25,10 +25,9 @@ export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) 
   const options = {
     mutationKey: postsKey,
     mutationFn: async ({ id, subscribe }: MutatePostSubscribeVariables) => {
-      const response = await weavy.post(
+      const response = await weavy.fetch(
         `/api/posts/${id}/${subscribe ? "subscribe" : "unsubscribe"}`,
-        "POST",
-        ""
+        { method: "POST" }
       );
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();

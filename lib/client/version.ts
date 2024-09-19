@@ -21,6 +21,9 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
       });
     }
 
+    /**
+     * The semver version of the package.
+     */
     readonly version: string = WeavyClient.version;
 
     /**
@@ -34,7 +37,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
 
       let response;
       try {
-        response = await fetch(new URL("/version", this.url), await this.fetchOptions(false));
+        response = await fetch(new URL("/version", this.url), await this.fetchOptions({}, false));
         if (!response.ok) {
           throw new Error("Could not verify environment version.");
         }

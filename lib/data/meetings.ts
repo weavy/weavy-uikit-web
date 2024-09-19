@@ -6,12 +6,12 @@ import { MeetingType } from "../types/meetings.types";
 export function addMeetingMutation(weavy: WeavyType, name: string) {
   return new MutationObserver(weavy.queryClient, {
     mutationFn: async () => {
-      const response = await weavy.post(`/x/${name}/meetings`, "POST");      
+      const response = await weavy.fetch(`/x/${name}/meetings`, { method: "POST" });
 
       if (!response.ok) {
         throw new Error("Failed to create meeting");
       }
-      return await response.json() as MeetingType;
-    }
+      return (await response.json()) as MeetingType;
+    },
   });
 }

@@ -19,7 +19,7 @@ export function getTrashPostMutationOptions(weavy: WeavyType, app: AppType) {
   const options = {
     mutationKey: postsKey,
     mutationFn: async ({ id }: MutatePostVariables) => {
-      const response = await weavy.post("/api/posts/" + id + "/trash", "POST", "");
+      const response = await weavy.fetch("/api/posts/" + id + "/trash", { method: "POST" });
       if (!response.ok) {
         throw new Error();
       }
@@ -60,7 +60,7 @@ export function getRestorePostMutationOptions(weavy: WeavyType, app: AppType) {
   const options = {
     mutationKey: postsKey,
     mutationFn: async ({ id }: MutatePostVariables) => {
-      const response = await weavy.post("/api/posts/" + id + "/restore", "POST", "");
+      const response = await weavy.fetch("/api/posts/" + id + "/restore", { method: "POST" });
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
@@ -103,7 +103,7 @@ export function getRestorePostMutation(weavy: WeavyType, app: AppType): RemovePo
 //         mutationKey: filesKey,
 //         mutationFn: async ({ file }: MutateFileVariables) => {
 //             if (file.id >= 1 && file.is_trashed) {
-//                 const response = await weavy.post("/api/files/" + file.id, "DELETE","")
+//                 const response = await weavy.fetch("/api/files/" + file.id, { method: "DELETE" })
 //                 if (!response.ok) {
 //                     const serverError = <ServerErrorResponseType> await response.json()
 //                     throw new Error(serverError.detail || serverError.title, { cause: serverError });

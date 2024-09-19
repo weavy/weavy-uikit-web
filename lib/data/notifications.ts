@@ -44,7 +44,7 @@ export function getNotificationsOptions(
 
       const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
-      const response = await weavy.get(url);
+      const response = await weavy.fetch(url);
       const result = await response.json();
       result.data = result.data || [];
       return result;
@@ -58,8 +58,11 @@ export function getNotificationsOptions(
   };
 }
 
-export function getLastNotification(weavy: WeavyType, type: NotificationTypes = NotificationTypes.All,
-  appIdOrUid?: string | number,) {
+export function getLastNotification(
+  weavy: WeavyType,
+  type: NotificationTypes = NotificationTypes.All,
+  appIdOrUid?: string | number
+) {
   const notificationsData = weavy.queryClient
     .getQueryData<InfiniteData<NotificationsResultType>>(["notifications", "list", appIdOrUid, type])
     ?.pages.flatMap((page) => page.data);
@@ -78,7 +81,7 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
       if (notificationId) {
         url.searchParams.append("id", notificationId.toString());
       }
-      await weavy.post(url, "PUT", "");
+      await weavy.fetch(url, { method: "PUT" });
     },
     onMutate: async (_variables: MutateMarkNotificationsVariables) => {
       const changedNotifications: Partial<NotificationType>[] = [];
@@ -113,7 +116,10 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
 
       updateCacheItemsCount<NotificationsResultType>(
         weavy.queryClient,
-        { queryKey: appIdOrUid ? ["apps", "notifications", "badge", appIdOrUid] : ["apps", "notifications", "badge"], exact: false },
+        {
+          queryKey: appIdOrUid ? ["apps", "notifications", "badge", appIdOrUid] : ["apps", "notifications", "badge"],
+          exact: false,
+        },
         () => 0
       );
 
@@ -145,7 +151,7 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ markAsRead, notificationId }: MutateMarkNotificationVariables) => {
       const url = `/api/notifications/${notificationId}/mark`;
-      await weavy.post(url, markAsRead ? "PUT" : "DELETE", "");
+      await weavy.fetch(url, { method: markAsRead ? "PUT" : "DELETE" });
     },
     onMutate: async (variables: MutateMarkNotificationVariables) => {
       const itemsChanged: Map<number, NotificationType> = new Map();

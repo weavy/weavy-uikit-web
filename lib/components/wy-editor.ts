@@ -444,7 +444,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
     before = context.matchBefore(/@[^@]+/);
 
     const typed = before?.text.substring(1);
-    const response = await this.weavy.get(`/api/apps/${this.app.id}/members?member=null&q=${typed}`);
+    const response = await this.weavy.fetch(`/api/apps/${this.app.id}/members?member=null&q=${typed}`);
     const result: UsersResultType = await response?.json();
 
     let completions: {
