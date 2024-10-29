@@ -1,13 +1,11 @@
-import { 
-    ConversationTypeGuid
- } from "./types/conversations.types"
+import { ConversationTypeGuid } from "./types/conversations.types";
 
-import { ContextualTypeGuids} from "./types/app.types";
+import { ContextualTypeGuids } from "./types/app.types";
 import { includeReversedProperties } from "./utils/objects";
 
 export * from "./client/weavy";
-export * from "./contexts/weavy-context"
-export { ContextController } from "./controllers/context-controller"
+export * from "./contexts/weavy-context";
+export { ContextController } from "./controllers/context-controller";
 
 // WyContext should be first for optimal loading when used as a provider.
 export { WyContext, type WyContextType } from "./wy-context";
@@ -20,7 +18,7 @@ export { WyNotifications, type WyNotificationsType } from "./wy-notifications";
 export { WyNotificationToasts, type WyNotificationToastsType } from "./wy-notification-toasts";
 export { WyPosts, type WyPostsType } from "./wy-posts";
 
-export * from "./components";
+export * as WeavyComponents from "./components";
 
 // Maps for working with app guids
 export const ConversationTypes = new Map(Object.entries(includeReversedProperties(ConversationTypeGuid)));

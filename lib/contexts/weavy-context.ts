@@ -1,10 +1,10 @@
 import { createContext } from "@lit/context";
-import { Weavy, type WeavyType } from "../client/weavy";
+import { type WeavyType } from "../client/weavy";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 import { isDomAvailable, throwOnDomNotAvailable } from "../utils/dom";
 
 export { type WeavyType } from "../client/weavy";
-export const WeavyContext = createContext<Weavy | undefined>(Symbol.for("weavy-client"));
+export const WeavyContext = createContext<WeavyType | undefined>(Symbol.for("weavy-client"));
 
 export function createWeavyContextProvider(host: HTMLElement, initialValue?: WeavyType) {
     throwOnDomNotAvailable()

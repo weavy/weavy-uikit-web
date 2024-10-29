@@ -2,6 +2,7 @@
 @use "base/color";
 @use "base/scroll";
 @use "base/svg";
+@use "pdf-viewer";
 
 .wy-pdf-container {
   position: absolute;
@@ -15,7 +16,7 @@
 }
 
 .wy-content-pdf {
-  @import "pdf-viewer";
+  @include pdf-viewer.defaults;
 
   .pdfViewer .page {
     box-shadow: var.default(--wy-shadow-level2);

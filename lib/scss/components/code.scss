@@ -1,3 +1,5 @@
+@use "code-vscode";
+
 // Themes generated from VS Code using https://prism.dotenv.dev/
 
 .wy-code, %wy-code {
@@ -5,7 +7,7 @@
     text-wrap: pretty;
   }
   
-  @import "code-vscode";
+  @include code-vscode.theme;
 }
 
 @mixin themes {

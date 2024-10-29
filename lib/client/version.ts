@@ -1,4 +1,4 @@
-import { WeavyClient, type WeavyClientType } from "./weavy";
+import { WeavyClient, type WeavyType } from "./weavy";
 import { Constructor } from "../types/generic.types";
 
 export interface WeavyVersionProps {
@@ -16,7 +16,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
 
       this.whenUrl().then(() => {
         if (!this.isDestroyed) {
-          (this as this & WeavyClientType).checkVersion();
+          (this as this & WeavyType).checkVersion();
         }
       });
     }
@@ -31,7 +31,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
      *
      * @param {string} [version] - Optional version to check against the environment version.
      */
-    async checkVersion(this: this & WeavyClientType, version: string = this.version) {
+    async checkVersion(this: this & WeavyType, version: string = this.version) {
       await this.whenUrl();
       this.networkStateIsPending = true;
 

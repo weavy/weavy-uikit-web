@@ -1,5 +1,4 @@
 export * from "./app-context"
-export * from "./configuration-context"
 export * from "./features-context"
 export * from "./link-context"
 export * from "./settings-context"

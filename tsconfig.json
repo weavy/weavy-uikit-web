@@ -51,7 +51,7 @@
     "lib/**/*.ts",
     "locales/**/*.ts",
     "lib/scss/**/*.scss",
-    "dev/tools/**/*.ts", 
+    "utils/**/*.ts",
     "index.ts",
     "tests/**/*.ts"
   ],

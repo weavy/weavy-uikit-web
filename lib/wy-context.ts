@@ -113,14 +113,6 @@ export class WyContext extends LitElement implements WeavyOptions {
   })
   url?: string | URL;
 
-  @property({
-    attribute: true,
-    converter: {
-      fromAttribute: (value) => toUrl(value),
-    },
-  })
-  zoomAuthenticationUrl?: string | URL;
-
   @state()
   protected weavy?: WeavyType;
 

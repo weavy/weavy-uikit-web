@@ -1,9 +1,7 @@
-import { PluginOption } from "vite";
-
-//process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+import { getServerConfig, getUsers, getAuthServer, syncUsers } from "./auth-server.js";
 
 export function weavyImportUrlPlugin() {
-  const options: PluginOption = {
+  const options = {
     name: "weavy-import-url",
     renderDynamicImport({
       //customResolution,
@@ -41,7 +39,7 @@ export function weavyImportUrlPlugin() {
 }
 
 export function weavyChunkNames(chunkInfo) {
-  let name: string;
+  let name;
   if (chunkInfo.facadeModuleId) {
     name = chunkInfo.facadeModuleId.split("node_modules/")[1];
   } else if (chunkInfo.moduleIds.length === 1) {
@@ -63,12 +61,16 @@ export function weavyChunkNames(chunkInfo) {
     name = name.slice(0, -1 * ".mjs".length);
   }*/
 
+  if (!name && chunkInfo.name === "__vite-browser-external") {
+    name = "empty-polyfills";
+  }
+
   //return `esm/${chunkInfo.isDynamicEntry ? "dynamic/" : ""}${name}.js`;
   return `[format]/${name}.${chunkInfo.format === "cjs" ? "cjs" : "js"}`;
 }
 
 export function utf8BomPlugin() {
-  const options: PluginOption = {
+  const options = {
     name: "utf-8-bom",
     generateBundle(options, bundle, _isWrite) {
       Object.keys(bundle).forEach((chunkId) => {
@@ -86,4 +88,29 @@ export function utf8BomPlugin() {
   };
 
   return options;
+}
+
+export function weavyAuthServer(command = "serve") {
+  const apiProxy = {
+    "/api": {}, // proxy our /api route to nowhere
+  };
+
+  return command === "serve"
+    ? {
+        name: "weavy-auth-server",
+        config() {
+          return {
+            server: { proxy: apiProxy },
+            preview: { proxy: apiProxy },
+          };
+        },
+        configureServer(server) {
+          const serverConfig = getServerConfig();
+          const users = getUsers();
+          const authServer = getAuthServer(serverConfig, users);
+          server.middlewares.use(authServer);
+          syncUsers(serverConfig, users);
+        },
+      }
+    : undefined;
 }

@@ -2,7 +2,7 @@
  * THIS IS UNUSED/DISABLED
  */
 
-import { WeavyClient, type WeavyClientType } from "./weavy";
+import { WeavyClient, type WeavyType } from "./weavy";
 import { Constructor } from "../types/generic.types";
 import { WyNotificationToasts } from "../wy-notification-toasts";
 import { WeavyClientOptionsType } from "../types/weavy.types";
@@ -55,7 +55,7 @@ export const WeavyNotificationsMixin = <TBase extends Constructor<WeavyClient>>(
       this._notificationToastsComponent = undefined;
     }
 
-    override destroy(this: this & WeavyClientType): void {
+    override destroy(this: this & WeavyType): void {
       super.destroy();
     }
   };

@@ -1,4 +1,4 @@
-import { WeavyClient, type WeavyClientType } from "./weavy";
+import { WeavyClient, type WeavyType } from "./weavy";
 import type { RealtimeDataType, RealtimeEventType } from "../types/realtime.types";
 import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
 import { DestroyError } from "../utils/errors";
@@ -33,7 +33,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
       this.whenConnectionRequested().then(() => {
         if (!this.isDestroyed) {
           //console.log(this.weavyId, "Weavy url and tokenFactory configured.");
-          (this as this & WeavyClientType).createConnection();
+          (this as this & WeavyType).createConnection();
         }
       });
     }
@@ -71,7 +71,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
       await this._whenConnectionStarted;
     }
 
-    async createConnection(this: this & WeavyClientType) {
+    async createConnection(this: this & WeavyType) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -165,14 +165,14 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
       }
     }
 
-    async disconnect(this: this & WeavyClientType) {
+    async disconnect(this: this & WeavyType) {
       if (this._connection) {
         await this._connection.stop();
         this.connectionState = "disconnected";
       }
     }
 
-    async connect(this: this & WeavyClientType) {
+    async connect(this: this & WeavyType) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -255,6 +255,10 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
 
       try {
         const name = group ? group + ":" + event : event;
+        if (!this._connectionEventListeners) {
+          // Wait for init to complete
+          await new Promise((r) => queueMicrotask(() => r(true)))
+        }
 
         if (this._connectionEventListeners.some((el) => el.name === name && el.callback === callback)) {
           throw new Error("Duplicate subscribe: " + name);
@@ -312,7 +316,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
       }
     }
 
-    override destroy(this: this & WeavyClientType) {
+    override destroy(this: this & WeavyType) {
       super.destroy();
 
       this.disconnect();

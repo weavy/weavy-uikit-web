@@ -39,7 +39,6 @@ export function getConversationsOptions(
   return {
     ...options,
     initialPageParam: 0,
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["conversations", "list", types, member],
     queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const queryParams = new URLSearchParams({

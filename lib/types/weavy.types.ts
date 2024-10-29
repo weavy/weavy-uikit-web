@@ -96,11 +96,6 @@ export interface WeavyOptions {
    * The URL to the weavy environment.
    */
   url?: string | URL;
-
-  /**
-   * The url for zoom authentication.
-   */
-  zoomAuthenticationUrl?: string | URL;
 }
 
 export type WeavyProps = { weavy: WeavyType };

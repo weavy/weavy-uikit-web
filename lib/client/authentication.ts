@@ -1,4 +1,4 @@
-import { WeavyClient, type WeavyClientType } from "./weavy";
+import { WeavyClient, type WeavyType } from "./weavy";
 import type { WeavyTokenFactory } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
 import { Constructor } from "../types/generic.types";
@@ -65,7 +65,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
 
       if (this._tokenFactory && this._tokenFactory !== tokenFactory) {
         this.whenUrlAndTokenFactory().then(() => {
-          (this as unknown as WeavyClientType).queryClient.refetchQueries({ stale: true });
+          (this as unknown as WeavyType).queryClient.refetchQueries({ stale: true });
         });
       }
 

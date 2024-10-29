@@ -13,10 +13,10 @@ export default class WySheet extends LitElement {
   static override styles = [
     overlayStyles,
     css`
-    :host {
-      display: contents;
-    }
-    `
+      :host {
+        display: contents;
+      }
+    `,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -31,11 +31,19 @@ export default class WySheet extends LitElement {
 
   close() {
     this.show = false;
-    this.viewportRef.value?.hidePopover();
+    try {
+      if (this.viewportRef.value?.popover) {
+        this.viewportRef.value?.hidePopover();
+      } else {
+        this.viewportRef.value?.close();
+      }
+    } catch {
+      /* No worries */
+    }
   }
 
   handleClose(e: ToggleEvent) {
-    if (e.newState === "closed") {
+    if ((e.type === "toggle" && e.newState === "closed") || e.type === "close") {
       this.show = false;
       this.dispatchEvent(new CustomEvent("close"));
       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
@@ -46,10 +54,22 @@ export default class WySheet extends LitElement {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("show")) {
-      if (this.show) {
-        this.viewportRef.value?.showPopover();
-      } else {
-        this.viewportRef.value?.hidePopover();
+      try {
+        if (this.show) {
+          if (this.viewportRef.value?.popover) {
+            this.viewportRef.value?.showPopover();
+          } else {
+            this.viewportRef.value?.show();
+          }
+        } else {
+          if (this.viewportRef.value?.popover) {
+            this.viewportRef.value?.hidePopover();
+          } else {
+            this.viewportRef.value?.close();
+          }
+        }
+      } catch {
+        /* No worries */
       }
     }
   }
@@ -84,7 +104,9 @@ export default class WySheet extends LitElement {
   }
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
-    this.viewportRef.value?.addEventListener("toggle", (e: Event) => this.handleClose(e as ToggleEvent))
+    this.viewportRef.value?.addEventListener(this.viewportRef.value.popover ? "toggle" : "close", (e: Event) =>
+      this.handleClose(e as ToggleEvent)
+    );
   }
 
   override disconnectedCallback() {

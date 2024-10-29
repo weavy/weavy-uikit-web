@@ -7,6 +7,12 @@
   background: none;
   border: none;
   padding: 0;
+
+  &[popover] {
+    position: fixed;
+    inset: 0;
+    z-index: const.$zindex-modal;
+  }
 }
 
 // Overlays
@@ -18,7 +24,11 @@
   justify-content: center;
   overflow: visible;
 
-  &:popover-open, &[open] {
+  &[open] {
+    display: flex;
+  }
+
+  &:popover-open {
     display: flex;
   }
 }

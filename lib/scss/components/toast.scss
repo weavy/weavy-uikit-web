@@ -7,7 +7,7 @@
   background: none;
   border: none;
   padding: var.default(--wy-padding-lg);
-  
+
   margin: 0;
   width: 100%;
   height: 100%;
@@ -16,12 +16,18 @@
   flex-direction: column;
   flex-wrap: wrap;
   //gap: var.default(--wy-gap-lg);
-  
+
   align-content: flex-end;
   align-items: flex-end;
   justify-content: flex-end;
 
   pointer-events: none;
+
+  &[popover] {
+    position: fixed;
+    inset: 0;
+    z-index: const.$zindex-popover;
+  }
 
   > ::slotted(*) {
     pointer-events: auto;
@@ -51,7 +57,7 @@
     transition-property: opacity, min-height, padding-top, padding-bottom, margin-top, margin-bottom, height;
     transition-duration: var.default(--wy-transition-duration);
     transition-timing-function: var.default(--wy-transition-curve);
-    
+
     &:not(.wy-show) {
       opacity: 0;
       min-height: 0;
@@ -65,8 +71,6 @@
   }
 }
 
-
-
 .wy-toast-action {
   position: sticky;
   top: var.wy-rem(4.5);
@@ -75,11 +79,11 @@
   z-index: const.$zindex-toast;
   background-color: color.token(--wy-primary);
   color: color.token(--wy-on-primary);
-  padding: var.wy-rem(.5) var.wy-rem(1);
+  padding: var.wy-rem(0.5) var.wy-rem(1);
   margin-left: auto;
   margin-right: auto;
   margin-top: 0;
-  margin-bottom: var.wy-rem(.5);
+  margin-bottom: var.wy-rem(0.5);
   border-radius: var.default(--wy-border-radius-pill);
   font-size: var.default(--wy-font-size-xs);
   width: max-content;

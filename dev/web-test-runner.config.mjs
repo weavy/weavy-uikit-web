@@ -13,6 +13,10 @@ export default {
   plugins: [
     vitePlugin({
       configFile: "dev/vite.config.ts",
+      server: {
+        https: false,
+        cors: true
+      }
     })
   ],
 };

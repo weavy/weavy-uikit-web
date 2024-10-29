@@ -7,6 +7,7 @@ import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } fro
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { iconNamesType } from "../utils/icons";
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
+import { isPopoverPolyfilled } from "../utils/dom";
 
 import rebootStyles from "../scss/components/base/reboot.scss";
 import dropdownStyles from "../scss/components/dropdown.scss";
@@ -70,11 +71,15 @@ export default class WyDropdown extends LitElement {
   private _documentClickHandler = (e: Event) => {
     if (this.show) {
       e.preventDefault();
+
+      if (!this.menuRef.value?.popover) {
+        this.show = false
+      }
     }
   };
 
   private handleClose(e: ToggleEvent) {
-    if (e.newState === "closed") {
+    if (e.type === "toggle" && e.newState === "closed" || e.type === "click") {
       this.show = false;
       this.dispatchEvent(new CustomEvent("close"));
       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
@@ -104,7 +109,7 @@ export default class WyDropdown extends LitElement {
           if (this.buttonRef.value && this.menuRef.value) {
             computePosition(this.buttonRef.value, this.menuRef.value, {
               placement: this._placement,
-              strategy: "absolute",
+              strategy: !this.menuRef.value.popover ? "fixed" : "absolute",
               middleware: [
                 flip(),
                 offset(({ placement }) => (placement.includes("top") ? 9 : 13)),
@@ -115,6 +120,10 @@ export default class WyDropdown extends LitElement {
                 Object.assign(this.menuRef.value.style, {
                   marginLeft: `${x}px`,
                   marginTop: `${y}px`,
+                  top: 0,
+                  left: 0,
+                  position: !this.menuRef.value.popover ? "fixed" : undefined,
+                  zIndex: !this.menuRef.value.popover ? 1075 : undefined
                 });
               }
             });
@@ -132,9 +141,17 @@ export default class WyDropdown extends LitElement {
         document.addEventListener("click", this._documentClickHandler, { once: true, capture: true });
       });
 
-      this.menuRef.value?.showPopover();
+      try {
+        this.menuRef.value?.showPopover();
+      } catch {
+        /* No worries */
+      }
     } else {
-      this.menuRef.value?.hidePopover();
+      try {
+        this.menuRef.value?.hidePopover();
+      } catch {
+        /* No worries */
+      }
     }
   }
 
@@ -169,7 +186,7 @@ export default class WyDropdown extends LitElement {
           @keyup=${clickOnEnterAndSpace}
           class="wy-dropdown-menu"
           ?hidden=${!this.show}
-          popover
+          ?popover=${!isPopoverPolyfilled()}
         >
           <slot></slot>
         </div>
@@ -178,7 +195,7 @@ export default class WyDropdown extends LitElement {
   }
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
-    this.menuRef.value?.addEventListener("toggle", (e: Event) => this.handleClose(e as ToggleEvent));
+    this.menuRef.value?.addEventListener(this.menuRef.value.popover ? "toggle" : "click", (e: Event) => this.handleClose(e as ToggleEvent));
   }
 
   override disconnectedCallback(): void {

@@ -3,8 +3,6 @@ import { state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type BlockSettingsType, BlockSettingsContext } from "../contexts/settings-context";
 import { Constructor } from "../types/generic.types";
-import type { ServerConfigurationType } from "../types/server.types";
-import { ServerConfigurationsContext } from "../contexts/configuration-context";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 
 import type { UserType } from "../types/users.types";
@@ -20,10 +18,6 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
     @consume({ context: AppContext, subscribe: true })
     @state()
     app: AppType | undefined;
-
-    @consume({ context: ServerConfigurationsContext, subscribe: true })
-    @state()
-    configuration: ServerConfigurationType | undefined = {};
 
     @consume({ context: ProductFeaturesContext, subscribe: true })
     @state()
@@ -54,14 +48,6 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
     });
     async whenApp() {
       return await this.#whenApp;
-    }
-
-    #resolveConfiguration?: (configuration: ServerConfigurationType) => void;
-    #whenConfiguration = new Promise<ServerConfigurationType>((r) => {
-      this.#resolveConfiguration = r;
-    });
-    async whenConfiguration() {
-      return await this.#whenConfiguration;
     }
 
     #resolveHasFeatures?: (hasFeatures: ProductFeaturesType) => void;
@@ -114,7 +100,6 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
 
       this.contexts = {
         app: this.app,
-        configuration: this.configuration,
         hasFeatures: this.hasFeatures,
         link: this.link,
         settings: this.settings,
@@ -135,10 +120,6 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
 
       if (changedProperties.has("app") && this.app) {
         this.#resolveApp?.(this.app);
-      }
-
-      if (changedProperties.has("configuration") && this.configuration) {
-        this.#resolveConfiguration?.(this.configuration);
       }
 
       if (changedProperties.has("hasFeatures") && this.hasFeatures) {
@@ -167,10 +148,6 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
       
       if (this.app) {
         this.requestUpdate("app");
-      }
-
-      if (this.configuration) {
-        this.requestUpdate("configuration");
       }
 
       if (this.hasFeatures) {

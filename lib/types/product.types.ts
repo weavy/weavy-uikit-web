@@ -12,8 +12,9 @@ export enum ProductFeatures {
   Comments = "comments",
   Confluence = "confluence",
   Embeds = "embeds",
-  Meetings = "meetings",
+  GoogleMeet = "google_meet",
   Mentions = "mentions",
+  MicrosoftTeams = "microsoft_teams",
   Polls = "polls",
   Previews = "previews",
   Reactions = "reactions",
@@ -23,6 +24,7 @@ export enum ProductFeatures {
   Versions = "versions",
   WebDAV = "web_dav",
   //Webhooks = "webhooks",
+  ZoomMeetings = "zoom_meetings",
 }
 
 export type ProductFeaturesListType = ProductFeatures[];
@@ -35,65 +37,73 @@ export type ProductFeaturesListType = ProductFeatures[];
  */
 export type ProductFeaturesType = {
   /**
-   * Disable the possibility to upload local files.
+   * Whether the possibility to upload local files is enabled.
    */
   attachments?: boolean;
   /**
-   * Disable he cloud file picker (Google Drive, Dropbox etc.).
+   * Whether the cloud file picker (Google Drive, Dropbox etc.) is enabled.
    */
   cloudFiles?: boolean;
   /**
-   * Disable comments on posts/files.
+   * Whether comments on posts/files is enabled.
    */
   comments?: boolean;
   /**
-   * Disable confluence picker.
+   * Whether confluence picker is enabled.
    */
   confluence?: boolean;
   /**
-   * Disable creating embeds from urls in the post text.
+   * Whether creating embeds from urls in the post text is enabled.
    */
   embeds?: boolean;
   /**
-   * Disable Zoom meetings.
+   * Whether Google Meet is enabled.
    */
-  meetings?: boolean;
+  googleMeet?: boolean;
   /**
-   * Disable the possibility to mention other people in the directory in a file comment.
+   * Whether the possibility to mention other people in the directory in a file comment is enabled.
    */
   mentions?: boolean;
   /**
-   * Disable the possibility to create a poll.
+   * Whether Microsoft Teams is enabled.
+   */
+  microsoftTeams?: boolean;
+  /**
+   * Whether the possibility to create a poll is enabled.
    */
   polls?: boolean;
   /**
-   * Disable previews of files.
+   * Whether previews of files is enabled.
    */
   previews?: boolean;
   /**
-   * Disable the possibility to add emoji reactions to a message, post or comment. Setting this to `false` will enable only the thumbs up reaction.
+   * Whether the possibility to add emoji reactions to a message, post or comment is enabled. Setting this to `false` will enable only the thumbs up reaction.
    */
   reactions?: boolean;
   /**
-   * Disable read receipts on messages.
+   * Whether read receipts on messages is enabled.
    */
   receipts?: boolean;
   /**
-   * Disable thumbnail file previews.
+   * Whether thumbnail file previews is enabled.
    */
   thumbnails?: boolean;
   /**
-   * Disable the typing indicator in the chat when other people types.
+   * Whether the typing indicator in the chat when other people types is enabled.
    */
   typing?: boolean;
   /**
-   *  Disable file versions.
+   *  Whether file versions is enabled.
    */
   versions?: boolean;
   /**
-   * Disable webDAV functionality for document files.
+   * Whether WebDAV functionality for document files is enabled.
    */
   webDAV?: boolean;
+  /**
+   * Whether Zoom meetings is enabled.
+   */
+  zoomMeetings?: boolean;
 };
 
 /**
@@ -124,13 +134,17 @@ export type ProductFeatureProps = {
    */
   noEmbeds?: boolean;
   /**
-   * Disable Zoom meetings.
+   * Disable Google Meet.
    */
-  noMeetings?: boolean;
+  noGoogleMeet?: boolean;
   /**
    * Disable the possibility to mention other people in the directory in a file comment.
    */
   noMentions?: boolean;
+  /**
+   * Disable Microsoft Teams.
+   */
+  noMicrosoftTeams?: boolean;
   /**
    * Disable the possibility to create a poll.
    */
@@ -163,40 +177,48 @@ export type ProductFeatureProps = {
    * Disable webDAV functionality for document files.
    */
   noWebDAV?: boolean;
+  /**
+   * Disable Zoom meetings.
+   */
+  noZoomMeetings?: boolean;
 };
 
-export const ProductFeatureMapping: { [key: string]: keyof ProductFeaturesType} = {
-  "attachments": "attachments",
-  "cloud_files": "cloudFiles",
-  "comments": "comments",
-  "confluence": "confluence",
-  "embeds": "embeds",
-  "meetings": "meetings",
-  "mentions": "mentions",
-  "polls": "polls",
-  "previews": "previews",
-  "reactions": "reactions",
-  "receipts": "receipts",
-  "thumbnails": "thumbnails",
-  "typing": "typing",
-  "versions": "versions",
-  "web_dav": "webDAV",
-}
+export const ProductFeatureMapping: { [key: string]: keyof ProductFeaturesType } = {
+  attachments: "attachments",
+  cloud_files: "cloudFiles",
+  comments: "comments",
+  confluence: "confluence",
+  embeds: "embeds",
+  google_meet: "googleMeet",
+  mentions: "mentions",
+  microsoft_teams: "microsoftTeams",
+  polls: "polls",
+  previews: "previews",
+  reactions: "reactions",
+  receipts: "receipts",
+  thumbnails: "thumbnails",
+  typing: "typing",
+  versions: "versions",
+  web_dav: "webDAV",
+  zoom_meetings: "zoomMeetings",
+};
 
-export const ProductFeaturePropMapping: { [key: string]: keyof ProductFeatureProps} = {
-  "attachments": "noAttachments",
-  "cloud_files": "noCloudFiles",
-  "comments": "noComments",
-  "confluence": "noConfluence",
-  "embeds": "noEmbeds",
-  "meetings": "noMeetings",
-  "mentions": "noMentions",
-  "polls": "noPolls",
-  "previews": "noPreviews",
-  "reactions": "noReactions",
-  "receipts": "noReceipts",
-  "thumbnails": "noThumbnails",
-  "typing": "noTyping",
-  "versions": "noVersions",
-  "web_dav": "noWebDAV",
-}
+export const ProductFeaturePropMapping: { [key: string]: keyof ProductFeatureProps } = {
+  attachments: "noAttachments",
+  cloud_files: "noCloudFiles",
+  comments: "noComments",
+  confluence: "noConfluence",
+  embeds: "noEmbeds",
+  google_meet: "noGoogleMeet",
+  mentions: "noMentions",
+  microsoft_teams: "noMicrosoftTeams",
+  polls: "noPolls",
+  previews: "noPreviews",
+  reactions: "noReactions",
+  receipts: "noReceipts",
+  thumbnails: "noThumbnails",
+  typing: "noTyping",
+  versions: "noVersions",
+  web_dav: "noWebDAV",
+  zoom_meetings: "noZoomMeetings",
+};

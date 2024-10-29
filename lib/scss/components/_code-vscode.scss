@@ -1,163 +1,165 @@
 @use "base/color";
 
-// Theme generated from VS Code using https://prism.dotenv.dev/
-
-code[class*="language-"],
-pre[class*="language-"] {
-  color: #{color.token(--wy-code-text)};
-  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
-  text-align: left;
-  white-space: pre-wrap;
-  word-spacing: normal;
-  word-break: normal;
-  word-wrap: break-word;
-  line-height: 1.5;
-
-  -moz-tab-size: 4;
-  -o-tab-size: 4;
-  tab-size: 4;
-
-  -webkit-hyphens: none;
-  -moz-hyphens: none;
-  -ms-hyphens: none;
-  hyphens: none;
-}
-
-/*pre[class*="language-"]::-moz-selection,
-pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection,
-code[class*="language-"] ::-moz-selection {
-  text-shadow: none;
-  background: #ffffff;
-}
-
-pre[class*="language-"]::selection,
-pre[class*="language-"] ::selection,
-code[class*="language-"]::selection,
-code[class*="language-"] ::selection {
-  text-shadow: none;
-  background: #ffffff;
-}*/
-
-@media print {
+@mixin theme {
+  // Theme generated from VS Code using https://prism.dotenv.dev/
+  
   code[class*="language-"],
   pre[class*="language-"] {
-    text-shadow: none;
+    color: #{color.token(--wy-code-text)};
+    font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+    text-align: left;
+    white-space: pre-wrap;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: break-word;
+    line-height: 1.5;
+  
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+  
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
   }
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-  padding: 1em;
-  margin: .5em 0;
-  overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-  color: #{color.token(--wy-code-text)};
-  background: #{color.token(--wy-background)};
-}
-
-:not(pre) > code[class*="language-"] {
-  padding: .1em;
-  border-radius: .3em;
-  white-space: normal;
-}
-
-.token.variable {
-  color: #{color.token(--wy-code-variable)};
-}
-
-.token.operator {
-  color: #{color.token(--wy-code-operator)};
-}
-
-.token.prolog {
-  color: #{color.token(--wy-code-prolog)};
-}
-
-.token.comment {
-  color: #{color.token(--wy-code-comment)};
-}
-
-.token.builtin {
-  color: #{color.token(--wy-code-builtin)};
-}
-
-.token.number {
-  color: #{color.token(--wy-code-number)};
-}
-
-.token.inserted {
-  color: #{color.token(--wy-code-inserted)};
-}
-
-.token.constant {
-  color: #{color.token(--wy-code-constant)};
-}
-
-.token.hexcode {
-  color: #{color.token(--wy-code-hexcode)};
-}
-
-.token.regex {
-  color: #{color.token(--wy-code-regex)};
-}
-
-.token.char {
-  color: #{color.token(--wy-code-char)};
-}
-
-.token.tag {
-  color: #{color.token(--wy-code-tag)};
-}
-
-.token.attr-name {
-  color: #{color.token(--wy-code-attr-name)};
-}
-
-.token.selector {
-  color: #{color.token(--wy-code-selector)};
-}
-
-.token.property {
-  color: #{color.token(--wy-code-property)};
-}
-
-.token.deleted {
-  color: #{color.token(--wy-code-deleted)};
-}
-
-.token.string {
-  color: #{color.token(--wy-code-string)};
-}
-
-.token.changed {
-  color: #{color.token(--wy-code-changed)};
-}
-
-.token.punctuation {
-  color: #{color.token(--wy-code-punctuation)};
-}
-
-.token.function {
-  color: #{color.token(--wy-code-function)};
-}
-
-.token.keyword {
-  color: #{color.token(--wy-code-keyword)};
-}
-
-.token.class-name {
-  color: #{color.token(--wy-code-class-name)};
-}
-
-.token.important,
-.token.bold {
-  font-weight: bold;
-}
-
-.token.italic {
-  font-style: italic;
+  
+  /*pre[class*="language-"]::-moz-selection,
+  pre[class*="language-"] ::-moz-selection,
+  code[class*="language-"]::-moz-selection,
+  code[class*="language-"] ::-moz-selection {
+    text-shadow: none;
+    background: #ffffff;
+  }
+  
+  pre[class*="language-"]::selection,
+  pre[class*="language-"] ::selection,
+  code[class*="language-"]::selection,
+  code[class*="language-"] ::selection {
+    text-shadow: none;
+    background: #ffffff;
+  }*/
+  
+  @media print {
+    code[class*="language-"],
+    pre[class*="language-"] {
+      text-shadow: none;
+    }
+  }
+  
+  /* Code blocks */
+  pre[class*="language-"] {
+    padding: 1em;
+    margin: .5em 0;
+    overflow: auto;
+  }
+  
+  :not(pre) > code[class*="language-"],
+  pre[class*="language-"] {
+    color: #{color.token(--wy-code-text)};
+    background: #{color.token(--wy-background)};
+  }
+  
+  :not(pre) > code[class*="language-"] {
+    padding: .1em;
+    border-radius: .3em;
+    white-space: normal;
+  }
+  
+  .token.variable {
+    color: #{color.token(--wy-code-variable)};
+  }
+  
+  .token.operator {
+    color: #{color.token(--wy-code-operator)};
+  }
+  
+  .token.prolog {
+    color: #{color.token(--wy-code-prolog)};
+  }
+  
+  .token.comment {
+    color: #{color.token(--wy-code-comment)};
+  }
+  
+  .token.builtin {
+    color: #{color.token(--wy-code-builtin)};
+  }
+  
+  .token.number {
+    color: #{color.token(--wy-code-number)};
+  }
+  
+  .token.inserted {
+    color: #{color.token(--wy-code-inserted)};
+  }
+  
+  .token.constant {
+    color: #{color.token(--wy-code-constant)};
+  }
+  
+  .token.hexcode {
+    color: #{color.token(--wy-code-hexcode)};
+  }
+  
+  .token.regex {
+    color: #{color.token(--wy-code-regex)};
+  }
+  
+  .token.char {
+    color: #{color.token(--wy-code-char)};
+  }
+  
+  .token.tag {
+    color: #{color.token(--wy-code-tag)};
+  }
+  
+  .token.attr-name {
+    color: #{color.token(--wy-code-attr-name)};
+  }
+  
+  .token.selector {
+    color: #{color.token(--wy-code-selector)};
+  }
+  
+  .token.property {
+    color: #{color.token(--wy-code-property)};
+  }
+  
+  .token.deleted {
+    color: #{color.token(--wy-code-deleted)};
+  }
+  
+  .token.string {
+    color: #{color.token(--wy-code-string)};
+  }
+  
+  .token.changed {
+    color: #{color.token(--wy-code-changed)};
+  }
+  
+  .token.punctuation {
+    color: #{color.token(--wy-code-punctuation)};
+  }
+  
+  .token.function {
+    color: #{color.token(--wy-code-function)};
+  }
+  
+  .token.keyword {
+    color: #{color.token(--wy-code-keyword)};
+  }
+  
+  .token.class-name {
+    color: #{color.token(--wy-code-class-name)};
+  }
+  
+  .token.important,
+  .token.bold {
+    font-weight: bold;
+  }
+  
+  .token.italic {
+    font-style: italic;
+  }
 }

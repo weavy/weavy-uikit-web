@@ -116,6 +116,16 @@ export function supportsPopover() {
   return HTMLElement.prototype.hasOwnProperty("popover");
 }
 
+export function isPopoverPolyfilled() {
+  // if the `showPopover` method is defined but is not "native code"
+  // then we can infer it's been polyfilled
+  // See https://github.com/oddbird/popover-polyfill/blob/main/src/popover.ts
+  return Boolean(
+    document.body?.showPopover &&
+      !/native code/i.test(document.body.showPopover.toString()),
+  );
+}
+
 export function isDomAvailable() {
   // SSR friendly check
   return typeof window !== 'undefined'

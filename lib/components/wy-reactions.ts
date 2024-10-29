@@ -3,7 +3,6 @@ import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
-
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
 import type { ReactableType, ReactionsResultType } from "../types/reactions.types";
 import {
@@ -12,13 +11,13 @@ import {
   removeReactionMutation,
   replaceReactionMutation,
 } from "../data/reactions";
-
 import { QueryController } from "../controllers/query-controller";
 import { WeavyProps } from "../types/weavy.types";
 import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
+import { isPopoverPolyfilled } from "../utils/dom";
 
 import "./wy-spinner";
 import "./wy-button";
@@ -89,7 +88,6 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   @state()
   reactedEmoji: string | undefined;
 
-
   @state()
   show: boolean = false;
 
@@ -106,11 +104,15 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   private _documentClickHandler = (e: Event) => {
     if (this.show) {
       e.preventDefault();
+
+      if (!this.menuRef.value?.popover) {
+        this.show = false
+      }
     }
   };
 
   private handleClose(e: ToggleEvent) {
-    if (e.newState === "closed") {
+    if (e.type === "toggle" && e.newState === "closed" || e.type === "click") {
       this.show = false;
       this.dispatchEvent(new CustomEvent("close"));
       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
@@ -196,7 +198,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
             if (this.buttonRef.value && this.menuRef.value) {
               computePosition(this.buttonRef.value, this.menuRef.value, {
                 placement: this._placement,
-                strategy: "absolute",
+                strategy: !this.menuRef.value.popover ? "fixed" : "absolute",
                 middleware: [
                   flip(),
                   offset({ mainAxis: 0, alignmentAxis: -8 }),
@@ -207,6 +209,10 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
                   Object.assign(this.menuRef.value.style, {
                     marginLeft: `${x}px`,
                     marginTop: `${y}px`,
+                    top: 0,
+                    left: 0,
+                    position: !this.menuRef.value.popover ? "fixed" : undefined,
+                    zIndex: !this.menuRef.value.popover ? 1075 : undefined
                   });
                 }
               });
@@ -225,16 +231,20 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
         document.addEventListener("click", this._documentClickHandler, { once: true, capture: true });
       });
 
-      this.menuRef.value?.showPopover();
+      try {
+        this.menuRef.value?.showPopover();
+      } catch {
+        /* No worries */
+      }
     } else {
-      this.menuRef.value?.hidePopover();
+      try {
+        this.menuRef.value?.hidePopover();
+      } catch {
+        /* No worries */
+      }
     }
 
-    if (
-      changedProperties.has("weavy") &&
-      this.weavy?.reactions &&
-      this.emojis != this.weavy.reactions
-    ) {
+    if (changedProperties.has("weavy") && this.weavy?.reactions && this.emojis != this.weavy.reactions) {
       this.emojis = this.weavy.reactions;
     }
   }
@@ -287,8 +297,14 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
         </wy-button>
       </div>
 
-      <div ${ref(this.menuRef)} part="wy-reaction-menu"           @click=${this.handleClickToggle}
-      @keyup=${clickOnEnterAndSpace} ?hidden=${!this.show} popover>
+      <div
+        ${ref(this.menuRef)}
+        part="wy-reaction-menu"
+        @click=${this.handleClickToggle}
+        @keyup=${clickOnEnterAndSpace}
+        ?hidden=${!this.show}
+        ?popover=${!isPopoverPolyfilled()}
+      >
         <div part="wy-reaction-picker">
           ${this.emojis.map(
             (emoji) =>
@@ -344,15 +360,11 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   }
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
-    this.menuRef.value?.addEventListener("toggle", (e: Event) => this.handleClose(e as ToggleEvent));
+    this.menuRef.value?.addEventListener(this.menuRef.value.popover ? "toggle" : "click", (e: Event) => this.handleClose(e as ToggleEvent));
   }
-  
+
   protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>): void {
-    if (
-      (changedProperties.has("weavy") || changedProperties.has("entityId")) &&
-      this.weavy &&
-      this.entityId
-    ) {
+    if ((changedProperties.has("weavy") || changedProperties.has("entityId")) && this.weavy && this.entityId) {
       this.reactionListQuery.trackQuery(getReactionListOptions(this.weavy, this.messageType, this.entityId));
     }
   }

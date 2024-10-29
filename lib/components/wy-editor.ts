@@ -625,8 +625,14 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
     if (!this.weavy) {
       return;
     }
-  
-    if (e.source === this.authWindow && (this.weavy.url as URL).origin === e.origin && e.data && e.data.name && e.data.name.endsWith("-authorized")) {
+
+    if (
+      e.source === this.authWindow &&
+      (this.weavy.url as URL).origin === e.origin &&
+      e.data &&
+      e.data.name &&
+      e.data.name.endsWith("-authorized")
+    ) {
       const name = e.data.name.slice(0, -"-authorized".length);
       const mutation = addMeetingMutation(this.weavy, name);
       const meeting = await mutation.mutate();
@@ -747,20 +753,30 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                 @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
               ></wy-confluence>`
             : nothing}
-          ${this.hasFeatures?.meetings
-            ? html`<wy-button kind="icon" @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
+          ${this.hasFeatures?.zoomMeetings
+            ? html`
+                <wy-button kind="icon" @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
                   <wy-icon svg="zoom-meetings"></wy-icon>
                 </wy-button>
+              `
+            : nothing}
+          ${this.hasFeatures?.googleMeet
+            ? html`
                 <wy-button kind="icon" @click=${() => this.handleMeetingClick("google")} title=${msg("Google Meet")}>
                   <wy-icon svg="google-meet"></wy-icon>
                 </wy-button>
+              `
+            : nothing}
+          ${this.hasFeatures?.microsoftTeams
+            ? html`
                 <wy-button
                   kind="icon"
                   @click=${() => this.handleMeetingClick("microsoft")}
                   title=${msg("Microsoft Teams")}
                 >
                   <wy-icon svg="microsoft-teams"></wy-icon>
-                </wy-button>`
+                </wy-button>
+              `
             : nothing}
           ${this.hasFeatures?.polls
             ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")}>
@@ -803,7 +819,9 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
         : nothing}
 
       <!-- meetings -->
-      ${this.hasFeatures?.meetings && this.meeting
+      ${(this.meeting?.provider === "zoom" && this.hasFeatures?.zoomMeetings) ||
+      (this.meeting?.provider === "google" && this.hasFeatures?.googleMeet) ||
+      (this.meeting?.provider === "microsoft" && this.hasFeatures?.microsoftTeams)
         ? html`
             <div class="wy-item">
               <wy-icon svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>

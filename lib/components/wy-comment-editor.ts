@@ -26,7 +26,11 @@ export default class WyCommentEditor extends WyEditor {
   protected override renderMiddleSlot() {
     return html`<div class="wy-comment-editor-inputs">
       <!-- Add -->
-      ${this.hasFeatures?.attachments || this.hasFeatures?.cloudFiles || this.hasFeatures?.meetings
+      ${this.hasFeatures?.attachments ||
+      this.hasFeatures?.cloudFiles ||
+      this.hasFeatures?.zoomMeetings ||
+      this.hasFeatures?.googleMeet ||
+      this.hasFeatures?.microsoftTeams
         ? html`<wy-dropdown icon="plus" directionY="up">
             ${this.hasFeatures?.attachments
               ? html`<wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
@@ -59,17 +63,28 @@ export default class WyCommentEditor extends WyEditor {
                   @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
                 ></wy-confluence>`
               : nothing}
-            ${this.hasFeatures?.meetings
+            ${this.hasFeatures?.zoomMeetings
               ? html`
                   <wy-dropdown-item @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
                     <wy-icon svg="zoom-meetings"></wy-icon>
                     <span>${msg("Zoom meeting")}</span>
                   </wy-dropdown-item>
+                `
+              : nothing}
+            ${this.hasFeatures?.googleMeet
+              ? html`
                   <wy-dropdown-item @click=${() => this.handleMeetingClick("google")} title=${msg("Google Meet")}>
                     <wy-icon svg="google-meet"></wy-icon>
                     <span>${msg("Google Meet")}</span>
                   </wy-dropdown-item>
-                  <wy-dropdown-item @click=${() => this.handleMeetingClick("microsoft")} title=${msg("Microsoft Teams")}>
+                `
+              : nothing}
+            ${this.hasFeatures?.microsoftTeams
+              ? html`
+                  <wy-dropdown-item
+                    @click=${() => this.handleMeetingClick("microsoft")}
+                    title=${msg("Microsoft Teams")}
+                  >
                     <wy-icon svg="microsoft-teams"></wy-icon>
                     <span>${msg("Microsoft Teams")}</span>
                   </wy-dropdown-item>

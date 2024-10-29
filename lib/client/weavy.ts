@@ -1,11 +1,10 @@
 import { S4 } from "../utils/data";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 import { globalContextProvider, WeavyContext } from "../contexts/weavy-context";
-
 import { chrome } from "../utils/browser";
-import type { WeavyOptions, Destructable, WeavyClientOptionsType } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
-
+import { throwOnDomNotAvailable } from "../utils/dom";
+import type { WeavyOptions, Destructable, WeavyClientOptionsType } from "../types/weavy.types";
 import { SOURCE_LOCALE, WeavyLocalizationMixin, WeavyLocalizationProps } from "./localization";
 import { WeavyNetworkMixin, WeavyNetworkProps } from "./network";
 import { WeavyAuthenticationMixin, WeavyAuthenticationProps } from "./authentication";
@@ -15,9 +14,11 @@ import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 import { WeavyFetchMixin, WeavyFetchProps } from "./fetch";
 import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
 import { WeavyRealtimeMixin, WeavyRealtimeProps, type WyNotificationsEventType } from "./realtime";
-import { throwOnDomNotAvailable } from "../utils/dom";
+import { WeavyApiMixin, WeavyApiProps, type AppType } from "./api";
 
-export type WeavyClientType = WeavyClient &
+export type { WeavyOptions, Destructable, WeavyClientOptionsType };
+
+export type WeavyType = WeavyClient &
   WeavyNetworkProps &
   WeavyAuthenticationProps &
   WeavyLocalizationProps &
@@ -26,7 +27,8 @@ export type WeavyClientType = WeavyClient &
   WeavyVersionProps &
   WeavyFetchProps &
   WeavyStylesProps &
-  WeavyRealtimeProps;
+  WeavyRealtimeProps &
+  WeavyApiProps;
 
 /**
  * Context for Weavy that handles communication with the server, data handling and common options.
@@ -58,7 +60,6 @@ export class WeavyClient implements WeavyOptions, Destructable {
     staleTime: 1000 * 1, // 1s
     tokenFactoryRetryDelay: 2000,
     tokenFactoryTimeout: 20000,
-    zoomAuthenticationUrl: undefined,
   };
 
   readonly weavySid: string = S4();
@@ -142,19 +143,6 @@ export class WeavyClient implements WeavyOptions, Destructable {
     }
   }
 
-  // DEPRECATED
-
-  #zoomAuthenticationUrl?: string | URL;
-
-  get zoomAuthenticationUrl() {
-    return this.#zoomAuthenticationUrl ?? WeavyClient.defaults.zoomAuthenticationUrl;
-  }
-
-  set zoomAuthenticationUrl(url: string | URL | undefined) {
-    console.warn(`Setting "zoomAuthenticationUrl" is deprecated. Configure Zoom on your Weavy Environment instead.`);
-    this.#zoomAuthenticationUrl = url;
-  }
-
   // CONSTRUCTOR
 
   constructor(options?: WeavyClientOptionsType) {
@@ -162,7 +150,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
 
     throwOnDomNotAvailable();
 
-    this.host = document.documentElement
+    this.host = document.documentElement;
 
     const validOptions: typeof options = {};
 
@@ -210,19 +198,17 @@ export class WeavyClient implements WeavyOptions, Destructable {
 }
 
 export class Weavy
-  extends WeavyRealtimeMixin(
-    WeavyLocalizationMixin(
-      WeavyConnectionMixin(
-        WeavyNetworkMixin(
-          WeavyAuthenticationMixin(
-            WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyClient))))
+  extends WeavyApiMixin(
+    WeavyRealtimeMixin(
+      WeavyLocalizationMixin(
+        WeavyConnectionMixin(
+          WeavyNetworkMixin(
+            WeavyAuthenticationMixin(WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyClient)))))
           )
         )
       )
     )
   )
-  implements WeavyClientType {}
+  implements WeavyType {}
 
-export type WeavyType = Weavy;
-
-export type { WyNotificationsEventType }
+export type { WyNotificationsEventType, AppType };

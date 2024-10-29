@@ -1,5 +1,5 @@
 import { DestroyError } from "../utils/errors";
-import { WeavyClient, type WeavyClientType } from "./weavy";
+import { WeavyClient, type WeavyType } from "./weavy";
 import { assign } from "../utils/objects";
 import { defaultFetchSettings } from "../utils/data";
 import type { Constructor } from "../types/generic.types";
@@ -75,7 +75,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
     // FETCH
 
     async fetchOptions(
-      this: this & WeavyClientType,
+      this: this & WeavyType,
       options: FetchOptions = {},
       authorized: boolean = true
     ): Promise<RequestInit> {
@@ -109,7 +109,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
     }
 
     async fetch(
-      this: this & WeavyClientType,
+      this: this & WeavyType,
       url: string | URL,
       options?: FetchOptions,
       retry: boolean = true
@@ -146,7 +146,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
     }
 
     async upload(
-      this: this & WeavyClientType,
+      this: this & WeavyType,
       url: string | URL,
       method: HttpUploadMethodType,
       body: string | FormData,
@@ -191,14 +191,14 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
     }
 
     // DEPRECATED
-    async get(this: this & WeavyClientType, url: string | URL) {
+    async get(this: this & WeavyType, url: string | URL) {
       console.warn(`weavy.get() is deprecated, use weavy.fetch("${url}") instead.`);
       return this.fetch(url);
     }
 
     // DEPRECATED
     async post(
-      this: this & WeavyClientType,
+      this: this & WeavyType,
       url: string | URL,
       method: HttpMethodType,
       body?: BodyInit,

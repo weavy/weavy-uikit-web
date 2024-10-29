@@ -45,8 +45,7 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
   }
 
   private async dispatchLink(_e: Event) {
-    const weavy = await this.whenWeavy();
-    return dispatchLinkEvent(this, weavy, this.notification);
+    return await dispatchLinkEvent(this, this.notification);
   }
 
   private dispatchMark(e: Event, markAsRead: boolean) {

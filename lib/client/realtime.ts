@@ -1,4 +1,4 @@
-import { WeavyClient, type WeavyClientType } from "./weavy";
+import { WeavyClient, type WeavyType } from "./weavy";
 import { Constructor } from "../types/generic.types";
 import {
   RealtimeEventType,
@@ -56,8 +56,8 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
       }
     };
 
-    realtimeSubscribe() {
-      const weavy = this as this & WeavyClientType;
+    async realtimeSubscribe() {
+      const weavy = this as this & WeavyType;
 
       // Notifications
       if (this.notificationEvents) {
@@ -69,7 +69,7 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
     }
 
     realtimeUnsubscribe() {
-      const weavy = this as this & WeavyClientType;
+      const weavy = this as this & WeavyType;
 
       if (this.notificationEvents) {
         weavy.unsubscribe(null, "notification_created", this.dispatchRealtimeEvent);
@@ -84,7 +84,7 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
       super(...args);
     }
 
-    override destroy(this: this & WeavyClientType): void {
+    override destroy(this: this & WeavyType): void {
       this.realtimeUnsubscribe();
       super.destroy();
     }

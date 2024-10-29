@@ -131,9 +131,8 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
       });
 
       nativeNotification.onclick = async () => {
-        const weavy = await this.whenWeavy();
         this.handleMark(true, notification.id);
-        dispatchLinkEvent(this, weavy, notification);
+        await dispatchLinkEvent(this, notification);
       };
 
       nativeNotification.onclose = () => {

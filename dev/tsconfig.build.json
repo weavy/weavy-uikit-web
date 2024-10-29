@@ -19,7 +19,8 @@
   "include": [
     "../lib/**/*.ts",
     "../lib/scss/**/*.scss",
-    "../locales/**/*.ts"
+    "../locales/**/*.ts",
+    "../utils/**/*.{mj,cj,j,t}s"
   ],
   "exclude": [
     "node_modules",

@@ -2,9 +2,7 @@ import { LitElement, PropertyValueMap } from "lit";
 import { property, state } from "lit/decorators.js";
 import { ContextConsumer, provide } from "@lit/context";
 import { type BlockSettingsType, BlockSettingsContext, BlockSettings } from "../contexts/settings-context";
-import { Constructor } from "../types/generic.types";
-import type { ServerConfigurationType } from "../types/server.types";
-import { ServerConfigurationsContext } from "../contexts/configuration-context";
+import type { Constructor } from "../types/generic.types";
 import { whenParentsDefined } from "../utils/dom";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 import type { UserType } from "../types/users.types";
@@ -25,7 +23,11 @@ import { ProductFeaturesContext } from "../contexts/features-context";
 import { ContextualTypes, EntityType } from "../types/app.types";
 import { LinkContext } from "../contexts/link-context";
 import { getStorage } from "../utils/data";
-import type { NotificationsAppearanceType, NotificationsBadgeType, WyLinkEventType } from "../types/notifications.types";
+import type {
+  NotificationsAppearanceType,
+  NotificationsBadgeType,
+  WyLinkEventType,
+} from "../types/notifications.types";
 import { ConversationTypeGuid } from "../types/conversations.types";
 
 export interface BlockProps {
@@ -77,11 +79,6 @@ export interface BlockContextProps {
   app: AppType | undefined;
 
   /**
-   * The configuration from the server provided as a context on the component.
-   */
-  configuration: ServerConfigurationType | undefined;
-
-  /**
    * Config for disabling features in the component.
    * *Note: You can't enable any features that aren't available in your license.*
    */
@@ -115,7 +112,6 @@ export interface BlockContextProviderProps {
   contexts?: {} & BlockContextProps;
 
   whenApp: () => Promise<AppType>;
-  whenConfiguration: () => Promise<ServerConfigurationType>;
   whenHasFeatures: () => Promise<ProductFeaturesType>;
   whenLink: () => Promise<EntityType>;
   whenSettings: () => Promise<BlockSettingsType>;
@@ -139,10 +135,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     @provide({ context: AppContext })
     @state()
     app: AppType | undefined;
-
-    @provide({ context: ServerConfigurationsContext })
-    @state()
-    configuration: ServerConfigurationType = {};
 
     @provide({ context: ProductFeaturesContext })
     @state()
@@ -227,8 +219,8 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
      * Reads a link from storage provides it in the .link property/context.
      */
     protected readStorageLink() {
-      if(!this.storage) {
-        console.error("Storage not available")
+      if (!this.storage) {
+        console.error("Storage not available");
         return;
       }
 
@@ -275,29 +267,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       }
     };
 
-    // DEPRECATED
-    @property({ type: Object })
-    set features(_features: ProductFeaturesType | undefined) {
-      console.warn('Setting a "features" object is deprecated, use feature-disabling properties/attributes instead.');
-
-      // Deprecated backward compatible feature settings object
-      if (_features) {
-        for (const featureKey in ProductFeatureMapping) {
-          const featureConfigKey = ProductFeatureMapping[featureKey];
-          if (featureConfigKey in _features) {
-            const featureProp = ProductFeaturePropMapping[featureKey];
-            const featureDisabled = _features[featureConfigKey] === false;
-            console.warn(`Using "${featureProp}" from deprecated "features.${featureConfigKey}".`);
-            this[featureProp] = featureDisabled;
-          }
-        }
-      }
-    }
-
-    get features() {
-      return this.hasFeatures;
-    }
-
     // PROPERTIES
     @state()
     productType?: ProductTypes;
@@ -322,7 +291,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     get name() {
       return this._appName;
     }
-    
+
     // SETTINGS
     @property({ type: String })
     notifications: NotificationsAppearanceType = "button-list";
@@ -347,10 +316,13 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     noEmbeds = false;
 
     @property({ type: Boolean })
-    noMeetings = false;
+    noGoogleMeet = false;
 
     @property({ type: Boolean })
     noMentions = false;
+
+    @property({ type: Boolean })
+    noMicrosoftTeams = false;
 
     @property({ type: Boolean })
     noPolls = false;
@@ -376,6 +348,9 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     @property({ type: Boolean })
     noWebDAV = false;
 
+    @property({ type: Boolean })
+    noZoomMeetings = false;
+
     // PROMISES
     // TODO: Switch to Promise.withResolvers() when allowed by typescript
 
@@ -385,14 +360,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     });
     async whenApp() {
       return await this.#whenApp;
-    }
-
-    #resolveConfiguration?: (configuration: ServerConfigurationType) => void;
-    #whenConfiguration = new Promise<ServerConfigurationType>((r) => {
-      this.#resolveConfiguration = r;
-    });
-    async whenConfiguration() {
-      return await this.#whenConfiguration;
     }
 
     #resolveHasFeatures?: (hasFeatures: ProductFeaturesType) => void;
@@ -442,7 +409,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     // INTERNAL PROPERTIES
 
     #appQuery = new QueryController<AppType>(this);
-    #configurationQuery = new QueryController<ServerConfigurationType>(this);
     #featuresQuery = new QueryController<ProductFeaturesListType>(this);
     #userQuery = new QueryController<UserType>(this);
 
@@ -455,7 +421,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
 
       this.contexts = {
         app: this.app,
-        configuration: this.configuration,
         hasFeatures: this.hasFeatures,
         link: this.link,
         settings: this.settings,
@@ -468,13 +433,9 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       super.connectedCallback();
       document.addEventListener("wy:link", this.linkEventHandler as unknown as EventListener);
       window.addEventListener("storage", this.storageLinkHandler);
-      
+
       if (this.app) {
         this.requestUpdate("app");
-      }
-
-      if (this.configuration) {
-        this.requestUpdate("configuration");
       }
 
       if (this.hasFeatures) {
@@ -524,14 +485,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       }
 
       if (changedProperties.has("weavy") && this.weavy) {
-        this.#configurationQuery.trackQuery(
-          getApiOptions<ServerConfigurationType>(this.weavy, ["configuration"])
-        );
         this.#userQuery.trackQuery(getApiOptions<UserType>(this.weavy, ["user"]));
-      }
-
-      if (!this.#configurationQuery.result?.isPending && this.#configurationQuery.result?.data) {
-        this.configuration = this.#configurationQuery.result?.data;
       }
 
       if (!this.#userQuery.result?.isPending) {
@@ -545,11 +499,7 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.user = this.#userQuery.result?.data;
       }
 
-      if (
-        (changedProperties.has("productType") || changedProperties.has("weavy")) &&
-        this.productType &&
-        this.weavy
-      ) {
+      if ((changedProperties.has("productType") || changedProperties.has("weavy")) && this.productType && this.weavy) {
         this.#featuresQuery.trackQuery(
           getApiOptions<ProductFeaturesListType>(this.weavy, ["features", this.productType])
         );
@@ -576,6 +526,11 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         changedProperties.has("name") ||
         changedProperties.has("weavy")
       ) {
+        // Reset whenApp
+        this.#whenApp = new Promise<AppType>((r) => {
+          this.#resolveApp = r;
+        });
+
         if (this.contextualType && this.uid && this.weavy) {
           const appData = this.name ? { name: this.name } : undefined;
           this.#appQuery.trackQuery(getAppOptions(this.weavy, this.uid, this.contextualType, appData));
@@ -614,7 +569,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       // Contexts convenience object
       if (
         changedProperties.has("app") ||
-        changedProperties.has("configuration") ||
         changedProperties.has("hasFeatures") ||
         changedProperties.has("link") ||
         changedProperties.has("settings") ||
@@ -623,7 +577,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       ) {
         this.contexts = {
           app: this.app,
-          configuration: this.configuration,
           hasFeatures: this.hasFeatures,
           link: this.link,
           settings: this.settings,
@@ -636,10 +589,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
 
       if (changedProperties.has("app") && this.app) {
         this.#resolveApp?.(this.app);
-      }
-
-      if (changedProperties.has("configuration") && this.configuration) {
-        this.#resolveConfiguration?.(this.configuration);
       }
 
       if (changedProperties.has("hasFeatures") && this.hasFeatures) {
@@ -660,18 +609,6 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
 
       if (changedProperties.has("weavy") && this.weavy) {
         this.#resolveWeavy?.(this.weavy);
-      }
-
-      // BACKWARDS DEPRECATED COMPATIBILITY
-      if (
-        (changedProperties.has("weavy") || changedProperties.has("configuration")) &&
-        this.weavy &&
-        this.configuration
-      ) {
-        if (!this.configuration.zoom_authentication_url && this.weavy.zoomAuthenticationUrl) {
-          console.warn(`Using "zoomAuthenticationUrl" from WyContext.`);
-          this.configuration.zoom_authentication_url = this.weavy.zoomAuthenticationUrl.toString();
-        }
       }
     }
   }

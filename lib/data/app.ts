@@ -1,18 +1,25 @@
 import { MutationKey } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import { AppUpProperties, ContextualTypes, type AppType } from "../types/app.types";
-import { getApi, getApiOptions } from "./api";
+import { getApi, getApiMutation, getApiOptions } from "./api";
 
-export function getAppOptions<T = AppType>(weavy: WeavyType, uid: string, type: ContextualTypes, appData?: AppUpProperties) {
+export function getAppOptions<T extends AppType = AppType>(weavy: WeavyType, uid: string, type: ContextualTypes = ContextualTypes.Unknown, appData?: AppUpProperties) {
   return type === ContextualTypes.Unknown
     ? getApiOptions<T>(weavy, ["apps", uid])
     : getApiOptions<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
 
-export function getApp<T = AppType>(weavy: WeavyType, uid: string, type: ContextualTypes, appData?: AppUpProperties) {
+export function getApp<T extends AppType = AppType>(weavy: WeavyType, uid: string, type: ContextualTypes = ContextualTypes.Unknown, appData?: AppUpProperties) {
   return type === ContextualTypes.Unknown
     ? getApi<T>(weavy, ["apps", uid])
     : getApi<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
+}
+
+export async function mutateApp<T extends AppType = AppType>(weavy: WeavyType, app: T, appData?: AppUpProperties) {
+  const appMutation = getApiMutation<T>(weavy, ["apps", app.uid || app.id], undefined, undefined, "PATCH");
+  const appResult = appMutation.mutate(JSON.stringify({ ...appData }))
+  
+  return appResult
 }
 
 export type MutateAppSubscribeProps = {

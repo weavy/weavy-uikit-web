@@ -33,7 +33,6 @@ export function getNotificationsOptions(
   return {
     ...options,
     initialPageParam: 0,
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["notifications", "list", appIdOrUid, type],
     queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const queryParams = new URLSearchParams({

@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $grid-breakpoints: (
   xs: 0,
   sm: 576px,
@@ -36,7 +38,7 @@ $grid-breakpoints: (
 //    >> breakpoint-min(sm, (xs: 0, sm: 576px, md: 768px, lg: 992px, xl: 1200px, xxl: 1400px))
 //    576px
 @function breakpoint-min($name, $breakpoints: $grid-breakpoints) {
-  $min: map-get($breakpoints, $name);
+  $min: map.get($breakpoints, $name);
   @return if($min != 0, $min, null);
 }
 
@@ -50,7 +52,7 @@ $grid-breakpoints: (
 //    >> breakpoint-max(md, (xs: 0, sm: 576px, md: 768px, lg: 992px, xl: 1200px, xxl: 1400px))
 //    767.98px
 @function breakpoint-max($name, $breakpoints: $grid-breakpoints) {
-  $max: map-get($breakpoints, $name);
+  $max: map.get($breakpoints, $name);
   @return if($max and $max > 0, $max - .02, null);
 }
 
@@ -67,7 +69,7 @@ $grid-breakpoints: (
 
 // Makes the @content apply to the given size and container
 @mixin container-size-up($name, $container:null, $breakpoints: $grid-breakpoints) {  
-  $min: map-get($breakpoints, $name);     
+  $min: map.get($breakpoints, $name);     
   @if $container {
     @container #{$container} (inline-size >= #{$min}) {
       @content;

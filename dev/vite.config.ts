@@ -1,13 +1,13 @@
 import { defineConfig, loadEnv } from "vite";
-import packageJson from "../package.json" with { type: "json" };
+import packageJson from "../package.json";
 import dts from "vite-plugin-dts";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
-import { utf8BomPlugin, weavyChunkNames, weavyImportUrlPlugin } from "./vite.plugins";
+import { utf8BomPlugin, weavyAuthServer, weavyChunkNames, weavyImportUrlPlugin } from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
-import litCss from 'vite-plugin-lit-css';
+import litCss from "vite-plugin-lit-css";
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -16,7 +16,7 @@ const version = process.argv.find((s) => s.startsWith("--version="))?.split("=")
 
 // https://vitejs.dev/config/
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   console.log(sourceName, version);
 
   const env = loadEnv(mode, process.cwd(), "");
@@ -52,7 +52,8 @@ export default defineConfig(({ mode }) => {
         lit: true,
       }),
       weavyImportUrlPlugin(),
-      litCss()
+      litCss(),
+      weavyAuthServer(command),
     ],
     define: {
       WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
@@ -67,26 +68,31 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         {
-          find: "@microsoft/signalr", replacement: "@microsoft/signalr/dist/browser/signalr.min.js",
+          find: "@microsoft/signalr",
+          replacement: "@microsoft/signalr/dist/browser/signalr.min.js",
         },
         {
-          find:/@lit\/reactive-element$/, replacement: path.resolve("./node_modules/@lit/reactive-element/node/reactive-element.js"),
+          find: /@lit\/reactive-element$/,
+          replacement: path.resolve("./node_modules/@lit/reactive-element/node/reactive-element.js"),
         },
         {
-          find:/@lit\/reactive-element\/(.*)/, replacement: `${path.resolve("./node_modules/@lit/reactive-element/node")}${path.sep}$1`,
+          find: /@lit\/reactive-element\/(.*)/,
+          replacement: `${path.resolve("./node_modules/@lit/reactive-element/node")}${path.sep}$1`,
         },
         {
-          find:/lit-html$/, replacement: path.resolve("./node_modules/lit-html/node/lit-html.js"),
+          find: /lit-html$/,
+          replacement: path.resolve("./node_modules/lit-html/node/lit-html.js"),
         },
         {
-          find:/lit-html\/(.)/, replacement: `${path.resolve("./node_modules/lit-html/node")}${path.sep}$1`,
+          find: /lit-html\/(.)/,
+          replacement: `${path.resolve("./node_modules/lit-html/node")}${path.sep}$1`,
         },
-      ]
+      ],
     },
     server: {
-      proxy: {
+      /*proxy: {
         "/api": "http://localhost:3001/",
-      },
+      },*/
       https: httpsConfig,
     },
     esbuild: {
@@ -94,6 +100,13 @@ export default defineConfig(({ mode }) => {
       charset: "utf8",
       //banner: "\ufeff", // UTF-8 BOM
       keepNames: true,
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: "modern-compiler", // or "modern"
+        },
+      },
     },
     build: {
       lib: {
@@ -137,6 +150,9 @@ export default defineConfig(({ mode }) => {
               react: ["react", "react-dom"],
               pdfjs: ["pdfjs-dist"],
               "locales/sv-SE": ["./locales/sv-SE"],
+              /*tools: [
+                "@tanstack/query-devtools"
+              ]*/
             },
             chunkFileNames: weavyChunkNames,
           },

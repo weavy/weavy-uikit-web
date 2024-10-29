@@ -30,11 +30,15 @@ export class WyToasts extends LitElement {
 
   close() {
     this.show = false;
-    this.viewportRef.value?.hidePopover();
+    try {
+      this.viewportRef.value?.hidePopover();
+    } catch {
+      /* No worries */
+    }
   }
 
   handleClose(e: ToggleEvent) {
-    if (e.newState === "closed") {
+    if ((e.type === "toggle" && e.newState === "closed") || e.type === "click") {
       this.show = false;
       this.dispatchEvent(new CustomEvent("hide"));
       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
@@ -51,10 +55,14 @@ export class WyToasts extends LitElement {
 
   override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("show")) {
-      if (this.show) {
-        this.viewportRef.value?.showPopover();
-      } else {
-        this.viewportRef.value?.hidePopover();
+      try {
+        if (this.show) {
+          this.viewportRef.value?.showPopover();
+        } else {
+          this.viewportRef.value?.hidePopover();
+        }
+      } catch {
+        /* No worries */
       }
     }
     if (changedProperties.has("show") && this.show) {
@@ -63,7 +71,7 @@ export class WyToasts extends LitElement {
   }
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
-    this.viewportRef.value?.addEventListener("toggle", (e: Event) => {
+    this.viewportRef.value?.addEventListener(this.viewportRef.value.popover ? "toggle" : "click", (e: Event) => {
       this.handleClose(e as ToggleEvent);
     });
     if (this.show) {
@@ -92,7 +100,7 @@ export class WyToast extends LitElement {
 
   private toastRef = createRef<HTMLDivElement>();
 
-  static defaultDuration = 5000;
+  static defaultDuration = 50000;
 
   @state()
   show = false;
@@ -109,7 +117,7 @@ export class WyToast extends LitElement {
     if (this.toastRef.value) {
       await whenElementVisible(this.toastRef.value, false);
     }
-    this.dispatchEvent(new CustomEvent("closed", { detail: { silent }}));
+    this.dispatchEvent(new CustomEvent("closed", { detail: { silent } }));
     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
   }
 

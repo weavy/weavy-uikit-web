@@ -11,7 +11,7 @@ describe("wy-context", () => {
 
     await el.updateComplete;
 
-    expect(el).shadowDom.to.exist;
+    expect(el).shadowDom.to.exist;    
     expect(el).shadowDom.to.equal(`<slot></slot>`);
     expect(el).lightDom.to.equal(`Test`);
   });
@@ -55,7 +55,6 @@ describe("wy-context", () => {
     const el = await fixture<WyContext>(html`
       <wy-context
         config='{ 
-        "zoomAuthenticationUrl": "https://localhost:8001",
         "cloudFilePickerUrl": "https://localhost:8002",
         "reactions": ["⛓️‍💥", "🫎"],
         "locales": ["en-PI", "xx-pirate"],
@@ -67,7 +66,6 @@ describe("wy-context", () => {
     await el.updateComplete;
 
     expect(el).to.have.property("config").that.is.instanceOf(Object);
-    expect(el.config).to.have.property("zoomAuthenticationUrl").that.equals("https://localhost:8001");
     expect(el.config).to.have.property("cloudFilePickerUrl").that.equals("https://localhost:8002");
     expect(el.config)
       .to.have.property("reactions")
