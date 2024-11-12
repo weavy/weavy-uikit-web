@@ -7,8 +7,8 @@ export { type WeavyType } from "../client/weavy";
 export const WeavyContext = createContext<WeavyType | undefined>(Symbol.for("weavy-client"));
 
 export function createWeavyContextProvider(host: HTMLElement, initialValue?: WeavyType) {
-    throwOnDomNotAvailable()
-    return new ContextProvider(host, { context: WeavyContext, initialValue });
+  throwOnDomNotAvailable();
+  return new ContextProvider(host, { context: WeavyContext, initialValue });
 }
 
 /**

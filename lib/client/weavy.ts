@@ -143,6 +143,13 @@ export class WeavyClient implements WeavyOptions, Destructable {
     }
   }
 
+  /**
+   * Prefix to use for caches.
+   */
+  get cachePrefix() {
+    return `${WeavyClient.version}:${this.url}`
+  }
+
   // CONSTRUCTOR
 
   constructor(options?: WeavyClientOptionsType) {

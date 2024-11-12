@@ -38,8 +38,8 @@ export async function setStorageItem(prefix: string, property: PropertyKey, item
   }
 }
 
-export async function persistProperties<T = object>(parent: T, key: string, properties: Array<keyof T>) {
-  const prefix = `${keyPrefix}:${typeof parent}:${key}`;
+export async function persistProperties<T = object>(parent: T, key: string, properties: Array<keyof T>, cachePrefix?: string) {
+  const prefix = `${keyPrefix}:${cachePrefix ? `${cachePrefix}:` : ''}${typeof parent}:${key}`;
 
   properties.forEach(async (property) => {
     // Try to initialize property from storage
