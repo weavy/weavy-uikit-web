@@ -7,10 +7,11 @@ import { Constructor } from "../types/generic.types";
 
 export interface WeavyConnectionProps {
   whenConnectionRequested: () => Promise<void>;
-  whenConnectionStarted: () => Promise<void>;
-  createConnection: () => Promise<void>;
+  whenConnectionStarted: () => Promise<HubConnection>;
+  whenConnectionCreated: () => Promise<HubConnection>;
+  createConnection: () => Promise<HubConnection>;
   disconnect: () => Promise<void>;
-  connect: () => Promise<void>;
+  connect: () => Promise<HubConnection>;
   subscribe: <T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
@@ -49,6 +50,17 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
       await this._whenConnectionRequested;
     }
 
+    // whenConnectionCreated
+    _resolveConnectionCreated?: (value: HubConnection) => void;
+
+    _whenConnectionCreated = new Promise<HubConnection>((r) => {
+      this._resolveConnectionCreated = r;
+    });
+
+    async whenConnectionCreated() {
+      return await this._whenConnectionCreated;
+    }
+
     // RTM CONNECTION
 
     _connection?: HubConnection;
@@ -56,9 +68,9 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
 
     signalRAccessTokenRefresh = false;
 
-    _whenConnectionStartedResolve?: (value: unknown) => void;
+    _whenConnectionStartedResolve?: (value: HubConnection) => void;
     _whenConnectionStartedReject?: (reason: unknown) => void;
-    _whenConnectionStarted = new Promise((resolve, reject) => {
+    _whenConnectionStarted = new Promise<HubConnection>((resolve, reject) => {
       this._whenConnectionStartedResolve = resolve;
       this._whenConnectionStartedReject = reject;
     });
@@ -68,7 +80,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
     }
 
     async whenConnectionStarted() {
-      await this._whenConnectionStarted;
+      return await this._whenConnectionStarted;
     }
 
     async createConnection(this: this & WeavyType) {
@@ -142,7 +154,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           }
 
           this.networkStateIsPending = true;
-          this._whenConnectionStarted = new Promise((resolve, reject) => {
+          this._whenConnectionStarted = new Promise<HubConnection>((resolve, reject) => {
             this._whenConnectionStartedResolve = resolve;
             this._whenConnectionStartedReject = reject;
           });
@@ -161,8 +173,11 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
             this._connection?.invoke("Subscribe", this._connectionEventListeners[i].name);
           }
         });
+        this._resolveConnectionCreated?.(this._connection);
         this.connect();
       }
+
+      return this._connection;
     }
 
     async disconnect(this: this & WeavyType) {
@@ -177,69 +192,75 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         throw new DestroyError();
       }
 
+      let connection: HubConnection;
       if (this._connection) {
-        console.log(this.weavyId, "Connecting SignalR...");
-        //this.networkStateIsPending = true;
+        connection = this._connection;
+      } else {
+        connection = await this.whenConnectionCreated();
+      }
 
-        try {
-          if (!window.navigator.onLine) {
-            throw new Error();
-          }
+      console.log(this.weavyId, "Connecting SignalR...");
+      //this.networkStateIsPending = true;
 
-          await Promise.race([this._connection.start(), this.whenConnectionStarted()]);
-          this.signalRAccessTokenRefresh = false;
+      try {
+        if (!window.navigator.onLine) {
+          throw new Error();
+        }
+
+        await Promise.race([connection.start(), this.whenConnectionStarted()]);
+        this.signalRAccessTokenRefresh = false;
+        this.networkStateIsPending = false;
+        this.connectionState = "connected";
+        this._whenConnectionStartedResolve?.(connection);
+        console.info(this.weavyId, "SignalR connected.");
+      } catch (e: unknown) {
+        if (e instanceof DestroyError) {
+          console.warn(this.weavyId, "SignalR connection aborted.");
+          return connection;
+        }
+        if (!window.navigator.onLine) {
           this.networkStateIsPending = false;
-          this.connectionState = "connected";
-          this._whenConnectionStartedResolve?.(undefined);
-          console.info(this.weavyId, "SignalR connected.");
-        } catch (e: unknown) {
-          if (e instanceof DestroyError) {
-            console.warn(this.weavyId, "SignalR connection aborted.");
-            return;
-          }
-          if (!window.navigator.onLine) {
-            this.networkStateIsPending = false;
-            console.log(this.weavyId, "Offline, reconnecting SignalR when online.");
+          console.log(this.weavyId, "Offline, reconnecting SignalR when online.");
+          await new Promise((r) => {
+            window.addEventListener("online", r, { once: true });
+          });
+        } else {
+          if (
+            !this.signalRAccessTokenRefresh &&
+            window.document.visibilityState !== "hidden" &&
+            (e as Error).toString().includes("Unauthorized")
+          ) {
+            console.log(this.weavyId, "Retrying SignalR connect with fresh token.");
+            this.signalRAccessTokenRefresh = true;
+          } else {
+            console.log(
+              this.weavyId,
+              "Server is probably down, retrying SignalR connect after a delay or when window regains focus."
+            );
+            this.connectionState = "reconnecting";
             await new Promise((r) => {
+              // after timeout
+              setTimeout(r, 5000);
+              // or after tab gains focus again
+              window.addEventListener("visibilitychange", r, { once: true });
+              window.addEventListener("offline", r, { once: true });
               window.addEventListener("online", r, { once: true });
             });
-          } else {
-            if (
-              !this.signalRAccessTokenRefresh &&
-              window.document.visibilityState !== "hidden" &&
-              (e as Error).toString().includes("Unauthorized")
-            ) {
-              console.log(this.weavyId, "Retrying SignalR connect with fresh token.");
-              this.signalRAccessTokenRefresh = true;
-            } else {
-              console.log(
-                this.weavyId,
-                "Server is probably down, retrying SignalR connect after a delay or when window regains focus."
-              );
-              this.connectionState = "reconnecting";
-              await new Promise((r) => {
-                // after timeout
-                setTimeout(r, 5000);
-                // or after tab gains focus again
-                window.addEventListener("visibilitychange", r, { once: true });
-                window.addEventListener("offline", r, { once: true });
-                window.addEventListener("online", r, { once: true });
-              });
-            }
           }
-
-          if (window.navigator.onLine && document?.visibilityState !== "hidden") {
-            await new Promise((r) => setTimeout(r, 1000));
-          }
-
-          // Check version in parallel to attempting to reconnect.
-          this.checkVersion();
-
-          // Reconnect
-          this.networkStateIsPending = true;
-          await this.connect();
         }
+
+        if (window.navigator.onLine && document?.visibilityState !== "hidden") {
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+
+        // Check version in parallel to attempting to reconnect.
+        this.checkVersion();
+
+        // Reconnect
+        this.networkStateIsPending = true;
+        await this.connect();
       }
+      return connection;
     }
 
     async subscribe<T extends RealtimeEventType | RealtimeDataType>(
@@ -257,7 +278,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         const name = group ? group + ":" + event : event;
         if (!this._connectionEventListeners) {
           // Wait for init to complete
-          await new Promise((r) => queueMicrotask(() => r(true)))
+          await new Promise((r) => queueMicrotask(() => r(true)));
         }
 
         if (this._connectionEventListeners.some((el) => el.name === name && el.callback === callback)) {

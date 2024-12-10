@@ -1,5 +1,5 @@
 import { ContextEvent as ContextRequestEvent } from "@lit/context";
-import { ValueNotifier } from "node_modules/@lit/context/lib/value-notifier.js";
+import { ValueNotifier } from "../../node_modules/@lit/context/lib/value-notifier.js";
 import type { Context, ContextType } from "@lit/context";
 
 declare global {

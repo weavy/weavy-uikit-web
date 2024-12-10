@@ -28,12 +28,12 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
   return class WeavyRealtime extends Base implements WeavyRealtimeProps {
     _notificationEvents: boolean = WeavyClient.defaults.notificationEvents ?? false;
 
-    get notificationEvents() {
+    get notificationEvents(): boolean {
       return this._notificationEvents;
     }
-    set notificationEvents(enable: boolean) {
+    set notificationEvents(enable: boolean | null | undefined) {
       this.realtimeUnsubscribe();
-      this._notificationEvents = enable;
+      this._notificationEvents = enable ?? false;
       this.realtimeSubscribe();
     }
 

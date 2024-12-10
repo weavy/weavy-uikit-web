@@ -110,17 +110,12 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
       return;
     }
 
-    updateCacheItem(
-      this.weavy.queryClient,
-      ["posts", this.app!.id],
-      realtimeEvent.entity.id,
-      (item: PostType) => {
-        item.reactions.data = [
-          ...(item.reactions.data || []),
-          { content: realtimeEvent.reaction, created_by: realtimeEvent.actor },
-        ];
-      }
-    );
+    updateCacheItem(this.weavy.queryClient, ["posts", this.app!.id], realtimeEvent.entity.id, (item: PostType) => {
+      item.reactions.data = [
+        ...(item.reactions.data || []),
+        { content: realtimeEvent.reaction, created_by: realtimeEvent.actor },
+      ];
+    });
   };
 
   handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
@@ -128,16 +123,11 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
       return;
     }
 
-    updateCacheItem(
-      this.weavy.queryClient,
-      ["posts", this.app!.id],
-      realtimeEvent.entity.id,
-      (item: PostType) => {
-        if (item.reactions.data) {
-          item.reactions.data = item.reactions.data.filter((item) => item.created_by?.id !== realtimeEvent.actor.id);
-        }
+    updateCacheItem(this.weavy.queryClient, ["posts", this.app!.id], realtimeEvent.entity.id, (item: PostType) => {
+      if (item.reactions.data) {
+        item.reactions.data = item.reactions.data.filter((item) => item.created_by?.id !== realtimeEvent.actor.id);
       }
-    );
+    });
   };
 
   #unsubscribeToRealtime?: () => void;
@@ -160,7 +150,7 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
 
       // realtime
       const subscribeGroup = `a${this.app.id}`;
-      
+
       this.weavy.subscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
       this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
       this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
@@ -185,79 +175,84 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
     const { data: infiniteData, isPending } = this.postsQuery.result ?? {};
     const flattenedPages = infiniteData?.pages.flatMap((messageResult) => messageResult.data);
 
-    return html`
-      <wy-buttons floating reverse>
-        <wy-notification-button-list></wy-notification-button-list>
-      </wy-buttons>
+    return this.app
+      ? html`
+          <wy-buttons floating reverse>
+            <wy-notification-button-list></wy-notification-button-list>
+          </wy-buttons>
 
-      <div class="wy-posts">
-        ${this.app && this.user && hasPermission(PermissionTypes.Create, this.app.permissions)
-          ? html`
-              <div class="wy-post">
-                <wy-editor
-                  editorLocation="apps"
-                  .typing=${false}
-                  .draft=${true}
-                  placeholder=${msg("Create a post...")}
-                  buttonText=${msg("Post")}
-                  @submit=${(e: CustomEvent) => this.handleSubmit(e)}
-                ></wy-editor>
-              </div>
-            `
-          : nothing}
-        <!-- this.user ?? -->
-        ${!isPending
-          ? html`
-              ${this.app && this.user && flattenedPages
-                ? repeat(
-                    flattenedPages,
-                    (post) => post.id,
-                    (post) => {
-                      return this.app && this.user
-                        ? html`<wy-post
-                            id="post-${post.id}"
-                            .postId=${post.id}
-                            .temp=${post.temp || false}
-                            .createdBy=${post.created_by}
-                            .createdAt=${post.created_at}
-                            .modifiedAt=${post.updated_at}
-                            .isSubscribed=${post.is_subscribed}
-                            .isTrashed=${post.is_trashed}
-                            .html=${post.html}
-                            .text=${post.text}
-                            .plain=${post.plain}
-                            .attachments=${post.attachments?.data}
-                            .meeting=${post.meeting}
-                            .pollOptions=${post.options?.data}
-                            .embed=${post.embed}
-                            .reactions=${post.reactions?.data}
-                            .commentCount=${post.comments?.count || 0}
-                            @subscribe=${(e: CustomEvent) => {
-                              this.subscribePostMutation?.mutate({ id: e.detail.id, subscribe: e.detail.subscribe });
-                            }}
-                            @trash=${(e: CustomEvent) => {
-                              this.removePostMutation?.mutate({ id: e.detail.id });
-                            }}
-                            @restore=${(e: CustomEvent) => {
-                              this.restorePostMutation?.mutate({ id: e.detail.id });
-                            }}
-                            @vote=${(e: CustomEvent) => {
-                              this.pollMutation?.mutate({
-                                optionId: e.detail.id,
-                                parentType: e.detail.parentType,
-                                parentId: e.detail.parentId,
-                              });
-                            }}
-                          ></wy-post>`
-                        : nothing;
-                    }
-                  )
-                : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-              <div ${ref(this.pagerRef)} class="wy-pager"></div>
-            `
-          : html` <wy-empty><wy-spinner overlay></wy-spinner></wy-empty> `}
-      </div>
-    `;
+          <div class="wy-posts">
+            ${this.user && hasPermission(PermissionTypes.Create, this.app.permissions)
+              ? html`
+                  <div class="wy-post">
+                    <wy-editor
+                      editorLocation="apps"
+                      .typing=${false}
+                      .draft=${true}
+                      placeholder=${msg("Create a post...")}
+                      buttonText=${msg("Post")}
+                      @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+                    ></wy-editor>
+                  </div>
+                `
+              : nothing}
+            <!-- this.user ?? -->
+            ${!isPending
+              ? html`
+                  ${this.user && flattenedPages
+                    ? repeat(
+                        flattenedPages,
+                        (post) => post.id,
+                        (post) => {
+                          return this.user
+                            ? html`<wy-post
+                                id="post-${post.id}"
+                                .postId=${post.id}
+                                .temp=${post.temp || false}
+                                .createdBy=${post.created_by}
+                                .createdAt=${post.created_at}
+                                .modifiedAt=${post.updated_at}
+                                .isSubscribed=${post.is_subscribed}
+                                .isTrashed=${post.is_trashed}
+                                .html=${post.html}
+                                .text=${post.text}
+                                .plain=${post.plain}
+                                .attachments=${post.attachments?.data}
+                                .meeting=${post.meeting}
+                                .pollOptions=${post.options?.data}
+                                .embed=${post.embed}
+                                .reactions=${post.reactions?.data}
+                                .commentCount=${post.comments?.count || 0}
+                                @subscribe=${(e: CustomEvent) => {
+                                  this.subscribePostMutation?.mutate({
+                                    id: e.detail.id,
+                                    subscribe: e.detail.subscribe,
+                                  });
+                                }}
+                                @trash=${(e: CustomEvent) => {
+                                  this.removePostMutation?.mutate({ id: e.detail.id });
+                                }}
+                                @restore=${(e: CustomEvent) => {
+                                  this.restorePostMutation?.mutate({ id: e.detail.id });
+                                }}
+                                @vote=${(e: CustomEvent) => {
+                                  this.pollMutation?.mutate({
+                                    optionId: e.detail.id,
+                                    parentType: e.detail.parentType,
+                                    parentId: e.detail.parentId,
+                                  });
+                                }}
+                              ></wy-post>`
+                            : nothing;
+                        }
+                      )
+                    : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
+                  <div ${ref(this.pagerRef)} class="wy-pager"></div>
+                `
+              : html` <wy-empty><wy-spinner padded></wy-spinner></wy-empty> `}
+          </div>
+        `
+      : html` <wy-empty><wy-spinner padded></wy-spinner></wy-empty> `;
   }
 
   override disconnectedCallback(): void {

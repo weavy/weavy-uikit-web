@@ -56,7 +56,7 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
 
     return html`
       <div
-        class="wy-item wy-poll-option"
+        class="wy-item wy-list-item wy-poll-option"
         tabindex="0"
         @click=${() => this.dispatchVote(this.option.id!)}
         @keydown=${clickOnEnterAndConsumeOnSpace}
@@ -94,7 +94,7 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
                 ? html`
                     ${data.votes?.data!.map(
                       (vote) => html`
-                        <div class="wy-item">
+                        <div class="wy-item wy-list-item">
                           <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.display_name}></wy-avatar>
                           <div class="wy-item-body">${vote.display_name}</div>
                         </div>

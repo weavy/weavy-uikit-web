@@ -7,6 +7,7 @@
   background: none;
   border: none;
   padding: 0;
+  margin: 0;
 
   &[popover] {
     position: fixed;
@@ -23,6 +24,8 @@
   align-items: center;
   justify-content: center;
   overflow: visible;
+  max-width: 100%;
+  max-height: 100%;
 
   &[open] {
     display: flex;
@@ -30,6 +33,11 @@
 
   &:popover-open {
     display: flex;
+  }
+
+  &:focus-visible {
+    // Temporary fix for misplaced focus-ring
+    outline: none;
   }
 }
 
@@ -45,10 +53,11 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border-radius: var.default(--wy-border-radius);
-    box-shadow: var.default(--wy-shadow-level4);
-
+    border-radius: 0;
+    
     @include breakpoints.media-breakpoint-up(md) {
+      border-radius: var.default(--wy-border-radius);
+      box-shadow: var.default(--wy-shadow-level4);
       margin-left: var.wy-rem(4);
       margin-top: auto;
       margin-right: var.wy-rem(4);
@@ -61,6 +70,8 @@
   &.wy-modal-full {
     width: 100%;
     height: 100%;
+    overflow: hidden;
+    border-radius: 0;
 
     @include breakpoints.media-breakpoint-up(md) {
       margin: 0;

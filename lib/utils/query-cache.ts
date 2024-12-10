@@ -50,8 +50,13 @@ export function findAnyExistingItem<TDataItem extends PlainObjectType>(
   return existingItem && copy ? <TDataItem>{ ...existingItem } : existingItem;
 }
 
-export function addToQueryData<TDataItem extends PlainObjectType>(
-  queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined,
+export function addToQueryData<
+  TDataItem extends PlainObjectType,
+  TQueryData extends InfiniteData<InfiniteQueryResultType<TDataItem>, unknown> | QueryResultType<TDataItem> =
+    | InfiniteData<InfiniteQueryResultType<TDataItem>, unknown>
+    | QueryResultType<TDataItem>
+>(
+  queryData: NoInfer<TQueryData> | undefined,
   item: TDataItem,
   sorting: { by?: string; descending?: boolean } = {},
   previousId?: number
@@ -333,32 +338,39 @@ export function removeQueryData<TDataItem extends PlainObjectType>(
   return queryData;
 }
 
-export const addCacheItem = <T extends PlainObjectType>(
+export const addCacheItem = <
+  T extends PlainObjectType,
+  TQueryFnData extends InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> | undefined =
+    | InfiniteData<InfiniteQueryResultType<T>, unknown>
+    | QueryResultType<T>
+    | undefined
+>(
   queryClient: QueryClient,
   key: QueryKey,
   item: T,
   tempId?: number,
   sorting?: { by?: string; descending?: boolean }
-): T | void => {
-  return queryClient.setQueryData(key, (data: unknown) => {
-    return addToQueryData<T>(
-      data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> | undefined,
-      item,
-      sorting,
-      tempId
-    ) as NoInfer<void | T> | undefined;
+): TQueryFnData | undefined => {
+  return queryClient.setQueryData<TQueryFnData>(key, (data) => {
+    return addToQueryData<T>(data, item, sorting, tempId) as NoInfer<TQueryFnData> | undefined;
   });
 };
 
-export const addCacheItems = <T extends PlainObjectType>(
+export const addCacheItems = <
+  T extends PlainObjectType,
+  TQueryFnData extends InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> =
+    | InfiniteData<InfiniteQueryResultType<T>, unknown>
+    | QueryResultType<T>
+>(
   queryClient: QueryClient,
-  filters: QueryFilters,
+  filters: QueryFilters<TQueryFnData>,
   item: T,
   tempId?: number,
   sorting?: { by?: string; descending?: boolean }
 ): T | void => {
-  queryClient.setQueriesData<InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>>(filters, (data) =>
-    addToQueryData<T>(data, item, sorting, tempId)
+  queryClient.setQueriesData<TQueryFnData>(
+    filters,
+    (data) => addToQueryData<T>(data, item, sorting, tempId) as NoInfer<TQueryFnData> | undefined
   );
 };
 
@@ -428,7 +440,7 @@ export const updateCacheItemCount = <T extends PlainObjectType>(
     const { count } = data as QueryResultType<T>;
     return { count: fnUpdater(count) } as unknown as NoInfer<void | T> | undefined;
   });
-}
+};
 
 export const updateCacheItemsCount = <T extends PlainObjectType>(
   queryClient: QueryClient,
@@ -439,7 +451,7 @@ export const updateCacheItemsCount = <T extends PlainObjectType>(
     const { count } = data as QueryResultType<T>;
     return { count: fnUpdater(count) } as unknown as NoInfer<void | T> | undefined;
   });
-}
+};
 
 // export const setCacheItem = (queryClient: QueryClient, key: QueryKey, id: number, updated: any) => {
 //     const data = queryClient.getQueryData<any>(key);

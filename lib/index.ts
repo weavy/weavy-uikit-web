@@ -6,6 +6,7 @@ import { includeReversedProperties } from "./utils/objects";
 export * from "./client/weavy";
 export * from "./contexts/weavy-context";
 export { ContextController } from "./controllers/context-controller";
+export type * from "./contexts/"
 
 // WyContext should be first for optimal loading when used as a provider.
 export { WyContext, type WyContextType } from "./wy-context";

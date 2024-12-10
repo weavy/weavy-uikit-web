@@ -11,7 +11,7 @@ export const SOURCE_LOCALE = "en";
 
 export interface WeavyLocalizationProps {
   locales: [string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)][];
-  localization?: ReturnType<typeof configureLocalization>;
+  readonly localization?: ReturnType<typeof configureLocalization>;
   locale: string;
 }
 
@@ -36,17 +36,21 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
       ["sv-SE", () => import("../../locales/sv-SE")],
     ]);
 
-    get locales() {
+    get locales(): WeavyLocalizationProps["locales"] {
       return Array.from(this._locales.entries());
     }
 
-    set locales(locales) {
+    set locales(locales: WeavyLocalizationProps["locales"] | null | undefined) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
 
       if (this.localization) {
         throw new Error("Locales may only be configured once");
+      }
+
+      if (!locales) {
+        return
       }
 
       if (!Array.isArray(locales)) {
@@ -63,16 +67,20 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
     }
 
     _locale = WeavyLocalization.sourceLocale;
-    localization?: ReturnType<typeof configureLocalization>;
+    _localization?: ReturnType<typeof configureLocalization>;
+    
+    get localization() {
+      return this._localization
+    }
 
     /**
      * Selected locale. The locale must be pre configured in `.locales`.
      */
-    get locale() {
+    get locale(): string {
       return this._locale;
     }
 
-    set locale(newLocale) {
+    set locale(newLocale: string | null | undefined) {
       if (this.isDestroyed) {
         throw new DestroyError();
       }
@@ -143,7 +151,7 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
             loadLocale: (newLocale) => this.loadLocale(newLocale),
           });
 
-          this.localization = {
+          this._localization = {
             getLocale,
             setLocale,
           };

@@ -33,19 +33,18 @@ export class WyComments extends BlockProviderMixin(LitElement) {
   }
 
   override render() {
-    return html`
-      <wy-buttons floating reverse>
-        <wy-notification-button-list></wy-notification-button-list>
-      </wy-buttons>
-
-      ${this.app && this.user
-        ? html` <wy-comment-list parentId=${this.app?.id} .location=${"apps"}></wy-comment-list> `
-        : html`
-            <wy-empty>
-              <wy-spinner padded></wy-spinner>
-            </wy-empty>
-          `}
-    `;
+    return this.app && this.user
+      ? html`
+          <wy-buttons floating reverse>
+            <wy-notification-button-list></wy-notification-button-list>
+          </wy-buttons>
+          <wy-comment-list parentId=${this.app?.id} .location=${"apps"}></wy-comment-list>
+        `
+      : html`
+          <wy-empty>
+            <wy-spinner padded></wy-spinner>
+          </wy-empty>
+        `;
   }
 }
 

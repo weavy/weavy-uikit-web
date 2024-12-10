@@ -36,7 +36,7 @@ export default class WyAttachment extends LitElement {
     const provider = getProvider(this.provider);
 
     return html`
-      <a href=${this.previewUrl || this.url} class="wy-item wy-item-lg" target="_blank" title=${this.name}>
+      <a href=${this.previewUrl || this.url} class="wy-item wy-list-item-lg" target="_blank" title=${this.name}>
         <wy-icon name=${icon} .overlayName=${provider} size="48" kind=${kind} ext=${ext}></wy-icon>
         <div class="wy-item-body ">
           <div class="wy-item-title">${this.name}</div>

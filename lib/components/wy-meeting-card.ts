@@ -25,14 +25,14 @@ export default class WyMeetingCard extends LitElement {
     return html`
       <div class="wy-list">
         ${meetingHasEnded
-          ? html`<div class="wy-item wy-meeting wy-disabled" title="${msg("Meeting ended")}">
+          ? html`<div class="wy-item wy-list-item wy-meeting wy-disabled" title="${msg("Meeting ended")}">
                 <wy-icon svg="${getMeetingIconName(this.meeting.provider)}" size="48" ></wy-icon>                
                 <div class="wy-item-body">
                   <div class="wy-item-title">${getMeetingTitle(this.meeting.provider)}</div>
                   <div class="wy-item-text">${this.meeting.code}</div>
                 </div> 
               </div>`
-          : html`<a class="wy-item wy-meeting" href=${this.meeting.join_url} target="_blank"  title="${msg("Join meeting")}">
+          : html`<a class="wy-item wy-list-item wy-meeting" href=${this.meeting.join_url} target="_blank"  title="${msg("Join meeting")}">
               <wy-icon svg="${getMeetingIconName(this.meeting.provider)}" size="48" color="native"></wy-icon>
               <div class="wy-item-body">
                 <div class="wy-item-title">${getMeetingTitle(this.meeting.provider)}</div>

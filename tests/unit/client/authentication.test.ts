@@ -90,14 +90,35 @@ describe("WeavyAuthenticationMixin", () => {
     } catch (e) {
       expect(e).to.be.instanceOf(TypeError).that.has.a.property("message").that.contains("invalid string");
     }
-
-    try {
-      // @ts-expect-error TypeError
-      weavy.tokenFactory = async () => null;
-      await weavy.getToken(true);
-    } catch (e) {
-      expect(e).to.be.instanceOf(TypeError);
-    }
   });
 
+  it("can wait for a valid token", async () => {
+    weavy = new Weavy({
+      url: "https://weavy.test",
+      tokenFactory: async () => undefined,
+    });
+    // Initial token
+    queueMicrotask(() => {
+      weavy.tokenFactory = async () => null;
+      queueMicrotask(() => {
+        weavy.tokenFactory = async () => "";
+        queueMicrotask(() => {
+          weavy.tokenFactory = async () => "wyu_delayed-token";
+        });
+      });
+    });
+    expect(await weavy.getToken()).to.equal("wyu_delayed-token");
+    
+    // Refreshed token
+    queueMicrotask(() => {
+      weavy.tokenFactory = async (refresh: boolean) => refresh ? "" : "invalid_token";
+      queueMicrotask(() => {
+        weavy.tokenFactory = async (refresh: boolean) => refresh ? null : "invalid_token";
+        queueMicrotask(() => {
+          weavy.tokenFactory = async (refresh: boolean) => refresh ? "wyu_updated-token" : "invalid_token";
+        });
+      });
+    });
+    expect(await weavy.getToken(true)).to.equal("wyu_updated-token");
+  });
 });

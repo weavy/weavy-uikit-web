@@ -28,6 +28,11 @@ export default class WyConfluence extends BlockConsumerMixin(LitElement) {
   @state()
   showPicker = false;
 
+  constructor() {
+    super();
+    console.warn("Using <wy-confluence-picker> is deprecated! Please contact support for using Confluence with Weavy.");
+  }
+
   open() {
     this.showPicker = true;
   }

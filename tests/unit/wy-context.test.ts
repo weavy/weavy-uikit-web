@@ -51,45 +51,6 @@ describe("wy-context", () => {
     expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
   });
 
-  /*it('has a "config" attribute with unreflected property', async () => {
-    const el = await fixture<WyContext>(html`
-      <wy-context
-        config='{ 
-        "cloudFilePickerUrl": "https://localhost:8002",
-        "reactions": ["⛓️‍💥", "🫎"],
-        "locales": ["en-PI", "xx-pirate"],
-        "localesUrl": "https://localhost:8003",
-        "staleTime": 1,
-        "gcTime": 1
-      }'></wy-context>
-    `);
-    await el.updateComplete;
-
-    expect(el).to.have.property("config").that.is.instanceOf(Object);
-    expect(el.config).to.have.property("cloudFilePickerUrl").that.equals("https://localhost:8002");
-    expect(el.config)
-      .to.have.property("reactions")
-      .that.is.instanceOf(Array)
-      .with.lengthOf(2)
-      .and.contains("⛓️‍💥")
-      .and.contains("🫎");
-    expect(el.config)
-      .to.have.property("locales")
-      .that.is.instanceOf(Array)
-      .with.lengthOf(2)
-      .and.contains("en-PI")
-      .and.contains("xx-pirate");
-    expect(el.config).to.have.property("localesUrl").that.equals("https://localhost:8003");
-    expect(el.config).to.have.property("staleTime").that.equals(1);
-    expect(el.config).to.have.property("gcTime").that.equals(1);
-
-    expect(() => {
-      el.setAttribute("config", "{ 'gcTime': 1 }");
-    }, "invalid JSON").to.change(el, "config");
-    expect(el).property("config").to.be.null;
-  });
-  */
-
   it('has a "locale" attribute with unreflected property that sets locale', async () => {
     const el = await fixture<WyContext>(html` <wy-context locale="en"></wy-context> `);
     expect(() => (el.locales = [["en-PI", {} as LocaleModule]])).to.not.throw;
@@ -100,8 +61,6 @@ describe("wy-context", () => {
     expect(el.locale).to.equal("en-PI");
     expect(() => (el.locale = "xx-pirate")).to.throw;
   });
-
-
 
   /*it('has an "_weavy" property that is unaccessible from the outside', async () => {
     const el = await fixture<WeavyProvider>(html` <wy-provider></wy-provider> `)

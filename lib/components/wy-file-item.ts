@@ -119,7 +119,7 @@ export class WyFileItem extends LitElement {
 
     return html`
       <div
-        class="wy-item ${classMap({
+        class="wy-item wy-list-item ${classMap({
           "wy-item-trashed": file.is_trashed,
           "wy-item-hover": this.hasHover && !file.is_trashed && !this.isRenaming,
         })}"

@@ -3,7 +3,7 @@ import { type ServerErrorResponseType } from "../types/server.types";
 import { type WeavyType } from "../client/weavy";
 import { AppType } from "../types/app.types";
 import { UserType } from "../types/users.types";
-import { MutationKey } from "@tanstack/query-core";
+import { Mutation, MutationKey } from "@tanstack/query-core";
 import { getTempFile } from "./file-create";
 import { updateMutationContext } from "../utils/mutation-cache";
 import { HeaderContentType } from "../types/http.types";
@@ -17,12 +17,9 @@ export type UploadProgressProps = {
   progress: number;
 };
 
-export function removeSuccessfulUploadBlobMutations(
-  weavy: WeavyType,
-  app: AppType,
-  name: string,
-  uniqueId?: string
-) {
+export type UploadBlobMutationType = Mutation<BlobType, Error, MutateFileProps, FileMutationContextType | undefined>;
+
+export function removeSuccessfulUploadBlobMutations(weavy: WeavyType, app: AppType, name: string, uniqueId?: string) {
   const queryClient = weavy.queryClient;
 
   // Remove successful blobs
@@ -32,20 +29,16 @@ export function removeSuccessfulUploadBlobMutations(
       mutationKey: ["apps", app.id, "blobs", uniqueId],
       exact: true,
       status: "success",
-      predicate: (mutation) => mutation.state.data.name === name,
+      predicate: (mutation) => (mutation as UploadBlobMutationType).state.data?.name === name,
     })
     .forEach((mutation) => {
       queryClient.getMutationCache().remove(mutation);
     });
 }
 
-export async function uploadBlob(
-  weavy: WeavyType,
-  file: File,
-  onProgress?: (variables: UploadProgressProps) => void
-) {
+export async function uploadBlob(weavy: WeavyType, file: File, onProgress?: (variables: UploadProgressProps) => void) {
   const formData = new FormData();
-  formData.append("blob", file);  
+  formData.append("blob", file);
 
   const response = await weavy.upload("/api/blobs", "POST", formData, HeaderContentType.Auto, (progress) => {
     if (onProgress) {
@@ -61,26 +54,19 @@ export async function uploadBlob(
   return blob;
 }
 
-export function getSimpleUploadBlobMutationOptions(
-  weavy: WeavyType
-) {
+export function getSimpleUploadBlobMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async (variables: MutateFileProps) => {
       const uploadedFile = await uploadBlob(weavy, variables.file, variables.onProgress);
       return uploadedFile;
-    }
-    // TODO: implement onmutate, onsuccess, onerror...    
+    },
+    // TODO: implement onmutate, onsuccess, onerror...
   };
 
   return options;
 }
 
-export function getUploadBlobMutationOptions(
-  weavy: WeavyType,
-  user: UserType,
-  app: AppType,
-  uniqueId?: string
-) {
+export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, app: AppType, uniqueId?: string) {
   const queryClient = weavy.queryClient;
   const blobsKey: MutationKey = ["apps", app.id, "blobs", uniqueId];
 

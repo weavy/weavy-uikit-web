@@ -280,6 +280,7 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
                 </wy-button>
               `
             : nothing}
+          ${this.app ? html` <wy-notification-button-list></wy-notification-button-list> ` : nothing}
 
           <wy-dropdown icon="sort" title="Sort items by" directionX="left">
             <wy-dropdown-option
@@ -334,8 +335,6 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
               ${msg("Show trashed")}
             </wy-dropdown-option>
           </wy-dropdown>
-
-          <wy-notification-button-list></wy-notification-button-list>
 
           <wy-dropdown directionX="left" ?disabled=${!this.app}>
             ${this.app?.is_subscribed

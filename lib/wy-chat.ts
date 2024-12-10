@@ -43,15 +43,14 @@ export class WyChat extends BlockProviderMixin(LitElement) {
   }
 
   override render() {
-    return html`
-      <wy-buttons floating reverse>
-        <wy-notification-button-list></wy-notification-button-list>
-      </wy-buttons>
-
-      ${this.app
-        ? html` <wy-conversation .conversation=${this.app} .conversationId=${this.app.id}></wy-conversation> `
-        : html` <wy-empty><wy-spinner></wy-spinner></wy-empty> `}
-    `;
+    return this.app
+      ? html`
+          <wy-buttons floating reverse>
+            <wy-notification-button-list></wy-notification-button-list>
+          </wy-buttons>
+          <wy-conversation .conversation=${this.app} .conversationId=${this.app.id}></wy-conversation>
+        `
+      : html` <wy-empty><wy-spinner padded></wy-spinner></wy-empty> `;
   }
 }
 

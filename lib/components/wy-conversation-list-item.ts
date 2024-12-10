@@ -204,7 +204,7 @@ export default class WyConversationListItem extends LitElement {
     return html`
       <div
         class=${classMap({
-          "wy-item wy-item-lg wy-item-hover wy-conversation": true,
+          "wy-item wy-list-item-lg wy-item-hover wy-conversation": true,
           "wy-unread": this.unread,
           "wy-active": this.selected,
         })}

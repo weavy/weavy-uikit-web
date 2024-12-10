@@ -71,6 +71,8 @@ export class WyConfluenceViewer extends LitElement {
   constructor() {
     super();
 
+    console.warn("Using <wy-confluence-picker> is deprecated! Please contact support for using Confluence with Weavy.");
+    
     import("@atlaskit/embedded-confluence").then((ConfluenceModule) => {
       this.PageComponent = ConfluenceModule.Page;
     });

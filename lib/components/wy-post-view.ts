@@ -167,7 +167,7 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
 
     return this.temp
       ? html`<div class="wy-post">
-          <div class="wy-item wy-item-lg">
+          <div class="wy-item">
             <wy-avatar
               .src="${this.createdBy.avatar_url}"
               .isBot=${this.createdBy.is_bot}
@@ -191,7 +191,7 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
         </div>`
       : html`
           <div class="wy-post" part=${partMap({ "wy-highlight": this.highlight && !this.isCommentLinked })} ${ref(this.highlightRef)}>
-            <div class="wy-item wy-item-lg">
+            <div class="wy-item">
               <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
           this.createdBy.display_name
         }></wy-avatar>

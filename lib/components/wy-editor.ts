@@ -313,6 +313,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                     render: function (completion: MentionsCompletion, _state: EditorState) {
                       const div = document.createElement("div");
                       div.classList.add("wy-item");
+                      div.classList.add("wy-list-item");
                       div.classList.add("wy-item-hover");
 
                       if (!completion.item?.access || completion.item.access === AccessTypes.None) {
@@ -823,7 +824,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
       (this.meeting?.provider === "google" && this.hasFeatures?.googleMeet) ||
       (this.meeting?.provider === "microsoft" && this.hasFeatures?.microsoftTeams)
         ? html`
-            <div class="wy-item">
+            <div class="wy-item wy-list-item">
               <wy-icon svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
               <div class="wy-item-body">${getMeetingTitle(this.meeting.provider)}</div>
               <wy-button kind="icon" @click=${this.handleRemoveMeeting}>

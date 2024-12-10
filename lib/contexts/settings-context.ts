@@ -3,6 +3,8 @@ import { BlockSettingProps } from "../mixins/block-mixin";
 import { LitElement } from "lit";
 import { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
 
+export type { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
+
 export class BlockSettings implements BlockSettingProps {
   #component: LitElement;
 

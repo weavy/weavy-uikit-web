@@ -65,7 +65,7 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
     async whenLink() {
       return await this.#whenLink;
     }
-    
+
     #resolveSettings?: (settings: BlockSettingsType) => void;
     #whenSettings = new Promise<BlockSettingsType>((r) => {
       this.#resolveSettings = r;
@@ -145,7 +145,7 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
 
     override connectedCallback(): void {
       super.connectedCallback();
-      
+
       if (this.app) {
         this.requestUpdate("app");
       }
@@ -170,7 +170,6 @@ export const BlockConsumerMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.requestUpdate("weavy");
       }
     }
-
   }
 
   // Cast return type to your mixin's interface intersected with the Base type

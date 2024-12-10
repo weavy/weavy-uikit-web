@@ -1,11 +1,12 @@
 import { LocaleModule } from "@lit/localize";
 import { WeavyType } from "../client/weavy";
+import { Nullable } from "./generic.types";
 /**
  * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
  */
-export type WeavyTokenFactory = (refresh: boolean) => Promise<string>;
+export type WeavyTokenFactory = (refresh: boolean) => Promise<string | null | undefined>;
 
-export interface WeavyOptions {
+export interface StrictWeavyOptions {
   /**
    * The url to the cloud file picker.
    */
@@ -97,6 +98,8 @@ export interface WeavyOptions {
    */
   url?: string | URL;
 }
+
+export type WeavyOptions = Nullable<StrictWeavyOptions>
 
 export type WeavyProps = { weavy: WeavyType };
 

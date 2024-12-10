@@ -130,7 +130,7 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
                     `
                   : html`
                       <div
-                        class="wy-item wy-item-hover wy-item-lg ${classMap({
+                        class="wy-item wy-list-item-lg wy-item-hover ${classMap({
                           "wy-active": versionFile.version == this.activeVersion?.version,
                         })}"
                         tabindex="0"

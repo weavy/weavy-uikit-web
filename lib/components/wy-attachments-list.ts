@@ -44,7 +44,7 @@ export default class WyAttachmentsList extends LitElement {
               @click=${(e: Event) => {
                 !e.defaultPrevented && !a.is_trashed && this.dispatchFileOpen(e, a);
               }}
-              class="wy-item"
+              class="wy-item wy-list-item"
               href="${ifDefined(a.download_url)}"
               title=${a.name}>
               <wy-icon name=${icon} .overlayName=${provider} size="48" kind=${kind} ext=${ext}></wy-icon>

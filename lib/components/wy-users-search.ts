@@ -105,7 +105,7 @@ export default class WyUsersSearch extends LitElement {
     if (this.selected.length > 0) {
       return html`${this.selected.map((member: MemberType) => {
           return html`
-            <div class="wy-item wy-item-hover" @click=${() => this.handleSelected(member, false)} @keydown=${clickOnEnterAndConsumeOnSpace} @keyup=${clickOnEnterAndConsumeOnSpace}>
+            <div class="wy-item wy-list-item wy-item-hover" @click=${() => this.handleSelected(member, false)} @keydown=${clickOnEnterAndConsumeOnSpace} @keyup=${clickOnEnterAndConsumeOnSpace}>
               <wy-avatar
                 id=${member.id}
                 .src=${member.avatar_url}
@@ -148,7 +148,7 @@ export default class WyUsersSearch extends LitElement {
               this.selected.find((s) => s.id === m.id) === undefined
           )
           .map((member: MemberType) => {
-            return html`<div class="wy-item wy-item-hover" @click=${() => this.handleSelected(member, !this.isChecked(member.id))} @keydown=${clickOnEnterAndConsumeOnSpace} @keyup=${clickOnEnterAndConsumeOnSpace}>
+            return html`<div class="wy-item wy-list-item wy-item-hover" @click=${() => this.handleSelected(member, !this.isChecked(member.id))} @keydown=${clickOnEnterAndConsumeOnSpace} @keyup=${clickOnEnterAndConsumeOnSpace}>
               <wy-avatar
                 id=${member.id}
                 .src=${member.avatar_url}

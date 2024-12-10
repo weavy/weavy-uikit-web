@@ -11,14 +11,23 @@
   gap: var.default(--wy-gap);
   padding: var.default(--wy-padding);
   text-decoration: none;
+}
+
+.wy-list-item {
   min-height: var.wy-rem(3);
 }
 
 // Item with room for larger icon and two rows of content
-.wy-item-lg {
-  padding: var.default(--wy-padding);
+.wy-list-item-lg {
   min-height: var.wy-rem(4.5);
+}
+
+
+.wy-item-inner {
+  display: flex;
+  align-items: center;
   gap: var.default(--wy-gap);
+  flex: 1 1 100%;
 }
 
 .wy-item-body {

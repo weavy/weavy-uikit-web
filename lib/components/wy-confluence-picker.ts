@@ -56,6 +56,12 @@ export default class WyConfluencePicker extends LitElement {
   @state()
   spaceId?: string;
 
+  constructor() {
+    super();
+
+    console.warn("Using <wy-confluence-picker> is deprecated! Please contact support for using Confluence with Weavy.");
+  }
+
   private dispatchSubmit(url: string, id: string, title: string) {
     if (this.cloudHost && this.spaceKey) {
       const submitEvent = new CustomEvent<ConfluencePageProps>("submit", {
@@ -172,7 +178,7 @@ export default class WyConfluencePicker extends LitElement {
                       return html`
                         <a
                           href="#"
-                          class="wy-item wy-item-lg wy-item-hover"
+                          class="wy-item wy-list-item-lg wy-item-hover"
                           title=${r.name}
                           @click=${(e: MouseEvent) => this.handleResourceClick(e, r)}
                         >
@@ -198,7 +204,7 @@ export default class WyConfluencePicker extends LitElement {
                         ? html`
                             <a
                               href="#"
-                              class="wy-item wy-item-lg wy-item-hover"
+                              class="wy-item wy-list-item-lg wy-item-hover"
                               title=${content.name}
                               @click=${(e: MouseEvent) => this.handleSpaceClick(e, content.id, content.key)}
                             >
@@ -211,7 +217,7 @@ export default class WyConfluencePicker extends LitElement {
                         : html`
                             <a
                               href="#"
-                              class="wy-item wy-item-lg wy-item-hover"
+                              class="wy-item wy-list-item-lg wy-item-hover"
                               title=${content.title}
                               @click=${(e: MouseEvent) =>
                                 this.handlePageClick(e, content._links.webui, content.id, content.title)}

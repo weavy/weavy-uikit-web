@@ -364,7 +364,7 @@ export default class WyPreview extends BlockConsumerMixin(LitElement) {
         @release-focus=${() => this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
       >
         ${this.showOverlay
-          ? html`
+          ? html`<div class="wy-preview-layout">
               ${this.renderHeader(this.currentFile)}
 
               <div class="wy-main">
@@ -487,6 +487,7 @@ export default class WyPreview extends BlockConsumerMixin(LitElement) {
                       `
                     : nothing}
                 </div>
+              </div>
               </div>
             `
           : nothing}

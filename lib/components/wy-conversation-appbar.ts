@@ -359,7 +359,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
                                     <div class="wy-list">
                                       ${membersData.data?.map(
                                         (member: MemberType) => html`
-                                          <div class="wy-item">
+                                          <div class="wy-item wy-list-item">
                                             <wy-avatar
                                               .src=${member.avatar_url}
                                               .name=${member.display_name}

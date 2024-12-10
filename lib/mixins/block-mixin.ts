@@ -50,13 +50,13 @@ export interface BlockProps {
    * Unique identifier for your app component.
    * The uid should correspond to the uid of the app created using the server-to-server Web API.
    */
-  uid?: string;
+  uid?: string | null;
 
   /**
    * Optional display name for your app component.
    * The name will be updated on the server or fetched from the server.
    */
-  name?: string;
+  name?: string | null;
 }
 
 // Define the interface for the mixin
@@ -200,9 +200,21 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
         this.requestUpdate("link", oldLink);
       } else {
         // Not matching
-        //console.log("link removed", link)
+        //console.log("link removed", link);
         this._link = undefined;
         this.requestUpdate("link", oldLink);
+      }
+    }
+
+    /**
+     * Clears the link and resets the promise.
+     */
+    protected clearLink() {
+      if (this.link) {
+        this.#whenLink = new Promise<EntityType>((r) => {
+          this.#resolveLink = r;
+        });
+        this.link = undefined;
       }
     }
 
@@ -277,8 +289,8 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
     @state()
     conversationTypes?: ConversationTypeGuid[];
 
-    @property()
-    uid?: string;
+    @property({ type: String })
+    uid?: string | null;
 
     private _initialAppName?: string;
     private _appName?: string;
@@ -550,6 +562,14 @@ export const BlockProviderMixin = <T extends Constructor<LitElement>>(Base: T) =
       }
 
       // Links
+      if (
+        changedProperties.has("uid") &&
+        (this.uid || changedProperties.get("uid")) &&
+        this.uid !== changedProperties.get("uid")
+      ) {
+        this.clearLink();
+      }
+
       if (
         (!this.link &&
           ((changedProperties.has("uid") && this.uid) || (changedProperties.has("app") && this.app)) &&

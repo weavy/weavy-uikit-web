@@ -126,7 +126,7 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
     const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.createdAt));
 
     return this.temp
-      ? html`<div class="wy-item wy-item-sm wy-comment-header">
+      ? html`<div class="wy-item wy-comment-header">
             <wy-avatar
               .src="${this.createdBy.avatar_url}"
               .size=${32}
@@ -145,7 +145,7 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
               ${this.html ? html`<div class="wy-content"><wy-skeleton .text=${this.text}></wy-skeleton></div>` : ``}
             </div>
           </div>`
-      : html`<div class="wy-item wy-item-sm wy-comment-header" ${ref(this.highlightRef)}>
+      : html`<div class="wy-item wy-comment-header" ${ref(this.highlightRef)}>
             <wy-avatar
               .src=${this.createdBy.avatar_url}
               .size=${32}

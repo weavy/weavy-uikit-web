@@ -18,7 +18,7 @@ export type ExternalBlobMutationType = MutationObserver<
   FileMutationContextType
 >;
 
-export function removeSuccessfulExternalBlobMutations(weavy: WeavyType, app: AppType, name: string) {
+/*export function removeSuccessfulExternalBlobMutations(weavy: WeavyType, app: AppType, name: string) {
   const queryClient = weavy.queryClient;
 
   // Remove successful blobs
@@ -33,7 +33,7 @@ export function removeSuccessfulExternalBlobMutations(weavy: WeavyType, app: App
     .forEach((mutation) => {
       queryClient.getMutationCache().remove(mutation);
     });
-}
+}*/
 
 export async function externalBlob(weavy: WeavyType, externalBlob: ExternalBlobType) {
   const response = await weavy.fetch("/api/blobs/external", { method: "POST", body: JSON.stringify(externalBlob) });

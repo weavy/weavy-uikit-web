@@ -52,7 +52,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
 
       const environmentVersion = await response.text();
 
-      if (!version || !environmentVersion || version !== environmentVersion) {
+      if (environmentVersion.startsWith("v") && (!version || !environmentVersion || version !== environmentVersion)) {
         try {
           const semverVersion = version.split(".").slice(0, 2);
           const semverEnvironmentVersion = environmentVersion.split(".").slice(0, 2);

@@ -44,7 +44,7 @@ export default class WyPdfViewer extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavy?: WeavyType;
+  protected weavy?: WeavyType;
 
   whenPdfjsResolve?: (value: { pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }) => void
   whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
@@ -102,10 +102,26 @@ export default class WyPdfViewer extends LitElement {
     linkService: this.pdfLinkService,
   });*/
 
-  private pdfLoadingTask?: PDFDocumentLoadingTask;
+  protected pdfLoadingTask?: PDFDocumentLoadingTask;
+
+  protected delayedResize?: number
+  protected resizer: ResizeObserver = new ResizeObserver(() => {
+    if (this.pdfViewer) {
+      if (this.delayedResize) {
+        clearTimeout(this.delayedResize)
+        this.delayedResize = undefined
+      }
+      this.delayedResize = window.setTimeout(() => {
+        if (this.pdfViewer) {
+          // Update/Set scale
+          this.pdfViewer.currentScaleValue = this.pdfViewer._currentScaleValue;
+        }  
+      }, 100)
+    }
+  });
 
   ////////
-  private async open() {
+  protected async open() {
     const { pdfjsLib } = await this.whenPdfjs;
     if (!this.pdfViewer || !this.pdfHistory || !this.l10n || !this.pdfLinkService) {
       return;
@@ -138,6 +154,7 @@ export default class WyPdfViewer extends LitElement {
       this.pdfViewer.setDocument(pdfDocument);
       this.pdfLinkService.setDocument(pdfDocument);
       this.pdfHistory.initialize({
+        // @ts-expect-error Type 'string | null' is not assignable to type 'string'.
         fingerprint: pdfDocument.fingerprints[0],
       });
 
@@ -159,7 +176,7 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  private async close() {
+  protected async close() {
     if (!this.pdfLoadingTask) {
       return Promise.resolve();
     }
@@ -182,7 +199,7 @@ export default class WyPdfViewer extends LitElement {
     return await destructionPromise;
   }
 
-  private pdfViewError(pdfjsLib: pdfjsLibType ,message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
+  protected pdfViewError(pdfjsLib: pdfjsLibType ,message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
     const moreInfoText = [`PDF.js v${pdfjsLib?.version || "?"} (build: ${pdfjsLib?.build || "?"})`];
     if (moreInfo) {
       moreInfoText.push(`Message: ${moreInfo.message}`);
@@ -401,10 +418,11 @@ export default class WyPdfViewer extends LitElement {
       this.pdfEventBus?.on("pagesinit", () => {
         // We can use pdfViewer now, e.g. let's change default scale.
         if (this.isConnected && this.pdfViewer) {
+          //console.log("PDF INIT", this.pdfViewer)
           this.pdfViewer.currentScaleValue = this.DEFAULT_SCALE_VALUE; //"auto";
           this.pageNumberRef.value!.value = "1";
           this.totalPagesRef.value!.innerText = this.pdfViewer!.pagesCount.toFixed(0);
-        }
+          this.resizer.observe(this.pdfViewer.container);        }
       });
       //console.log("new pdf viewer", this.pdfViewer);
     }
@@ -464,7 +482,16 @@ export default class WyPdfViewer extends LitElement {
     `;
   }
 
+  override connectedCallback(): void {
+    super.connectedCallback()
+    if (this.pdfViewer) {
+      this.resizer.observe(this.pdfViewer.container);
+    }
+  }
+
   override disconnectedCallback() {
+    this.resizer.unobserve(this);
+
     try {
       this.close();
       this.pdfViewer?.cleanup();

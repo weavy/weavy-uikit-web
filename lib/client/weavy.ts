@@ -4,19 +4,29 @@ import { globalContextProvider, WeavyContext } from "../contexts/weavy-context";
 import { chrome } from "../utils/browser";
 import { DestroyError } from "../utils/errors";
 import { throwOnDomNotAvailable } from "../utils/dom";
-import type { WeavyOptions, Destructable, WeavyClientOptionsType } from "../types/weavy.types";
-import { SOURCE_LOCALE, WeavyLocalizationMixin, WeavyLocalizationProps } from "./localization";
-import { WeavyNetworkMixin, WeavyNetworkProps } from "./network";
+import type { WeavyOptions, Destructable, WeavyClientOptionsType, WeavyTokenFactory, StrictWeavyOptions } from "../types/weavy.types";
+import { WeavyApiMixin, WeavyApiProps, type AppType } from "./api";
 import { WeavyAuthenticationMixin, WeavyAuthenticationProps } from "./authentication";
 import { WeavyConnectionMixin, WeavyConnectionProps } from "./connection";
-import { WeavyQueryMixin, WeavyQueryProps } from "./query";
-import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 import { WeavyFetchMixin, WeavyFetchProps } from "./fetch";
-import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
+import { SOURCE_LOCALE, WeavyLocalizationMixin, WeavyLocalizationProps } from "./localization";
+import { WeavyNetworkMixin, WeavyNetworkProps } from "./network";
+import { WeavyQueryMixin, WeavyQueryProps } from "./query";
 import { WeavyRealtimeMixin, WeavyRealtimeProps, type WyNotificationsEventType } from "./realtime";
-import { WeavyApiMixin, WeavyApiProps, type AppType } from "./api";
+import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
+import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 
-export type { WeavyOptions, Destructable, WeavyClientOptionsType };
+export type { WeavyOptions, Destructable, WeavyClientOptionsType, WeavyTokenFactory, StrictWeavyOptions };
+export type * from "./api"
+export type * from "./authentication"
+export type * from "./connection"
+export type * from "./fetch"
+export type * from "./localization"
+export type * from "./network"
+export type * from "./query"
+export type * from "./realtime"
+export type * from "./styles"
+export type * from "./version"
 
 export type WeavyType = WeavyClient &
   WeavyNetworkProps &
@@ -34,7 +44,7 @@ export type WeavyType = WeavyClient &
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
  */
-export class WeavyClient implements WeavyOptions, Destructable {
+export class WeavyClient implements StrictWeavyOptions, Destructable {
   /**
    * The semver version of the package.
    */
@@ -47,7 +57,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
 
   // CONFIG
 
-  static defaults: WeavyOptions = {
+  static defaults: StrictWeavyOptions = {
     cloudFilePickerUrl: "https://filebrowser.weavy.io/v14/",
     confluenceAuthenticationUrl: undefined,
     confluenceProductName: undefined,
@@ -97,7 +107,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
   async whenUrl() {
     await this.#whenUrl;
   }
-
+ 
   // Reactive options
 
   #url?: URL;
@@ -105,11 +115,11 @@ export class WeavyClient implements WeavyOptions, Destructable {
   /**
    * The URL to the weavy environment.
    */
-  get url() {
+  get url(): URL | undefined {
     return this.#url;
   }
 
-  set url(url: string | URL | undefined) {
+  set url(url: string | URL | null | undefined) {
     if (this.isDestroyed) {
       throw new DestroyError();
     }
@@ -120,7 +130,9 @@ export class WeavyClient implements WeavyOptions, Destructable {
           this.#url = new URL(url, window.location.toString());
         }
       } else if (url instanceof URL) {
-        this.#url = url;
+        this.#url = url || undefined;
+      } else if (url === undefined || url === null) {
+        this.#url = undefined
       } else {
         throw -1;
       }
@@ -129,7 +141,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
     }
 
     if (
-      !this.disableEnvironmentImports &&
+      url && !this.disableEnvironmentImports &&
       (globalThis as typeof globalThis & { WEAVY_IMPORT_URL: string }).WEAVY_IMPORT_URL === undefined
     ) {
       (globalThis as typeof globalThis & { WEAVY_IMPORT_URL: string }).WEAVY_IMPORT_URL = new URL(
@@ -141,6 +153,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
     if (this.#url) {
       this.#resolveUrl?.(this.#url);
     }
+
   }
 
   /**

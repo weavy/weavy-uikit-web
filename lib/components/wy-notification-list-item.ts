@@ -57,7 +57,7 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
       });
       return this.dispatchEvent(event);
     }
-    return true
+    return true;
   }
 
   private dispatchClose() {
@@ -112,7 +112,7 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
     return html`
       <div
         class=${classMap({
-          "wy-item wy-item-lg wy-item-hover wy-notification": true,
+          "wy-item wy-list-item-lg wy-item-hover wy-notification": true,
           "wy-unread": !this.standalone && Boolean(this.notification.is_unread),
           "wy-read": !this.standalone && !this.notification.is_unread,
           "wy-active": !this.standalone && this.selected,
@@ -123,39 +123,38 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
-        <wy-avatar
-          class="wy-item-top"
-          src=${ifDefined(otherMember?.avatar_url)}
-          name=${ifDefined(otherMember?.display_name)}
-          presence=${otherMember?.presence || "away"}
-          ?isBot=${otherMember?.is_bot}
-          id=${ifDefined(otherMember?.id)}
-          size=${48}
-        ></wy-avatar>
+        <div class="wy-item-inner">
+          <wy-avatar
+            class="wy-item-top"
+            src=${ifDefined(otherMember?.avatar_url)}
+            name=${ifDefined(otherMember?.display_name)}
+            presence=${otherMember?.presence || "away"}
+            ?isBot=${otherMember?.is_bot}
+            id=${ifDefined(otherMember?.id)}
+            size=${48}
+          ></wy-avatar>
 
-        <div class="wy-item-rows wy-item-rows-compact">
-          <div class="wy-item-row">
-            <div class="wy-item-title-lg" title=${title + (detail ? `: "${detail}"`: '')}>
-              ${titleHtml}${detail ? html`: <q class="wy-item-quote">${detail}</q> ` : nothing}
+          <div class="wy-item-rows wy-item-rows-compact">
+            <div class="wy-item-row">
+              <div class="wy-item-title-lg" title=${title + (detail ? `: "${detail}"` : "")}>
+                ${titleHtml}${detail ? html`: <q class="wy-item-quote">${detail}</q> ` : nothing}
+              </div>
             </div>
+            <div class="wy-item-row"> ${timeMeta} ${markButton} </div>
           </div>
-          <div class="wy-item-row"> 
-          ${timeMeta} 
-          ${markButton}
-          </div>
-        </div>
 
-        ${this.standalone
-          ? html`
-              <wy-button
-                kind="icon"
-                @click=${(e: Event) =>
-                  this.dispatchMark(e, Boolean(this.notification.is_unread)) && this.dispatchClose()}
-              >
-                <wy-icon name="close"></wy-icon>
-              </wy-button>
-            `
-          : nothing}
+          ${this.standalone
+            ? html`
+                <wy-button
+                  kind="icon"
+                  @click=${(e: Event) =>
+                    this.dispatchMark(e, Boolean(this.notification.is_unread)) && this.dispatchClose()}
+                >
+                  <wy-icon name="close"></wy-icon>
+                </wy-button>
+              `
+            : nothing}
+        </div>
       </div>
     `;
   }

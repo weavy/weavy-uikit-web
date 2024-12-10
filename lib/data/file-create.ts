@@ -1,4 +1,4 @@
-import { MutationKey, MutationState } from "@tanstack/query-core";
+import { Mutation, MutationKey, MutationState } from "@tanstack/query-core";
 import { getKind, getWebPreviewFormat } from "../utils/files";
 import {
   BlobType,
@@ -120,6 +120,7 @@ export function getFileMutationsByConflictOrError(
         
     }
 }*/
+export type CreateFileMutationType = Mutation<FileType, Error, CreateFileProps, FileMutationContextType | undefined>;
 
 export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name: string) {
   const queryClient = weavy.queryClient;
@@ -131,7 +132,8 @@ export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name:
       mutationKey: ["apps", app.id, "files"],
       exact: true,
       predicate: (mutation) =>
-        /error|success/.test(mutation.state.status) && mutation.state.variables.blob?.name === name,
+        /error|success/.test(mutation.state.status) &&
+        (mutation as CreateFileMutationType).state.variables?.blob?.name === name,
     })
     .forEach((mutation) => {
       queryClient.getMutationCache().remove(mutation);

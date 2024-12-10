@@ -385,7 +385,7 @@ export class WyReactionItem extends LitElement {
 
   override render() {
     return html`
-      <div class="wy-item">
+      <div class="wy-item wy-list-item">
         <wy-avatar
           .src=${this.reaction.created_by?.avatar_url}
           .name=${this.reaction.created_by?.display_name}

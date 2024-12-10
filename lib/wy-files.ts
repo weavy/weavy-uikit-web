@@ -274,14 +274,14 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
       this.weavy.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
       this.weavy.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
 
-      this.#unsubscribeToRealtime = () => {    
+      this.#unsubscribeToRealtime = () => {
         this.weavy?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
         this.weavy?.unsubscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
         this.weavy?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
         this.weavy?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
         this.weavy?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
         this.#unsubscribeToRealtime = undefined;
-      }
+      };
     }
   }
 
@@ -365,7 +365,7 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
                   </wy-icon-display>
                 </wy-empty>
               `
-          : html`<wy-empty><wy-spinner overlay></wy-spinner></wy-empty>`}
+          : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
         <div ${ref(this.pagerRef)} part="wy-pager"></div>
       </div>
       ${!isPending

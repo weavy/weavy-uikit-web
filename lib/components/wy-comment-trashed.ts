@@ -25,7 +25,7 @@ export default class WyCommentTrashed extends LitElement {
 
   override render() {
     return html`
-      <div class="wy-item wy-item-lg">
+      <div class="wy-item">
         <div class="wy-item-body">${msg("Comment was trashed.")}</div>
         <wy-button @click=${() => this.dispatchRestore()} class="wy-button-variant">${msg("Undo")}</wy-button>
       </div>

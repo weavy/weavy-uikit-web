@@ -23,11 +23,10 @@ describe("WeavyConnectionMixin", () => {
     await weavy.whenConnectionRequested()
 
     // Wait for other async functions to finish
-    await new Promise((r) => queueMicrotask(() => r(true)));
-    
+    await weavy.whenConnectionCreated()
     expect(weavy).to.have.property("rtmConnection").that.is.instanceOf(HubConnection);
   });
 
-  it('has a promise "whenConnectionStarted" that resolves')
+  //it('has a promise "whenConnectionStarted" that resolves')
 
 });

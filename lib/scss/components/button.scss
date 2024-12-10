@@ -180,10 +180,10 @@
 
 [part~="wy-buttons-floating"] {
   position: sticky;
-  padding: var.default(--wy-gap-lg) var.default(--wy-gap-lg) 0;
+  padding: var.default(--wy-padding-lg) var.default(--wy-padding-lg) 0;
   top: 0;
   height: 0;
-  margin-bottom: calc(-1 * var.default(--wy-gap-lg));
+  margin-bottom: calc(-1 * var.default(--wy-padding-lg));
   z-index: const.$zindex-fixed;
   --wy-component-background-color: #{color.token(--wy-surface-variant)};
   --wy-component-color: #{color.token(--wy-on-surface-variant)};
