@@ -106,6 +106,9 @@ export class TypingController implements ReactiveController {
     this.updateTyping();
   };
 
+  /**
+   * @fires typing
+   */
   private updateTyping() {
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);

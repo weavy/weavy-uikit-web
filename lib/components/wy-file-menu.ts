@@ -1,18 +1,18 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { msg, localized, str } from "@lit/localize";
 import { consume } from "@lit/context";
-
 import { getIcon } from "../utils/files";
 import { type FileType } from "../types/files.types";
 import { openUrl } from "../utils/urls";
 import { toKebabCase } from "../utils/strings";
 import { type ProductFeaturesType, ProductFeaturesContext } from "../contexts/features-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { iconNamesType } from "../utils/icons";
 
 import "./wy-icon";
 import "./wy-dropdown";
-import { iconNamesType } from "../utils/icons";
 
 @customElement("wy-file-menu")
 @localized()
@@ -67,7 +67,6 @@ export default class WyFileMenu extends LitElement {
   }
 
   private triggerApplication() {
-    // TODO: Change to webdav-url
     this.file && openUrl(this.file.application_url, "_top", this.file.name);
   }
 

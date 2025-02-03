@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
@@ -24,8 +25,8 @@ export default class WyPost extends LitElement {
   @property({ type: Number })
   postId!: number;
 
-  @property({ type: Boolean })
-  temp: boolean = false;
+  // @property({ type: Boolean })
+  // temp: boolean = false;
 
   @property({ attribute: false })
   createdBy!: MemberType;
@@ -121,7 +122,6 @@ export default class WyPost extends LitElement {
         ? html`<wy-post-view
             id="${this.id}"
             .postId=${this.postId}
-            .temp=${this.temp}
             .createdBy=${this.createdBy}
             .createdAt=${this.createdAt}
             .modifiedAt=${this.modifiedAt}

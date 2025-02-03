@@ -95,7 +95,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         const connectionUrl = new URL("/hubs/rtm", this.url);
         if (this._connection.baseUrl !== connectionUrl.toString()) {
           this.connectionState = "reconnecting";
-          console.log(
+          console.info(
             this.weavyId,
             "Reconnecting due to changed url.",
             this._connection.baseUrl,
@@ -161,7 +161,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           this.connect();
         });
         this._connection.onreconnecting(() => {
-          console.log(this.weavyId, "SignalR reconnecting...");
+          console.info(this.weavyId, "SignalR reconnecting...");
           this.connectionState = "reconnecting";
           //this.networkStateIsPending = true;
         });
@@ -199,7 +199,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         connection = await this.whenConnectionCreated();
       }
 
-      console.log(this.weavyId, "Connecting SignalR...");
+      console.info(this.weavyId, "Connecting SignalR...");
       //this.networkStateIsPending = true;
 
       try {
@@ -220,7 +220,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         }
         if (!window.navigator.onLine) {
           this.networkStateIsPending = false;
-          console.log(this.weavyId, "Offline, reconnecting SignalR when online.");
+          console.info(this.weavyId, "Offline, reconnecting SignalR when online.");
           await new Promise((r) => {
             window.addEventListener("online", r, { once: true });
           });
@@ -230,10 +230,10 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
             window.document.visibilityState !== "hidden" &&
             (e as Error).toString().includes("Unauthorized")
           ) {
-            console.log(this.weavyId, "Retrying SignalR connect with fresh token.");
+            console.info(this.weavyId, "Retrying SignalR connect with fresh token.");
             this.signalRAccessTokenRefresh = true;
           } else {
-            console.log(
+            console.info(
               this.weavyId,
               "Server is probably down, retrying SignalR connect after a delay or when window regains focus."
             );

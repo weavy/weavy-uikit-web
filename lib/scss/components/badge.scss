@@ -25,6 +25,16 @@ $badge-padding-x: 0.65em !default;
   }
 }
 
+.wy-badge-reveal {
+  opacity: 1;
+  transition: opacity var.default(--wy-transition)
+      calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
 .wy-button-badge {
   position: absolute;
   right: 0;

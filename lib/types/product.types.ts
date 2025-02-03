@@ -8,11 +8,12 @@ export enum ProductTypes {
 
 export enum ProductFeatures {
   Attachments = "attachments",
+  Bots = "bots",
   CloudFiles = "cloud_files",
   Comments = "comments",
-  Confluence = "confluence",
   Embeds = "embeds",
   GoogleMeet = "google_meet",
+  Meetings = "meetings",
   Mentions = "mentions",
   MicrosoftTeams = "microsoft_teams",
   Polls = "polls",
@@ -23,7 +24,7 @@ export enum ProductFeatures {
   Typing = "typing",
   Versions = "versions",
   WebDAV = "web_dav",
-  //Webhooks = "webhooks",
+  Webhooks = "webhooks",
   ZoomMeetings = "zoom_meetings",
 }
 
@@ -41,6 +42,10 @@ export type ProductFeaturesType = {
    */
   attachments?: boolean;
   /**
+   * Whether bots are enabled.
+   */
+  bots?: boolean;
+  /**
    * Whether the cloud file picker (Google Drive, Dropbox etc.) is enabled.
    */
   cloudFiles?: boolean;
@@ -49,10 +54,6 @@ export type ProductFeaturesType = {
    */
   comments?: boolean;
   /**
-   * Whether confluence picker is enabled.
-   */
-  confluence?: boolean;
-  /**
    * Whether creating embeds from urls in the post text is enabled.
    */
   embeds?: boolean;
@@ -60,6 +61,10 @@ export type ProductFeaturesType = {
    * Whether Google Meet is enabled.
    */
   googleMeet?: boolean;
+  /**
+   * Whether meetings are generally available. This can be ignored if using all individual meeting feature flags, i.e. googleMeet, microsoftTeams and zoomMeetings.
+   */
+  meetings?: boolean;
   /**
    * Whether the possibility to mention other people in the directory in a file comment is enabled.
    */
@@ -101,6 +106,10 @@ export type ProductFeaturesType = {
    */
   webDAV?: boolean;
   /**
+   * Whether Webhooks are enabled. This usually only has effect server side.
+   */
+  webhooks?: boolean;
+  /**
    * Whether Zoom meetings is enabled.
    */
   zoomMeetings?: boolean;
@@ -125,10 +134,6 @@ export type ProductFeatureProps = {
    * Disable comments on posts/files.
    */
   noComments?: boolean;
-  /**
-   * Disable confluence picker.
-   */
-  noConfluence?: boolean;
   /**
    * Disable creating embeds from urls in the post text.
    */
@@ -185,11 +190,12 @@ export type ProductFeatureProps = {
 
 export const ProductFeatureMapping: { [key: string]: keyof ProductFeaturesType } = {
   attachments: "attachments",
+  bots: "bots",
   cloud_files: "cloudFiles",
   comments: "comments",
-  confluence: "confluence",
   embeds: "embeds",
   google_meet: "googleMeet",
+  meetings: "meetings",
   mentions: "mentions",
   microsoft_teams: "microsoftTeams",
   polls: "polls",
@@ -200,6 +206,7 @@ export const ProductFeatureMapping: { [key: string]: keyof ProductFeaturesType }
   typing: "typing",
   versions: "versions",
   web_dav: "webDAV",
+  webhooks: "webhooks",
   zoom_meetings: "zoomMeetings",
 };
 
@@ -207,7 +214,6 @@ export const ProductFeaturePropMapping: { [key: string]: keyof ProductFeaturePro
   attachments: "noAttachments",
   cloud_files: "noCloudFiles",
   comments: "noComments",
-  confluence: "noConfluence",
   embeds: "noEmbeds",
   google_meet: "noGoogleMeet",
   mentions: "noMentions",

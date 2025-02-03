@@ -152,21 +152,6 @@
   margin-top: var.wy-rem(-.125);
 }
 
-.wy-status-pending {  
-  --wy-component-background-color: #{color.token(--wy-inverse-primary)};
-  color:var(--wy-component-background-color);
-}
-
-.wy-status-sent {  
-  --wy-component-background-color: #{color.token(--wy-inverse-primary)};
-  color:var(--wy-component-background-color);
-}
-
-.wy-status-delivered {  
-  --wy-component-background-color: #{color.token(--wy-inverse-primary)};
-  color:var(--wy-component-background-color);
-}
-
 .wy-message-readmore {
   justify-self: center;
   text-align: center;

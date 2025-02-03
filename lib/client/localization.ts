@@ -122,7 +122,7 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
 
       if (this._locales?.has(newLocale)) {
         const localizedTemplate = this._locales.get(newLocale);
-        console.log(
+        console.info(
           this.weavyId,
           typeof localizedTemplate === "function" ? "loading locale" : "preloaded locale",
           newLocale
@@ -143,7 +143,7 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
       if (this._locales?.size) {
         if (!this.localization) {
           const targetLocales = this._locales.keys();
-          console.log(this.weavyId, "Configuring locales", targetLocales);
+          console.info(this.weavyId, "Configuring locales", targetLocales);
 
           const { getLocale, setLocale } = configureLocalization({
             sourceLocale: WeavyLocalization.sourceLocale,

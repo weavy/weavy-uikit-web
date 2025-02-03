@@ -8,7 +8,7 @@
 @property --wy-component-color {
   syntax: "<color>";
   inherits: true;
-  initial-value: transparent;
+  initial-value: currentColor;
 }
 
 @property --wy-component-background-color {

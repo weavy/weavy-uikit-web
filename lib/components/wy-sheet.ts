@@ -1,5 +1,6 @@
 import { LitElement, type PropertyValues, html, css } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -53,25 +54,7 @@ export default class WySheet extends LitElement {
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
     super.willUpdate(changedProperties);
 
-    if (changedProperties.has("show")) {
-      try {
-        if (this.show) {
-          if (this.viewportRef.value?.popover) {
-            this.viewportRef.value?.showPopover();
-          } else {
-            this.viewportRef.value?.show();
-          }
-        } else {
-          if (this.viewportRef.value?.popover) {
-            this.viewportRef.value?.hidePopover();
-          } else {
-            this.viewportRef.value?.close();
-          }
-        }
-      } catch {
-        /* No worries */
-      }
-    }
+    
   }
 
   override render() {
@@ -98,6 +81,25 @@ export default class WySheet extends LitElement {
   }
 
   override updated(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("show")) {
+      try {
+        if (this.show) {
+          if (this.viewportRef.value?.popover) {
+            this.viewportRef.value?.showPopover();
+          } else {
+            this.viewportRef.value?.show();
+          }
+        } else {
+          if (this.viewportRef.value?.popover) {
+            this.viewportRef.value?.hidePopover();
+          } else {
+            this.viewportRef.value?.close();
+          }
+        }
+      } catch {
+        /* No worries */
+      }
+    }
     if (changedProperties.has("show") && this.show) {
       this.viewportRef.value?.focus();
     }

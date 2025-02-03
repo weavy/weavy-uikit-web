@@ -68,7 +68,7 @@ export const getEmbeds = async (content: string, callback: (embed: EmbedType) =>
     });
   }
 
-  // TODO: Make use of tanstack instead?
+  // REVIEW: Make use of tanstack instead?
 
   if (matches === null || matches.length === 0) {
     // no matches

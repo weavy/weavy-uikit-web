@@ -1,14 +1,15 @@
 import { LitElement, html, type PropertyValueMap, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-
-import allStyles from "../scss/all.scss";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { MemberType } from "../types/members.types";
-import { AddConversationMutationType, getAddConversationMutation } from "../data/conversations";
+import { AddAppMutationType, getAddAppMutation } from "../data/app";
 import { localized, msg } from "@lit/localize";
 import { WeavyProps } from "../types/weavy.types";
-import { ConversationTypeString } from "../types/conversations.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { AppTypeString } from "../types/app.types";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import allStyles from "../scss/all.scss";
 
 import "./wy-users-search";
 import "./wy-overlay";
@@ -17,7 +18,7 @@ import "./wy-icon";
 
 @customElement("wy-conversation-new")
 @localized()
-export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
+export default class WyConversationNew extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [allStyles];
 
   protected exportParts = new ShadowPartsController(this);
@@ -28,7 +29,7 @@ export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
   @state()
   private show = false;
 
-  private addConversationMutation?: AddConversationMutationType;
+  private addConversationMutation?: AddAppMutationType;
 
   private open() {
     this.show = true;
@@ -40,8 +41,8 @@ export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
 
   private async submit(members: MemberType[] = []) {
     const memberOptions = this.bot
-      ? { members: [this.bot], type: ConversationTypeString.BotChat }
-      : { members: members?.map((m) => m.id) };
+      ? { members: [this.bot], type: AppTypeString.BotChat }
+      : { members: members?.map((m) => m.id), type: members.length === 1 ? AppTypeString.PrivateChat : AppTypeString.ChatRoom };
 
     // create conversation
     const conversation = await this.addConversationMutation?.mutate(memberOptions);
@@ -49,17 +50,13 @@ export default class WyConversationNew extends BlockConsumerMixin(LitElement) {
     // close modal
     this.close();
 
-    // trigger refetch and select conversation events
-    const event = new CustomEvent("refetch", {});
-    this.dispatchEvent(event);
-
     const eventSelect = new CustomEvent("selected", { detail: { id: conversation?.id } });
     return this.dispatchEvent(eventSelect);
   }
 
   protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
     if (changedProperties.has("weavy") && this.weavy) {
-      this.addConversationMutation = getAddConversationMutation(this.weavy);
+      this.addConversationMutation = getAddAppMutation(this.weavy);
     }
   }
 

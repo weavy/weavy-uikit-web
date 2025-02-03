@@ -1,5 +1,7 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
@@ -13,7 +15,6 @@ import chatCss from "../scss/all.scss"
 import "./wy-comment-trashed";
 import "./wy-comment-view";
 import "./wy-comment-edit";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-comment")
 export default class WyComment extends LitElement {
@@ -28,8 +29,8 @@ export default class WyComment extends LitElement {
   @property({ type: Number })
   parentId!: number;
 
-  @property({ type: Boolean })
-  temp: boolean = false;
+  @property({ attribute: false })
+  location: "posts" | "files" | "apps" = "apps";
 
   @property({ attribute: false })
   createdBy!: MemberType;
@@ -109,6 +110,7 @@ export default class WyComment extends LitElement {
             class="wy-comment"
             .commentId=${this.commentId}
             .parentId=${this.parentId}
+            .location=${this.location}
             .text=${this.text}
             .pollOptions=${this.pollOptions}
             .attachments=${this.attachments}
@@ -123,7 +125,7 @@ export default class WyComment extends LitElement {
             id="comment-view-${this.commentId}"
             .commentId=${this.commentId}
             .parentId=${this.parentId}
-            .temp=${this.temp}
+            .location=${this.location}
             .createdBy=${this.createdBy}
             .createdAt=${this.createdAt}
             .modifiedAt=${this.modifiedAt}

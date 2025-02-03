@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -24,13 +25,19 @@ export default class WySkeleton extends LitElement {
       const lines = text.split(/(\n+)/);
       skeleton = lines.map((l) => {
         const words = l.split(/(\s+)/);
-        return `<div>${words.map(str => `<span class="wy-placeholder">${str}</span>`).join(" ")}</div>`;
-      }).join(" ");
-     
+        return `<div>${words.map(str => `<span class="wy-placeholder">${this.escapeHTML(str)}</span>`).join(" ")}</div>`;
+      }).join(" ");     
     }
 
     return html`
       <div>${unsafeHTML(skeleton)}</div>
     `;
   }
+
+  escapeHTML(str: string) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
 }

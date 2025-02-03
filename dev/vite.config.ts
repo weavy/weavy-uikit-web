@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
-import { utf8BomPlugin, weavyAuthServer, weavyChunkNames, weavyImportUrlPlugin } from "../utils/vite-plugins";
+import { utf8BomPlugin, weavyAuthServer, weavyChunkNames, weavyImportUrlPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
 
@@ -41,6 +41,7 @@ export default defineConfig(({ command, mode }) => {
     publicDir: "public",
     envPrefix: "WEAVY_",
     plugins: [
+      excludeNodeInPdfJS(),
       dts({
         tsconfigPath: "dev/tsconfig.build.json",
         outDir: "dist/types",
@@ -147,7 +148,6 @@ export default defineConfig(({ command, mode }) => {
                 "@lezer/lr",
                 "@lezer/markdown",
               ],
-              react: ["react", "react-dom"],
               pdfjs: ["pdfjs-dist"],
               "locales/sv-SE": ["./locales/sv-SE"],
               /*tools: [

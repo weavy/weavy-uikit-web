@@ -18,7 +18,7 @@ export function observeCSSThemeColor(element: Element, callback: (themeColor?: s
   const observer = new MutationObserver(() => {
     const nextColor = getCSSThemeColor(element);
     if (nextColor !== prevColor) {
-      console.log("--wy-theme-color changed", nextColor);
+      //console.log("--wy-theme-color changed", nextColor);
       prevColor = nextColor;
       callback(nextColor);
     }
@@ -69,7 +69,7 @@ export function observeMetaThemeColor(callback: (themeColor?: string) => void) {
   const checkChangedColor = () => {
     const nextColor = getMetaThemeColor();
     if (nextColor !== prevColor) {
-      console.log("meta theme-color changed", nextColor);
+      //console.log("meta theme-color changed", nextColor);
       prevColor = nextColor;
       callback(nextColor);
     }
@@ -120,7 +120,6 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
   // Get the theme from a hex or rgba() color
   if (!seedColor.startsWith("#") && !seedColor.startsWith("rgb")) {
     computedSeedColor = getComputedColor(seedColor);
-    console.log("computed color", seedColor);
   }
 
   const argb = seedColor.startsWith("#") ? argbFromHex(computedSeedColor) : argbFromRgba(computedSeedColor);
@@ -284,7 +283,7 @@ export const adoptGlobalStyles = (
 
   if (supportsAdoptingStyleSheets) {
     document.adoptedStyleSheets = styles.map((s) =>
-      s instanceof CSSStyleSheet ? s : s.styleSheet!
+      s instanceof CSSStyleSheet ? s : s.styleSheet as CSSStyleSheet
     );
   } else {
     for (const s of styles) {

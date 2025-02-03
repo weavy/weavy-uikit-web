@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { customElement, property, queryAssignedElements, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, queryAssignedElements, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -11,6 +12,7 @@ import { isPopoverPolyfilled } from "../utils/dom";
 
 import rebootStyles from "../scss/components/base/reboot.scss";
 import dropdownStyles from "../scss/components/dropdown.scss";
+
 import WeavyIcon from "./wy-icon";
 import "./wy-button";
 
@@ -50,7 +52,7 @@ export default class WyDropdown extends LitElement {
   private _placement: Placement = "bottom-start";
 
   @state()
-  show: boolean = false;
+  showMenu: boolean = false;
 
   @queryAssignedElements({ slot: "button" })
   private _slotButton!: Array<HTMLElement>;
@@ -69,18 +71,19 @@ export default class WyDropdown extends LitElement {
   }
 
   private _documentClickHandler = (e: Event) => {
-    if (this.show) {
+    if (this.showMenu) {
       e.preventDefault();
 
+      // When legacy mode/not popover mode, close manually
       if (!this.menuRef.value?.popover) {
-        this.show = false
+        this.showMenu = false
       }
     }
   };
 
   private handleClose(e: ToggleEvent) {
     if (e.type === "toggle" && e.newState === "closed" || e.type === "click") {
-      this.show = false;
+      this.showMenu = false;
       this.dispatchEvent(new CustomEvent("close"));
       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
     }
@@ -88,7 +91,7 @@ export default class WyDropdown extends LitElement {
 
   private handleClickToggle(_e: Event) {
     _e.stopPropagation();
-    this.show = !this.show;
+    this.showMenu = !this.showMenu;
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
@@ -103,8 +106,8 @@ export default class WyDropdown extends LitElement {
           : "top-end";
     }
 
-    if (changedProperties.has("show")) {
-      if (this.show && !this.computePositionCleanup && this.buttonRef.value && this.menuRef.value) {
+    if (changedProperties.has("showMenu")) {
+      if (this.showMenu && !this.computePositionCleanup && this.buttonRef.value && this.menuRef.value) {
         this.computePositionCleanup = autoUpdate(this.buttonRef.value, this.menuRef.value, () => {
           if (this.buttonRef.value && this.menuRef.value) {
             computePosition(this.buttonRef.value, this.menuRef.value, {
@@ -129,13 +132,13 @@ export default class WyDropdown extends LitElement {
             });
           }
         });
-      } else if (!this.show && this.computePositionCleanup) {
-        this.computePositionCleanup();
+      } else if (!this.showMenu && this.computePositionCleanup) {
+        this.computePositionCleanup?.();
         this.computePositionCleanup = undefined;
       }
     }
 
-    if (this.show) {
+    if (this.showMenu) {
       // Catch clicks outside dropdowns
       requestAnimationFrame(() => {
         document.addEventListener("click", this._documentClickHandler, { once: true, capture: true });
@@ -171,7 +174,7 @@ export default class WyDropdown extends LitElement {
             .kind=${isIcon ? "icon" : undefined}
             ?small=${this.small}
             title=${this.title}
-            ?active=${this.show}
+            ?active=${this.showMenu}
             ?disabled=${this.disabled}
           >
             <slot name="button" @slotchange=${() => this.requestUpdate()}>
@@ -185,7 +188,7 @@ export default class WyDropdown extends LitElement {
           @click=${this.handleClickToggle}
           @keyup=${clickOnEnterAndSpace}
           class="wy-dropdown-menu"
-          ?hidden=${!this.show}
+          ?hidden=${isPopoverPolyfilled() && !this.showMenu}
           ?popover=${!isPopoverPolyfilled()}
         >
           <slot></slot>

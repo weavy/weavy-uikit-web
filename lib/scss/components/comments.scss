@@ -6,7 +6,7 @@
 .wy-comments {
   display: flex;
   flex-direction: column;
-  gap: var.default(--wy-gap-lg);
+  gap: var.default(--wy-gap-xl);
 }
 
 .wy-comment {
@@ -19,7 +19,6 @@
   display: flex;
   flex-direction: column;
   gap: var.default(--wy-gap-sm);
-  padding: var.default(--wy-padding-sm);
   position: relative;
 
   @include highlight.flash;

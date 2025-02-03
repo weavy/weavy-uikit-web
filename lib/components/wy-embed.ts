@@ -1,11 +1,14 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import type { EmbedType } from "../types/embeds.types";
 import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { ifDefined } from "lit/directives/if-defined.js";
 
-import chatCss from "../scss/all.scss"
+import chatCss from "../scss/all.scss";
+
 import "./wy-button";
 import "./wy-icon";
 
@@ -68,8 +71,8 @@ export default class WyEmbed extends LitElement {
               <a href=${this.embed.original_url} target="_blank">
                 <img
                   src=${this.embed.thumbnail_url}
-                  width=${this.embed.thumbnail_width!}
-                  height=${this.embed.thumbnail_height!}
+                  width=${ifDefined(this.embed.thumbnail_width)}
+                  height=${ifDefined(this.embed.thumbnail_height)}
                   alt="" />
               </a>
             </div>
@@ -89,8 +92,8 @@ export default class WyEmbed extends LitElement {
               <a href=${this.embed.original_url} target="_blank">
                 <img
                   src=${this.embed.thumbnail_url}
-                  width=${this.embed.thumbnail_width!}
-                  height=${this.embed.thumbnail_height!}
+                  width=${ifDefined(this.embed.thumbnail_width)}
+                  height=${ifDefined(this.embed.thumbnail_height)}
                   alt="" />
               </a>
             </div>

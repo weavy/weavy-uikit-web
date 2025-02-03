@@ -47,14 +47,18 @@ export class DropZoneController implements ReactiveController {
         // If dropped items aren't files, reject them
         if (item.kind === "file") {
           const file = item.getAsFile();
-          files.push(file!);
+          if (file) {
+            files.push(file);
+          } else {
+            console.error("Could not add file")
+          }
           //console.log(`… file[${i}].name = ${file?.name}`);
         }
       });
     } else if (event.dataTransfer?.files) {
       // Use DataTransfer interface to access the file(s)
       [...event.dataTransfer.files].forEach((file) => {
-        files.push(file!);
+        files.push(file);
         //console.log(`… file[${i}].name = ${file.name}`);
       });
     }

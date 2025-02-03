@@ -1,15 +1,14 @@
 import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
-import chatCss from "../scss/all.scss";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
-import { ConversationTypeGuid, ConversationsResultType } from "../types/conversations.types";
+import { AppType, AppTypeGuid, AppsResultType } from "../types/app.types";
 import type { UserType } from "../types/users.types";
-import { getConversationsOptions } from "../data/conversations";
+import { getAppListOptions } from "../data/app";
 import { InfiniteData } from "@tanstack/query-core";
-
 import {
   LeaveConversationMutationType,
   MarkConversationMutationType,
@@ -22,15 +21,17 @@ import {
   getStarConversationMutation,
   getTrashConversationMutation,
 } from "../data/conversation";
-import { updateCacheItem } from "../utils/query-cache";
-import { ConversationType } from "../types/conversations.types";
+import { getFlatInfiniteResultData, updateCacheItems } from "../utils/query-cache";
 import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
 import { inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyProps } from "../types/weavy.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all.scss";
+import pagerStyles from "../scss/components/pager.scss";
 
 import "./wy-conversation-list-item";
 import "./wy-conversation-new";
@@ -41,7 +42,7 @@ import "./wy-spinner";
 
 @customElement("wy-conversation-list")
 @localized()
-export default class WeavyConversationList extends BlockConsumerMixin(LitElement) {
+export default class WeavyConversationList extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -49,6 +50,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
         position: relative;
       }
     `,
+    pagerStyles
   ];
   protected exportParts = new ShadowPartsController(this);
 
@@ -62,7 +64,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
   conversationId?: number;
 
   @property({ type: Array })
-  conversationTypes?: ConversationTypeGuid[] = [ConversationTypeGuid.ChatRoom, ConversationTypeGuid.PrivateChat];
+  conversationTypes?: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
 
   @property()
   bot?: string;
@@ -78,7 +80,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
 
   private inputRef: Ref<HTMLInputElement> = createRef();
 
-  conversationsQuery = new InfiniteQueryController<ConversationsResultType>(this);
+  conversationsQuery = new InfiniteQueryController<AppsResultType>(this);
 
   private markConversationMutation?: MarkConversationMutationType;
   private starConversationMutation?: StarConversationMutationType;
@@ -104,41 +106,44 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
       data = [parseInt(data)];
     }
 
-    updateCacheItem(
+    const updateMembersInApps = (item: AppType) => {
+      const members = item.members.data ?? [];
+      members.forEach((m) => {
+        m.presence = (data as number[]).indexOf(m.id) != -1 ? "active" : "away";
+      });
+      item.members.data = members;
+    };
+
+
+    updateCacheItems(
       this.weavy.queryClient,
-      ["conversations"],
-      () => true,
-      (item: ConversationType) => {
-        const members = item.members.data ?? [];
-        members.forEach((m) => {
-          m.presence = (data as number[]).indexOf(m.id) != -1 ? "active" : "away";
-        });
-        item.members.data = members;
-      }
+      { queryKey: ["apps", "list"], exact: false },
+      undefined,
+      updateMembersInApps
     );
   };
 
-  private async handleMark(id: number, markAsRead: boolean, messageId: number) {
-    const lastMessageId = markAsRead ? messageId : null;
-    await this.markConversationMutation?.mutate({ id: id, markAsRead: markAsRead, messageId: lastMessageId });
+  private async handleMark(appId: number, messageId: number) {
+    await this.markConversationMutation?.mutate({ appId, messageId, userId: this.user?.id });
   }
 
-  private async handleStar(id: number, star: boolean) {
-    await this.starConversationMutation?.mutate({ id: id, star: star });
+  private async handleStar(appId: number, star: boolean) {
+    await this.starConversationMutation?.mutate({ appId, star });
   }
 
-  private async handlePin(id: number, pin: boolean) {
-    await this.pinConversationMutation?.mutate({ id: id, pin: pin });
+  private async handlePin(appId: number, pin: boolean) {
+    await this.pinConversationMutation?.mutate({ appId, pin });
   }
 
-  private async handleLeaveConversation(id: number) {
-    await this.leaveConversationMutation?.mutate({ id: id, members: [this.user!.id] });
+  private async handleLeaveConversation(appId: number) {
+    const user = await this.whenUser();
+    await this.leaveConversationMutation?.mutate({ appId, members: [user.id] });
     this.dispatchSelected(undefined);
     this.conversationsQuery.result.refetch();
   }
 
-  private async handleTrashConversation(id: number) {
-    await this.trashConversationMutation?.mutate({ id: id });
+  private async handleTrashConversation(appId: number) {
+    await this.trashConversationMutation?.mutate({ appId });
     this.dispatchSelected(undefined);
     this.conversationsQuery.result.refetch();
   }
@@ -162,7 +167,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
 
     if ((changedProperties.has("weavy") || changedProperties.has("conversationTypes")) && this.weavy) {
       this.conversationsQuery.trackInfiniteQuery(
-        getConversationsOptions(this.weavy, {}, () => this.searchText, this.conversationTypes, this.bot)
+        getAppListOptions(this.weavy, {}, this.conversationTypes, this.bot, () => this.searchText, "pinned_at desc,rev desc")
       );
 
       this.markConversationMutation = getMarkConversationMutation(this.weavy);
@@ -175,11 +180,13 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
 
       // realtime
       this.weavy.subscribe(null, "app_created", this.handleRefresh);
+      this.weavy.subscribe(null, "message_created", this.handleRefresh);
       this.weavy.subscribe(null, "member_added", this.handleRefresh);
       this.weavy.subscribe(null, "online", this.handlePresenceChange);
 
       this.#unsubscribeToRealtime = () => {
         this.weavy?.unsubscribe(null, "app_created", this.handleRefresh);
+        this.weavy?.unsubscribe(null, "message_created", this.handleRefresh);
         this.weavy?.unsubscribe(null, "member_added", this.handleRefresh);
         this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
         this.#unsubscribeToRealtime = undefined;
@@ -199,14 +206,15 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
   }
 
   override async updated(changedProperties: PropertyValueMap<this & { searchText: string }>) {
-    if (changedProperties.has("searchText") && this.conversationsQuery.result) {
-      await this.conversationsQuery.result.refetch();
+    // searchText is changed but undefined on initial load
+    if (changedProperties.has("searchText") && changedProperties.get("searchText") && this.conversationsQuery.result) {
+      await this.conversationsQuery.result.refetch?.();
     }
   }
 
-  private renderConversations(user: UserType, infiniteData?: InfiniteData<ConversationsResultType>) {
+  private renderConversations(user: UserType, infiniteData?: InfiniteData<AppsResultType>) {
     if (infiniteData) {
-      const flattenedPages = infiniteData.pages.flatMap((conversationsResult) => conversationsResult.data!);
+      const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
       return repeat(
         flattenedPages,
@@ -226,12 +234,11 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
               .type=${conversation.type}
               .selected=${this.conversationId == conversation.id}
               @selected=${(e: CustomEvent) => this.dispatchSelected(e.detail.id)}
-              @mark=${(e: CustomEvent) => this.handleMark(e.detail.id, e.detail.markAsRead, e.detail.messageId)}
+              @mark=${(e: CustomEvent) => this.handleMark(e.detail.id, e.detail.messageId)}
               @star=${(e: CustomEvent) => this.handleStar(e.detail.id, e.detail.star)}
               @pin=${(e: CustomEvent) => this.handlePin(e.detail.id, e.detail.pin)}
               @leave=${(e: CustomEvent) => this.handleLeaveConversation(e.detail.id)}
               @trash=${(e: CustomEvent) => this.handleTrashConversation(e.detail.id)}
-              @refetch=${() => this.conversationsQuery.result.refetch()}
             ></wy-conversation-list-item>`,
           ];
         }
@@ -241,7 +248,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
   }
 
   override render() {
-    const { data: infiniteData, isPending } = this.conversationsQuery.result ?? {};
+    const { data: infiniteData, isPending, hasNextPage } = this.conversationsQuery.result ?? {};
     const avatarIsPending = !this.avatarUser;
 
     return html`
@@ -263,7 +270,6 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
                 >
                 <wy-conversation-new
                   .bot=${this.bot}
-                  @refetch=${() => this.conversationsQuery.result.refetch()}
                   @selected=${(e: CustomEvent) => this.dispatchSelected(e.detail.id)}
                 ></wy-conversation-new>
               </nav>
@@ -306,7 +312,7 @@ export default class WeavyConversationList extends BlockConsumerMixin(LitElement
                       </div>
                     `
                 : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-              <div ${ref(this.pagerRef)} part="wy-pager"></div>
+              ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
             </div>
           `
         : html`<wy-empty class="wy-pane"><wy-spinner overlay></wy-spinner></wy-empty>`}

@@ -54,7 +54,9 @@
     height: 100%;
     overflow: hidden;
     border-radius: 0;
-    
+  }
+
+  &.wy-modal-padded {
     @include breakpoints.media-breakpoint-up(md) {
       border-radius: var.default(--wy-border-radius);
       box-shadow: var.default(--wy-shadow-level4);
@@ -68,11 +70,6 @@
   }
 
   &.wy-modal-full {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: 0;
-
     @include breakpoints.media-breakpoint-up(md) {
       margin: 0;
       border-radius: var.default(--wy-border-radius);

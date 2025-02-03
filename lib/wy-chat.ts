@@ -1,10 +1,8 @@
-import { customElement } from "lit/decorators.js";
+import { customElement } from "./utils/decorators/custom-element";
 import { ThemeController } from "./controllers/theme-controller";
-import { LitElement, html } from "lit";
-import { ContextualTypes } from "./types/app.types";
-import { ConversationType } from "./types/conversations.types";
-import { BlockProviderMixin } from "./mixins/block-mixin";
-import { Constructor } from "./types/generic.types";
+import { html } from "lit";
+import { AppTypeString } from "./types/app.types";
+import { WeavyComponent } from "./classes/weavy-component";
 import { ProductTypes } from "./types/product.types";
 import { localized } from "@lit/localize";
 
@@ -20,22 +18,29 @@ import "./components/wy-empty";
 import "./components/wy-button";
 import "./components/wy-spinner";
 
-@customElement("wy-chat")
+export const WY_CHAT_TAGNAME = "wy-chat";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_CHAT_TAGNAME]: WyChat;
+  }
+}
+
+/**
+ * Weavy component to render a single contextual chat.
+ *
+ * @element wy-chat
+ * @class WyChat
+ * @fires wy-preview-open {WyPreviewOpenEventType}
+ * @fires wy-preview-close {WyPreviewCloseEventType}
+ */
+@customElement(WY_CHAT_TAGNAME)
 @localized()
-export class WyChat extends BlockProviderMixin(LitElement) {
+export class WyChat extends WeavyComponent {
   static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
   override productType = ProductTypes.Chat;
-  override contextualType = ContextualTypes.Chat;
-
-  // Override app type
-  override get app() {
-    return super.app as ConversationType;
-  }
-
-  override set app(app: ConversationType) {
-    super.app = app;
-  }
+  override componentType = AppTypeString.Chat;
 
   constructor() {
     super();
@@ -50,8 +55,6 @@ export class WyChat extends BlockProviderMixin(LitElement) {
           </wy-buttons>
           <wy-conversation .conversation=${this.app} .conversationId=${this.app.id}></wy-conversation>
         `
-      : html` <wy-empty><wy-spinner padded></wy-spinner></wy-empty> `;
+      : html` <wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty> `;
   }
 }
-
-export type WyChatType = Constructor<WyChat>;

@@ -1,10 +1,11 @@
 import { LitElement, html, nothing, type TemplateResult, type PropertyValues } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
-import { ConversationTypeGuid } from "../types/conversations.types";
+import { AppTypeGuid, AccessType } from "../types/app.types";
 import throttle from "lodash.throttle";
 import { typingMutation } from "../data/typing";
 import { type MeetingType } from "../types/meetings.types";
@@ -20,7 +21,6 @@ import {
 } from "../types/files.types";
 import { toUpperCaseFirst } from "../utils/strings";
 import { getUploadBlobMutationOptions } from "../data/blob-upload";
-import { AccessTypes } from "../types/app.types";
 import type { UsersResultType, UserType } from "../types/users.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { repeat } from "lit/directives/repeat.js";
@@ -36,26 +36,28 @@ import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { WeavyProps } from "../types/weavy.types";
 import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
-import type { EditorState, Extension } from "@codemirror/state";
+import type { Compartment, EditorState, Extension } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { desktop } from "../utils/browser";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all.scss";
 
 import WeavyAvatar from "./wy-avatar";
 import "./wy-embed";
 import "./wy-dropdown";
 import "./wy-file-item";
-import "./wy-confluence";
-
-import chatCss from "../scss/all.scss";
 
 @customElement("wy-editor")
 @localized()
-export default class WyEditor extends BlockConsumerMixin(LitElement) {
+export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
+
+  @property({ type: Boolean })
+  disabled: boolean = false;
 
   @property({ attribute: false })
   parentId?: number;
@@ -140,17 +142,22 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   @state()
   protected editorExtensions?: Extension[];
 
+  // For modifying readonly state
+  protected editorEditable?: Compartment;
+  protected EditorView?: typeof EditorView;
+
   @state()
   protected editor?: EditorView;
 
   protected editorRef: Ref<HTMLElement> = createRef();
+  protected editorInitialized: boolean = false;
 
   private throttledTyping = throttle(
     async () => {
       if (
         this.weavy &&
         this.app &&
-        (this.app.type === ConversationTypeGuid.ChatRoom || this.app.type === ConversationTypeGuid.PrivateChat)
+        (this.app.type === AppTypeGuid.ChatRoom || this.app.type === AppTypeGuid.PrivateChat)
       ) {
         const mutation = await typingMutation(this.weavy, this.app.id);
         await mutation.mutate();
@@ -245,7 +252,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
       }
 
       if (this.options && this.options.length > 0) {
-        this.pollOptions = [...this.options, { id: null, text: "" }];
+        this.pollOptions = this.options;
         this.showPolls = true;
       }
     }
@@ -270,7 +277,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
       this.weavy.whenUrl().then(() => {
         import("../utils/editor/editor").then(
           ({
-            defaultHighlightStyle,
+            weavyHighlighter,
             syntaxHighlighting,
             history,
             dropCursor,
@@ -286,7 +293,18 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
             EditorView,
             EditorState,
             weavyDesktopMessageKeymap,
+            Compartment,
           }) => {
+            this.editorInitialized = true;
+
+            // Clear the fallback dummy
+            if (this.editorRef.value && !this.editor) {
+              this.editorRef.value.innerHTML = "";
+            }
+
+            this.editorEditable = new Compartment();
+            this.EditorView = EditorView;
+
             const extraKeyMap =
               this.editorType === "messages" && desktop && weavyDesktopMessageKeymap
                 ? [...weavyDesktopMessageKeymap]
@@ -316,7 +334,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                       div.classList.add("wy-list-item");
                       div.classList.add("wy-item-hover");
 
-                      if (!completion.item?.access || completion.item.access === AccessTypes.None) {
+                      if (!completion.item?.access || completion.item.access === AccessType.None) {
                         div.classList.add("wy-disabled");
                       }
 
@@ -337,7 +355,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                 ],
               }),
               placeholder(this.placeholder),
-              syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+              syntaxHighlighting(weavyHighlighter, { fallback: true }),
               EditorView.lineWrapping,
               keymap.of([...extraKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap]),
               markdown({ codeLanguages: languages }),
@@ -378,9 +396,15 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                 },
               }),
               EditorView.updateListener.of((_v: ViewUpdate) => {}),
+              this.editorEditable.of(EditorView.editable.of(!this.disabled)),
             ];
 
-            if (!this.editor) {
+            if (this.editor) {
+              this.editor.dispatch({
+                // Update readonly state
+                effects: this.editorEditable.reconfigure(EditorView.editable.of(!this.disabled)),
+              });
+            } else {
               this.editor = new EditorView({
                 state: EditorState.create({
                   doc: this.text,
@@ -399,10 +423,17 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
       });
     }
 
+    if (changedProperties.has("disabled") && this.editor && this.editorEditable && this.EditorView) {
+      this.editor.dispatch({
+        // Update readonly state
+        effects: this.editorEditable.reconfigure(this.EditorView.editable.of(!this.disabled)),
+      });
+    }
+
     if (changedProperties.has("placeholder")) {
       const cmPlaceholder = this.renderRoot.querySelector<HTMLElement>(".cm-placeholder");
 
-      if (cmPlaceholder) {
+      if (cmPlaceholder && this.editor) {
         cmPlaceholder.setAttribute("aria-label", `placeholder ${this.placeholder}`);
         cmPlaceholder.innerText = this.placeholder;
       }
@@ -544,7 +575,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
       text = this.text;
     }
 
-    if ((!files || !files.length) && !this.meeting && !this.embeds.length && !this.pollOptions.length && text === "") {
+    if ((!files || !files.length) && !this.meeting && !this.embeds.length && (!this.pollOptions.length || this.pollOptions.filter((option) => option.text.trim() !== "").length === 0) && text === "") {
       localStorage.removeItem(this.draftKey);
     } else {
       localStorage.setItem(
@@ -552,7 +583,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
         JSON.stringify({
           meeting: this.meeting,
           text: text,
-          pollOptions: this.pollOptions,
+          pollOptions: this.pollOptions.filter((option) => option.text.trim() !== ""),
           embeds: this.embeds,
         })
       );
@@ -706,11 +737,32 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   }
 
   protected handlePollOptionAdd(e: Event, index: number) {
-    if (index === this.pollOptions.length - 1) {
+    // NOTE: only allow 5 options for now
+    if (index === this.pollOptions.length - 1 && this.pollOptions.length < 5) {
       const option = { id: null, text: "" };
       this.pollOptions = [...this.pollOptions, option];
       this.saveDraft();
     }
+  }
+
+  /**
+   * Editor loading fallback dummy.
+   * Hard copy of the rendered nodes when the editor is empty. Cleaned up to not be editable.
+   */
+  protected renderEditorDummy(): TemplateResult | typeof nothing {
+    return !this.editorInitialized ? html`
+      <div class="cm-editor">
+        <div class="cm-announced"></div>
+        <div tabindex="-1" class="cm-scroller">
+          <div class="cm-content cm-lineWrapping">
+            <div class="cm-line"
+              ><img class="cm-widgetBuffer" aria-hidden="true" /><span class="cm-placeholder">${this.placeholder}</span
+              ><br
+            /></div>
+          </div>
+        </div>
+      </div>
+    ` : nothing;
   }
 
   protected renderTopSlot(): TemplateResult | typeof nothing {
@@ -720,14 +772,19 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   protected renderMiddleSlot(): TemplateResult | typeof nothing {
     return html`
       <!-- Input -->
-      <div
-        class=${classMap({ "wy-post-editor-text": true, "wy-is-invalid": this.editorError })}
-        ${ref(this.editorRef)}
-      ></div>
+      <div class=${classMap({ "wy-post-editor-text": true, "wy-is-invalid": this.editorError })} ${ref(this.editorRef)}>
+        ${this.renderEditorDummy()}
+      </div>
+
       <div class="wy-post-editor-inputs">
         <div class="wy-post-editor-buttons">
           ${this.hasFeatures?.attachments
-            ? html`<wy-button kind="icon" @click=${this.openFileInput} title=${msg("From device")}>
+            ? html`<wy-button
+                  kind="icon"
+                  @click=${this.openFileInput}
+                  title=${msg("From device")}
+                  ?disabled=${this.disabled}
+                >
                   <wy-icon name="attachment"></wy-icon>
                 </wy-button>
                 <input
@@ -742,28 +799,39 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                   multiple
                   hidden
                   tabindex="-1"
+                  ?disabled=${this.disabled}
                 />`
             : nothing}
           ${this.hasFeatures?.cloudFiles
-            ? html`<wy-button kind="icon" @click=${this.openCloudFiles} title=${msg("From cloud")}>
+            ? html`<wy-button
+                kind="icon"
+                @click=${this.openCloudFiles}
+                title=${msg("From cloud")}
+                ?disabled=${this.disabled}
+              >
                 <wy-icon name="cloud"></wy-icon>
               </wy-button>`
             : nothing}
-          ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
-            ? html`<wy-confluence
-                @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
-              ></wy-confluence>`
-            : nothing}
           ${this.hasFeatures?.zoomMeetings
             ? html`
-                <wy-button kind="icon" @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
+                <wy-button
+                  kind="icon"
+                  @click=${() => this.handleMeetingClick("zoom")}
+                  title=${msg("Zoom meeting")}
+                  ?disabled=${this.disabled}
+                >
                   <wy-icon svg="zoom-meetings"></wy-icon>
                 </wy-button>
               `
             : nothing}
           ${this.hasFeatures?.googleMeet
             ? html`
-                <wy-button kind="icon" @click=${() => this.handleMeetingClick("google")} title=${msg("Google Meet")}>
+                <wy-button
+                  kind="icon"
+                  @click=${() => this.handleMeetingClick("google")}
+                  title=${msg("Google Meet")}
+                  ?disabled=${this.disabled}
+                >
                   <wy-icon svg="google-meet"></wy-icon>
                 </wy-button>
               `
@@ -774,20 +842,23 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                   kind="icon"
                   @click=${() => this.handleMeetingClick("microsoft")}
                   title=${msg("Microsoft Teams")}
+                  ?disabled=${this.disabled}
                 >
                   <wy-icon svg="microsoft-teams"></wy-icon>
                 </wy-button>
               `
             : nothing}
           ${this.hasFeatures?.polls
-            ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")}>
+            ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")} ?disabled=${this.disabled}>
                 <wy-icon name="poll"></wy-icon>
               </wy-button>`
             : nothing}
         </div>
 
         <!-- Button -->
-        <wy-button @click="${this.submit}" color="primary" title=${this.buttonText}> ${this.buttonText} </wy-button>
+        <wy-button @click="${this.submit}" color="primary" title=${this.buttonText} ?disabled=${this.disabled}>
+          ${this.buttonText}
+        </wy-button>
       </div>
     `;
   }
@@ -798,6 +869,10 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
 
   protected renderLists(): TemplateResult | typeof nothing {
     const fileMutationResults = this.mutatingFiles.result;
+
+    if (this.disabled) {
+      return nothing;
+    }
 
     return html`
       <!-- polls -->
@@ -847,7 +922,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
                 };
                 return html`
                   <wy-file-item
-                    .file=${mutation.context?.file}
+                    .file=${mutation.context.file}
                     .status=${fileStatus}
                     title="${toUpperCaseFirst(mutation.context.type)}: ${file.name +
                     (fileStatus.text ? `: ${fileStatus.text}` : "")}"
@@ -909,6 +984,10 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
   }
 
   protected renderCloudFiles(): TemplateResult | typeof nothing {
+    if (this.disabled) {
+      return nothing;
+    }
+
     return html`
       <wy-cloud-files
         ${ref(this.cloudFilesRef)}
@@ -923,6 +1002,7 @@ export default class WyEditor extends BlockConsumerMixin(LitElement) {
     return html`
       <div
         class=${classMap({
+          "wy-editor": true,
           [this.editorClass]: true,
           "wy-dragging": isDragActive,
         })}

@@ -1,9 +1,12 @@
 import { LitElement, html, css } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import chatCss from "../scss/all.scss"
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { PollOptionType } from "../types/polls.types";
-import "./wy-poll-option";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import chatCss from "../scss/all.scss"
+
+import "./wy-poll-option";
 
 @customElement("wy-poll")
 export default class WyPoll extends LitElement {

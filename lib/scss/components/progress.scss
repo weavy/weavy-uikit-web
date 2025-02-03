@@ -1,39 +1,57 @@
 @use "base/color";
 @use "base/var";
 
-[part~=wy-progress] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    position: relative;
+[part~="wy-progress"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  position: relative;
 
-    width: var(--wy-component-icon-width);
-    height: var(--wy-component-icon-height);
-  
-    &:not([width]), &[width="24"] {
-      width: var(--wy-component-icon-width, var.wy-rem(1.5));
-    }
-  
-    &:not([height]), &[height="24"] {
-      height: var(--wy-component-icon-height, var.wy-rem(1.5));
-    }
+  width: var(--wy-component-icon-width);
+  height: var(--wy-component-icon-height);
+
+  &:not([width]),
+  &[width="24"] {
+    width: var(--wy-component-icon-width, var.wy-rem(1.5));
+  }
+
+  &:not([height]),
+  &[height="24"] {
+    height: var(--wy-component-icon-height, var.wy-rem(1.5));
+  }
 }
 
-[part~=wy-progress-padded] {
+[part~="wy-progress-padded"] {
   margin: var.wy-rem(1) var.wy-rem(2);
 }
 
-[part~=wy-progress][part~=wy-primary] {
+[part~="wy-progress-reveal"] {
+  opacity: 1;
+  transition: width var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
+    height var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
+    margin var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
+    opacity var.default(--wy-transition)
+      calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));
+
+  @starting-style {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin: 0;
+  }
+}
+
+[part~="wy-progress"][part~="wy-primary"] {
   color: color.token(--wy-primary);
 }
 
-[part~=wy-progress-remaining] {
+[part~="wy-progress-remaining"] {
   fill: none;
   stroke: color.token(--wy-surface-variant);
 }
 
-[part~=wy-progress-done] {
+[part~="wy-progress-done"] {
   fill: none;
   stroke: currentColor;
 }

@@ -12,25 +12,29 @@
   align-items: center;
   gap: 0.25rem;
 
-  :first-child {
+  > :first-child {
     line-height: var.default(--wy-line-height);
     flex: 0 1 auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
-  :last-child:not(:first-child) {
+
+  > :last-child:not(:first-child) {
     flex: 0 0 auto;
     white-space: nowrap;
   }
 }
 
-.wy-filename {
+[part~="wy-filename"] {
   font-size: var.default(--wy-font-size-sm);
+  height: calc(var.default(--wy-button-size) * 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 
   .wy-truncated-text-and-icon {
-    justify-content: center;
+    justify-content: space-between;
   }
 }
 
@@ -61,7 +65,7 @@ wy-files-appbar {
     }
   }
 
-  tr { 
+  tr {
     @include highlight.flash;
   }
 
@@ -69,42 +73,42 @@ wy-files-appbar {
   tr > :nth-child(2) {
     width: 100%;
     // make room for rename form
-    & td {    
-      padding: 0 var.default(--wy-table-cell-padding-x);  
+    & td {
+      padding: 0 var.default(--wy-table-cell-padding-x);
     }
   }
   // modified
-  tr > :nth-child(3){
+  tr > :nth-child(4) {
     width: var.wy-rem(7);
 
     display: none;
     @include breakpoints.container-size-up(md) {
       display: table-cell;
-    }    
+    }
 
     @include text.truncate;
   }
   // kind
-  tr > :nth-child(4) {
+  tr > :nth-child(5) {
     width: var.wy-rem(7.5);
     text-align: right;
 
     display: none;
     @include breakpoints.container-size-up(md) {
       display: table-cell;
-    }     
+    }
 
     @include text.truncate;
   }
   // size
-  tr > :nth-child(5) {
+  tr > :nth-child(6) {
     width: var.wy-rem(7);
     text-align: right;
-    
+
     display: none;
     @include breakpoints.container-size-up(sm) {
       display: table-cell;
-    }    
+    }
 
     @include text.truncate;
   }

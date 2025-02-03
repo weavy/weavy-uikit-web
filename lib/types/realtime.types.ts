@@ -1,5 +1,4 @@
 import { AppRef, AppType, EntityType } from "./app.types";
-import { ConversationType } from "./conversations.types";
 import { CommentType } from "./comments.types";
 import { FileType } from "./files.types";
 import { PlainObjectType } from "./generic.types";
@@ -22,9 +21,13 @@ export type RealtimeAppEventType = RealtimeEventType & {
   app: AppType;
 };
 
-export type RealtimeMemberEventType = RealtimeEventType & {
-  app: AppType;
+export type RealtimeMemberEventType = RealtimeAppEventType & {
   member: MemberType;
+};
+
+export type RealtimeAppMarkedEventType = RealtimeAppEventType & {
+  marked_at: string;
+  marked_id: number;
 };
 
 // REACTIONS
@@ -36,17 +39,6 @@ export type RealtimeReactionEventType = RealtimeEventType & {
 // CHAT
 export type RealtimeMessageEventType = RealtimeEventType & {
   message: MessageType;
-};
-
-export type RealtimeConversationMarkedEventType = RealtimeEventType & {
-  conversation: ConversationType;
-  marked_at: string;
-  marked_id: number;
-};
-
-export type RealtimeConversationDeliveredEventType = RealtimeEventType & {
-  conversation: ConversationType;
-  delivered_at: string;
 };
 
 // POSTS

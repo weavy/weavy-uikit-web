@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
-import { utf8BomPlugin } from "../utils/vite-plugins";
+import { utf8BomPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
 
@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
     publicDir: "public",
     envPrefix: "WEAVY_",
     plugins: [
+      excludeNodeInPdfJS(),
       dts({
         tsconfigPath: "dev/tsconfig.build.json",
         outDir: "dist/types",
@@ -86,6 +87,18 @@ export default defineConfig(({ mode }) => {
           find: /lit-html\/(.)/,
           replacement: `${path.resolve("./node_modules/lit-html/node")}${path.sep}$1`,
         },
+        /*{
+          find: "pdfjs-dist",
+          replacement: "pdfjs-dist/legacy/build/pdf.mjs",
+        },*/
+        /*{
+          find: /pdfjs-dist$/,
+          replacement: path.resolve("./dist/es/pdfjs-dist/legacy/build/pdf.mjs"),
+        },
+        {
+          find: /pdfjs-dist\/(.*)/,
+          replacement: `${path.resolve("./node_modules/pdfjs-dist/legacy")}${path.sep}$1`,
+        },*/
       ],
     },
     server: {

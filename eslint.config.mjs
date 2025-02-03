@@ -38,12 +38,14 @@ export default [
     rules: {
       ...litA11yConfigs.recommended.rules,
       "no-prototype-builtins": "off",
+      "no-console": ["warn", { allow: ["info", "warn", "error"] }],
       "@typescript-eslint/no-this-alias": "off",
       "@typescript-eslint/ban-types": "off",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-non-null-assertion": "warn",
 
       "@typescript-eslint/no-empty-object-type": [
         "error",

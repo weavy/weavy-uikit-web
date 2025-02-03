@@ -69,7 +69,11 @@ export function assign<TTarget>(target: TTarget, properties: TTarget, recursive:
   for (const property in properties) {
     if (Object.prototype.hasOwnProperty.call(properties, property)) {
       if (recursive && copy[property] && isPlainObject(copy[property]) && isPlainObject(properties[property])) {
-        copy[property] = assign(copy[property], properties[property] as TTarget[Extract<keyof TTarget, string>], recursive);
+        copy[property] = assign(
+          copy[property],
+          properties[property] as TTarget[Extract<keyof TTarget, string>],
+          recursive
+        );
       } else {
         copy[property] = properties[property];
       }
@@ -116,7 +120,12 @@ export function eqString(str1: string | unknown, str2: string | unknown, ignoreT
  * @param {boolean} anyObject - Compare anything as objects
  * @returns {boolean}
  */
-export function eqObjects(a: PlainObjectType, b: PlainObjectType, skipLength: boolean = false, anyObject: boolean = false) {
+export function eqObjects(
+  a: PlainObjectType,
+  b: PlainObjectType,
+  skipLength: boolean = false,
+  anyObject: boolean = false
+) {
   if (!anyObject && (!isPlainObject(a) || !isPlainObject(b))) {
     return false;
   }
@@ -146,16 +155,12 @@ export function eqObjects(a: PlainObjectType, b: PlainObjectType, skipLength: bo
 
 /**
  * Shifts the values and property keys.
- * 
- * @param {any} obj - The plain object to reverse keys and values from 
+ *
+ * @param {any} obj - The plain object to reverse keys and values from
  * @returns {Object} - A new object with reversed properties.
  */
-export function reversedProperties(obj: PlainObjectType) {
-  return Object.fromEntries(
-    Object
-      .entries(obj)
-      .map(([key, value]) => [value, key])
-    );
+export function reversedProperties<T extends PlainObjectType<PropertyKey>>(obj: T) {
+  return Object.fromEntries(Object.entries(obj).map(([key, value]) => [value, key]) as [T[keyof T], keyof T][]);
 }
 
 /**
@@ -163,6 +168,26 @@ export function reversedProperties(obj: PlainObjectType) {
  * @param {any} obj - The plain object to reverse keys and values from.
  * @returns {Object} - A new object with the original properties together with reversed properties.
  */
-export function includeReversedProperties(obj: PlainObjectType) {
-  return { ...obj, ...reversedProperties(obj)};
+export function includeReversedProperties<T extends PlainObjectType<PropertyKey>>(obj: T) {
+  return { ...obj, ...reversedProperties(obj) } as typeof obj & ReturnType<typeof reversedProperties<T>>;
+}
+
+/**
+ * Returns the properties from an object with proper types.
+ * @param obj - The plain object to get keys and values from.
+ * @returns {Iterable} - An iterable array with key value pairs.
+ */
+export function objectAsIterable<T extends PlainObjectType, TValue = T >(obj: T) {
+  return Object.entries(obj) as [keyof T, TValue][];
+}
+
+/**
+ * Includes reversed keys and values in an Iterable array.
+ * @param {any} obj - The plain object to reverse keys and values from.
+ * @returns {Object} - An iterable array with the original properties together with reversed properties as key value pairs.
+ */
+export function includeReversedPropertiesAsIterable<T extends PlainObjectType<PropertyKey>>(obj: T) {
+  return Object.entries(obj).concat(
+    Object.entries(obj).map(([key, value]) => [value, key]) as [string, keyof T][]
+  ) as [PropertyKey, keyof T | T][];
 }

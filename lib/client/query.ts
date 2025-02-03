@@ -13,7 +13,7 @@ import { Constructor } from "../types/generic.types";
 
 export interface WeavyQueryProps {
   queryClient: QueryClient;
-  createQueryClient: () => Promise<void>;
+  initQueryClient: () => void;
   disconnectQueryClient: () => Promise<void>;
 }
 
@@ -26,24 +26,6 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
     constructor(...args: any[]) {
       super(...args);
 
-      this.createQueryClient();
-    }
-
-    _hostIsConnectedObserver?: ResizeObserver;
-
-    _queryClient!: QueryClient;
-    _unsubscribeQueryClient?: () => void;
-    _sessionStoragePersister?: Persister;
-
-    get queryClient() {
-      return this._queryClient;
-    }
-
-    async createQueryClient() {
-      if (this.isDestroyed) {
-        throw new DestroyError();
-      }
-
       this._queryClient = new QueryClient({
         defaultOptions: {
           queries: {
@@ -52,6 +34,24 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
           },
         },
       });
+
+      this.initQueryClient();
+    }
+
+    _hostIsConnectedObserver?: ResizeObserver;
+
+    _queryClient: QueryClient;
+    _unsubscribeQueryClient?: () => void;
+    _sessionStoragePersister?: Persister;
+
+    get queryClient() {
+      return this._queryClient;
+    }
+
+    async initQueryClient() {
+      if (this.isDestroyed) {
+        throw new DestroyError();
+      }
 
       await this.whenUrl()
 
@@ -94,10 +94,10 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
         }
 
         if (isConnected) {
-          console.log(this.weavyId, "Query client mounted");
+          console.info(this.weavyId, "Query client mounted");
           this._queryClient.mount();
         } else {
-          console.log(this.weavyId, "Query client unmounted");
+          console.info(this.weavyId, "Query client unmounted");
           this._queryClient.unmount();
         }
       });
@@ -106,7 +106,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
     }
 
     async disconnectQueryClient() {
-      console.log(this.weavyId, "Query client disconnected");
+      console.info(this.weavyId, "Query client disconnected");
       await this._queryClient.cancelQueries();
       this.queryClient.setQueriesData({}, undefined);
       this.queryClient.resetQueries();

@@ -1,20 +1,22 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 import { WeavyProps } from "../types/weavy.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { NotificationTypes, NotificationsResultType } from "../types/notifications.types";
 import {
   getBadgeOptions,
 } from "../data/notifications";
 import { QueryController } from "../controllers/query-controller";
+
 import allStyles from "../scss/all.scss";
 import hostContentsStyles from "../scss/host-contents.scss";
 
 @customElement("wy-notification-badge")
 @localized()
-export default class WyNotificationBadge extends BlockConsumerMixin(LitElement) {
+export default class WyNotificationBadge extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     allStyles,
     hostContentsStyles

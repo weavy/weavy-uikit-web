@@ -16,15 +16,18 @@ import { whenParentsDefined } from "../utils/dom";
 export class InfiniteQueryController<TData = unknown> implements ReactiveController {
   host: ReactiveControllerHost;
   context?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
-  whenContext?: Promise<void>;
-  resolveContext?: (value: void | PromiseLike<void>) => void;
+  whenContext?: Promise<WeavyType>;
+  resolveContext?: (value: WeavyType | PromiseLike<WeavyType>) => void;
+  queryClient?: QueryClient;
+  whenQueryClient: Promise<QueryClient>;
+  resolveQueryClient?: (value: QueryClient | PromiseLike<QueryClient>) => void;
   observer?: InfiniteQueryObserver<TData>;
 
   private _result?: InfiniteQueryObserverResult<InfiniteData<TData>>;
 
   get result() {
     return (
-      this._result && this.observer ? this.observer.trackResult(this._result) : undefined
+      this._result && this.observer ? this.observer.trackResult(this._result) : { isPending: true }
     ) as InfiniteQueryObserverResult<InfiniteData<TData>>;
   }
 
@@ -33,30 +36,31 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
     this.host = host;
+    this.whenContext = new Promise((r) => (this.resolveContext = r));
+    this.whenQueryClient = new Promise((r) => (this.resolveQueryClient = r));
     this.setContext();
   }
 
   async setContext() {
-    this.whenContext = new Promise((r) => (this.resolveContext = r));
     await whenParentsDefined(this.host as LitElement);
-    this.context = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
-  }
-
-  hostUpdate(): void {
-    if (this.context?.value) {
-      this.resolveContext?.();
-    }
+    this.context = new ContextConsumer(this.host as LitElement, {
+      context: WeavyContext,
+      subscribe: true,
+      callback: (weavy) => {
+        if (weavy) {
+          this.resolveContext?.(weavy);
+          this.queryClient = weavy.queryClient;
+          this.resolveQueryClient?.(weavy.queryClient);
+        }
+      },
+    });
   }
 
   async trackInfiniteQuery(
     infiniteQueryOptions: InfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>,
-    optimistic: boolean = true,
-    queryClient?: QueryClient
+    optimistic: boolean = true
   ) {
-    if (!queryClient) {
-      await this.whenContext;
-      queryClient = this.context?.value?.queryClient;
-    }
+    const queryClient = await this.whenQueryClient;
 
     if (!queryClient) {
       throw new Error("No QueryClient provided");
@@ -65,24 +69,24 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
     this.observerUnsubscribe?.();
 
     const observer = new InfiniteQueryObserver<TData>(queryClient, infiniteQueryOptions);
-    //console.log("trackInfiniteQuery", infiniteQueryOptions)
 
     this.observer = observer;
     this.observerSubscribe(optimistic);
   }
 
   observerSubscribe(optimistic: boolean = true) {
-    if (this.observer) {
+    if (this.queryClient && this.observer) {
       if (optimistic) {
         this._result = this.observer.getOptimisticResult(
           this.observer.options as DefaultedInfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>
         );
       } else {
-        this._result = undefined;
+        this._result = this.observer.getCurrentResult();
       }
 
       this.observerUnsubscribe = this.observer.subscribe(() => {
         if (this.observer) {
+          // REVIEW: The replaceEqualDeep might now be redundant because of updates in Tanstack
           const nextResult = replaceEqualDeep(this.result, this.observer.getCurrentResult());
           if (nextResult !== this._result) {
             //console.log("update", nextResult)
@@ -96,6 +100,24 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
       // between creating the observer and subscribing to it.
       this.observer.updateResult();
       this.host.requestUpdate();
+
+      let whenUpdated;
+      if (optimistic) {
+        whenUpdated = this.observer.fetchOptimistic(this.observer.options);
+      } else {
+        whenUpdated = this.queryClient
+          .getQueryCache()
+          .get(
+            (this.observer.options as DefaultedInfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>)
+              .queryHash
+          )?.promise;
+      }
+      whenUpdated
+        ?.catch(() => {})
+        .finally(() => {
+          // `.updateResult()` will trigger the subscribe callback
+          this.observer?.updateResult();
+        });
     }
   }
 
@@ -104,6 +126,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
     this.observerUnsubscribe = undefined;
     this._result = undefined;
     this.observer = undefined;
+    this.host.requestUpdate();
   }
 
   hostConnected() {

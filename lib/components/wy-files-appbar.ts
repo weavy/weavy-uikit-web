@@ -1,12 +1,11 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { PermissionTypes } from "../types/app.types";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
+import { PermissionType } from "../types/app.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
-import filesCss from "../scss/all.scss";
-
 import {
   getFileMutationsByConflictOrError,
   getFileMutationsTotalProgress,
@@ -25,13 +24,14 @@ import { MutationStateController } from "../controllers/mutation-state-controlle
 import { openUrl } from "../utils/urls";
 import { MutationState } from "@tanstack/query-core";
 import { toUpperCaseFirst } from "../utils/strings";
-
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
 import { WeavyProps } from "../types/weavy.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { hasPermission } from "../utils/permission";
+
+import filesCss from "../scss/all.scss";
 
 import "./wy-button";
 import "./wy-dropdown";
@@ -40,12 +40,11 @@ import "./wy-spinner";
 import "./wy-sheet";
 import "./wy-file-item";
 import "./wy-cloud-files";
-import "./wy-confluence";
 import "./wy-notification-button-list";
 
 @customElement("wy-files-appbar")
 @localized()
-export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
+export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [filesCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -78,16 +77,18 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
   };
 
   // remove file attachment
-  private handleRemoveMutation(
+  private async handleRemoveMutation(
     mutationState: MutationState<BlobType | FileType, Error, unknown, FileMutationContextType>
   ) {
-    if (!this.weavy) {
-      return;
-    }
+    const weavy = await this.whenWeavy()
+    const app = await this.whenApp();
+
+    // NOTE: failed uploads are persisted under a different mutation key
+    const removeKey = mutationState.status === "error" && !(mutationState.variables as CreateFileProps)?.blob ? ["apps", app.id, "blobs", undefined] : ["apps", app.id, "files"];
 
     removeMutation(
-      this.weavy.queryClient,
-      ["apps", this.app!.id, "files"],
+      weavy.queryClient,
+      removeKey,
       (mutation) => mutation.state.submittedAt === mutationState.submittedAt
     );
   }
@@ -158,8 +159,6 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
         fileStatus.text = msg("Replace existing file?");
       }
 
-      //console.log('fileStatus', fileStatus)
-
       return html`
         <wy-file-item
           .file=${mutation.context?.file}
@@ -212,7 +211,7 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
     return html`
       <nav class="wy-toolbar">
         <div class="wy-toolbar-buttons">
-          ${hasPermission(PermissionTypes.Create, this.app?.permissions)
+          ${hasPermission(PermissionType.Create, this.app?.permissions)
             ? html`
                 <wy-dropdown title=${msg("Add files")}>
                   <span slot="button">${msg("Add files")}</span>
@@ -239,12 +238,6 @@ export class WyFilesAppbar extends BlockConsumerMixin(LitElement) {
                           <span>${msg("From cloud")}</span>
                         </wy-dropdown-item>
                       `
-                    : nothing}
-                  ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
-                    ? html`<wy-confluence
-                        dropdown
-                        @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}
-                      ></wy-confluence>`
                     : nothing}
                 </wy-dropdown>
               `

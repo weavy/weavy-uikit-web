@@ -1,11 +1,11 @@
 import { createContext } from "@lit/context";
-import { BlockSettingProps } from "../mixins/block-mixin";
+import { WeavyComponentSettingProps } from "../classes/weavy-component";
 import { LitElement } from "lit";
 import { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
 
 export type { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
 
-export class BlockSettings implements BlockSettingProps {
+export class WeavyComponentSettings implements WeavyComponentSettingProps {
   #component: LitElement;
 
   /**
@@ -26,13 +26,13 @@ export class BlockSettings implements BlockSettingProps {
 
     const settingKeys = Object.keys(this);
 
-    settingKeys.forEach((blockSetting) => {
-      if (blockSetting in host) {
-        Object.assign(this, { [blockSetting]: host[blockSetting as keyof typeof host] });
+    settingKeys.forEach((weavyComponentSetting) => {
+      if (weavyComponentSetting in host) {
+        Object.assign(this, { [weavyComponentSetting]: host[weavyComponentSetting as keyof typeof host] });
       }
     });
   }
 }
 
-export type BlockSettingsType = BlockSettings;
-export const BlockSettingsContext = createContext<BlockSettings | undefined>(Symbol.for("weavy-block-settings"));
+export type WeavyComponentSettingsType = WeavyComponentSettings;
+export const WeavyComponentSettingsContext = createContext<WeavyComponentSettings | undefined>(Symbol.for("weavy-component-settings"));

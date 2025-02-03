@@ -25,13 +25,11 @@ describe("Weavy class", () => {
   it('has "default" config properties', async () => {
     expect(Weavy).to.have.property("defaults").that.satisfies(isPlainObject);
     expect(Weavy.defaults).to.have.property("cloudFilePickerUrl", "https://filebrowser.weavy.io/v14/");
-    expect(Weavy.defaults).to.have.property("confluenceAuthenticationUrl", undefined);
-    expect(Weavy.defaults).to.have.property("confluenceProductName", undefined);
     expect(Weavy.defaults).to.have.property("disableEnvironmentImports", false);
     expect(Weavy.defaults).to.have.property("gcTime", 86400000);
     expect(Weavy.defaults).to.have.property("locale", "en");
     expect(Weavy.defaults).to.have.property("reactions").to.be.an("array").that.is.not.empty;
-    expect(Weavy.defaults).to.have.property("scrollBehavior").to.be.oneOf(["smooth", "instant"]);
+    expect(Weavy.defaults).to.have.property("scrollBehavior").to.be.oneOf(["auto", "smooth", "instant"]);
     expect(Weavy.defaults).to.have.property("staleTime", 1000);
     expect(Weavy.defaults).to.have.property("tokenFactoryRetryDelay", 2000);
     expect(Weavy.defaults).to.have.property("tokenFactoryTimeout", 20000);

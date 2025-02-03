@@ -1,62 +1,80 @@
 import { throwOnDomNotAvailable } from "./dom";
 
-interface Storage {
+export interface Storage {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
   removeItem: (key: string) => void;
 }
 
-const keyPrefix = "WEAVY_OFFLINE_CACHE";
-let storage: Storage | undefined;
-try {
-  throwOnDomNotAvailable();
-  
-  storage = window.sessionStorage;
-} catch {
-  console.warn("Session storage not available.");
-}
-const cache = new Map<PropertyKey, unknown>();
 
-export function resetPersistPropertiesCache() {
-  cache.clear();
-}
+export class PersistStorageCache {
+  #cache = new Map<PropertyKey, unknown>();
+  #storage: Storage | undefined;
 
-export async function getStorageItem(prefix: string, property: PropertyKey) {
-  const storageItem = storage?.getItem(`${prefix}-${property.toString()}`);
-  if (storageItem) {
-    return JSON.parse(storageItem);
-  } else {
-    return undefined;
-  }
-}
+  keyPrefix = "WEAVY_OFFLINE_CACHE";
 
-export async function setStorageItem(prefix: string, property: PropertyKey, item: unknown) {
-  const storageItem = JSON.stringify(item);
+  constructor(storage?: Storage) {
 
-  if (storageItem) {
-    storage?.setItem(`${prefix}-${property.toString()}`, storageItem);
-  }
-}
-
-export async function persistProperties<T = object>(parent: T, key: string, properties: Array<keyof T>, cachePrefix?: string) {
-  const prefix = `${keyPrefix}:${cachePrefix ? `${cachePrefix}:` : ''}${typeof parent}:${key}`;
-
-  properties.forEach(async (property) => {
-    // Try to initialize property from storage
-    if (!cache.has(property)) {
-      const item = await getStorageItem(prefix, property);
-      if (item) {
-        //console.log("Restoring property", property, item)
-        parent[property] = item;
+    if (storage) {
+      this.#storage = storage
+    } else {
+      try {
+        throwOnDomNotAvailable();
+        
+        this.#storage = window.sessionStorage;
+      } catch {
+        console.warn("Session storage not available.");
       }
-      cache.set(property, item);
     }
+  }
+  
+  resetPersistPropertiesCache() {
+    this.#cache.clear();
+  }
 
-    // Update cache and storage
-    if (parent[property] !== cache.get(property)) {
-      const item = parent[property];
-      cache.set(property, item);
-      setStorageItem(prefix, property, item);
+  async getStorageItem(prefix: string, property: PropertyKey) {
+    const storageItem = this.#storage?.getItem(`${prefix}-${property.toString()}`);
+    if (storageItem) {
+      return JSON.parse(storageItem);
+    } else {
+      return undefined;
     }
-  });
+  }
+
+  async setStorageItem(prefix: string, property: PropertyKey, item: unknown) {
+    const storageItem = JSON.stringify(item);
+  
+    if (storageItem) {
+      this.#storage?.setItem(`${prefix}-${property.toString()}`, storageItem);
+    }
+  }
+
+  async persistProperties<T = object>(parent: T, key: string, properties: Array<keyof T>, cachePrefix?: string) {
+    const prefix = `${this.keyPrefix}:${cachePrefix ? `${cachePrefix}:` : ''}${typeof parent}:${key}`;
+  
+    properties.forEach(async (property) => {
+      // Try to initialize property from storage
+      if (!this.#cache.has(property)) {
+        const item = await this.getStorageItem(prefix, property);
+        if (item) {
+          //console.log("Restoring property", property, item)
+          parent[property] = item;
+        }
+        this.#cache.set(property, item);
+      }
+  
+      // Update cache and storage
+      if (parent[property] !== this.#cache.get(property)) {
+        const item = parent[property];
+        this.#cache.set(property, item);
+        this.setStorageItem(prefix, property, item);
+      }
+    });
+  }
+  
 }
+
+
+
+
+

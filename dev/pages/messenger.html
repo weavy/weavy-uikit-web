@@ -27,10 +27,6 @@
   <wy-context 
       url="%WEAVY_URL%" 
       reactions='["👍", "❤️", "😂", "😒", "😁"]'
-      confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
-      confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"
-      modalParent="html"
-      
       tokenFactory="async (refresh) => {
         let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
 

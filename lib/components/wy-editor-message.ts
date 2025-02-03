@@ -1,10 +1,9 @@
 import { html, nothing, TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
 
 import WyEditor from "./wy-editor";
-
 import "./wy-dropdown";
 import "./wy-icon";
 import "./wy-button";
@@ -31,7 +30,7 @@ export default class WyMessageEditor extends WyEditor {
       this.hasFeatures?.zoomMeetings ||
       this.hasFeatures?.googleMeet ||
       this.hasFeatures?.microsoftTeams
-        ? html`<wy-dropdown icon="plus" directionY="up">
+        ? html`<wy-dropdown icon="plus" directionY="up" ?disabled=${this.disabled}>
             ${this.hasFeatures?.attachments
               ? html`
                   <wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
@@ -60,12 +59,6 @@ export default class WyMessageEditor extends WyEditor {
                     <span>${msg("From cloud")}</span>
                   </wy-dropdown-item>
                 `
-              : nothing}
-            ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
-              ? html`<wy-confluence
-                  dropdown
-                  @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
-                ></wy-confluence>`
               : nothing}
             ${this.hasFeatures?.polls
               ? html`
@@ -106,7 +99,7 @@ export default class WyMessageEditor extends WyEditor {
         : nothing}
 
       <!-- Input -->
-      <div class="wy-message-editor-text" ${ref(this.editorRef)}></div>
+      <div class="wy-message-editor-text" ${ref(this.editorRef)}> ${this.renderEditorDummy()} </div>
 
       <!-- Button -->
       <wy-button
@@ -114,6 +107,7 @@ export default class WyMessageEditor extends WyEditor {
         color="primary-text"
         title=${msg("Send", { desc: "Button action to send" })}
         @click="${this.submit}"
+        ?disabled=${this.disabled}
       >
         <wy-icon name="send"></wy-icon>
       </wy-button>

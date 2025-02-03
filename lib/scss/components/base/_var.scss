@@ -53,6 +53,7 @@
   --wy-gap:                       wy-rem(.5),
   --wy-gap-sm:                    calc(.5  * var(--wy-gap, wy-rem(.5))),
   --wy-gap-lg:                    calc(1.5 * var(--wy-gap, wy-rem(.5))),
+  --wy-gap-xl:                    calc(2 * var(--wy-gap, wy-rem(.5))),
 
   /* Border */
   --wy-border:                    1px,
@@ -62,8 +63,8 @@
   --wy-border-radius-pill:        var(--wy-border-radius, wy-rem(2.5)),
    
   /* Typography */
-  // Font should be inherited/unset by default
-  --wy-font-family:               unset, // #{$font-family-sans-serif};
+  --wy-font-family:               unset, // Font should be inherited/unset by default
+  --wy-font-monospace:            "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   --wy-font-size:                 var(--wy-size, 1em), // Assumes the inherited font-size, typically 16px
 
   --wy-font-weight:               unset, // #{$font-weight-normal};
@@ -104,6 +105,7 @@
   --wy-transition-duration-fast:  #{md.$animation-duration-fast},
   --wy-transition:                var(--wy-transition-duration, #{md.$animation-duration}) var(--wy-transition-curve, #{md.$animation-curve-default}),
   --wy-transition-fast:           var(--wy-transition-duration-fast, #{md.$animation-duration-fast}) var(--wy-transition-curve, #{md.$animation-curve-default}),
+  --wy-transition-reveal-delay:   1s,
 
   /* Opacity */
   --wy-opacity-backdrop:          95%,

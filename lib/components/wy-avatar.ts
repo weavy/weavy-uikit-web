@@ -1,6 +1,6 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { getInitials } from "../utils/strings";
 import { type MemberType } from "../types/members.types";
 import { type UserType } from "../types/users.types";

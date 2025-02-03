@@ -13,16 +13,6 @@ export interface StrictWeavyOptions {
   cloudFilePickerUrl?: string | URL;
 
   /**
-   * The url for confluence authentication.
-   */
-  confluenceAuthenticationUrl?: string | URL;
-
-  /**
-   * The name of the confluence product.
-   */
-  confluenceProductName?: string;
-
-  /**
    * Should the dynamic import of modules from the environment be disabled?
    */
   disableEnvironmentImports?: boolean;
@@ -50,7 +40,7 @@ export interface StrictWeavyOptions {
   reactions?: string[];
 
   /**
-   * Enable the realtime `wy:notifications` event.
+   * Enable the realtime `wy-notifications` event.
    */
   notificationEvents?: boolean;
 

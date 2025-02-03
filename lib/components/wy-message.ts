@@ -1,23 +1,25 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { localized, msg, str } from "@lit/localize";
 import { keyed } from "lit/directives/keyed.js";
-
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileOpenEventType, FileType } from "../types/files.types";
-
-import chatCss from "../scss/all.scss";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
-import { type ConversationType } from "../types/conversations.types";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { type AppType, EntityTypeString} from "../types/app.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { isEntityChainMatch } from "../utils/notifications";
+import { partMap } from "../utils/directives/shadow-part-map";
+
+import chatCss from "../scss/all.scss";
 
 import "./wy-avatar";
 import "./wy-embed";
@@ -30,19 +32,16 @@ import "./wy-meeting-card";
 import "./wy-skeleton";
 import "./wy-preview";
 import "./wy-poll";
-import { isEntityChainMatch } from "../utils/notifications";
-import { EntityTypes } from "../types/app.types";
-import { partMap } from "../utils/directives/shadow-part-map";
 
 @customElement("wy-message")
 @localized()
-export default class WyMessage extends BlockConsumerMixin(LitElement) {
+export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })
-  conversation?: ConversationType;
+  conversation?: AppType;
 
   @property({ type: Number })
   messageId!: number;
@@ -55,15 +54,6 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
 
   @property({ type: Boolean })
   isPrivateChat: boolean = false;
-
-  @property({ type: Boolean })
-  temp: boolean = false;
-
-  @property({ type: Boolean })
-  sent?: boolean | null = null;
-
-  @property({ type: Boolean })
-  delivered?: boolean | null = null;
 
   @property()
   displayName: string = "";
@@ -111,7 +101,7 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("link")) {
-      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Message, { id: this.messageId }));
+      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Message, { id: this.messageId }));
     }
   }
 
@@ -154,7 +144,7 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
           </div>
 
           <div class="wy-message-bubble">
-            ${this.temp
+            ${this.messageId < 0
               ? html`<wy-skeleton .text=${this.text}></wy-skeleton>`
               : html`
                   <!-- image grid -->
@@ -211,8 +201,9 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
                               directionX=${this.me ? "right" : "left"}
                               .reactions=${this.reactions}
                               parentId=${this.conversation.id}
+                              parentType="apps"
                               entityId=${this.messageId}
-                              messageType="messages"
+                              entityType="messages"
                             ></wy-reactions>
                           `
                         )}
@@ -241,12 +232,6 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
                     ></wy-avatar>`;
                   })}
                 `
-              : this.delivered === true
-              ? html`<wy-icon title="Delivered" class="wy-status-delivered" name="check-circle" size="18"></wy-icon>`
-              : this.sent === true
-              ? html`<wy-icon title="Sent" class="wy-status-sent" name="check-circle-outline" size="18"></wy-icon>`
-              : this.sent === false
-              ? html`<wy-icon title="Pending" class="wy-status-pending" name="circle-outline" size="18"></wy-icon>`
               : nothing}
           </div>`
         : nothing}
@@ -256,7 +241,6 @@ export default class WyMessage extends BlockConsumerMixin(LitElement) {
             html`
               <wy-preview
                 ${ref(this.previewRef)}
-                .uid=${`message-${this.messageId}`}
                 .files=${[...images, ...files]}
                 .isAttachment=${true}
               ></wy-preview>

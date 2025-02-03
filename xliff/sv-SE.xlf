@@ -216,8 +216,8 @@
         <target state="">Inlägget togs bort.</target>
       </trans-unit>
       <trans-unit id="s6acd68c5d25381a5">
-        <source><x id="0" equiv-text="${this.commentCount}"/> comments</source>
-        <target state=""><x id="0" equiv-text="${this.commentCount}"/> kommentarer</target>
+        <source><x id="0" equiv-text="${file.comments.count}"/> comments</source>
+        <target state=""><x id="0" equiv-text="${file.comments.count}"/> kommentarer</target>
       </trans-unit>
       <trans-unit id="s343f95633406dc81">
         <source>1 comment</source>
@@ -415,18 +415,6 @@
       <trans-unit id="sc374276841a6c39e">
         <source>Versions are not available for external cloud files.</source>
         <target>Versioner är inte tillgängliga för externa filer från molnet.</target>
-      </trans-unit>
-      <trans-unit id="sc16e00a7a8b2fde2">
-        <source>Back</source>  
-        <target>Tillbaka</target>
-      </trans-unit>
-      <trans-unit id="s8ad15eeb66d528ff">
-        <source>Select a Confluence site</source>
-        <target>Välj ett utrymme i Confluence</target>
-      </trans-unit>
-      <trans-unit id="sa51cfa5b38f02434">
-        <source>Confluence Page Picker</source>
-        <target>Confluence sidväljare</target>
       </trans-unit>
       <trans-unit id="s382a2aa3984474dd">
         <source>Create</source>

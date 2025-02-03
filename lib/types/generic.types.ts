@@ -1,5 +1,5 @@
 /** Generic Plain Object type, e.g. {} */
-export type PlainObjectType = { [key: PropertyKey]: unknown };
+export type PlainObjectType<TValue = unknown> = { [key: PropertyKey]: TValue };
 
 /** Generic constructor type */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,3 +20,11 @@ export type JsonType = boolean | number | string | null | { [key: string]: JsonT
  * @see https://github.com/microsoft/TypeScript/issues/39522
  **/
 export type Nullable<T> = { [K in keyof T]: T[K] | null };
+
+/**
+ * Strong string typing for the event type (event name) instead of any string.
+ * @example 
+ * const customEvent = new (CustomEvent as NamedEvent)(name, options)
+ */
+export type NamedEvent = 
+    new<T, TName extends string = CustomEvent<T>["type"]>(type: TName, eventInitDict?: CustomEventInit<T>) => CustomEvent<T> & { type: TName};

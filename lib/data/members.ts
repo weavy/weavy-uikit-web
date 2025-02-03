@@ -28,8 +28,6 @@ export function getInfiniteSearchMemberOptions(
   appId: number | undefined,
   bot: () => boolean | undefined  
 ): InfiniteQueryObserverOptions<MembersResultType, Error, InfiniteData<MembersResultType>> {
-  const PAGE_SIZE = 25;
-
   return {
     queryKey: ["searchmembers"],
     initialPageParam: 0,
@@ -42,18 +40,18 @@ export function getInfiniteSearchMemberOptions(
       let response;
       
       if (appId) {
-        response = await weavy.fetch(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.fetch(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
       } else {
-        response = await weavy.fetch(`/api/users?q=${query}&skip=${skip}&take=${PAGE_SIZE}&count=true${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.fetch(`/api/users?q=${query}&skip=${skip}${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
       }          
 
       const result = await response.json();
       result.data = result.data || [];
       return result;
     }),
-    getNextPageParam: (lastPage, pages) => {
-      if (lastPage?.end && lastPage?.end < lastPage?.count) {
-        return pages.length * PAGE_SIZE;
+    getNextPageParam: (lastPage) => {
+      if (lastPage.end && lastPage.end < lastPage.count) {
+        return lastPage.end;
       }
       return undefined;
     },

@@ -1,17 +1,14 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 import type { FileOpenEventType, FileOrderType, FileType, FileViewType } from "../types/files.types";
 import { repeat } from "lit/directives/repeat.js";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { createRef, Ref } from "lit/directives/ref.js";
-
-import { EntityTypes } from "../types/app.types";
+import { EntityTypeString } from "../types/app.types";
 import { getEntityChainMatch, hasEntityChildType } from "../utils/notifications";
-
-import { renderFileCard } from "./wy-file-grid";
-import { renderFileTable } from "./wy-file-table";
 
 import allCss from "../scss/all.scss";
 import hostScrollYStyles from "../scss/host-scroll-y.scss";
@@ -20,15 +17,15 @@ import hostScrollYStyles from "../scss/host-scroll-y.scss";
 import gridCss from "../scss/components/grid.scss";
 import cardCss from "../scss/components/card.scss";
 
-// wy-file-table
-
+import { renderFileTable } from "./wy-file-table";
+import { renderFileCard } from "./wy-file-grid";
 import "./wy-icon";
 import "./wy-dropdown";
 import "./wy-file-menu";
 
 @customElement("wy-files-list")
 @localized()
-export class WyFilesList extends BlockConsumerMixin(LitElement) {
+export class WyFilesList extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [allCss, hostScrollYStyles, gridCss, cardCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -108,9 +105,9 @@ export class WyFilesList extends BlockConsumerMixin(LitElement) {
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("link")) {
-      this.highlightId = this.link && getEntityChainMatch(this.link, EntityTypes.File)?.id;
+      this.highlightId = this.link && getEntityChainMatch(this.link, EntityTypeString.File)?.id;
       this.highlightComment = this.link && this.highlightId
-        ? hasEntityChildType(this.link, EntityTypes.File, { id: this.highlightId }, EntityTypes.Comment)
+        ? hasEntityChildType(this.link, EntityTypeString.File, { id: this.highlightId }, EntityTypeString.Comment)
         : false;
     }
 
@@ -130,6 +127,7 @@ export class WyFilesList extends BlockConsumerMixin(LitElement) {
               (file) => renderFileCard.call(this, file, this.isRenamingId, this.highlightId, this.highlightRef)
             )}
           </div>
+          <slot name="end"></slot>
         `;
       } else {
         return renderFileTable.call(this, this.files, this.order, this.isRenamingId, this.highlightId, this.highlightRef);

@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
@@ -8,7 +9,7 @@ import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { NotificationType } from "../types/notifications.types";
 import { dispatchLinkEvent, getNotificationText } from "../utils/notifications";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 
 import rebootCss from "../scss/components/base/reboot.scss";
 import itemCss from "../scss/components/item.scss";
@@ -21,7 +22,7 @@ import "./wy-button";
 
 @customElement("wy-notification-list-item")
 @localized()
-export default class WyNotificationListItem extends BlockConsumerMixin(LitElement) {
+export default class WyNotificationListItem extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [rebootCss, itemCss, metaCss, notificationsCss];
   protected exportParts = new ShadowPartsController(this);
 
@@ -45,7 +46,7 @@ export default class WyNotificationListItem extends BlockConsumerMixin(LitElemen
   }
 
   private async dispatchLink(_e: Event) {
-    return await dispatchLinkEvent(this, this.notification);
+    return await dispatchLinkEvent(this, this.weavy, this.notification);
   }
 
   private dispatchMark(e: Event, markAsRead: boolean) {

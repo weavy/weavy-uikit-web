@@ -1,7 +1,16 @@
 import { TemplateResult, html, nothing } from "lit";
-import { EntityType, EntityTypes } from "../types/app.types";
+import {
+  AppWithSourceMetadataType,
+  ComponentType,
+  EntityType,
+  EntityTypeString,
+  MetadataSourceType,
+} from "../types/app.types";
 import { WyLinkEventType, NotificationType } from "../types/notifications.types";
 import { msg, str } from "@lit/localize";
+import { type WeavyType } from "../client/weavy";
+import { AppTypeGuids, BotAppTypeGuids } from "../classes/weavy-component";
+import { NamedEvent } from "../types/generic.types";
 
 export function getEntityChain(entity?: EntityType) {
   const chain = [entity];
@@ -16,25 +25,25 @@ export function getEntityChain(entity?: EntityType) {
   return chain;
 }
 
-export function isEntityMatch(entity: EntityType, type: EntityTypes, item?: { id: number }) {
+export function isEntityMatch(entity: EntityType, type: EntityTypeString, item?: { id: number }) {
   return entity.type === type && (!item || entity.id === item.id);
 }
 
-export function isEntityChainMatch(entity: EntityType, type: EntityTypes, item?: { id: number }) {
+export function isEntityChainMatch(entity: EntityType, type: EntityTypeString, item?: { id: number }) {
   const chain = getEntityChain(entity);
   return chain.some((chainEntity) => chainEntity && isEntityMatch(chainEntity, type, item));
 }
 
-export function getEntityChainMatch(entity: EntityType, type: EntityTypes, item?: { id: number }) {
+export function getEntityChainMatch(entity: EntityType, type: EntityTypeString, item?: { id: number }) {
   const chain = getEntityChain(entity);
   return chain.find((chainEntity) => chainEntity && isEntityMatch(chainEntity, type, item));
 }
 
 export function hasEntityChildType(
   entity: EntityType,
-  type: EntityTypes,
+  type: EntityTypeString,
   item: { id: number },
-  childType: EntityTypes
+  childType: EntityTypeString
 ) {
   // Looking at child to be able to check parent
   const childMatch = getEntityChainMatch(entity, childType);
@@ -48,15 +57,41 @@ export function hasEntityChildType(
 
 export async function dispatchLinkEvent(
   target: EventTarget,
+  weavy: WeavyType | undefined,
   notification: NotificationType
 ) {
-  const event: WyLinkEventType = new CustomEvent("wy:link", {
+  let metadata: MetadataSourceType | undefined;
+
+  if (weavy && notification.link.app?.id) {
+    const response = await weavy.fetch(`/api/apps/${notification.link.app.id}`);
+    if (response.ok) {
+      metadata = ((await response.json()) as AppWithSourceMetadataType).metadata;
+    }
+  }
+
+  const event: WyLinkEventType = new (CustomEvent as NamedEvent)("wy-link", {
     bubbles: true,
     composed: true,
     cancelable: true,
-    detail: { ...notification.link },
+    detail: {
+      link: {
+        ...notification.link,
+        bot: getBotName(notification),
+      },
+      app_type: (notification.link.app?.type && AppTypeGuids.get(notification.link.app?.type)) || ComponentType.Unknown,
+      source_name: metadata?.source_name,
+      source_url: metadata?.source_url,
+      source_data: metadata?.source_data,
+    },
   });
+
   return target.dispatchEvent(event);
+}
+
+export function getBotName(notification: NotificationType) {
+  return notification.link.app?.type && BotAppTypeGuids.has(notification.link.app?.type) && notification.actor.is_bot
+    ? notification.actor.uid
+    : undefined;
 }
 
 export function getNotificationText(notification: NotificationType): {
@@ -65,7 +100,7 @@ export function getNotificationText(notification: NotificationType): {
   detail?: string;
 } {
   const args = notification.args;
-  
+
   switch (notification.template) {
     case "**{0}** added *{1}* to **{2}**": {
       const [name, fileName, appName] = args;

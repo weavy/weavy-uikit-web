@@ -27,14 +27,18 @@ export function getPollMutationOptions(weavy: WeavyType, mutationKey: MutationKe
       }
       return response.json();
     },
-    onMutate: async (variables: MutatePollVariables) => {
-      updateCacheItems(queryClient, { queryKey: key }, variables.parentId, (item: PostType) => {        
+    onMutate: async (variables: MutatePollVariables) => {      
+      updateCacheItems(queryClient, { queryKey: key }, variables.parentId, (item: PostType) => {                
         if (item.options?.data) {
           item.options.data = item.options.data?.map((o: PollOptionType) => {            
             if (o.has_voted) {
               o.has_voted = false;
               const count = o.votes?.count || 1;
-              o.votes!.count = count - 1;
+              if (o.votes) {
+                o.votes.count = count - 1;
+              } else {
+                o.votes = { count: count - 1 };
+              }
             } else if (!o.has_voted && o.id === variables.optionId) {
               o.has_voted = true;
               const count = o.votes?.count || 0;

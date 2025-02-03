@@ -11,7 +11,7 @@ export type MutateFileVersionVariables = {
 };
 
 export type FileVersionMutationType = MutationObserver<
-  FileType,
+  void,
   Error,
   MutateFileVersionVariables,
   FileMutationContextType
@@ -31,13 +31,15 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
   const options = {
     mutationKey: filesKey,
     mutationFn: async ({ versionFile }: MutateFileVersionVariables) => {
-      if (versionFile.id >= 1 && versionFile.version) {
-        const response = await weavy.fetch(`/api/files/${versionFile.id}/versions/${versionFile.version}/restore`, {
+      if (versionFile.id >= 1 && versionFile.rev) {
+        const response = await weavy.fetch(`/api/files/${versionFile.id}/versions/${versionFile.rev}/restore`, {
           method: "POST",
         });
-        return response.json();
+        if (!response.ok) {
+          throw new Error();
+        }  
       } else {
-        throw new Error(`Could not restore ${versionFile.name} to version ${versionFile.version}.`);
+        throw new Error(`Could not restore ${versionFile.name} to version ${versionFile.rev}.`);
       }
     },
     onMutate: async (variables: MutateFileVersionVariables) => {
@@ -51,7 +53,7 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
       );
       return <FileMutationContextType>{ type: "version", file, status: { state: "pending" } };
     },
-    onSuccess: (data: FileType, variables: MutateFileVersionVariables) => {
+    onSuccess: (data: void, variables: MutateFileVersionVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -96,8 +98,8 @@ export function getFileVersionDeleteMutationOptions(weavy: WeavyType, app: AppTy
   const options = {
     mutationKey: fileVersionKey,
     mutationFn: async ({ versionFile }: MutateFileVersionVariables) => {
-      if (versionFile.id >= 1 && versionFile.version) {
-        const response = await weavy.fetch(`/api/files/${versionFile.id}/versions/${versionFile.version}`, {
+      if (versionFile.id >= 1 && versionFile.rev) {
+        const response = await weavy.fetch(`/api/files/${versionFile.id}/versions/${versionFile.rev}`, {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -107,27 +109,27 @@ export function getFileVersionDeleteMutationOptions(weavy: WeavyType, app: AppTy
       } else {
         const serverError = <ServerErrorResponseType>{
           status: 400,
-          title: `Could not remove ${versionFile.name} version ${versionFile.version}.`,
+          title: `Could not remove ${versionFile.name} version ${versionFile.rev}.`,
         };
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
     },
     onMutate: async (variables: MutateFileVersionVariables) => {
       const versionPredicate = (item: FileType) =>
-        item.id === variables.versionFile.id && item.version === variables.versionFile.version;
+        item.id === variables.versionFile.id && item.rev === variables.versionFile.rev;
       updateCacheItem(queryClient, fileVersionKey, versionPredicate, (existingFile: FileType) =>
         Object.assign(existingFile, { status: "pending" })
       );
     },
     onSuccess: (data: void, variables: MutateFileVersionVariables) => {
       const versionPredicate = (item: FileType) =>
-        item.id === variables.versionFile.id && item.version === variables.versionFile.version;
+        item.id === variables.versionFile.id && item.rev === variables.versionFile.rev;
       removeCacheItem(queryClient, fileVersionKey, versionPredicate);
     },
     onError(error: Error, variables: MutateFileVersionVariables) {
       // Show in error list instead?
       const versionPredicate = (item: FileType) =>
-        item.id === variables.versionFile.id && item.version === variables.versionFile.version;
+        item.id === variables.versionFile.id && item.rev === variables.versionFile.rev;
       updateCacheItem(queryClient, fileVersionKey, versionPredicate, (existingFile: FileType) =>
         Object.assign(existingFile, { status: undefined })
       );

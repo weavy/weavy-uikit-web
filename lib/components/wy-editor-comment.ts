@@ -1,11 +1,11 @@
-import { html, nothing, TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
+import { html, nothing, PropertyValues, TemplateResult } from "lit";
+import { customElement } from "../utils/decorators/custom-element";
 import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
+import { WeavyProps } from "../types/weavy.types";
 
 import WyEditor from "./wy-editor";
-
 import "./wy-dropdown";
 import "./wy-icon";
 import "./wy-button";
@@ -17,6 +17,14 @@ export default class WyCommentEditor extends WyEditor {
     super();
     this.editorType = "comments";
     this.editorClass = "wy-comment-editor";
+  }
+
+  override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
+    super.willUpdate(changedProperties);
+
+    if (changedProperties.has("editorLocation") && this.editorLocation === "files") {
+      this.editorClass = "wy-comment-editor wy-comment-editor-bottom";
+    }
   }
 
   protected override renderTopSlot(): TemplateResult | typeof nothing {
@@ -31,7 +39,7 @@ export default class WyCommentEditor extends WyEditor {
       this.hasFeatures?.zoomMeetings ||
       this.hasFeatures?.googleMeet ||
       this.hasFeatures?.microsoftTeams
-        ? html`<wy-dropdown icon="plus" directionY="up">
+        ? html`<wy-dropdown icon="plus" directionY="up" ?disabled=${this.disabled}>
             ${this.hasFeatures?.attachments
               ? html`<wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
                     <wy-icon name="attachment"></wy-icon>
@@ -56,12 +64,6 @@ export default class WyCommentEditor extends WyEditor {
                   <wy-icon name="cloud"></wy-icon>
                   <span>${msg("From cloud")}</span>
                 </wy-dropdown-item>`
-              : nothing}
-            ${this.hasFeatures?.confluence && this.weavy?.confluenceAuthenticationUrl
-              ? html`<wy-confluence
-                  dropdown
-                  @external-blobs=${(e: CustomEvent) => this.handleExternalBlobs(e.detail.externalBlobs)}
-                ></wy-confluence>`
               : nothing}
             ${this.hasFeatures?.zoomMeetings
               ? html`
@@ -103,10 +105,12 @@ export default class WyCommentEditor extends WyEditor {
       <div
         class=${classMap({ "wy-comment-editor-text": true, "wy-is-invalid": this.editorError })}
         ${ref(this.editorRef)}
-      ></div>
+      >
+        ${this.renderEditorDummy()}
+      </div>
 
       <!-- Button -->
-      <wy-button kind="icon" @click="${this.submit}" title=${this.buttonText}>
+      <wy-button kind="icon" @click="${this.submit}" title=${this.buttonText} ?disabled=${this.disabled}>
         <wy-icon name="send"></wy-icon>
       </wy-button>
     </div>`;

@@ -5,7 +5,7 @@ import { type WeavyType } from "../client/weavy";
 export function typingMutation(weavy: WeavyType, conversationId: number | null) {
   return new MutationObserver(weavy.queryClient, {
     mutationFn: async () => {
-      const response = await weavy.fetch(`/api/conversations/${conversationId}/typing`, {
+      const response = await weavy.fetch(`/api/apps/${conversationId}/typing`, {
         method: "PUT",
         body: JSON.stringify({}),
       });

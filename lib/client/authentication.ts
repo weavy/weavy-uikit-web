@@ -223,7 +223,6 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
       }
 
       if (!this._tokenPromise) {
-        console.log("Getting token...")
         this._tokenPromise = new Promise((resolve, reject) => {
           // Try getting a valid token
           this._validTokenFromFactory(refresh).then(resolve).catch(reject);
@@ -240,7 +239,6 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
 
           this._tokenPromise = null;
           this._token = token;
-          console.log("Token resolved", token)
           return this._token;
         } catch (e) {
           this._tokenPromise = null;

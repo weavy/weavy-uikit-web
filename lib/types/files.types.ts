@@ -1,6 +1,7 @@
-import { AppRef, EntityType } from "./app.types";
+import { AppRef, AppType, EntityType } from "./app.types";
 import { CommentsResultType } from "./comments.types";
 import type { MetadataType, SortOrderType } from "./lists.types";
+import { ProductFeaturesType } from "./product.types";
 import { InfiniteQueryResultType } from "./query.types";
 import type { UserType } from "./users.types";
 import { type Mutation } from "@tanstack/query-core";
@@ -29,8 +30,8 @@ export type FileKindType =
 
 export type PreviewFormatType = "audio" | "code" | "embed" | "html" | "image" | "pdf" | "text" | "video" | "none";
 
-export type FileProviderType = "Box" | "Dropbox" | "Google Drive" | "OneDrive" | "Confluence";
-export type ProviderType = "box" | "dropbox" | "google-drive" | "onedrive" | "confluence";
+export type FileProviderType = "Box" | "Dropbox" | "Google Drive" | "OneDrive";
+export type ProviderType = "box" | "dropbox" | "google-drive" | "onedrive";
 
 export type BlobType = {
   id: number;
@@ -42,7 +43,7 @@ export type BlobType = {
 };
 
 export type ExternalBlobType = {
-  provider: "Box" | "Dropbox" | "Google Drive" | "OneDrive" | "Confluence";
+  provider: "Box" | "Dropbox" | "Google Drive" | "OneDrive";
   link: string;
   name: string;
   size: number;
@@ -53,9 +54,9 @@ export type ExternalBlobType = {
 
 export type FileType = {
   id: number;
+  rev?: number;
   app: AppRef;
-  parent?: EntityType;
-  version?: number;
+  parent?: EntityType;  
   name: string;
   kind: FileKindType;
   media_type: string;
@@ -79,10 +80,9 @@ export type FileType = {
   comments?: CommentsResultType;
   is_subscribed: boolean;
   is_starred: boolean;
-  is_trashed: boolean;  
+  is_trashed: boolean;
   refId?: number; //*
   raw?: string;
-  confluence?: boolean;
 };
 
 export type FilesResultType = InfiniteQueryResultType<FileType>;
@@ -137,4 +137,15 @@ export type FileMutationType = Mutation<
   FileMutationContextType | undefined
 >;
 
-export type FileOpenEventType = CustomEvent<{ fileId: number, tab?: "comments" | "versions" }>
+export type FileOpenEventType = CustomEvent<{ fileId: number; tab?: "comments" | "versions" }>;
+
+export type WyPreviewOpenEventType = CustomEvent<{
+  fileId: number;
+  tab?: "comments" | "versions";
+  files: FileType[];
+  app: AppType;
+  hasFeatures: ProductFeaturesType;
+  isAttachment: boolean;
+}> & { type: "wy-preview-open" };
+
+export type WyPreviewCloseEventType = CustomEvent & { type: "wy-preview-close"}

@@ -75,7 +75,7 @@ export class ValueNotifier<T> {
         consumerHost,
       });
     }
-    const {disposer} = this.subscriptions.get(callback)!;
+    const {disposer} = this.subscriptions.get(callback) || {};
     callback(this.value, disposer);
   }
 

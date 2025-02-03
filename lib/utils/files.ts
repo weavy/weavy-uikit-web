@@ -367,8 +367,6 @@ export function getProvider(provider: FileProviderType | undefined): ProviderTyp
       return "onedrive";
     case "Box":
       return "box";
-    case "Confluence":
-      return "confluence";
     default:
       return "";
   }
@@ -519,7 +517,7 @@ export function handleSelectFilename(e: Event) {
   const i = target?.value.lastIndexOf(".");
   if (i === -1) {
     target?.select();
-  } else {
-    target?.setSelectionRange(0, i!);
+  } else if (i !== undefined) {
+    target?.setSelectionRange(0, i);
   }
 }

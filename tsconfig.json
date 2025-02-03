@@ -42,7 +42,9 @@
         "strict": true,
         "rules": {
           "no-complex-attribute-binding": "warning",
-          "no-incompatible-type-binding": "warning"
+          "no-incompatible-type-binding": "warning",
+          "no-missing-element-type-definition": "off",
+          "no-unknown-event": "warning"
         }
       }
     ],

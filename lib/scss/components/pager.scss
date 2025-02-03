@@ -1,4 +1,29 @@
-@use "base/var";
+//@use "base/var";
+[part~="wy-pager"] {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+}
+
+[part~="wy-pager-bottom"] {
+  /* intersection element used instead of using rootMargin on the intersection observer */
+  width: 16px;
+  height: 256px;
+  max-height: 100%;
+  margin-top: -256px;
+  margin-inline: auto;
+  pointer-events: none;
+}
+
+[part~="wy-pager-top"] {
+  /* intersection element used instead of using rootMargin on the intersection observer */
+  width: 16px;
+  height: 256px;
+  max-height: 100%;
+  margin-bottom: -256px;
+  margin-inline: auto;
+  pointer-events: none;
+}
 
 /* NOT USED 
 tr.wy-pager {

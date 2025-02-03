@@ -1,12 +1,14 @@
 @use "base/color";
+@use "base/var";
 
 @mixin theme {
   // Theme generated from VS Code using https://prism.dotenv.dev/
-  
+
+  .code,
   code[class*="language-"],
   pre[class*="language-"] {
     color: #{color.token(--wy-code-text)};
-    font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+    font-family: var.default(--wy-font-monospace);
     text-align: left;
     white-space: pre-wrap;
     word-spacing: normal;

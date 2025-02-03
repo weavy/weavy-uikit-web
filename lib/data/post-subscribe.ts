@@ -4,7 +4,7 @@ import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
 
 import { AppType } from "../types/app.types";
-import { PostMutationContextType, PostType } from "../types/posts.types";
+import { PostType } from "../types/posts.types";
 
 export type MutatePostSubscribeVariables = {
   id: number;
@@ -15,7 +15,7 @@ export type SubscribePostMutationType = MutationObserver<
   PostType,
   Error,
   MutatePostSubscribeVariables,
-  PostMutationContextType
+  void
 >;
 
 export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) {
@@ -39,16 +39,12 @@ export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) 
       updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) =>
         Object.assign(existingPost, { is_subscribed: variables.subscribe })
       );
-      return <PostMutationContextType>{ type: variables.subscribe ? "subscribe" : "unsubscribe", id: variables.id };
     },
     onSuccess: (data: PostType, variables: MutatePostSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) =>
         Object.assign(existingPost, data)
       );
-    },
-    onError() {
-      //updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) => Object.assign(existingPost, { is_subscribed: variables..is_subscribed }));
-    },
+    }
   };
 
   return options;

@@ -23,17 +23,18 @@
   .wy-picker-list:not(:empty) {
     border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
   }
+
+  &.wy-comment-editor-bottom {
+    // we need the editor to appear below dropdowns
+    position: sticky;
+    bottom: 0;
+    z-index: #{const.$zindex-dropdown - 1};
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
+  }
 }
 
 
-.wy-comment-editor-bottom {
-  // we need the editor to appear below dropdowns
-  position: sticky;
-  bottom: 0;
-  z-index: #{const.$zindex-dropdown - 1};
-  background-color: var(--wy-component-background-color);
-  color: var(--wy-component-color);
-}
 
 .wy-comment-editor-inputs {
   display: flex;

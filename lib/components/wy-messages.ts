@@ -1,22 +1,25 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import { keyed } from "lit/directives/keyed.js";
-import type { MessageType, MessagesResultType } from "../types/messages.types";
+import type { MessagesResultType } from "../types/messages.types";
 import type { InfiniteData } from "@tanstack/query-core";
-import { type ConversationType, ConversationTypeGuid } from "../types/conversations.types";
+import { type AppType, AppTypeGuid } from "../types/app.types";
 import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { getFlatInfiniteResultData } from "../utils/query-cache";
 
 import chatCss from "../scss/all.scss";
+
 import "./wy-message";
 
 @customElement("wy-messages")
 @localized()
-export default class WyMessages extends BlockConsumerMixin(LitElement) {
+export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -32,7 +35,7 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
   protected exportParts = new ShadowPartsController(this);
 
   @property({ attribute: false })
-  conversation?: ConversationType;
+  conversation?: AppType;
 
   @property({ attribute: false })
   infiniteMessages!: InfiniteData<MessagesResultType, unknown>;
@@ -58,9 +61,7 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
   }
 
   override render() {
-    const flattenedPages = this.infiniteMessages?.pages
-      .flatMap((messageResult) => messageResult.data)
-      .filter((x) => x) as MessageType[];
+    const flattenedPages = getFlatInfiniteResultData(this.infiniteMessages);
 
     let lastDate: Date;
 
@@ -72,7 +73,7 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
           ? repeat(
               flattenedPages,
               (message) => message.id,
-              (message, index) => {
+              (message, _index) => {
                 const messageDate = new Date(message.created_at);
 
                 let dateContent = html``;
@@ -119,9 +120,8 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
                       .messageId=${message.id}
                       .me=${message.created_by.id === this.user?.id}
                       .isBot=${message.created_by.is_bot || false}
-                      .isPrivateChat=${this.conversation?.type === ConversationTypeGuid.PrivateChat ||
-                      this.conversation?.type === ConversationTypeGuid.BotChat}
-                      .temp=${message.temp}
+                      .isPrivateChat=${this.conversation?.type === AppTypeGuid.PrivateChat ||
+                      this.conversation?.type === AppTypeGuid.BotChat}
                       .displayName=${message.created_by.display_name}
                       .avatar=${message.created_by.avatar_url}
                       .createdAt=${message.created_at}
@@ -132,18 +132,6 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
                       .pollOptions=${message.options?.data}
                       .embed=${message.embed}
                       .reactions=${message.reactions?.data}
-                      .sent=${this.members &&
-                      index === flattenedPages.length - 1 &&
-                      message.created_by.id === this.user?.id
-                        ? !message.temp
-                          ? true
-                          : false
-                        : null}
-                      .delivered=${this.members &&
-                      index === flattenedPages.length - 1 &&
-                      (this.members.data ?? []).filter(
-                        (m) => m.id !== this.user?.id && m.delivered_at! > message.created_at
-                      ).length > 0}
                       .seenBy=${this.members && this.members.data && this.members.data.length > 0
                         ? this.members.data.filter((member) => {
                             return member.marked_id === message.id && member.id !== this.user?.id;
@@ -159,7 +147,6 @@ export default class WyMessages extends BlockConsumerMixin(LitElement) {
               }
             )
           : nothing}
-
         <slot name="end"></slot>
       </div>
     `;

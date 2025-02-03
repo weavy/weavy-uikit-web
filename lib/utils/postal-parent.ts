@@ -86,8 +86,8 @@ export class WeavyPostalParent extends WeavyEvents {
             }
 
             try {
-              const weavyId = this.contentWindowWeavyIds.get(e.source!);
-              const contentWindowName = this.contentWindowNames.get(e.source!);
+              const weavyId = e.source ? this.contentWindowWeavyIds.get(e.source) : undefined;
+              const contentWindowName = e.source ? this.contentWindowNames.get(e.source) : undefined;
 
               if (contentWindowName && e.source) {
                 e.source.postMessage(
@@ -110,7 +110,7 @@ export class WeavyPostalParent extends WeavyEvents {
               e.source &&
               this.contentWindowsMapByWeavyId.has(e.data.weavyId) &&
               this.contentWindowNames.has(e.source) &&
-              this.contentWindowsMapByWeavyId.get(e.data.weavyId)?.get(this.contentWindowNames.get(e.source)!)
+              this.contentWindowsMapByWeavyId.get(e.data.weavyId)?.get(this.contentWindowNames.get(e.source) as string)
             ) {
               this.contentWindowDomain.set(e.source, e.origin);
               this.distributeMessage(e);
@@ -267,7 +267,7 @@ export class WeavyPostalParent extends WeavyEvents {
         }),
         new Promise((resolve) => {
           this.on("message-receipt", { weavyId: message.weavyId, weavyMessageId: message.weavyMessageId }, () => {
-            console.debug("message-receipt received", message.weavyMessageId, message.name);
+            //console.debug("message-receipt received", message.weavyMessageId, message.name);
             clearTimeout(messageWatchdog);
             resolve(undefined);
           });

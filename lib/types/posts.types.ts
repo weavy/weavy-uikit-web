@@ -22,9 +22,6 @@ export type MutatePostProps = {
   embed: number;
 };
 
-export type PostMutationContextType = object;
-
 export type PostType = MsgType & {
   comments: CommentsResultType;
-  temp?: boolean;
 };

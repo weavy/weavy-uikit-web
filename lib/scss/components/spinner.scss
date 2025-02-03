@@ -5,17 +5,17 @@
 $spinner-offset: 187 !default;
 $spinner-duration: 1.4s !default;
 
-[part~=wy-spinner] {
+[part~="wy-spinner"] {
   align-self: center;
   justify-self: center;
   margin: auto;
 }
 
-[part~=wy-spinner-padded] {
-  margin: var.wy-rem(1) var.wy-rem(2);
+[part~="wy-spinner-padded"] {
+  margin: var.wy-rem(1);
 }
 
-[part~=wy-spinner-overlay] {
+[part~="wy-spinner-overlay"] {
   position: absolute;
   left: 0;
   right: 0;
@@ -24,22 +24,37 @@ $spinner-duration: 1.4s !default;
   margin: auto;
 }
 
-[part~=wy-spinner-circle] {
+[part~="wy-spinner-reveal"] {
+  opacity: 1;
+  transition: width var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
+    height var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
+    margin var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
+    opacity var.default(--wy-transition)
+      calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));
+
+  @starting-style {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin: 0;
+  }
+}
+
+[part~="wy-spinner-circle"] {
   stroke-dasharray: 1, 100;
   stroke-dashoffset: 0;
   transform-origin: center;
   fill: none !important;
 }
 
-[part~=wy-spinner][part~=wy-spin] {
+[part~="wy-spinner"][part~="wy-spin"] {
   // add class .wy-spin to animate the spinner (otherwise it will not be visible)
   animation: wy-rotate $spinner-duration linear infinite;
 }
 
-[part~=wy-spinner-circle][part~=wy-spin] {
-    animation: wy-dash $spinner-duration ease-in-out infinite, wy-color ($spinner-duration*2) ease-in-out infinite;
+[part~="wy-spinner-circle"][part~="wy-spin"] {
+  animation: wy-dash $spinner-duration ease-in-out infinite, wy-color ($spinner-duration * 2) ease-in-out infinite;
 }
-
 
 @keyframes wy-rotate {
   100% {
@@ -65,7 +80,8 @@ $spinner-duration: 1.4s !default;
 }
 
 @keyframes wy-color {
-  0%, 100% {
+  0%,
+  100% {
     stroke: color.token(--wy-primary);
   }
 

@@ -1,13 +1,10 @@
 import { LitElement, html, type PropertyValues, nothing, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { ConversationTypeGuid, type ConversationType } from "../types/conversations.types";
-
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import type { MemberType, MembersResultType } from "../types/members.types";
-
 import { getMemberOptions } from "../data/members";
 import { QueryController } from "../controllers/query-controller";
-
 import { localized, msg } from "@lit/localize";
 import {
   AddMembersToConversationMutationType,
@@ -21,11 +18,11 @@ import {
 } from "../data/conversation";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { inputBlurOnEnter } from "../utils/keyboard";
-import type { RealtimeAppEventType } from "../types/realtime.types";
+import type { RealtimeAppEventType, RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { BlobType } from "../types/files.types";
-import { AccessTypes, PermissionTypes } from "../types/app.types";
+import { type AppType, AppTypeGuid, AccessType, PermissionType } from "../types/app.types";
 import { hasPermission } from "../utils/permission";
 
 import chatCss from "../scss/all.scss";
@@ -38,7 +35,7 @@ import "./wy-overlay";
 
 @customElement("wy-conversation-appbar")
 @localized()
-export default class WyConversationAppbar extends BlockConsumerMixin(LitElement) {
+export default class WyConversationAppbar extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -54,7 +51,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
   conversationId?: number;
 
   @property({ attribute: false })
-  conversation?: ConversationType;
+  conversation?: AppType;
 
   @property({ type: Boolean })
   showDetails: boolean = false;
@@ -74,16 +71,16 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
    */
   private releaseFocusEvent = () => new CustomEvent<undefined>("release-focus", { bubbles: true, composed: true });
 
-  protected isBotChat(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.BotChat;
+  protected isBotChat(conversation?: AppType) {
+    return (conversation ?? this.conversation)?.type === AppTypeGuid.BotChat;
   }
 
-  protected isChatRoom(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.ChatRoom;
+  protected isChatRoom(conversation?: AppType) {
+    return (conversation ?? this.conversation)?.type === AppTypeGuid.ChatRoom;
   }
 
-  protected isPrivateChat(conversation?: ConversationType) {
-    return (conversation ?? this.conversation)?.type === ConversationTypeGuid.PrivateChat;
+  protected isPrivateChat(conversation?: AppType) {
+    return (conversation ?? this.conversation)?.type === AppTypeGuid.PrivateChat;
   }
 
   private membersQuery = new QueryController<MembersResultType>(this);
@@ -110,10 +107,10 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
     }
 
     // add members
-    await this.addMembersMutation?.mutate({ id: this.conversationId, members: members.map((m) => m.id) });
+    await this.addMembersMutation?.mutate({ appId: this.conversationId, members: members.map((m) => m.id) });
     await this.membersQuery.result.refetch();
 
-    await this.weavy.queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    await this.weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
   }
 
   private async handleSaveConversationName() {
@@ -122,7 +119,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
     }
 
     const name = this.conversationTitleInput.trim() === "" ? null : this.conversationTitleInput.trim();
-    await this.updateConversationMutation?.mutate({ id: this.conversationId, name });
+    await this.updateConversationMutation?.mutate({ appId: this.conversationId, name });
   }
 
   private async handleAvatarUploaded(blob: BlobType) {
@@ -130,7 +127,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
       return;
     }
     await this.updateConversationMutation?.mutate({
-      id: this.conversationId,
+      appId: this.conversationId,
       blobId: blob.id,
       thumbnailUrl: blob.thumbnail_url,
     });
@@ -140,16 +137,16 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
     if (!this.weavy || !this.conversationId) {
       return;
     }
-    await this.updateConversationMutation?.mutate({ id: this.conversationId, blobId: null, thumbnailUrl: null });
+    await this.updateConversationMutation?.mutate({ appId: this.conversationId, blobId: null, thumbnailUrl: null });
   }
 
-  private async updateMember(id: number, access: AccessTypes) {
+  private async updateMember(id: number, access: AccessType) {
     if (!this.weavy || !this.conversationId) {
       return;
     }
 
     await this.updateMemberMutation?.mutate({
-      id: this.conversationId,
+      appId: this.conversationId,
       userId: id,
       access,
     });
@@ -162,10 +159,12 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
       return;
     }
 
-    await this.leaveConversationMutation?.mutate({
-      id: this.conversationId,
-      members: [memberId!],
-    });
+    if (memberId) {
+      await this.leaveConversationMutation?.mutate({
+        appId: this.conversationId,
+        members: [memberId],
+      });
+    }
 
     if (!memberId) {
       this.showDetails = false;
@@ -175,8 +174,30 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
       await this.membersQuery.result.refetch();
     }
 
-    await this.weavy.queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    await this.weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
   }
+
+  private handlePresenceChange = (data: RealtimePresenceEventType) => {
+    if (!this.weavy) {
+      return;
+    }
+
+    // payload returns a single id as a string instead of number[]
+    if (!Array.isArray(data)) {
+      data = [parseInt(data)];
+    }
+
+    const updateMembersInApps = (app: AppType) => {
+      const members = app.members.data ?? [];
+      members.forEach((m) => {
+        m.presence = (data as number[]).indexOf(m.id) != -1 ? "active" : "away";
+      });
+      app.members.data = members;
+      return app;
+    };
+
+    this.weavy.queryClient.setQueryData(["apps", this.conversationId], updateMembersInApps);
+  };
 
   #unsubscribeToRealtime?: () => void;
 
@@ -206,10 +227,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
             initialData: () => {
               // Use any data from the conversation query as the initial data for the member query
               if (this.conversationId) {
-                return this.weavy?.queryClient.getQueryData<ConversationType>([
-                  "conversations",
-                  this.conversationId,
-                ])?.members;
+                return this.weavy?.queryClient.getQueryData<AppType>(["apps", this.conversationId])?.members;
               }
               return undefined;
             },
@@ -218,9 +236,11 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
 
         const subscribeGroup = `a${this.conversationId}`;
         this.weavy.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+        this.weavy.subscribe(null, "online", this.handlePresenceChange);
 
         this.#unsubscribeToRealtime = () => {
           this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+          this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
@@ -237,7 +257,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
   override render() {
     const { data: membersData } = this.membersQuery.result ?? {};
 
-    const adminCount: number = (membersData?.data || []).filter((user) => user.access === AccessTypes.Admin).length;
+    const adminCount: number = (membersData?.data || []).filter((user) => user.access === AccessType.Admin).length;
 
     const otherMember =
       this.user && this.isPrivateChat()
@@ -251,7 +271,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
           ${this.conversation && this.user
             ? html`
                 <div class="wy-appbar-section">
-                  ${this.conversation.type === ConversationTypeGuid.PrivateChat
+                  ${this.conversation.type === AppTypeGuid.PrivateChat
                     ? html`<wy-presence
                         placement="text"
                         .status=${otherMember?.presence}
@@ -368,7 +388,7 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
                                             ></wy-avatar>
                                             <div class="wy-item-body">
                                               ${member.display_name}
-                                              ${member.access === AccessTypes.Admin
+                                              ${member.access === AccessType.Admin
                                                 ? html` <wy-icon
                                                     size="20"
                                                     inline
@@ -377,8 +397,9 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
                                                   ></wy-icon>`
                                                 : nothing}
                                             </div>
-                                            ${member.id === this.user!.id &&
-                                            !hasPermission(PermissionTypes.Admin, this.conversation?.permissions)
+                                            ${this.user &&
+                                            this.user.id === member.id &&
+                                            !hasPermission(PermissionType.Admin, this.conversation?.permissions)
                                               ? html` <wy-button
                                                   @click=${() => this.leaveConversation(member.id)}
                                                   title=${msg("Leave conversation")}
@@ -386,24 +407,24 @@ export default class WyConversationAppbar extends BlockConsumerMixin(LitElement)
                                                 >
                                                   <wy-icon name="close"></wy-icon>
                                                 </wy-button>`
-                                              : hasPermission(PermissionTypes.Admin, this.conversation?.permissions)
+                                              : hasPermission(PermissionType.Admin, this.conversation?.permissions)
                                               ? html`<wy-dropdown>
                                                   <wy-dropdown-item @click=${() => this.leaveConversation(member.id)}>
                                                     <wy-icon name="account-minus"></wy-icon>
-                                                    ${member.id === this.user!.id
+                                                    ${this.user && this.user.id === member.id
                                                       ? msg("Leave conversation")
                                                       : msg("Remove member")}
                                                   </wy-dropdown-item>
-                                                  ${adminCount > 1 && member.access === AccessTypes.Admin
+                                                  ${adminCount > 1 && member.access === AccessType.Admin
                                                     ? html`<wy-dropdown-item
-                                                        @click=${() => this.updateMember(member.id, AccessTypes.Write)}
+                                                        @click=${() => this.updateMember(member.id, AccessType.Write)}
                                                       >
                                                         <wy-icon name="shield-star-outline"></wy-icon>
                                                         ${msg("Remove as admin")}
                                                       </wy-dropdown-item>`
-                                                    : member.access !== AccessTypes.Admin
+                                                    : member.access !== AccessType.Admin
                                                     ? html`<wy-dropdown-item
-                                                        @click=${() => this.updateMember(member.id, AccessTypes.Admin)}
+                                                        @click=${() => this.updateMember(member.id, AccessType.Admin)}
                                                       >
                                                         <wy-icon name="shield-star"></wy-icon>
                                                         ${msg("Make admin")}

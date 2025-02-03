@@ -1,9 +1,10 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { MutateAppSubscribeContextType, MutateAppSubscribeProps, getAppSubscribeMutationOptions } from "../data/app";
 import { MutationController } from "../controllers/mutation-controller";
 
@@ -16,7 +17,7 @@ import "./wy-dropdown";
 
 @customElement("wy-notification-button-list")
 @localized()
-export default class WyNotificationButtonList extends BlockConsumerMixin(LitElement) {
+export default class WyNotificationButtonList extends WeavyComponentConsumerMixin(LitElement) {
   protected exportParts = new ShadowPartsController(this);
 
   @state()
@@ -66,17 +67,6 @@ export default class WyNotificationButtonList extends BlockConsumerMixin(LitElem
         @close=${() => (this.showNotifications = false)}
         @release-focus=${() => this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }))}
       >
-        <wy-button
-          kind="icon"
-          slot="appbar-buttons"
-          @click=${() => {
-            this.notificationsRef.value?.markAllRead();
-          }}
-          title=${msg("Mark all as read")}
-        >
-          <wy-icon name="check-all"></wy-icon>
-        </wy-button>
-
         <wy-dropdown slot="appbar-buttons" ?disabled=${!this.app}>
           ${this.app?.is_subscribed
             ? html`<wy-dropdown-item @click=${() => this.handleSubscribe(false)}>

@@ -1,5 +1,6 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 
@@ -25,9 +26,7 @@ export default class WySpinner extends LitElement {
   @property({ type: Number })
   size: number = 24;
 
-  @property({
-    type: Boolean,
-  })
+  @property({ type: Boolean })
   noSpin: boolean = false;
 
   @property({ type: Boolean })
@@ -38,6 +37,9 @@ export default class WySpinner extends LitElement {
 
   @property({ type: Number })
   progress?: number = NaN;
+
+  @property({ type: Boolean })
+  reveal: boolean = false;
 
   override render() {
     const remaining = (this.noSpin && this.progress && 100 - this.progress) || undefined;
@@ -50,6 +52,7 @@ export default class WySpinner extends LitElement {
         "wy-progress": true,
         "wy-primary": true,
         "wy-progress-padded": this.padded,
+        "wy-progress-reveal": this.reveal,
       };
 
       return html`<svg
@@ -89,12 +92,13 @@ export default class WySpinner extends LitElement {
         "wy-spin": !this.noSpin,
         "wy-spinner-overlay": this.overlay,
         "wy-spinner-padded": this.padded,
+        "wy-spinner-reveal": this.reveal,
       };
 
       const spinnerCircleParts = {
         "wy-spinner-circle": true,
-        "wy-spin": !this.noSpin
-      }
+        "wy-spin": !this.noSpin,
+      };
 
       return html`<svg
         part="${partMap(spinnerParts)}"

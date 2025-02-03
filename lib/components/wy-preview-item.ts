@@ -1,9 +1,8 @@
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
-
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { getExtension, getIcon } from "../utils/files";
 import type { FileProviderType, FileType, PreviewFormatType } from "../types/files.types";
-
 import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
@@ -13,7 +12,6 @@ import "./wy-preview-media";
 import "./wy-preview-text";
 import "./wy-preview-embed";
 import "./wy-pdf-viewer";
-import "./wy-confluence-viewer";
 
 import allCss from "../scss/all.scss";
 
@@ -55,8 +53,7 @@ export class WyPreviewItem extends LitElement {
       width: number | undefined = file.width,
       height: number | undefined = file.height,
       mediaType: string = file.media_type,
-      provider: FileProviderType | undefined = file.provider,
-      raw: string | undefined = file.raw;
+      provider: FileProviderType | undefined = file.provider;
 
     if (format === "image") {
       return html`<wy-preview-image
@@ -87,9 +84,6 @@ export class WyPreviewItem extends LitElement {
         provider=${ifDefined(provider)}
       ></wy-preview-embed>`;
     } else if (format === "none") {
-      if (provider === "Confluence" && raw) {
-        return html`<wy-confluence-viewer src=${ifDefined(link)} icon=${icon} raw=${raw}></wy-confluence-viewer>`;
-      }
       return link
         ? html`<wy-preview-icon src=${link} icon=${icon} provider=${ifDefined(provider)}></wy-preview-icon>`
         : html`<wy-preview-icon src=${src} icon=${icon}></wy-preview-icon>`;

@@ -1,30 +1,52 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { PropertyValues, html, nothing } from "lit";
+import { customElement } from "./utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 import { ThemeController } from "./controllers/theme-controller";
-import { BlockProviderMixin } from "./mixins/block-mixin";
-import { Constructor } from "./types/generic.types";
-import { ContextualTypes } from "./types/app.types";
-import { NotificationType, NotificationTypes } from "./types/notifications.types";
+import { WeavyComponent } from "./classes/weavy-component";
+import { ComponentType } from "./types/app.types";
+import {
+  FormattedNotificationType,
+  NotificationType,
+  NotificationTypes,
+  WyNotificationEventType,
+} from "./types/notifications.types";
 import { repeat } from "lit/directives/repeat.js";
 import { getMarkNotificationMutation } from "./data/notifications";
 import { RealtimeNotificationEventType } from "./types/realtime.types";
 import { WeavyProps } from "./types/weavy.types";
-import { dispatchLinkEvent, getNotificationText } from "./utils/notifications";
+import { dispatchLinkEvent, getBotName, getNotificationText } from "./utils/notifications";
+import { NamedEvent } from "./types/generic.types";
 
 import colorModesStyles from "./scss/color-modes.scss";
 import hostFontStyles from "./scss/host-font.scss";
-import hostContentsStyles from "./scss/host-contents.scss"
+import hostContentsStyles from "./scss/host-contents.scss";
 
 import "./components/wy-notification-list-item";
 import { WyToast } from "./components/wy-toast";
 
-@customElement("wy-notification-toasts")
+export const WY_NOTIFICATION_TOASTS_TAGNAME = "wy-notification-toasts";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_NOTIFICATION_TOASTS_TAGNAME]: WyNotificationToasts;
+  }
+}
+
+/**
+ * Weavy component to show notification toast in realtime. May show rendered notifications, native browser notifications or just provide notification events.
+ *
+ * @element wy-notification-toasts
+ * @class WyNotificationToasts
+ * @fires wy-notification {WyNotificationEventType}
+ * @fires wy-link
+ */
+@customElement(WY_NOTIFICATION_TOASTS_TAGNAME)
 @localized()
-export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
+export class WyNotificationToasts extends WeavyComponent {
   static override styles = [colorModesStyles, hostContentsStyles, hostFontStyles];
 
-  override contextualType = ContextualTypes.Unknown;
+  override componentType = ComponentType.Unknown;
 
   /**
    * What type of notifications to display.
@@ -38,9 +60,10 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
    * Sets the kind of notifications to use.
    * - "internal" - Use HTML notifications.
    * - "native" - Use browser notifications.
+   * - "none" - Only use notification events.
    */
   @property()
-  appearance: "internal" | "native" /*| "auto"*/ = "internal";
+  appearance: "internal" | "native" | "none" = "internal";
 
   /**
    * Require the user to consent to notifications.
@@ -64,18 +87,50 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
 
   protected markNotificationMutation?: ReturnType<typeof getMarkNotificationMutation>;
 
-  protected handleEvent = (e: RealtimeNotificationEventType) => {
+  protected handleEvent = async (e: RealtimeNotificationEventType) => {
     if (this.typeFilter === NotificationTypes.All || this.typeFilter === e.notification.type) {
       if (e.action === "notification_deleted") {
         this.removeNotification(e.notification.id);
         this.closeNativeNotification(e.notification.id);
       } else {
-        if (e.action === "notification_created" && e.notification.is_unread) {
-          this.addOrUpdateNotification(e.notification);
-        } else {
-          this.updateNotification(e.notification);
+        const { title, detail } = getNotificationText(e.notification);
+
+        const formattedNotification: FormattedNotificationType = {
+          ...e.notification,
+          title,
+          detail,
+          lang: this.weavy?.locale,
+        };
+
+        // Populate bot
+        formattedNotification.link.bot = getBotName(formattedNotification);
+
+        const notificationEvent: WyNotificationEventType = new (CustomEvent as NamedEvent)("wy-notification", {
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+          detail: formattedNotification,
+        })
+
+        /**
+         * `wy-notification` event with formatted notification data.
+         * Use preventDefault to prevent notifications from being displayed.
+         * The event waits for user consent if required.
+         * @fires wy-notification
+         */
+        const notificationShouldDisplay =
+          (!this.requestUserPermission && this.appearance !== "native") || (await this.hasUserPermission())
+            ? this.dispatchEvent(notificationEvent)
+            : false;
+
+        if (notificationShouldDisplay) {
+          if (e.action === "notification_created" && e.notification.is_unread) {
+            await this.addOrUpdateNotification(e.notification);
+          } else {
+            await this.updateNotification(e.notification);
+          }
+          await this.addOrUpdateNativeNotification(formattedNotification);
         }
-        this.addOrUpdateNativeNotification(e.notification);
       }
     }
   };
@@ -116,27 +171,26 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
     }
   }
 
-  async addOrUpdateNativeNotification(notification: NotificationType) {
-    if (this.appearance !== "internal" && (await this.hasUserPermission())) {
-      const updatedExistingNotification = this.removeNativeNotification(notification.id);
-      const otherMember = notification.actor;
-      const { title, detail } = getNotificationText(notification);
-      const nativeNotification = new Notification(title, {
-        tag: `wy-${notification.id}`,
-        lang: this.weavy?.locale,
-        body: detail,
+  async addOrUpdateNativeNotification(formattedNotification: FormattedNotificationType) {
+    if (this.appearance === "native" && (await this.hasUserPermission())) {
+      const updatedExistingNotification = this.removeNativeNotification(formattedNotification.id);
+      const otherMember = formattedNotification.actor;
+      const nativeNotification = new Notification(formattedNotification.title, {
+        tag: `wy-${formattedNotification.id}`,
+        lang: formattedNotification.lang,
+        body: formattedNotification.detail,
         icon: otherMember.avatar_url,
         // @ts-expect-error Property `renotify` not available in ts types yet
         renotify: updatedExistingNotification && e.notification.is_unread,
       });
 
       nativeNotification.onclick = async () => {
-        this.handleMark(true, notification.id);
-        await dispatchLinkEvent(this, notification);
+        this.handleMark(true, formattedNotification.id);
+        await dispatchLinkEvent(this, this.weavy, formattedNotification);
       };
 
       nativeNotification.onclose = () => {
-        this.removeNativeNotification(notification.id);
+        this.removeNativeNotification(formattedNotification.id);
       };
 
       this._nativeNotifications = [...this._nativeNotifications, nativeNotification];
@@ -206,7 +260,7 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
     if (changedProperties.has("weavy") && this.weavy) {
       this.markNotificationMutation = getMarkNotificationMutation(this.weavy);
 
-      this.#unsubscribeToRealtime?.()
+      this.#unsubscribeToRealtime?.();
 
       this.weavy.subscribe(null, "notification_created", this.handleEvent);
       this.weavy.subscribe(null, "notification_updated", this.handleEvent);
@@ -217,12 +271,12 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
         this.weavy?.unsubscribe(null, "notification_updated", this.handleEvent);
         //this.weavy?.unsubscribe(null, "notification_deleted", this.handleEvent);
         this.#unsubscribeToRealtime = undefined;
-      }
+      };
     }
 
     if (
       (changedProperties.has("requestUserPermission") && this.requestUserPermission) ||
-      (changedProperties.has("appearance") && this.appearance !== "internal")
+      (changedProperties.has("appearance") && this.appearance === "native")
     ) {
       this.hasUserPermission();
     }
@@ -230,7 +284,7 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
 
   override render() {
     return html`
-      ${this.user && this.appearance !== "native"
+      ${this.user && this.appearance === "internal"
         ? html`
             <wy-toasts ?show=${Boolean(this._notifications.length)} @hide=${this.clearNotifications}>
               ${repeat(
@@ -263,5 +317,3 @@ export class WyNotificationToasts extends BlockProviderMixin(LitElement) {
     super.disconnectedCallback();
   }
 }
-
-export type WyNotificationToastsType = Constructor<WyNotificationToasts>;

@@ -1,17 +1,17 @@
 import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
-import chatCss from "../scss/all.scss";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import type { UserType } from "../types/users.types";
 import { InfiniteData } from "@tanstack/query-core";
-import { updateCacheItem } from "../utils/query-cache";
+import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
 import { RealtimeNotificationEventType, RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyProps } from "../types/weavy.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { NotificationType, NotificationTypes, NotificationsResultType } from "../types/notifications.types";
 import {
@@ -21,7 +21,11 @@ import {
   getNotificationsOptions,
 } from "../data/notifications";
 
+import chatCss from "../scss/all.scss";
+import pagerStyles from "../scss/components/pager.scss";
+
 import "./wy-notification-list-item";
+import "./wy-icon";
 import "./wy-presence";
 import "./wy-avatar";
 import "./wy-empty";
@@ -30,9 +34,10 @@ import "./wy-button";
 
 @customElement("wy-notification-list")
 @localized()
-export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
+export default class WyNotificationList extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
+    pagerStyles,
     css`
       :host {
         position: relative;
@@ -47,7 +52,7 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
   @property()
   typeFilter: NotificationTypes = NotificationTypes.All;
 
-  async markAllRead() {
+  async markAllAsRead() {
     const weavy = await this.whenWeavy();
     const notificationId = getLastNotification(weavy, NotificationTypes.All, this.app?.id)?.id;
     await this.markNotificationsMutation?.mutate({ notificationId });
@@ -78,7 +83,7 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
       return;
     }
 
-    // payload returns a single id as a string instead of number[] 
+    // payload returns a single id as a string instead of number[]
     if (!Array.isArray(data)) {
       data = [parseInt(data)];
     }
@@ -95,7 +100,10 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
   protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app")) && this.weavy ) {
+    if (
+      (changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app")) &&
+      this.weavy
+    ) {
       this.notificationsQuery.trackInfiniteQuery(getNotificationsOptions(this.weavy, this.typeFilter, this.app?.id));
     }
 
@@ -122,7 +130,7 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
         //this.weavy?.unsubscribe(null, "notification_deleted", this.handleRefresh);
         this.weavy?.unsubscribe(null, "notifications_marked", this.handleRefresh);
         this.#unsubscribeToRealtime = undefined;
-      }
+      };
     }
   }
 
@@ -133,7 +141,7 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
 
   private renderNotifications(user: UserType, infiniteData?: InfiniteData<NotificationsResultType>) {
     if (infiniteData) {
-      const flattenedPages = infiniteData.pages.flatMap((notificationsResult) => notificationsResult.data!);
+      const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
       return repeat(
         flattenedPages,
@@ -155,46 +163,55 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
   }
 
   override render() {
-    const { data: infiniteData, isPending } = this.notificationsQuery.result ?? {};
+    const { data: infiniteData, hasNextPage, isPending } = this.notificationsQuery.result ?? {};
 
     return html`
       ${this.user
         ? html`
-            <div class="wy-pane-body">
-                <wy-buttons tabs>
-                  <wy-button
-                    ?active=${this.typeFilter === NotificationTypes.All}
-                    @click=${() => (this.typeFilter = NotificationTypes.All)}
-                    kind="tab"
-                    small
-                  >
-                    ${msg("All")}
-                  </wy-button>
-                  <wy-button
-                    ?active=${this.typeFilter === NotificationTypes.Activity}
-                    @click=${() => (this.typeFilter = NotificationTypes.Activity)}
-                    kind="tab"
-                    small
-                  >
-                    ${msg("Activities")}
-                  </wy-button>
-                  <wy-button
-                    ?active=${this.typeFilter === NotificationTypes.Mention}
-                    @click=${() => (this.typeFilter = NotificationTypes.Mention)}
-                    kind="tab"
-                    small
-                  >
-                    ${msg("Mentions")}
-                  </wy-button>
-                  <wy-button
-                    ?active=${this.typeFilter === NotificationTypes.Reaction}
-                    @click=${() => (this.typeFilter = NotificationTypes.Reaction)}
-                    kind="tab"
-                    small
-                  >
-                    ${msg("Reactions")}
-                  </wy-button>
-                </wy-buttons>
+            <div class="wy-pane-toolbar">
+              <wy-buttons tabs>
+                <wy-button
+                  ?active=${this.typeFilter === NotificationTypes.All}
+                  @click=${() => (this.typeFilter = NotificationTypes.All)}
+                  kind="tab"
+                  small
+                >
+                  ${msg("All")}
+                </wy-button>
+                <wy-button
+                  ?active=${this.typeFilter === NotificationTypes.Activity}
+                  @click=${() => (this.typeFilter = NotificationTypes.Activity)}
+                  kind="tab"
+                  small
+                >
+                  ${msg("Activities")}
+                </wy-button>
+                <wy-button
+                  ?active=${this.typeFilter === NotificationTypes.Mention}
+                  @click=${() => (this.typeFilter = NotificationTypes.Mention)}
+                  kind="tab"
+                  small
+                >
+                  ${msg("Mentions")}
+                </wy-button>
+                <wy-button
+                  ?active=${this.typeFilter === NotificationTypes.Reaction}
+                  @click=${() => (this.typeFilter = NotificationTypes.Reaction)}
+                  kind="tab"
+                  small
+                >
+                  ${msg("Reactions")}
+                </wy-button>
+              </wy-buttons>
+              <wy-button
+                slot="buttons"
+                kind="icon"
+                @click=${() => this.markAllAsRead()}
+                title=${msg("Mark all as read")}
+              >
+                <wy-icon name="check-all"></wy-icon>
+              </wy-button>
+              <slot name="buttons"></slot>
             </div>
 
             <div class="wy-notifications">
@@ -211,7 +228,7 @@ export default class WyNotificationList extends BlockConsumerMixin(LitElement) {
                       </div>
                     `
                 : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-              <div ${ref(this.pagerRef)} part="wy-pager"></div>
+              ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
             </div>
           `
         : html`<wy-empty class="wy-pane"><wy-spinner overlay></wy-spinner></wy-empty>`}

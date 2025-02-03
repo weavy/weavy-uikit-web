@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
 import type { FileProviderType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";

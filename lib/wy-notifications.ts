@@ -1,33 +1,46 @@
-import { LitElement, html } from "lit";
-import { customElement } from "lit/decorators.js";
-import { localized, msg } from "@lit/localize";
+import { html } from "lit";
+import { customElement } from "./utils/decorators/custom-element";
+import { localized } from "@lit/localize";
 import { ThemeController } from "./controllers/theme-controller";
-import { BlockProviderMixin } from "./mixins/block-mixin";
-import { Constructor } from "./types/generic.types";
+import { WeavyComponent } from "./classes/weavy-component";
 import WyNotificationList from "./components/wy-notification-list";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { ContextualTypes } from "./types/app.types";
-
 import colorModesStyles from "./scss/color-modes.scss";
 import allStyles from "./scss/all.scss";
 import hostBlockStyles from "./scss/host-block.scss";
 import hostScrollYStyles from "./scss/host-scroll-y.scss";
 import hostFontStyles from "./scss/host-font.scss";
+import { ComponentType } from "./types/app.types";
 
 import "./components/wy-notification-list";
 import "./components/wy-empty";
 import "./components/wy-spinner";
 
-@customElement("wy-notifications")
+export const WY_NOTIFICATIONS_TAGNAME = "wy-notifications";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_NOTIFICATIONS_TAGNAME]: WyNotifications;
+  }
+}
+
+/**
+ * Weavy component to render a list of notifications.
+ *
+ * @element wy-notifications
+ * @class WyNotifications
+ * @fires wy-link
+ */
+@customElement(WY_NOTIFICATIONS_TAGNAME)
 @localized()
-export class WyNotifications extends BlockProviderMixin(LitElement) {
+export class WyNotifications extends WeavyComponent {
   static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles];
 
   /**
-   * Unknown ContextualType will enable optional uid.
+   * Unknown componentType will enable optional uid.
    * @ignore
    */
-  override contextualType = ContextualTypes.Unknown;
+  override componentType = ComponentType.Unknown;
 
   protected notificationsRef: Ref<WyNotificationList> = createRef();
 
@@ -40,30 +53,18 @@ export class WyNotifications extends BlockProviderMixin(LitElement) {
    * Mark all events as read.
    */
   markAllAsRead() {
-    this.notificationsRef.value?.markAllRead();
+    this.notificationsRef.value?.markAllAsRead();
   }
 
   override render() {
     return html`
-      <header class="wy-appbars">
-        <nav class="wy-appbar">
-          <wy-avatar .src=${this.user?.avatar_url} .name=${this.user?.display_name} .size=${24}></wy-avatar>
-          <div class="wy-appbar-text">${msg("Notifications")}</div>
-          <wy-button kind="icon" @click=${() => this.markAllAsRead()}>
-            <wy-icon name="check-all"></wy-icon>
-          </wy-button>
-        </nav>
-      </header>
-
       ${this.user
         ? html` <wy-notification-list ${ref(this.notificationsRef)}></wy-notification-list> `
         : html`
             <wy-empty>
-              <wy-spinner padded></wy-spinner>
+              <wy-spinner padded reveal></wy-spinner>
             </wy-empty>
           `}
     `;
   }
 }
-
-export type WyNotificationsType = Constructor<WyNotifications>;

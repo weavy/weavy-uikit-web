@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
-
 import type { FileType, FilesResultType } from "../types/files.types";
 import { getExtension, getIcon } from "../utils/files";
 import { classMap } from "lit/directives/class-map.js";
@@ -19,8 +19,10 @@ import { openUrl } from "../utils/urls";
 import { relativeTime } from "../utils/datetime";
 import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import filesCss from "../scss/all.scss";
 
 import "./wy-icon";
 import "./wy-dropdown";
@@ -28,11 +30,9 @@ import "./wy-empty";
 import "./wy-file-menu";
 import "./wy-spinner";
 
-import filesCss from "../scss/all.scss";
-
 @customElement("wy-file-versions")
 @localized()
-export class WyFileVersions extends BlockConsumerMixin(LitElement) {
+export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = filesCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -65,6 +65,7 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
 
   handleRemove(versionFile: FileType) {
     this.fileVersionDeleteMutation?.mutate({ versionFile });
+
     if (this.activeVersion === versionFile) {
       this.activeVersion = this.file;
     }
@@ -111,7 +112,7 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
               (versionFile) => versionFile.id,
               (versionFile: FileType, index) => {
                 const versionIcon = getIcon(versionFile.name || "").icon;
-                const num = data.data!.length - index;
+                const num = data.data ? data.data.length - index : NaN;
                 const ext = getExtension(versionFile.name);
                 const modifiedAt = new Date(versionFile.updated_at || versionFile.created_at);
                 const isExternal = Boolean(this.file.external_url);
@@ -131,7 +132,7 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
                   : html`
                       <div
                         class="wy-item wy-list-item-lg wy-item-hover ${classMap({
-                          "wy-active": versionFile.version == this.activeVersion?.version,
+                          "wy-active": versionFile.rev == this.activeVersion?.rev,
                         })}"
                         tabindex="0"
                         @click=${() => this.selectVersion(versionFile)}
@@ -153,9 +154,9 @@ export class WyFileVersions extends BlockConsumerMixin(LitElement) {
                           <wy-dropdown-item @click=${() => this.triggerDownload(versionFile)}>
                             <wy-icon name="download"></wy-icon>
                             ${msg("Download")}
-                          </wy-dropdown-item>
+                          </wy-dropdown-item>                          
 
-                          ${versionFile.version !== this.file.version
+                          ${index !== 0
                             ? html`
                                 <wy-dropdown-divider></wy-dropdown-divider>
                                 <wy-dropdown-item @click=${() => this.handleRevert(versionFile)}>

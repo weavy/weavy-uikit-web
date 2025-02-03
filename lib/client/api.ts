@@ -1,9 +1,9 @@
 import { WeavyClient, WeavyType } from "./weavy";
 import { Constructor } from "../types/generic.types";
-import { AppType } from "../types/app.types";
+import { AppType, AppWithSourceMetadataType } from "../types/app.types";
 import { getApp } from "../data/app";
 
-export type { AppType }
+export type { AppType, AppWithSourceMetadataType }
 
 export interface WeavyApiProps {
   api: {

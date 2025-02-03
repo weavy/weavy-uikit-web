@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <link rel="modulepreload" href="/locales/sv-SE.ts" />
   <script type="module" src="/lib"></script>
   <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
   <style>
     :root {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+        "Open Sans", "Helvetica Neue", sans-serif;
     }
 
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       height: 100%;
@@ -25,7 +27,7 @@
     }
 
     wy-messenger {
-      height: calc(100vh - 3rem);      
+      height: calc(100vh - 3rem);
     }
   </style>
 </head>
@@ -33,13 +35,11 @@
   <header>
     <select id="bots"></select>
   </header>
-  <wy-context 
-      url="%WEAVY_URL%" 
-      reactions='["👍", "❤️", "😂", "😒", "😁"]'
-      confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
-      confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"
-      locale="sv-SE" 
-      tokenFactory="async (refresh) => {
+  <wy-context
+    url="%WEAVY_URL%"
+    reactions='["👍", "❤️", "😂", "😒", "😁"]'
+    locale="sv-SE"
+    tokenFactory="async (refresh) => {
         let response = await fetch(`/api/token${refresh ? '?refresh=true' : ''}`)
 
         if (response.ok) {          
@@ -48,37 +48,50 @@
         } else {
           throw new Error('Could not get access token from server!')
         }
-      }">
-      <tanstack-dev-tools buttonposition="top-right" position="top"></tanstack-dev-tools>
-      <wy-messenger bot="?"></wy-messenger>
-      
+      }"
+  >
+    <tanstack-dev-tools buttonposition="top-right" position="top"></tanstack-dev-tools>
+    <wy-messenger bot="?"></wy-messenger>
+    <wy-notification-toasts></wy-notification-toasts>
   </wy-context>
   <script>
-    const messenger = document.querySelector("wy-messenger")
+    const messenger = document.querySelector("wy-messenger");
     const botSelector = document.getElementById("bots");
 
     const bots = fetch("/api/bots")
-    .then(res => res.json())
-    .then((bots) => {
-        bots.forEach(bot => {
-          const option = document.createElement('option');
+      .then((res) => res.json())
+      .then((bots) => {
+        bots.forEach((bot) => {
+          const option = document.createElement("option");
           option.value = bot.username;
           option.text = bot.name;
-          if (bot.username === sessionStorage.getItem("wy-bot")) {
+          if (bot.username === document.location.hash.substr(1)) {
             option.selected = true;
             messenger.setAttribute("bot", bot.username);
           }
           botSelector.add(option);
         });
-        
+
         // Set default
         botSelector.value = messenger.getAttribute("bot");
-    });
+      });
 
     botSelector.addEventListener("change", () => {
-      console.log("bot ->", botSelector.value)
+      console.log("bot ->", botSelector.value);
       messenger.setAttribute("bot", botSelector.value);
-      sessionStorage.setItem("wy-bot",  botSelector.value);
+      document.location.hash = botSelector.value;
+    });
+
+    window.addEventListener("hashchange", (e) => {
+      const botHash = document.location.hash.substr(1);
+      if (botSelector.value !== botHash) {
+        console.log("bot changed by url hash", botHash);
+        botSelector.value = botHash;
+      }
     })
+
+    document.addEventListener("wy-link", (e) => {
+      console.log("WYLINK", e.detail);
+    });
   </script>
 </body>

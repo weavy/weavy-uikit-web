@@ -1,163 +1,120 @@
 import { InfiniteData, MutationObserver } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
-import { ConversationType, ConversationTypeGuid, ConversationsResultType } from "../types/conversations.types";
-import { ConversationMutationContextType } from "../types/conversations.types";
+import { AppType, AppTypeGuid, AppsResultType, AccessType, AppRef } from "../types/app.types";
 import { removeCacheItem, updateCacheItem, updateCacheItems } from "../utils/query-cache";
-import { AccessTypes, AppRef, AppType } from "../types/app.types";
 import { getApi, getApiOptions } from "./api";
-
-export type MutateDeliveredConversationVariables = {
-  id: number;
-};
+import { MemberType } from "../types/members.types";
 
 export type MutateMarkConversationVariables = {
-  id: number;
-  markAsRead: boolean;
-  messageId: number | null;
+  appId: number;
+  messageId?: number | null | undefined;
+  userId: number | undefined;
 };
 
 export type MutateStarConversationVariables = {
-  id: number;
+  appId: number;
   star: boolean;
 };
 
 export type MutatePinConversationVariables = {
-  id: number;
+  appId: number;
   pin: boolean;
 };
 
 export type MutateLeaveConversationVariables = {
-  id: number;
+  appId: number;
   members: number[];
 };
 
 export type MutateUpdateMemberVariables = {
-  id: number;
+  appId: number;
   userId: number;
-  access: AccessTypes;
+  access: AccessType;
 };
 
 export type MutateAddMembersToConversationVariables = {
-  id: number;
+  appId: number;
   members: number[];
 };
 
 export type MutateUpdateConversationVariables = {
-  id: number;
+  appId: number;
   name?: string | null | undefined;
   blobId?: number | null | undefined;
   thumbnailUrl?: string | null | undefined;
 };
 
 export type MutateTrashConversationVariables = {
-  id: number;
+  appId: number;
 };
 
-export type DeliveredConversationMutationType = MutationObserver<
-  void,
-  Error,
-  MutateDeliveredConversationVariables,
-  ConversationMutationContextType
->;
-export type MarkConversationMutationType = MutationObserver<
-  void,
-  Error,
-  MutateMarkConversationVariables,
-  ConversationMutationContextType
->;
-export type StarConversationMutationType = MutationObserver<
-  void,
-  Error,
-  MutateStarConversationVariables,
-  ConversationMutationContextType
->;
-export type PinConversationMutationType = MutationObserver<
-  void,
-  Error,
-  MutatePinConversationVariables,
-  ConversationMutationContextType
->;
-export type LeaveConversationMutationType = MutationObserver<
-  void,
-  Error,
-  MutateLeaveConversationVariables,
-  ConversationMutationContextType
->;
-export type UpdateMemberMutationType = MutationObserver<
-  void,
-  Error,
-  MutateUpdateMemberVariables,
-  ConversationMutationContextType
->;
+export type MarkConversationMutationType = MutationObserver<void, Error, MutateMarkConversationVariables, void>;
+export type StarConversationMutationType = MutationObserver<void, Error, MutateStarConversationVariables, void>;
+export type PinConversationMutationType = MutationObserver<void, Error, MutatePinConversationVariables, void>;
+export type LeaveConversationMutationType = MutationObserver<void, Error, MutateLeaveConversationVariables, void>;
+export type UpdateMemberMutationType = MutationObserver<void, Error, MutateUpdateMemberVariables, void>;
 export type AddMembersToConversationMutationType = MutationObserver<
   void,
   Error,
   MutateAddMembersToConversationVariables,
-  ConversationMutationContextType
+  void
 >;
-export type UpdateConversationMutationType = MutationObserver<
-  ConversationType,
-  Error,
-  MutateUpdateConversationVariables,
-  ConversationMutationContextType
->;
-export type TrashConversationMutationType = MutationObserver<
-  void,
-  Error,
-  MutateTrashConversationVariables,
-  ConversationMutationContextType
->;
-export function getDeliveredConversationMutationOptions(weavy: WeavyType) {
-  const options = {
-    mutationFn: async ({ id }: MutateDeliveredConversationVariables) => {
-      const url = `/api/conversations/${id}/delivered`;
-      await weavy.fetch(url, { method: "PUT" });
-    },
-    onMutate: async () => {
-      return <ConversationMutationContextType>{};
-    },
-  };
-
-  return options;
-}
+export type UpdateConversationMutationType = MutationObserver<AppType, Error, MutateUpdateConversationVariables, void>;
+export type TrashConversationMutationType = MutationObserver<void, Error, MutateTrashConversationVariables, void>;
 
 export function getMarkConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, markAsRead, messageId }: MutateMarkConversationVariables) => {
-      const url = markAsRead ? `/api/conversations/${id}/mark?messageId=${messageId}` : `/api/conversations/${id}/mark`;
-      await weavy.fetch(url, { method: markAsRead ? "PUT" : "DELETE" });
+    mutationFn: async ({ appId, messageId }: MutateMarkConversationVariables) => {
+      const url = messageId ? `/api/apps/${appId}/mark?messageId=${messageId}` : `/api/apps/${appId}/mark`;
+      await weavy.fetch(url, { method: messageId ? "PUT" : "DELETE" });
     },
     onMutate: async (variables: MutateMarkConversationVariables) => {
+      // update details and list cache
+      await weavy.queryClient.cancelQueries({ queryKey: ["apps", variables.appId] });
+      await weavy.queryClient.cancelQueries({ queryKey: ["apps", "list"], exact: false });
+      await weavy.queryClient.cancelQueries({ queryKey: ["members", variables.appId] });
+
+      weavy.queryClient.setQueryData(["apps", variables.appId], (app: AppType) =>
+        app ? { ...app, is_unread: !variables.messageId || variables.messageId < app.last_message.id } : app
+      );
+
       updateCacheItems(
         weavy.queryClient,
-        { queryKey: ["conversations", "list"], exact: false },
-        variables.id,
-        (item: ConversationType) => {
-          item.is_unread = !variables.markAsRead;
+        { queryKey: ["apps", "list"], exact: false },
+        variables.appId,
+        (item: AppType) => {
+          item.is_unread = !variables.messageId || variables.messageId < item.last_message.id;
         }
       );
 
-      updateCacheItem(weavy.queryClient, ["conversations", variables.id], -1, (item: ConversationType) => {
-        item.is_unread = !variables.markAsRead;
-        if (variables.messageId) {
-          if (item.last_message) {
-            item.last_message.id = variables.messageId!;
+      // Update members after apps
+      if (variables.userId) {
+        updateCacheItem(weavy.queryClient, ["members", variables.appId], variables.userId, (member: MemberType) => {
+          if (variables.messageId) {
+            member.marked_at = new Date().toISOString();
+            member.marked_id = variables.messageId
+          } else {
+            member.marked_at = undefined;
+            member.marked_id = undefined
           }
-        }
-      });
-
-      return <ConversationMutationContextType>{};
+        })
+      }
     },
     onError: (error: Error, variables: MutateMarkConversationVariables) => {
       console.error(error.message);
       updateCacheItems(
         weavy.queryClient,
-        { queryKey: ["conversations", "list"], exact: false },
-        variables.id,
-        (item: ConversationType) => {
-          item.is_unread = variables.markAsRead;
+        { queryKey: ["apps", "list"], exact: false },
+        variables.appId,
+        (item: AppType) => {
+          item.is_unread = !item.is_unread;
         }
       );
+    },
+    onSettled: (data: void | undefined, error: Error | null, variables: MutateMarkConversationVariables) => {
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps", variables.appId] });
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps", "list"], exact: false });
+      weavy.queryClient.invalidateQueries({ queryKey: ["members", variables.appId] })
     },
   };
 
@@ -166,27 +123,26 @@ export function getMarkConversationMutationOptions(weavy: WeavyType) {
 
 export function getStarConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, star }: MutateStarConversationVariables) => {
-      await weavy.fetch(`/api/apps/${id}/stars`, { method: star ? "POST" : "DELETE" });
+    mutationFn: async ({ appId, star }: MutateStarConversationVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/stars`, { method: star ? "POST" : "DELETE" });
     },
     onMutate: async (variables: MutateStarConversationVariables) => {
       updateCacheItems(
         weavy.queryClient,
-        { queryKey: ["conversations", "list"], exact: false },
-        variables.id,
-        (item: ConversationType) => {
+        { queryKey: ["apps", "list"], exact: false },
+        variables.appId,
+        (item: AppType) => {
           item.is_starred = variables.star;
         }
       );
-      return <ConversationMutationContextType>{};
     },
     onError: (error: Error, variables: MutateStarConversationVariables) => {
       console.error(error.message);
       updateCacheItems(
         weavy.queryClient,
-        { queryKey: ["conversations", "list"], exact: false },
-        variables.id,
-        (item: ConversationType) => {
+        { queryKey: ["apps", "list"], exact: false },
+        variables.appId,
+        (item: AppType) => {
           item.is_starred = !variables.star;
         }
       );
@@ -198,22 +154,21 @@ export function getStarConversationMutationOptions(weavy: WeavyType) {
 
 export function getPinConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, pin }: MutatePinConversationVariables) => {
-      await weavy.fetch(`/api/conversations/${id}/pin`, { method: pin ? "PUT" : "DELETE" });
+    mutationFn: async ({ appId, pin }: MutatePinConversationVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/pin`, { method: pin ? "PUT" : "DELETE" });
     },
     onMutate: async (variables: MutatePinConversationVariables) => {
       updateCacheItems(
         weavy.queryClient,
-        { queryKey: ["conversations", "list"], exact: false },
-        variables.id,
-        (item: ConversationType) => {
+        { queryKey: ["apps", "list"], exact: false },
+        variables.appId,
+        (item: AppType) => {
           item.is_pinned = variables.pin;
         }
       );
-      return <ConversationMutationContextType>{};
     },
     onSettled: async () => {
-      await weavy.queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      await weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
     },
   };
 
@@ -222,13 +177,20 @@ export function getPinConversationMutationOptions(weavy: WeavyType) {
 
 export function getLeaveConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, members }: MutateLeaveConversationVariables) => {
-      await weavy.fetch(`/api/apps/${id}/members/${members.join(",")}`, { method: "DELETE" });
+    mutationFn: async ({ appId, members }: MutateLeaveConversationVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/members/${members.join(",")}`, { method: "DELETE" });
     },
     onMutate: async (variables: MutateLeaveConversationVariables) => {
-      removeCacheItem(weavy.queryClient, ["conversations"], variables.id);
-      return <ConversationMutationContextType>{};
+      removeCacheItem(weavy.queryClient, ["apps", "list"], variables.appId);
     },
+    onSuccess: (data: void | undefined, variables: MutateLeaveConversationVariables) => {
+      weavy.queryClient.removeQueries({ queryKey: ["apps", variables.appId]})
+      weavy.queryClient.removeQueries({ queryKey: ["members", variables.appId]})
+    },
+    onSettled: () => {
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps"]})
+      weavy.queryClient.invalidateQueries({ queryKey: ["members"]})
+    }
   };
 
   return options;
@@ -236,13 +198,13 @@ export function getLeaveConversationMutationOptions(weavy: WeavyType) {
 
 export function getUpdateMemberMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, userId, access }: MutateUpdateMemberVariables) => {
-      await weavy.fetch(`/api/apps/${id}/members/${userId}`, { method: "PUT", body: JSON.stringify({ access }) });
+    mutationFn: async ({ appId, userId, access }: MutateUpdateMemberVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/members/${userId}`, { method: "PUT", body: JSON.stringify({ access }) });
     },
-    onMutate: async (variables: MutateUpdateMemberVariables) => {
-      removeCacheItem(weavy.queryClient, ["conversations"], variables.id);
-      return <ConversationMutationContextType>{};
-    },
+    onSettled: (data: void | undefined, error: Error | null, variables: MutateUpdateMemberVariables) => {
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps"] })
+      weavy.queryClient.invalidateQueries({ queryKey: ["members", variables.appId] })
+    }
   };
 
   return options;
@@ -250,8 +212,8 @@ export function getUpdateMemberMutationOptions(weavy: WeavyType) {
 
 export function getAddMembersToConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, members }: MutateAddMembersToConversationVariables) => {
-      await weavy.fetch(`/api/apps/${id}/members`, {
+    mutationFn: async ({ appId, members }: MutateAddMembersToConversationVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/members`, {
         method: "PUT",
         body: JSON.stringify(
           members.map((id: number) => {
@@ -260,9 +222,10 @@ export function getAddMembersToConversationMutationOptions(weavy: WeavyType) {
         ),
       });
     },
-    onMutate: async () => {
-      return <ConversationMutationContextType>{};
-    },
+    onSettled: (data: void | undefined, error: Error | null, variables: MutateAddMembersToConversationVariables) => {
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps"] })
+      weavy.queryClient.invalidateQueries({ queryKey: ["members", variables.appId] })
+    }
   };
 
   return options;
@@ -270,8 +233,8 @@ export function getAddMembersToConversationMutationOptions(weavy: WeavyType) {
 
 export function getUpdateConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id, name, blobId }: MutateUpdateConversationVariables) => {
-      const response = await weavy.fetch(`/api/apps/${id}`, {
+    mutationFn: async ({ appId, name, blobId }: MutateUpdateConversationVariables) => {
+      const response = await weavy.fetch(`/api/apps/${appId}`, {
         method: "PATCH",
         body: JSON.stringify({
           name: name,
@@ -281,20 +244,18 @@ export function getUpdateConversationMutationOptions(weavy: WeavyType) {
       return response.json();
     },
     onMutate: async (variables: MutateUpdateConversationVariables) => {
-      updateCacheItem(weavy.queryClient, ["conversations"], variables.id, (item: ConversationType) => {
-        item.display_name = variables.name!;
-        if (typeof variables?.thumbnailUrl !== "undefined") {
-          item.avatar_url = variables.thumbnailUrl!;
+      const modifyAppItem = (item: AppType) => {
+        if (typeof variables.name === "string") {
+          item.display_name = variables.name;
         }
-      });
 
-      updateCacheItem(weavy.queryClient, ["conversations", variables.id], -1, (item: ConversationType) => {
-        item.display_name = variables.name!;
-        if (typeof variables?.thumbnailUrl !== "undefined") {
-          item.avatar_url = variables.thumbnailUrl!;
+        if (typeof variables?.thumbnailUrl === "string") {
+          item.avatar_url = variables.thumbnailUrl;
         }
-      });
-      return <ConversationMutationContextType>{};
+      };
+
+      updateCacheItem(weavy.queryClient, ["apps", variables.appId], undefined, modifyAppItem);
+      updateCacheItems(weavy.queryClient, { queryKey: ["apps", "list"], exact: false }, variables.appId, modifyAppItem);
     },
   };
 
@@ -303,21 +264,18 @@ export function getUpdateConversationMutationOptions(weavy: WeavyType) {
 
 export function getTrashConversationMutationOptions(weavy: WeavyType) {
   const options = {
-    mutationFn: async ({ id }: MutateTrashConversationVariables) => {
-      await weavy.fetch(`/api/apps/${id}/trash`, { method: "POST" });
+    mutationFn: async ({ appId }: MutateTrashConversationVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/trash`, { method: "POST" });
     },
     onMutate: async (variables: MutateTrashConversationVariables) => {
-      removeCacheItem(weavy.queryClient, ["conversations"], variables.id);
-
-      return <ConversationMutationContextType>{};
+      removeCacheItem(weavy.queryClient, ["apps", "list"], variables.appId);
     },
+    onSettled: () => {
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps"]})
+    }
   };
 
   return options;
-}
-
-export function getDeliveredConversationMutation(weavy: WeavyType): DeliveredConversationMutationType {
-  return new MutationObserver(weavy.queryClient, getDeliveredConversationMutationOptions(weavy));
 }
 
 export function getMarkConversationMutation(weavy: WeavyType): MarkConversationMutationType {
@@ -352,46 +310,57 @@ export function getTrashConversationMutation(weavy: WeavyType): TrashConversatio
   return new MutationObserver(weavy.queryClient, getTrashConversationMutationOptions(weavy));
 }
 
-export function getConversationOptions(weavy: WeavyType, conversationId: number) {
-  return getApiOptions<ConversationType>(weavy, ["conversations", conversationId], undefined, {
-    initialData: () => {
-      // Use any data from the conversation-list query as the initial data for the conversation query
-      return weavy?.queryClient
-        .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
-        ?.pages.flatMap((cPage) => cPage.data)
-        .find((c) => c?.id === conversationId);
-    },
-  });
-}
-
-export function getConversation(weavy: WeavyType, conversationId: number) {
-  return getApi<ConversationType>(weavy, ["conversations", conversationId], undefined, {
-    initialData: () => {
-      // Use any data from the conversation-list query as the initial data for the conversation query
-      return weavy?.queryClient
-        .getQueryData<InfiniteData<ConversationsResultType>>(["conversations"])
-        ?.pages.flatMap((cPage) => cPage.data)
-        .find((c) => c?.id === conversationId);
-    },
-  });
-}
-
-export async function resolveConversation(
+export function getConversationOptions(
   weavy: WeavyType,
-  conversation: AppRef | AppType | number,
-  types: ConversationTypeGuid[] = Object.values(ConversationTypeGuid)
-): Promise<ConversationType | undefined> {
-  let checkConversation: ConversationType;
+  conversationId: number,
+  types: AppTypeGuid[] | null = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat],
+  member?: string
+) {
+  return getApiOptions<AppType>(weavy, ["apps", conversationId], undefined, {
+    initialData: () => {
+      // Use data from app list as initial data for app details
+      return weavy?.queryClient
+        .getQueryData<InfiniteData<AppsResultType>>(["apps", "list", types, member])
+        ?.pages.flatMap((cPage) => cPage.data)
+        .find((c) => c?.id === conversationId);
+    },
+  });
+}
 
-  if (typeof conversation === "number") {
-    checkConversation = await getConversation(weavy, conversation);
-  } else if (typeof conversation.id === "number" && !conversation.type) {
-    checkConversation = await getConversation(weavy, conversation.id);
-  } else if (typeof conversation.type === "string") {
-    checkConversation = conversation as ConversationType;
+export function getConversation(
+  weavy: WeavyType,
+  conversationId: number,
+  types: AppTypeGuid[] | null = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat],
+  member?: string
+) {
+  return getApi<AppType>(weavy, ["apps", conversationId], undefined, {
+    initialData: () => {
+      // Use data from app list as initial data for app details
+      return weavy?.queryClient
+        .getQueryData<InfiniteData<AppsResultType>>(["apps", "list", types, member])
+        ?.pages.flatMap((cPage) => cPage.data)
+        .find((c) => c?.id === conversationId);
+    },
+  });
+}
+
+export async function resolveAppWithType(
+  weavy: WeavyType,
+  app: AppRef | AppType | number,
+  types: AppTypeGuid[],
+  member?: string
+): Promise<AppType | undefined> {
+  let checkApp: AppType;
+
+  // TODO: Replace with a compatible getApp instead of getConversation
+  if (typeof app === "number") {
+    checkApp = await getConversation(weavy, app, types, member);
+  } else if (typeof app.id === "number" && !app.type) {
+    checkApp = await getConversation(weavy, app.id, types, member);
+  } else if (typeof app.type === "string") {
+    checkApp = app as AppType;
   } else {
     return undefined;
   }
-
-  return types.includes(checkConversation.type) ? checkConversation : undefined;
+  return types.includes(checkApp.type) ? checkApp : undefined;
 }

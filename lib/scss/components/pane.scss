@@ -17,7 +17,7 @@
 }
 
 .wy-pane-group {
-  padding: var.wy-rem(.75);
+  padding: var.default(--wy-padding);
 }
 
 .wy-pane-background {
@@ -25,4 +25,12 @@
   --wy-component-color: #{color.token(--wy-on-background)};
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
+}
+
+.wy-pane-toolbar {
+  display: flex;
+  flex: 1;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: var.default(--wy-padding-sm);
 }

@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import chatCss from "../scss/all.scss";

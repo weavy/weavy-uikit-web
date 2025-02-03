@@ -1,9 +1,9 @@
-import { LitElement, html, nothing, type PropertyValues } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { html, nothing, type PropertyValues } from "lit";
+import { customElement } from "./utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
-import { ContextualTypes, type AppType } from "./types/app.types";
-import type { UserType } from "./types/users.types";
+import { AppTypeString, type AppType } from "./types/app.types";
 import { getInfiniteFileListOptions } from "./data/files";
 import type {
   FileOrderType,
@@ -43,14 +43,15 @@ import { localized, msg } from "@lit/localize";
 import { PersistStateController } from "./controllers/persist-state-controller";
 import { ThemeController } from "./controllers/theme-controller";
 import { RealtimeFileEventType } from "./types/realtime.types";
-import { BlockProviderMixin } from "./mixins/block-mixin";
-import { Constructor } from "./types/generic.types";
+import { WeavyComponent } from "./classes/weavy-component";
 import { ProductTypes } from "./types/product.types";
+import { getFlatInfiniteResultData } from "./utils/query-cache";
 
 import allStyles from "./scss/all.scss";
 import hostBlockStyles from "./scss/host-block.scss";
 import hostFontStyles from "./scss/host-font.scss";
 import colorModesStyles from "./scss/color-modes.scss";
+import pagerStyles from "./scss/components/pager.scss";
 
 import "./components/wy-files-appbar";
 import "./components/wy-files-list";
@@ -59,19 +60,29 @@ import "./components/wy-spinner";
 import "./components/wy-empty";
 import "./components/wy-icon";
 
+export const WY_FILES_TAGNAME = "wy-files";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_FILES_TAGNAME]: WyFiles;
+  }
+}
+
 /**
- * Files component to render a list of uploaded files and linked files from cloud providers.
+ * Weavy component to render a list of uploaded files and linked files from cloud providers.
  *
  * @element wy-files
  * @class WyFiles
+ * @fires wy-preview-open {WyPreviewOpenEventType}
+ * @fires wy-preview-close {WyPreviewCloseEventType}
  */
-@customElement("wy-files")
+@customElement(WY_FILES_TAGNAME)
 @localized()
-export class WyFiles extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostFontStyles];
+export class WyFiles extends WeavyComponent {
+  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostFontStyles, pagerStyles];
 
   override productType = ProductTypes.Files;
-  override contextualType = ContextualTypes.Files;
+  override componentType = AppTypeString.Files;
 
   /**
    * The view for showing the file list.
@@ -97,7 +108,7 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
 
   private filesQuery = new InfiniteQueryController<FilesResultType>(this);
 
-  private persistState = new PersistStateController<this>(this);
+  private persistState = new PersistStateController(this);
   //private history = new HistoryController<this>(this)
 
   private infiniteScroll = new InfiniteScrollController(this);
@@ -211,6 +222,14 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
     this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
+  protected handleRealtimeCommentCreated = () => {
+    if (!this.weavy || !this.app) {
+      return;
+    }
+
+    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+  };
+
   #unsubscribeToRealtime?: () => void;
 
   constructor() {
@@ -219,12 +238,17 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
     new ThemeController(this, WyFiles.styles);
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this & { app: AppType; user: UserType }>) {
+  protected override willUpdate(changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties);
 
     //console.log("files willUpdate", Array.from(changedProperties.keys()), this.uid, this.weavy)
-    if ((changedProperties.has("uid") || changedProperties.has("weavy")) && this.uid && this.weavy) {
-      this.persistState.observe(["view", "order", "showTrashed"], this.uid);
+    if (
+      (changedProperties.has("uid") || changedProperties.has("weavy") || changedProperties.has("user")) &&
+      this.uid &&
+      this.weavy &&
+      this.user
+    ) {
+      this.persistState.observe(["view", "order", "showTrashed"], this.uid, `u${this.user.id}`);
       //this.history.observe(['view'], this.uid)
     }
 
@@ -273,6 +297,7 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
       this.weavy.subscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
       this.weavy.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
       this.weavy.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+      this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
 
       this.#unsubscribeToRealtime = () => {
         this.weavy?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
@@ -280,6 +305,7 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
         this.weavy?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
         this.weavy?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
         this.weavy?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+        this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
         this.#unsubscribeToRealtime = undefined;
       };
     }
@@ -290,88 +316,92 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
   }
 
   protected override render() {
-    const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
-    const { data, isPending, dataUpdatedAt } = this.filesQuery.result ?? { isPending: networkIsPending };
+    const { data, dataUpdatedAt, hasNextPage, isPending } = this.filesQuery.result;
     const isDragActive = this.dropZone.isDragActive;
 
-    const files: FileType[] = (data?.pages.flatMap((filesResult) => filesResult.data!) || []).filter((f) => f);
+    const files = getFlatInfiniteResultData(data);
 
-    return html`
-      <wy-files-appbar
-        .order=${this.order}
-        .showTrashed=${this.showTrashed}
-        .view=${this.view}
-        @upload-files=${this.handleBlobUpload}
-        @external-blobs=${this.handleExternalBlobs}
-        @create-files=${(e: CustomEvent) =>
-          (e.detail.blobs as BlobType[]).forEach((blob) => this.handleCreateFile(blob, e.detail.replace))}
-        @order=${(e: CustomEvent) => {
-          this.order = e.detail.order;
-        }}
-        @show-trashed=${(e: CustomEvent) => {
-          this.showTrashed = e.detail.showTrashed;
-        }}
-        @view=${(e: CustomEvent) => {
-          this.view = e.detail.view;
-        }}
-        @subscribe=${(e: CustomEvent) => this.handleSubscribe(e.detail.subscribe)}
-      >
-      </wy-files-appbar>
-
-      <div
-        class="wy-files ${classMap({ "wy-dragging": isDragActive })}"
-        data-drag-title=${msg("Drop files here to upload.")}
-      >
-        ${!isPending
-          ? files.length
-            ? html`
-                <wy-files-list
-                  .view=${this.view}
-                  .files=${files}
-                  .dataUpdatedAt=${dataUpdatedAt}
-                  .order=${this.order}
-                  @file-open=${(e: FileOpenEventType) => {
-                    this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
-                  }}
-                  @order=${(e: CustomEvent) => {
-                    this.order = e.detail.order;
-                  }}
-                  @rename=${(e: CustomEvent) => {
-                    this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
-                  }}
-                  @subscribe=${(e: CustomEvent) => {
-                    this.subscribeFileMutation?.mutate({
-                      file: e.detail.file,
-                      subscribe: e.detail.subscribe,
-                    });
-                  }}
-                  @trash=${(e: CustomEvent) => {
-                    this.trashFileMutation?.mutate({ file: e.detail.file });
-                  }}
-                  @restore=${(e: CustomEvent) => {
-                    this.restoreFileMutation?.mutate({ file: e.detail.file });
-                  }}
-                  @delete-forever=${(e: CustomEvent) => {
-                    this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
-                  }}
-                >
-                </wy-files-list>
-              `
-            : html`
-                <wy-empty>
-                  <wy-icon-display>
-                    <wy-icon name="file-upload"></wy-icon>
-                    <span slot="text">${msg("Add some files to get started!")}</span>
-                  </wy-icon-display>
-                </wy-empty>
-              `
-          : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-        <div ${ref(this.pagerRef)} part="wy-pager"></div>
-      </div>
-      ${!isPending
-        ? html` <wy-preview ${ref(this.previewRef)} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
-        : nothing}
-    `;
+    return [
+      html`
+        <wy-files-appbar
+          .order=${this.order}
+          .showTrashed=${this.showTrashed}
+          .view=${this.view}
+          @upload-files=${this.handleBlobUpload}
+          @external-blobs=${this.handleExternalBlobs}
+          @create-files=${(e: CustomEvent) =>
+            (e.detail.blobs as BlobType[]).forEach((blob) => this.handleCreateFile(blob, e.detail.replace))}
+          @order=${(e: CustomEvent) => {
+            this.order = e.detail.order;
+          }}
+          @show-trashed=${(e: CustomEvent) => {
+            this.showTrashed = e.detail.showTrashed;
+          }}
+          @view=${(e: CustomEvent) => {
+            this.view = e.detail.view;
+          }}
+          @subscribe=${(e: CustomEvent) => this.handleSubscribe(e.detail.subscribe)}
+        >
+        </wy-files-appbar>
+      `,
+      this.app
+        ? html`
+            <div
+              class="wy-files ${classMap({ "wy-dragging": isDragActive })}"
+              data-drag-title=${msg("Drop files here to upload.")}
+            >
+              ${files.length
+                ? html`
+                    <wy-files-list
+                      .view=${this.view}
+                      .files=${files}
+                      .dataUpdatedAt=${dataUpdatedAt}
+                      .order=${this.order}
+                      @file-open=${(e: FileOpenEventType) => {
+                        this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
+                      }}
+                      @order=${(e: CustomEvent) => {
+                        this.order = e.detail.order;
+                      }}
+                      @rename=${(e: CustomEvent) => {
+                        this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
+                      }}
+                      @subscribe=${(e: CustomEvent) => {
+                        this.subscribeFileMutation?.mutate({
+                          file: e.detail.file,
+                          subscribe: e.detail.subscribe,
+                        });
+                      }}
+                      @trash=${(e: CustomEvent) => {
+                        this.trashFileMutation?.mutate({ file: e.detail.file });
+                      }}
+                      @restore=${(e: CustomEvent) => {
+                        this.restoreFileMutation?.mutate({ file: e.detail.file });
+                      }}
+                      @delete-forever=${(e: CustomEvent) => {
+                        this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
+                      }}
+                    >
+                      ${hasNextPage ? html`<div slot="end" ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
+                    </wy-files-list>
+                  `
+                : html`
+                    <wy-empty>
+                      ${isPending
+                        ? html`<wy-spinner padded reveal></wy-spinner>`
+                        : html` <wy-icon-display>
+                            <wy-icon name="file-upload"></wy-icon>
+                            <span slot="text">${msg("Add some files to get started!")}</span>
+                          </wy-icon-display>`}
+                    </wy-empty>
+                  `}
+            </div>
+            ${data
+              ? html` <wy-preview ${ref(this.previewRef)} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
+              : nothing}
+          `
+        : html`<wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty>`,
+    ];
   }
 
   override disconnectedCallback(): void {
@@ -379,5 +409,3 @@ export class WyFiles extends BlockProviderMixin(LitElement) {
     super.disconnectedCallback();
   }
 }
-
-export type WyFilesType = Constructor<WyFiles>;

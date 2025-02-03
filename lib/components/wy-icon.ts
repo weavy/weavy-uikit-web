@@ -1,5 +1,6 @@
 import { LitElement, html, type PropertyValues, css, svg } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import {
   getIconMapping,
   defaultIcon,
@@ -11,11 +12,12 @@ import {
 import { toKebabCase } from "../utils/strings";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { partMap } from "../utils/directives/shadow-part-map";
+import { unsafeSVG } from "lit/directives/unsafe-svg.js";
+import { S4 } from "../utils/data";
 
 import rebootCss from "../scss/components/base/reboot.scss";
 import iconCss from "../scss/components/icons.scss";
-import { partMap } from "../utils/directives/shadow-part-map";
-import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 
 @customElement("wy-icon")
 export default class WyIcon extends LitElement {
@@ -85,6 +87,8 @@ export default class WyIcon extends LitElement {
   @state()
   nativeOverlayColor?: string;
 
+  protected uniqueId = `wy-icon-${S4()}`;
+
   override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("name") && this.name) {
       this.path = getIconMapping(this.name) || defaultIcon;
@@ -114,30 +118,65 @@ export default class WyIcon extends LitElement {
       ["wy-active"]: this.active,
     };
 
-    const remSize = this.size !== 24 && this.size / 16;
-    const sizeStyle = remSize
+    const hasRemSize = this.size !== 24;
+    const remSize = this.size / 16;
+    const sizeStyle = hasRemSize
       ? `width: var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))); height: var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem)));`
       : "";
 
     const svgContent = this.svg && getSvgMapping(this.svg);
 
     if (this.overlayPath) {
-      return html`
-        <wy-icon-stack style="${sizeStyle}">
-          <svg part=${partMap(iconParts)} viewBox="0 0 24 24" width="${this.size}" height="${this.size}">
-            ${svgContent
-              ? unsafeSVG(svgContent)
-              : svg`
+      return [
+        html`
+          <style>
+            .icon-mask-bg {
+              width: var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem)));
+              height: var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem)));
+              fill: white;
+            }
+
+            .icon-mask {
+              width: calc(var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))));
+              height: calc(var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem))));
+              ry: calc(var(--wy-border-radius-pill, var(--wy-border-radius, 50%)) * 2);
+              x: calc(var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))) / 2);
+              y: calc(var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem))) / 2);
+              stroke: black;
+              stroke-width: 4px;
+              fill: black;
+            }
+          </style>
+        `,
+        html`
+          <wy-icon-stack style="${sizeStyle}">
+            <svg
+              part=${partMap(iconParts)}
+              viewBox="0 0 24 24"
+              width="${this.size}"
+              height="${this.size}"
+              style="mask-image: url(#${this.uniqueId}-mask); -webkit-mask-image: url(#${this.uniqueId}-mask);"
+            >
+              <defs>
+                <mask id="${this.uniqueId}-mask">
+                  <rect class="icon-mask-bg" />
+                  <rect class="icon-mask" />
+                </mask>
+              </defs>
+              ${svgContent
+                ? unsafeSVG(svgContent)
+                : svg`
           <path d="${this.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
         `}
-            <!--rect width="24" height="24" fill="transparent" /-->
-          </svg>
-          <svg part="wy-icon-stack-overlay" viewBox="0 0 24 24" width="${this.size / 2}" height="${this.size / 2}">
-            <path d="${this.overlayPath}" style="fill: ${ifDefined(this.nativeOverlayColor)}" />
-            <!--rect width="24" height="24" fill="transparent" /-->
-          </svg>
-        </wy-icon-stack>
-      `;
+              <!--rect width="24" height="24" fill="transparent" /-->
+            </svg>
+            <svg part="wy-icon-stack-overlay" viewBox="0 0 24 24" width="${this.size / 2}" height="${this.size / 2}">
+              <path d="${this.overlayPath}" style="fill: ${ifDefined(this.nativeOverlayColor)}" />
+              <!--rect width="24" height="24" fill="transparent" /-->
+            </svg>
+          </wy-icon-stack>
+        `,
+      ];
     }
 
     return html`

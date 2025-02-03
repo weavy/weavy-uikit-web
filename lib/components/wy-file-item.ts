@@ -1,18 +1,17 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
-
-import filesCss from "../scss/all.scss"
-
 import { getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
 import type { FileActionType, FileStatusType, FileType } from "../types/files.types";
-
 import { ifDefined } from "lit/directives/if-defined.js";
 import { inputConsume } from "../utils/keyboard";
 import { getFileActionIconMapping } from "../utils/icons";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+
+import filesCss from "../scss/all.scss"
 
 import "./wy-icon";
 import "./wy-file-menu";

@@ -1,5 +1,6 @@
 import { LitElement, html, nothing, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import chatCss from "../scss/all.scss";
 import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
@@ -7,7 +8,7 @@ import { getVotesOptions } from "../data/poll";
 import { localized, msg, str } from "@lit/localize";
 import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-sheet";
@@ -16,16 +17,16 @@ import "./wy-icon";
 
 @customElement("wy-poll-option")
 @localized()
-export default class WyPollOption extends BlockConsumerMixin(LitElement) {
+export default class WyPollOption extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number, attribute: false })
-  totalVotes!: number;
+  totalVotes: number = 0;
 
   @property({ attribute: false })
-  option!: PollOptionType;
+  option?: PollOptionType;
 
   @state()
   private showSheet: boolean = false;
@@ -33,12 +34,16 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
   getVotesQuery = new QueryController<PollOptionType>(this);
 
   protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>): void {
-    if (changedProperties.has("weavy") && this.weavy && this.option) {
-      this.getVotesQuery.trackQuery(getVotesOptions(this.weavy, this.option.id!));
+    if (changedProperties.has("weavy") && this.weavy && this.option && this.option.id) {
+      this.getVotesQuery.trackQuery(getVotesOptions(this.weavy, this.option.id));
     }
   }
 
-  private dispatchVote(id: number) {
+  private dispatchVote(id?: number | null) {
+    if (!id) {
+      return;
+    }
+
     const event = new CustomEvent("vote", { detail: { id: id } });
     return this.dispatchEvent(event);
   }
@@ -51,6 +56,10 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
   }
 
   override render() {
+    if(!this.option || !this.option.id) {
+      return nothing;
+    }
+
     const { data, isLoading } = this.getVotesQuery.result ?? {};
     const ratio = this.totalVotes > 0 ? Math.round(((this.option.votes?.count || 0) / this.totalVotes) * 100) : 0;
 
@@ -58,7 +67,7 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
       <div
         class="wy-item wy-list-item wy-poll-option"
         tabindex="0"
-        @click=${() => this.dispatchVote(this.option.id!)}
+        @click=${() => this.dispatchVote(this.option?.id)}
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
@@ -92,14 +101,14 @@ export default class WyPollOption extends BlockConsumerMixin(LitElement) {
               <!-- <wy-spinner></wy-spinner> -->
               ${this.showSheet && data && !isLoading
                 ? html`
-                    ${data.votes?.data!.map(
+                    ${data.votes?.data ? data.votes.data.map(
                       (vote) => html`
                         <div class="wy-item wy-list-item">
                           <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.display_name}></wy-avatar>
                           <div class="wy-item-body">${vote.display_name}</div>
                         </div>
                       `
-                    )}
+                    ) : nothing}
                   `
                 : nothing}
             </wy-sheet>

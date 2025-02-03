@@ -1,5 +1,5 @@
 import { WeavyClient, type WeavyType } from "./weavy";
-import { Constructor } from "../types/generic.types";
+import { Constructor, NamedEvent } from "../types/generic.types";
 import {
   RealtimeEventType,
   RealtimeNotificationEventType,
@@ -11,7 +11,7 @@ import { throwOnDomNotAvailable } from "../utils/dom";
 
 export interface WeavyRealtimeProps {
   /**
-   * Enable the realtime `wy:notifications` event.
+   * Enable the realtime `wy-notifications` event.
    */
   notificationEvents: boolean;
 }
@@ -47,11 +47,11 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
         case "notification_updated":
         case "notification_deleted":
         case "notifications_marked": {
-          const event = new CustomEvent("wy:notifications", {
+          const event: WyNotificationsEventType = new (CustomEvent as NamedEvent)("wy-notifications", {
             ...eventOptions,
             detail: realtimeEvent as RealtimeNotificationsEventDetailType,
           });
-          this.host.dispatchEvent(event as WyNotificationsEventType);
+          this.host.dispatchEvent(event);
         }
       }
     };

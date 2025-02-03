@@ -1,11 +1,12 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { WeavyPostalParent } from "../utils/postal-parent";
 import type { ExternalBlobType } from "../types/files.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 
 import cloudFilesCss from "../scss/all.scss";
 
@@ -16,7 +17,7 @@ import WyOverlay from "./wy-overlay";
 
 @customElement("wy-cloud-files")
 @localized()
-export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
+export default class WyCloudFiles extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = cloudFilesCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -99,9 +100,9 @@ export default class WyCloudFiles extends BlockConsumerMixin(LitElement) {
     };
 
     this.handleGoogleSelected = (_message: unknown, e: MessageEvent) => {
-      if (e.source === this.iframeElementRef.value?.contentWindow?.self) {
+      if (e.source === this.iframeElementRef.value?.contentWindow?.self && this.overlayRef.value) {
         //console.log("google-selected");
-        this.overlayRef.value!.maximized = true;
+        this.overlayRef.value.maximized = true;
       }
     };
 

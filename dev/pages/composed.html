@@ -13,7 +13,7 @@
       body {
         margin: 0;
         padding: 0;
-        height: 100%;
+        height: 100vh;
       }
 
       .grid {
@@ -22,7 +22,7 @@
         grid-auto-flow: column;
         grid-auto-columns: 1fr;
         gap: 0.5rem;
-        background: #fff;
+        
       }
     </style>
     <script type="module">
@@ -31,9 +31,7 @@
 
       const weavy = new Weavy({
         url: "%WEAVY_URL%",
-        reactions: ["👍", "❤️", "😂", "😒", "😁"],
-        confluenceAuthenticationUrl: "%WEAVY_CONFLUENCE_AUTH_URL%",
-        confluenceProductName: "%WEAVY_CONFLUENCE_PRODUCT_NAME%",
+        reactions: ["👍", "❤️"]
       });
 
       //weavy.notificationToasts = true;
@@ -52,7 +50,7 @@
 
       let linkWindow;
 
-      document.addEventListener("wy:link", (e) => {
+      document.addEventListener("wy-link", (e) => {
         const appType = e.detail.app.type;
         const appUid = e.detail.app.uid;
         const contextualPrefix = "acme-";
@@ -65,31 +63,18 @@
           const pageName = appUid.substring(contextualPrefix.length);
           linkUrl = new URL(`./${pageName}.html`, window.location);
         }
-
         window.location = linkUrl;
-
-        /*if (linkUrl) {
-          if (linkWindow && !linkWindow.closed) {
-            if (linkWindow.location.href !== linkUrl.href) {
-              linkWindow.location.href = linkUrl.href;
-            }
-            linkWindow.focus()
-          } else {
-            linkWindow = window.open(linkUrl, "wy-link");
-          }
-        }*/
       });
       console.log("init done")
-
       globalThis.weavy = weavy;
     </script>
   </head>
-  <body>
+  <body>    
     <div class="grid">
       <wy-chat uid="acme-chat"></wy-chat>
-      <wy-posts uid="acme-feed" style="max-width: 33vw"></wy-posts>
+      <wy-posts uid="acme-posts" style="max-width: 33vw"></wy-posts>
       <wy-files uid="acme-files" style="max-width: 33vw"></wy-files>
-    </div>
+    </div>    
     <tanstack-dev-tools buttonPosition="bottom-right"></tanstack-dev-tools>
     <wy-notification-toasts></wy-notification-toasts>
   </body>

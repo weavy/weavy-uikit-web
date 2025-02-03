@@ -1,11 +1,6 @@
 import { html, nothing } from "lit";
-
-import "./wy-icon";
-import "./wy-file-menu";
-
 import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
 import type { FileType } from "../types/files.types";
-
 import { WyFilesList } from "./wy-files-list";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
 import { Ref, ref } from "lit/directives/ref.js";
@@ -13,8 +8,18 @@ import { autofocusRef } from "../utils/dom";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { checkImageLoad, imageLoaded } from "../utils/images";
 import { partMap } from "../utils/directives/shadow-part-map";
+import { msg, str } from "@lit/localize";
 
-export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?: number, highlightId?: number, highlightRef?: Ref<HTMLElement>) {
+import "./wy-icon";
+import "./wy-file-menu";
+
+export function renderFileCard(
+  this: WyFilesList,
+  file: FileType,
+  isRenamingId?: number,
+  highlightId?: number,
+  highlightRef?: Ref<HTMLElement>
+) {
   const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
   const fileChangedAt = file.updated_at || file.created_at;
   const fileDate = new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
@@ -51,7 +56,7 @@ export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?:
   };
 
   const trashedPart = {
-    "wy-trashed": file.is_trashed
+    "wy-trashed": file.is_trashed,
   };
 
   const highlight = Boolean(highlightId && highlightId === file.id);
@@ -71,7 +76,7 @@ export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?:
       }}
       @keydown=${clickOnEnterAndConsumeOnSpace}
       @keyup=${clickOnSpace}
-      ${highlight && highlightRef ? ref(highlightRef): nothing}
+      ${highlight && highlightRef ? ref(highlightRef) : nothing}
     >
       <div part="wy-card-actions">
         <wy-file-menu
@@ -89,7 +94,7 @@ export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?:
             <img
               part="wy-card-top wy-card-content wy-card-image ${partMap({
                 "wy-card-top-image": file.kind === "image",
-                ...trashedPart
+                ...trashedPart,
               })}"
               width=${ifDefined(file.width)}
               height=${ifDefined(file.height)}
@@ -126,7 +131,20 @@ export function renderFileCard(this: WyFilesList, file: FileType, isRenamingId?:
             `
           : html`<div class="wy-truncated-text-and-icon"
               ><div>${file.name}</div> ${file.comments?.count
-                ? html`<wy-icon size="16" name="comment" color="secondary"></wy-icon>`
+                ? html`<wy-button
+                    small
+                    kind="icon"
+                    @click=${(e: Event) => {
+                      if (!e.defaultPrevented && !file.is_trashed) {
+                        (e.target as HTMLElement).blur();
+                        this.dispatchFileOpen(file.id, "comments");
+                        e.stopPropagation();
+                      }
+                    }}
+                    title=${msg(str`${file.comments.count} comments`)}
+                  >
+                    <span class="wy-badge">${file.comments.count}</span>
+                  </wy-button>`
                 : nothing}</div
             >`}
       </div>

@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 calc(.75 * var.default(--wy-padding)) calc(.75* var.default(--wy-padding));
+  padding: 0 calc(var.default(--wy-padding) * .75) calc(var.default(--wy-padding) * .75);
 
   .wy-meta {
     margin-right: var.wy-rem(0.5);

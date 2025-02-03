@@ -1,12 +1,14 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { persistProperties, resetPersistPropertiesCache } from "../utils/persist-properties";
-import { WeavyType } from "../client/weavy";
+import { PersistStorageCache } from "../utils/persist-properties";
+import { WeavyComponentContextProps } from "../classes/weavy-component";
 
-export class PersistStateController<T = ReactiveControllerHost> implements ReactiveController {
-  host: ReactiveControllerHost;
+export class PersistStateController<T extends ReactiveControllerHost & WeavyComponentContextProps> implements ReactiveController {
+  host: T;
   #prefixKey: string = "";
   #cachePrefix?: string;
   properties: Array<keyof T> = [];
+
+  persistStorageCache = new PersistStorageCache();
 
   get prefixKey() {
     return this.#prefixKey;
@@ -14,7 +16,7 @@ export class PersistStateController<T = ReactiveControllerHost> implements React
 
   set prefixKey(prefixKey) {
     if (prefixKey !== this.#prefixKey) {
-      resetPersistPropertiesCache();
+      this.persistStorageCache.resetPersistPropertiesCache();
       this.#prefixKey = prefixKey;
       this.host.requestUpdate();
     }
@@ -26,27 +28,15 @@ export class PersistStateController<T = ReactiveControllerHost> implements React
 
   set cachePrefix(cachePrefix) {
     if (cachePrefix !== this.#cachePrefix) {
-      resetPersistPropertiesCache();
+      this.persistStorageCache.resetPersistPropertiesCache();
       this.#cachePrefix = cachePrefix;
       this.host.requestUpdate();
     }
   }
 
-  constructor(host: ReactiveControllerHost, prefixKey?: string, properties?: Array<keyof T>, cachePrefix?: string) {
+  constructor(host: T) {
     host.addController(this);
     this.host = host;
-
-    if (properties) {
-      this.properties = properties;
-    }
-
-    if (prefixKey) {
-      this.#prefixKey = prefixKey;
-    }
-
-    if (cachePrefix) {
-      this.cachePrefix = cachePrefix;
-    }
   }
 
   public observe(properties: Array<keyof T>, prefixKey?: string, cachePrefix?: string) {
@@ -62,9 +52,8 @@ export class PersistStateController<T = ReactiveControllerHost> implements React
   }
 
   hostUpdate() {
-    if (this.prefixKey && this.properties) {
-      const weavy = (this.host as unknown as this & { weavy: WeavyType }).weavy;
-      persistProperties<T>(this.host as T, this.prefixKey, this.properties, this.cachePrefix || weavy?.cachePrefix);
+    if (this.prefixKey && this.properties && this.host.weavy) {
+      this.persistStorageCache.persistProperties<T>(this.host as T, this.prefixKey, this.properties, this.cachePrefix ? `${this.host.weavy.cachePrefix}:${this.cachePrefix}` : this.host.weavy.cachePrefix);
     }
   }
 }

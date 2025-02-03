@@ -22,28 +22,25 @@ export class InfiniteScrollController implements ReactiveController {
       if (!infiniteQueryResult.isLoading && !this.isObservePending) {
         this.isObservePending = true;
 
-        requestAnimationFrame(() => {
-          this.loadMoreRefElement = loadMoreRefElement;
-          this.scroller?.disconnect();
-          this.scroller = createScroller(
+         requestAnimationFrame(() => {
+           this.loadMoreRefElement = loadMoreRefElement;
+           this.scroller?.disconnect();
+           this.scroller = createScroller(
             loadMoreRefElement,
             async () => {
               if (infiniteQueryResult.hasNextPage && !infiniteQueryResult.isFetching) {
-                //console.log("infinite scroll fetch", { ...infiniteQueryResult});
                 await infiniteQueryResult.fetchNextPage({ cancelRefetch: false });
-
                 // Wait for effects and trigger render before resolving
                 if (this.reverse) {
                   await this.host.updateComplete;
-                  //console.log("infinte scroll fetch done")
                 }
               }
             },
             this.reverse
-          );
+           );
 
           this.isObservePending = false;
-        });
+         });
       }
     }
   }

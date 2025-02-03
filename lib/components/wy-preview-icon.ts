@@ -1,14 +1,15 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { localized, msg, str } from "@lit/localize";
 import { getProvider } from "../utils/files";
 import type { FileProviderType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { iconNamesType } from "../utils/icons";
 
-import "./wy-icon";
-
 import allCss from "../scss/all.scss"
+
+import "./wy-icon";
 
 @customElement("wy-preview-icon")
 @localized()

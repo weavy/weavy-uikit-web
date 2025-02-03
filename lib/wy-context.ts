@@ -1,11 +1,11 @@
 import { css, html, LitElement, type PropertyValues } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { Weavy, type WeavyType } from "./client/weavy";
 import type { WeavyTokenFactory, WeavyOptions } from "./types/weavy.types";
 import { indirectEvalObject } from "./converters/indirect-eval-object";
 import { toUrl } from "./converters/url";
 import { LocaleModule } from "@lit/localize";
-import { Constructor } from "./types/generic.types";
+import { customElement } from "./utils/decorators/custom-element";
 
 import allStyles from "./scss/all.scss";
 import colorModesStyles from "./scss/color-modes.scss";
@@ -14,7 +14,25 @@ function acceptedValue(value: unknown) {
   return value !== undefined && value !== null && value !== false;
 }
 
-@customElement("wy-context")
+export const WY_CONTEXT_TAGNAME = "wy-context";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_CONTEXT_TAGNAME]: WyContext;
+  }
+}
+
+/**
+ * Weavy context provider component for configuration of authentication and common settings for Weavy components.
+ * 
+ * May be used globally on document level if no child nodes are present. When child nodes are present it is limited to the scope of the child nodes.
+ *
+ * @element wy-context
+ * @class WyContext
+ * @fires wy-notifications {WyNotificationsEventType}
+ * @slot
+ */
+@customElement(WY_CONTEXT_TAGNAME)
 export class WyContext extends LitElement implements WeavyOptions {
   static override styles = [
     allStyles,
@@ -48,11 +66,7 @@ export class WyContext extends LitElement implements WeavyOptions {
       fromAttribute: (value) => toUrl(value),
     },
   })
-  confluenceAuthenticationUrl?: string | URL;
-
-  @property({ attribute: true })
-  confluenceProductName?: string;
-
+  
   @property({ type: Boolean })
   disableEnvironmentImports?: boolean;
 
@@ -64,9 +78,6 @@ export class WyContext extends LitElement implements WeavyOptions {
 
   @property({ attribute: true, type: Number })
   gcTime?: number;
-
-  @property({ attribute: true })
-  modalParent?: string;
 
   @property({ attribute: true, type: Array })
   reactions?: string[];
@@ -160,5 +171,3 @@ export class WyContext extends LitElement implements WeavyOptions {
     return html` <slot></slot> `;
   }
 }
-
-export type WyContextType = Constructor<WyContext>;

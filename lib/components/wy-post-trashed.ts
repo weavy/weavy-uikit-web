@@ -1,11 +1,12 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
+import { localized, msg } from "@lit/localize";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all.scss"
-import { localized, msg } from "@lit/localize";
 
 import "./wy-button";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-post-trashed")
 @localized()

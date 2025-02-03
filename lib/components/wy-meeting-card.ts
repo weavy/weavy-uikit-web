@@ -1,12 +1,15 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import type { MeetingType } from "../types/meetings.types";
-import chatCss from "../scss/all.scss";
 import { localized, msg } from "@lit/localize";
-import "./wy-icon";
-import "./wy-button";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
+
+import chatCss from "../scss/all.scss";
+
+import "./wy-icon";
+import "./wy-button";
 
 @customElement("wy-meeting-card")
 @localized()

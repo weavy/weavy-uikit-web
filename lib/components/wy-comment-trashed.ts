@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 

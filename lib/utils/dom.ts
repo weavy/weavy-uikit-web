@@ -24,7 +24,7 @@ export async function whenParentsDefined(element: Element, prefix: string = "wy-
   const whenParentElementsDefined = [];
   for (let parent: Element | null = element; (parent = parent.parentElement); ) {
     if (parent.matches(":not(:defined)") && parent.localName.startsWith(prefix)) {
-      console.log("Waiting for defining", parent.localName);
+      //console.log("Waiting for defining", parent.localName);
       whenParentElementsDefined.push(customElements.whenDefined(parent.localName));
     }
   }
@@ -47,19 +47,20 @@ export const observeConnected = (target: Element, callback: (isConnected: boolea
   return connectObserver;
 };
 
-export async function whenConnected(target: Element) {
-    if (target.isConnected) {
-        return
+export async function whenConnected(target: Element, connected: boolean = true) {
+    if (target.isConnected === connected) {
+        return connected;
     } else {
         let resolveConnectPromise: (value: unknown) => void
         const connectPromise = new Promise((r) => resolveConnectPromise = r)
         const observer = observeConnected(target, (isConnected) => {
-            if (isConnected) {
-                resolveConnectPromise?.(true);
+            if (isConnected === connected) {
+                resolveConnectPromise?.(connected);
             }
         })
         await connectPromise;
         observer.disconnect();
+        return connected;
     }
 }
 

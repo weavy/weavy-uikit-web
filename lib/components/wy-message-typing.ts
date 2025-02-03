@@ -1,5 +1,6 @@
 import { LitElement, PropertyValueMap, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { TypingController } from "../controllers/typing-controller";
 import { consume } from "@lit/context";
@@ -16,11 +17,20 @@ import bouncerCss from "../scss/components/bouncer.scss";
 
 import "./wy-avatar";
 
+/**
+ * Shows a typing message whenever a member is typing
+ * 
+ * @fires typing
+ */
 @customElement("wy-message-typing")
 export default class WyMessageTyping extends LitElement {
   static override styles = [rebootCss, bouncerCss, messagesCss];
 
   protected exportParts = new ShadowPartsController(this);
+
+  /**
+   * @fires typing
+   */
   protected typing = new TypingController(this);
 
   @consume({ context: WeavyContext, subscribe: true })
@@ -82,9 +92,7 @@ export default class WyMessageTyping extends LitElement {
     );
 
     const dateFull = this.typingTime
-      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
-          this.typingTime
-        )
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(this.typingTime)
       : "";
     const timeShort = this.typingTime
       ? new Intl.DateTimeFormat(this.weavy?.locale, { timeStyle: "short" }).format(this.typingTime)

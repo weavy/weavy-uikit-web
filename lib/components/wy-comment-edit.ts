@@ -1,20 +1,21 @@
 import { LitElement, html, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { localized, msg } from "@lit/localize";
+import { MutationController } from "../controllers/mutation-controller";
+import { getUpdateCommentMutationOptions } from "../data/comments";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
-import { PollOptionType } from "../types/polls.types";
-
-import { MutationController } from "../controllers/mutation-controller";
-import { CommentMutationContextType, CommentType, MutateCommentProps } from "../types/comments.types";
-import { getUpdateCommentMutationOptions } from "../data/comments";
-import { WeavyProps } from "../types/weavy.types";
+import type { PollOptionType } from "../types/polls.types";
+import type { CommentType, MutateCommentProps } from "../types/comments.types";
+import type { WeavyProps } from "../types/weavy.types";
 
 import "./wy-attachment";
 import "./wy-image-grid";
@@ -26,7 +27,6 @@ import "./wy-icon";
 import "./wy-editor";
 
 import chatCss from "../scss/all.scss"
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 @customElement("wy-comment-edit")
 @localized()
@@ -43,11 +43,11 @@ export default class WyCommentEdit extends LitElement {
   @property({ type: Number })
   parentId!: number;
 
+  @property({ attribute: false })
+  location: "posts" | "files" | "apps" = "apps";
+
   @property({ type: Number })
   commentId!: number;
-
-  @property({ type: Boolean })
-  temp: boolean = false;
 
   @property({ attribute: false })
   createdBy!: MemberType;
@@ -89,7 +89,7 @@ export default class WyCommentEdit extends LitElement {
     CommentType,
     Error,
     MutateCommentProps,
-    CommentMutationContextType
+    unknown
   >(this);
 
 
@@ -101,7 +101,7 @@ export default class WyCommentEdit extends LitElement {
   private handleSubmit(e: CustomEvent) {
     this.updateCommentMutation.mutate({
       id: this.commentId,
-      type: "apps",
+      type: this.location,
       parentId: this.parentId,
       text: e.detail.text,
       meetingId: e.detail.meetingId,
@@ -117,7 +117,7 @@ export default class WyCommentEdit extends LitElement {
   override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     if ((changedProperties.has("parentId") || changedProperties.has("weavy")) && this.parentId && this.weavy) {
       this.updateCommentMutation.trackMutation(
-        getUpdateCommentMutationOptions(this.weavy, ["comments", this.parentId])
+        getUpdateCommentMutationOptions(this.weavy, [this.location, this.parentId, "comments"])
       );
     }
   }
@@ -134,7 +134,7 @@ export default class WyCommentEdit extends LitElement {
         </wy-button>
       </nav>
       <wy-editor
-        editorLocation="posts"
+        editorLocation=${this.location}
         .text=${this.text}
         .embed=${this.embed}
         .options=${this.pollOptions}

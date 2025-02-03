@@ -33,6 +33,12 @@
   gap: var.default(--wy-button-gap);
   position: relative;
 
+  &[part~="wy-button-sm"] {
+    height: calc(var.default(--wy-button-size) * .8); // 2.5rem * 0.8 = 32px
+    padding: calc(var.default(--wy-button-padding-y) * .25) calc(var.default(--wy-button-padding-x) * .5);
+    
+  }
+
   &:disabled {
     opacity: var.default(--wy-opacity-disabled);
     cursor: unset;
@@ -59,11 +65,6 @@
     opacity: 0%;
   }
   
-  &[part~=wy-button-sm]::before {
-    margin: calc(var.default(--wy-button-padding-x) * -.25) calc(var.default(--wy-button-padding-x) * -.25);
-    border-radius: var.default(--wy-button-border-radius);
-  }
-
   &:hover {
     &::before {
       opacity: 8%;
@@ -91,10 +92,14 @@
   justify-content: center;
 
   &[part~="wy-button-sm"] {
-    height: calc(var.default(--wy-button-size) * .625);
-    width: calc(var.default(--wy-button-size) * .625);
+    height: calc(var.default(--wy-button-size) * .6); // 2.5rem * 0.6 = 24px
+    width: calc(var.default(--wy-button-size) * .6);  
     padding: 0;
     margin: calc(var.default(--wy-button-padding-y) * .5);
+
+    &[part~="wy-button-state-layer"]::before {
+      margin: calc(var.default(--wy-button-size) * -.1); // -4px
+    }
   }
 
   &[part~="wy-active"] {
@@ -102,25 +107,27 @@
   }
 }
 
-[part~="wy-button-icon-inline"] {
-  height: var.default(--wy-button-size);
+// button with icon(s) and optional text
+[part~="wy-button-icon-inline"] {  
+  height: var.default(--wy-button-size);  
   width: auto;
   min-width: var.default(--wy-button-size);
   background: var(--wy-component-background-color);
   color: currentColor;
-  //border-radius: var.default(--wy-button-border-radius);
   display: flex;
   padding: var.default(--wy-button-padding-y);
 
-  &[part~="wy-button-sm"] {
-    height: calc(var.default(--wy-button-size) * .625);
-    padding: calc(var.default(--wy-button-padding-y) * .25) 0;
+  &[part~="wy-button-sm"] {    
+    height: calc(var.default(--wy-button-size) * .6); // 2.5rem * 0.6 = 24px
+    min-width: calc(var.default(--wy-button-size) * .6);
+    padding: calc(var.default(--wy-button-padding-y) * .25);
     margin: calc(var.default(--wy-button-padding-y) * .5);
-    min-width: calc(var.default(--wy-button-size) * .625);
+
+    &[part~="wy-button-state-layer"]::before {
+      margin: calc(var.default(--wy-button-size) * -.1); // -4px
+    }
   }
 }
-
-
 
 [part~="wy-button-inline"] {
   border-radius: var.default(--wy-border-radius-pill);

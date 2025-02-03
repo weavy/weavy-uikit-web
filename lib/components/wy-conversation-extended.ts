@@ -1,26 +1,20 @@
 import { html, type PropertyValues, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { type ConversationType } from "../types/conversations.types";
-import type { MemberType, MembersResultType } from "../types/members.types";
-import { getMemberOptions } from "../data/members";
+import { customElement } from "../utils/decorators/custom-element";
+import { state } from "lit/decorators.js";
+import type { MemberType } from "../types/members.types";
 import { updateCacheItem } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
-import type {
-  RealtimeAppEventType,
-  RealtimeConversationDeliveredEventType,
-  RealtimeConversationMarkedEventType,
-} from "../types/realtime.types";
+import type { RealtimeAppEventType, RealtimeAppMarkedEventType } from "../types/realtime.types";
 import { WeavyProps } from "../types/weavy.types";
 import { hasPermission } from "../utils/permission";
 import { ref } from "lit/directives/ref.js";
-import { QueryController } from "../controllers/query-controller";
-import { PermissionTypes } from "../types/app.types";
+import { PermissionType } from "../types/app.types";
 
 import WyConversation from "./wy-conversation";
 import "./wy-empty";
 import "./wy-messages";
-import "./wy-message-editor";
+import "./wy-editor-message";
 import "./wy-message-typing";
 import "./wy-spinner";
 
@@ -30,8 +24,6 @@ export default class WyConversationExtended extends WyConversation {
   @state()
   protected conversationTitle: string = "";
 
-  membersQuery = new QueryController<MembersResultType>(this);
-
   private handleRealtimeAppUpdated = (realtimeEvent: RealtimeAppEventType) => {
     if (!this.conversation || realtimeEvent.app.id !== this.conversation.id) {
       return;
@@ -40,8 +32,8 @@ export default class WyConversationExtended extends WyConversation {
     this.conversationTitle = realtimeEvent.app.display_name;
   };
 
-  private handleRealtimeSeenBy = (realtimeEvent: RealtimeConversationMarkedEventType) => {
-    if (!this.weavy || !this.conversation || realtimeEvent.conversation.id !== this.conversation.id) {
+  private handleRealtimeMarked = (realtimeEvent: RealtimeAppMarkedEventType) => {
+    if (!this.weavy || !this.conversation) {
       return;
     }
 
@@ -56,26 +48,6 @@ export default class WyConversationExtended extends WyConversation {
     );
   };
 
-  private handleRealtimeDelivered = (realtimeEvent: RealtimeConversationDeliveredEventType) => {
-    if (
-      !this.weavy ||
-      !this.conversation ||
-      realtimeEvent.actor.id === this.user!.id ||
-      realtimeEvent.conversation.id !== this.conversation!.id
-    ) {
-      return;
-    }
-
-    updateCacheItem(
-      this.weavy.queryClient,
-      ["members", this.conversation.id],
-      realtimeEvent.actor.id,
-      (item: MemberType) => {
-        item.delivered_at = realtimeEvent.delivered_at;
-      }
-    );
-  };
-
   #unsubscribeToRealtime?: () => void;
 
   protected override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
@@ -86,11 +58,6 @@ export default class WyConversationExtended extends WyConversation {
       if (changedProperties.has("conversation") && this.conversation) {
         this.conversationTitle = this.conversation.display_name;
       }
-
-      if (!this.conversation) {
-        //console.log("no more conversation")
-        this.membersQuery.untrackQuery();
-      }
     }
 
     if (
@@ -98,38 +65,17 @@ export default class WyConversationExtended extends WyConversation {
       this.weavy &&
       this.conversationId !== changedProperties.get("conversationId")
     ) {
-      if (this.conversationId && this.hasFeatures?.receipts) {
-        this.membersQuery.trackQuery(
-          getMemberOptions(this.weavy, this.conversationId, {
-            initialData: () => {
-              // Use any data from the conversation query as the initial data for the member query
-              if (this.conversation?.id) {
-                return this.weavy?.queryClient.getQueryData<ConversationType>([
-                  "conversations",
-                  this.conversation.id,
-                ])?.members;
-              }
-              return undefined;
-            },
-          })
-        );
-      } else {
-        this.membersQuery.untrackQuery();
-      }
-
       this.#unsubscribeToRealtime?.();
 
       if (this.conversationId) {
         const subscribeGroup = `a${this.conversationId}`;
 
         this.weavy.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
-        this.weavy.subscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
-        this.weavy.subscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
+        this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
 
         this.#unsubscribeToRealtime = () => {
-          this.weavy?.unsubscribe(subscribeGroup, "conversation_marked", this.handleRealtimeSeenBy);
+          this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
           this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
-          this.weavy?.unsubscribe(subscribeGroup, "conversation_delivered", this.handleRealtimeDelivered);
           this.#unsubscribeToRealtime = undefined;
         };
       }
@@ -137,8 +83,7 @@ export default class WyConversationExtended extends WyConversation {
   }
 
   override render() {
-    const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
-    const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
+    const { data: infiniteData, isPending: messagesIsPending, hasNextPage } = this.messagesQuery.result ?? {};
     const { data: membersData, isPending: membersIsPending } = this.membersQuery.result ?? {};
 
     const otherMember =
@@ -149,7 +94,7 @@ export default class WyConversationExtended extends WyConversation {
     return html`
       ${this.conversation && infiniteData
         ? html`
-            ${!hasNextPage && !isPending
+            ${!hasNextPage && !messagesIsPending
               ? html`
                   <wy-avatar-header>
                     ${this.conversation.avatar_url
@@ -179,7 +124,7 @@ export default class WyConversationExtended extends WyConversation {
               .members=${membersData}
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
-              .unreadMarkerShow=${this.lastReadMessageShow}
+              .unreadMarkerShow=${this.showNewMessages}
               @vote=${(e: CustomEvent) => {
                 this.pollMutation?.mutate({
                   optionId: e.detail.id,
@@ -188,7 +133,7 @@ export default class WyConversationExtended extends WyConversation {
                 });
               }}
             >
-              <div slot="start" ${ref(this.pagerRef)} part="wy-pager"></div>
+              ${hasNextPage ? html`<div slot="start" ${ref(this.pagerRef)} part="wy-pager wy-pager-top"></div>` : nothing}
               <wy-message-typing
                 slot="end"
                 .conversationId=${this.conversation.id}
@@ -202,19 +147,21 @@ export default class WyConversationExtended extends WyConversation {
         : html`
             <div class="wy-messages">
               <wy-empty class="wy-pane">
-                ${isPending || membersIsPending || !this.conversation
+                ${messagesIsPending || membersIsPending || !this.conversation
                   ? html`<wy-spinner overlay></wy-spinner>`
                   : msg("Start the conversation!")}
               </wy-empty>
             </div>
           `}
-      ${this.conversation && hasPermission(PermissionTypes.Create, this.conversation?.permissions)
+      ${this.conversation
         ? html`
+            <div ${ref(this.bottomRef)}></div>
             <div class="wy-footerbar wy-footerbar-sticky">
               <wy-message-editor
                 .app=${this.conversation}
                 .draft=${true}
                 placeholder=${msg("Type a message...")}
+                ?disabled=${!hasPermission(PermissionType.Create, this.conversation?.permissions)}
                 @submit=${(e: CustomEvent) => this.handleSubmit(e)}
               ></wy-message-editor>
             </div>

@@ -34,7 +34,7 @@ export class ThemeController implements ReactiveController {
     const nextThemeColor = this.themeColor || getCSSThemeColor(this.host) || getMetaThemeColor();
     if (nextThemeColor && nextThemeColor !== this._resolvedThemeColor) {
       this._resolvedThemeColor = nextThemeColor;
-      console.log("Configuring theme", this._resolvedThemeColor);
+      console.info("Configuring theme", this._resolvedThemeColor);
       const themeColors = generateThemeColors(this._resolvedThemeColor).join("");
       const colorCSS = css`
         :host {

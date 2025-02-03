@@ -29,7 +29,6 @@ export function getNotificationsOptions(
   appIdOrUid?: string | number,
   options: object = {}
 ): InfiniteQueryObserverOptions<NotificationsResultType, Error, InfiniteData<NotificationsResultType>> {
-  const PAGE_SIZE = 25;
   return {
     ...options,
     initialPageParam: 0,
@@ -37,7 +36,6 @@ export function getNotificationsOptions(
     queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const queryParams = new URLSearchParams({
         skip: opt.pageParam?.toString() || "0",
-        top: PAGE_SIZE.toString(),
         type: type,
       });
 
@@ -48,9 +46,9 @@ export function getNotificationsOptions(
       result.data = result.data || [];
       return result;
     },
-    getNextPageParam: (lastPage, pages) => {
-      if (lastPage.end && lastPage?.end < lastPage?.count) {
-        return pages.length * PAGE_SIZE;
+    getNextPageParam: (lastPage) => {
+      if (lastPage.end && lastPage.end < lastPage.count) {
+        return lastPage.end;
       }
       return undefined;
     },
@@ -219,7 +217,7 @@ export function getBadgeOptions(
 ) {
   const queryParams = new URLSearchParams({
     type: type,
-    countOnly: "true",
+    count_only: "true",
     unread: "true",
   });
 

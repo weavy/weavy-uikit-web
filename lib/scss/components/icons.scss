@@ -45,9 +45,9 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  background: var(--wy-component-background-color, #{color.token(--wy-background)});
+  //background: var(--wy-component-background-color, #{color.token(--wy-background)});
   border-radius: 50%;
-  border: 1px solid var(--wy-component-background-color, #{color.token(--wy-background)});
+  //border: 1px solid var(--wy-component-background-color, #{color.token(--wy-background)});
 }
 
 // stacked icons (icon+overlay icon)
@@ -66,7 +66,7 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  background-color: var(--wy-component-background-color, #{color.token(--wy-background)});
+  //background-color: var(--wy-component-background-color, #{color.token(--wy-background)});
   border-radius: 50%;
   width: calc(var(--wy-component-icon-width) / 2);
   height: calc(var(--wy-component-icon-height) / 2);
@@ -92,8 +92,8 @@
 }
 
 // big file type icon
-:host(wy-icon-display), [part~=wy-icon-display] {
-  color: var(--wy-component-color, color.token(--wy-on-surface-variant));
+[part~=wy-icon-display] {
+  color: color.token(--wy-on-surface-variant); // Default currentColor
   border-radius: var(--wy-component-border-radius, var.default(--wy-border-radius));
   display: flex;
   align-items: center;
@@ -105,6 +105,7 @@
 }
 
 [part~=wy-icon-display-icon] {
+  color: var(--wy-component-color);
   --wy-component-icon-width: #{var.wy-rem(4)};
   --wy-component-icon-height: #{var.wy-rem(4)};
   padding: var.wy-rem(1) var.wy-rem(2);
@@ -113,6 +114,7 @@
 // Name after content icon
 [part~=wy-icon-display-text],
 [part~=wy-icon-display-meta] {
+  color: var(--wy-component-color);
   padding: var.wy-rem(1) var.wy-rem(2);
   text-align: center;
 }

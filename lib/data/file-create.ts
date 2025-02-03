@@ -36,7 +36,7 @@ export const getTempFile = (
     thumbnail_url: srcUrl,
     preview_url: srcUrl,
     download_url: srcUrl,
-    version: -1,
+    rev: -1,
     created_by: user,
     created_at: new Date().toUTCString(),
     is_subscribed: false,
@@ -218,7 +218,7 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
           }
         });
       } else {
-        const errorId = context!.file?.refId || context!.file?.id;
+        const errorId = context?.file?.refId || context?.file?.id;
         if (errorId) {
           if (errorId >= 1) {
             //updateCacheItem(queryClient, filesKey, errorId, (file: FileType) => Object.assign(file, { status: "error", statusText: error.detail || error.title, progress: undefined }));

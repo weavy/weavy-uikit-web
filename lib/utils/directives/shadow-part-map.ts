@@ -67,7 +67,7 @@ class ShadowPartMapDirective extends Directive {
       for (const name of this._previousShadowParts) {
         if (!(name in shadowPartInfo)) {
           partList.remove(name);
-          this._previousShadowParts!.delete(name);
+          this._previousShadowParts.delete(name);
         }
       }
   

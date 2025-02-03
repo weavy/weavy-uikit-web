@@ -1,5 +1,6 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { Presence, type PresenceType } from "../types/presence.types";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";

@@ -15,3 +15,4 @@ export declare function weavyAuthServer(command: "build" | "serve" = "serve"): {
     };
     configureServer(server: ViteDevServer): void;
 } | undefined;
+export declare function excludeNodeInPdfJS(): import("vite").Plugin<any>;

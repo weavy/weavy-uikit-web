@@ -1,5 +1,6 @@
 import { LitElement, PropertyValueMap, PropertyValues, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
@@ -10,9 +11,9 @@ import type { FileOpenEventType, FileType } from "../types/files.types";
 import { PollOptionType } from "../types/polls.types";
 import type { EmbedType } from "../types/embeds.types";
 import { relativeTime } from "../utils/datetime";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { EntityTypes } from "../types/app.types";
+import { EntityTypeString } from "../types/app.types";
 import { isEntityChainMatch } from "../utils/notifications";
 
 import chatCss from "../scss/all.scss";
@@ -33,7 +34,7 @@ import "./wy-skeleton";
 
 @customElement("wy-comment-view")
 @localized()
-export default class WyCommentView extends BlockConsumerMixin(LitElement) {
+export default class WyCommentView extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -44,8 +45,8 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
   @property({ type: Number })
   parentId!: number;
 
-  @property({ type: Boolean })
-  temp: boolean = false;
+  @property({ attribute: false })
+  location: "posts" | "files" | "apps" = "apps";
 
   @property({ attribute: false })
   createdBy!: MemberType;
@@ -103,7 +104,7 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>) {
     if (changedProperties.has("link")) {
-      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Comment, { id: this.commentId }));
+      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.commentId }));
     }
 
     if (changedProperties.has("highlight")) {
@@ -125,8 +126,8 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
     }).format(new Date(this.createdAt));
     const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.createdAt));
 
-    return this.temp
-      ? html`<div class="wy-item wy-comment-header">
+    return this.commentId < 0
+      ? html`<div class="wy-item wy-item-sm wy-comment-header">
             <wy-avatar
               .src="${this.createdBy.avatar_url}"
               .size=${32}
@@ -229,18 +230,15 @@ export default class WyCommentView extends BlockConsumerMixin(LitElement) {
                 lineBottom
                 small
                 .reactions=${this.reactions}
+                parentType=${this.location}
                 parentId=${this.parentId}
                 entityId=${this.commentId}
-                messageType="comments"
+                entityType="comments"
               ></wy-reactions>`
             : nothing}
-
-          <wy-preview
-            ${ref(this.previewRef)}
-            .uid=${`comment-${this.parentId}-${this.commentId.toString()}`}
-            .files=${this.attachments}
-            .isAttachment=${true}
-          ></wy-preview> `;
+          ${this.attachments?.length
+            ? html`<wy-preview ${ref(this.previewRef)} .files=${this.attachments} .isAttachment=${true}></wy-preview> `
+            : nothing} `;
   }
 
   protected override updated(changedProperties: PropertyValues<this>) {

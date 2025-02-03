@@ -9,7 +9,7 @@
   line-height: 1;
   width: 1em;
   height: 1em;
-  font-size: 1.25em;
+  font-size: var.wy-rem(1.25);
 }
 
 .wy-emoji-icon-sm {
@@ -18,8 +18,3 @@
   font-size: var.wy-rem(1.125);
 }
 
-.wy-emoji-icon-xs {
-  width: var.wy-rem(1.125);
-  height: var.wy-rem(1.125);
-  font-size: var.wy-rem(1);
-}

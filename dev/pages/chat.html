@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html style="--wy-theme-color: #61afef;">
+<html style="--wy-theme-color: #61afef">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
     <script>
       //fetch("/api/contextual/acme-chat?type=chat")
     </script>
@@ -11,22 +11,24 @@
     <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
     <style>
       :root {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          "Open Sans", "Helvetica Neue", sans-serif;
       }
 
       * {
-        box-sizing: border-box;;
+        box-sizing: border-box;
       }
-  
-      html, body {
+
+      html,
+      body {
         margin: 0;
         padding: 0;
         height: 100%;
       }
-  
+
       .toolbar {
         height: 3rem;
-        padding: .5rem;
+        padding: 0.5rem;
         display: flex;
         justify-content: center;
       }
@@ -35,27 +37,35 @@
         height: calc(100vh - 3rem);
 
         /* iPhone compatible height */
-        @supports(height: 100dvh) {
+        @supports (height: 100dvh) {
           height: calc(100dvh - 3rem);
         }
       }
     </style>
     <script>
       function toggle() {
-        const chat = document.querySelector('wy-chat');
+        const chat = document.querySelector("wy-chat");
         chat.hidden = !chat.hidden;
       }
     </script>
   </head>
   <body>
-    <wy-context 
-        url="%WEAVY_URL%" 
-        reactions='["👍", "❤️", "😂", "😒", "😁"]' 
-        confluenceAuthenticationUrl="%WEAVY_CONFLUENCE_AUTH_URL%"
-        confluenceProductName="%WEAVY_CONFLUENCE_PRODUCT_NAME%"
-        tokenUrl="/api/token"></wy-context>
-        <div class="toolbar"><button onclick="toggle()">Toggle</button></div>
-        <wy-chat uid="acme-chat" name="Acme Chit Chat"></wy-chat>
-        <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
+    <wy-context url="%WEAVY_URL%" reactions='["👍", "❤️", "😂", "😒", "😁"]' tokenUrl="/api/token"></wy-context>
+    <div class="toolbar"><button onclick="toggle()">Toggle</button></div>
+    <wy-chat uid="acme-chat" name="Acme Chit Chat"></wy-chat>
+    <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
+    <script>
+      const chat = document.querySelector("wy-chat");
+      chat.addEventListener("wy-preview-open", (e) => {
+        if (window.top !== window.self) {
+          console.log("requesting external preview", e.detail.fileId, e.detail.tab);
+          window.top.postMessage({
+            name: "wy-preview-open",
+            ...e.detail,
+          });
+          e.preventDefault();
+        }
+      });
+    </script>
   </body>
 </html>

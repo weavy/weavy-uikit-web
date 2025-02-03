@@ -1,11 +1,12 @@
-import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { LitElement, html, nothing } from "lit";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ref } from "lit/directives/ref.js";
 import type { FileOpenEventType, FileType } from "../types/files.types";
+import { checkImageLoad, imageLoaded } from "../utils/images";
 
 import chatCss from "../scss/all.scss"
-import { checkImageLoad, imageLoaded } from "../utils/images";
 
 @customElement("wy-image-grid")
 export default class WyImageGrid extends LitElement {
@@ -39,15 +40,15 @@ export default class WyImageGrid extends LitElement {
     return html`
       <div class="wy-image-grid">
         ${images.map((a: FileType, idx: number) => {
-          const ratio = a.width! / a.height! || 1;
+          const ratio = a.width && a.height ? a.width / a.height : 1;
           const baseSize = 64;
           const maxScale = 2;
           const flexRatio = ratio.toPrecision(5);
           const flexBasis = (ratio * baseSize).toPrecision(5) + "px";
           const padding = (100 / ratio).toPrecision(5) + "%";
           const intrinsicWidth = a.width + "px";
-          const maxWidth = a.width! > 0 ? maxScale * a.width! + "px" : "none";
-          return html`
+          const maxWidth = a.width && a.width > 0 ? maxScale * a.width + "px" : "none";
+          return a.preview_url ? html`
             <a
               href="#"
               @click=${(e: Event) => {
@@ -63,7 +64,7 @@ export default class WyImageGrid extends LitElement {
               })}>
               <div class="wy-image-area" style=${styleMap({ paddingBottom: padding })}>
                 <img
-                  src=${a.preview_url!}
+                  src=${a.preview_url}
                   ${ref(checkImageLoad)}
                   @load=${imageLoaded}
                   alt=""
@@ -72,7 +73,7 @@ export default class WyImageGrid extends LitElement {
                 ${idx === images.length - 1 && more ? html`<span class="wy-more">+${more}</span>` : ``}
               </div>
             </a>
-          `;
+          ` : nothing;
         })}
       </div>
     `;

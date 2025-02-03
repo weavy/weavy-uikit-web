@@ -1,10 +1,9 @@
-import { LitElement, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { html } from "lit";
+import { customElement } from "./utils/decorators/custom-element";
 import { localized } from "@lit/localize";
-import { ContextualTypes } from "./types/app.types";
+import { AppTypeString } from "./types/app.types";
 import { ThemeController } from "./controllers/theme-controller";
-import { BlockProviderMixin } from "./mixins/block-mixin";
-import { Constructor } from "./types/generic.types";
+import { WeavyComponent } from "./classes/weavy-component";
 import { ProductTypes } from "./types/product.types";
 
 import colorModesStyles from "./scss/color-modes.scss";
@@ -19,13 +18,29 @@ import "./components/wy-spinner";
 import "./components/wy-button";
 import "./components/wy-notification-button-list";
 
-@customElement("wy-comments")
+export const WY_COMMENTS_TAGNAME = "wy-comments";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_COMMENTS_TAGNAME]: WyComments;
+  }
+}
+
+/**
+ * Weavy component to render contextual comments.
+ *
+ * @element wy-comments
+ * @class WyComments
+ * @fires wy-preview-open {WyPreviewOpenEventType}
+ * @fires wy-preview-close {WyPreviewCloseEventType}
+ */
+@customElement(WY_COMMENTS_TAGNAME)
 @localized()
-export class WyComments extends BlockProviderMixin(LitElement) {
+export class WyComments extends WeavyComponent {
   static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
   override productType = ProductTypes.Comments;
-  override contextualType = ContextualTypes.Comments;
+  override componentType = AppTypeString.Comments;
 
   constructor() {
     super();
@@ -33,19 +48,17 @@ export class WyComments extends BlockProviderMixin(LitElement) {
   }
 
   override render() {
-    return this.app && this.user
+    return this.app
       ? html`
           <wy-buttons floating reverse>
             <wy-notification-button-list></wy-notification-button-list>
           </wy-buttons>
-          <wy-comment-list parentId=${this.app?.id} .location=${"apps"}></wy-comment-list>
+          <wy-comment-list parentId=${this.app.id} .location=${"apps"}></wy-comment-list>
         `
       : html`
           <wy-empty>
-            <wy-spinner padded></wy-spinner>
+            <wy-spinner padded reveal></wy-spinner>
           </wy-empty>
         `;
   }
 }
-
-export type WyCommentsType = Constructor<WyComments>;

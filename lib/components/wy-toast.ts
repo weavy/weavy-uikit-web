@@ -1,5 +1,6 @@
 import { LitElement, type PropertyValues, html, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { whenElementVisible } from "../utils/dom";

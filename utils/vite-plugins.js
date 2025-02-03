@@ -114,3 +114,23 @@ export function weavyAuthServer(command = "serve") {
       }
     : undefined;
 }
+
+/**
+ * Explicitly sets `isNodeJS = true` in pdf.mjs, which enables treeshaking of all node specific stuff.
+ */
+export function excludeNodeInPdfJS() {
+  const fileRegex = /pdfjs-dist\/.*\/pdf\.mjs$/;
+  return {
+    name: "fix-pdfjs",
+
+    transform(src, id) {
+      if (fileRegex.test(id)) {
+        const isNodeRegex = /const isNodeJS = (.*);/;
+        return {
+          code: src.replace(isNodeRegex, "const isNodeJS = false;"),
+          map: null, // provide source map if available
+        };
+      }
+    },
+  };
+}

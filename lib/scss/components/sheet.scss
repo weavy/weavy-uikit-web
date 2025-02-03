@@ -68,5 +68,10 @@
     // transition show
     transition: transform var.default(--wy-transition), opacity var.default(--wy-transition);
     pointer-events: auto;
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(var.wy-rem(32));
+    }
   }
 }

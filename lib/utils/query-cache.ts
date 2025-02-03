@@ -1,21 +1,7 @@
 import { InfiniteData, NoInfer, QueryClient, QueryFilters, QueryKey, SetDataOptions } from "@tanstack/query-core";
 import { PlainObjectType } from "../types/generic.types";
 import { InfiniteQueryResultType, QueryResultType } from "../types/query.types";
-
-// export const getCacheItem = <T>(queryClient: QueryClient, key: QueryKey, id: number): T | null => {
-
-//     const data = queryClient.getQueryData<any>(key);
-//     if (data) {
-//         if (data.pages) {
-//             const items = data.pages.map((p: any) => p.data).flat();
-//             return items.find((i: any) => i.id === id)
-//         } else {
-//             // not paged data...
-//         }
-//     }
-
-//     return null;
-// }
+import { MsgType } from "../types/msg.types";
 
 export function findAnyExistingItem<TDataItem extends PlainObjectType>(
   queryData: InfiniteData<InfiniteQueryResultType<TDataItem>> | QueryResultType<TDataItem> | undefined,
@@ -76,7 +62,7 @@ export function addToQueryData<
 
           const pageData = page.data || [];
 
-          // remove any previous item or tempId
+          // remove any existing item
           const newData = pageData.filter(
             (pageItem) =>
               pageItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || pageItem.id !== previousId)
@@ -85,8 +71,8 @@ export function addToQueryData<
           if (sorting && sorting.by) {
             // Use sorting
             foundIndex = newData.findIndex((pageItem) => {
-              let pageItemValue = pageItem[sorting.by!];
-              let itemValue = (item as TDataItem & PlainObjectType)[sorting.by!];
+              let pageItemValue = sorting.by && pageItem[sorting.by];
+              let itemValue = sorting.by && (item as TDataItem & PlainObjectType)[sorting.by];
 
               // updated_at should fallback to created_at
               if (sorting.by === "updated_at") {
@@ -154,7 +140,7 @@ export function addToQueryData<
     } else if ((queryData as QueryResultType<TDataItem>)?.data?.length) {
       // not paged data...
       let foundIndex = -1;
-      // remove any previous item or tempId
+      // remove existing item
       const newData = [
         ...((queryData as QueryResultType<TDataItem>).data?.filter(
           (dataItem) =>
@@ -167,8 +153,8 @@ export function addToQueryData<
       if (sorting && sorting.by) {
         // Use sorting
         foundIndex = newData.findIndex((dataItem) => {
-          let dataItemValue = dataItem[sorting.by!];
-          let itemValue = (item as TDataItem & PlainObjectType)[sorting.by!];
+          let dataItemValue = dataItem[sorting.by as string];
+          let itemValue = (item as TDataItem & PlainObjectType)[sorting.by as string];
 
           // updated_at should fallback to created_at
           if (sorting.by === "updated_at") {
@@ -348,11 +334,10 @@ export const addCacheItem = <
   queryClient: QueryClient,
   key: QueryKey,
   item: T,
-  tempId?: number,
   sorting?: { by?: string; descending?: boolean }
 ): TQueryFnData | undefined => {
   return queryClient.setQueryData<TQueryFnData>(key, (data) => {
-    return addToQueryData<T>(data, item, sorting, tempId) as NoInfer<TQueryFnData> | undefined;
+    return addToQueryData<T>(data, item, sorting) as NoInfer<TQueryFnData> | undefined;
   });
 };
 
@@ -365,12 +350,11 @@ export const addCacheItems = <
   queryClient: QueryClient,
   filters: QueryFilters<TQueryFnData>,
   item: T,
-  tempId?: number,
   sorting?: { by?: string; descending?: boolean }
 ): T | void => {
   queryClient.setQueriesData<TQueryFnData>(
     filters,
-    (data) => addToQueryData<T>(data, item, sorting, tempId) as NoInfer<TQueryFnData> | undefined
+    (data) => addToQueryData<T>(data, item, sorting) as NoInfer<TQueryFnData> | undefined
   );
 };
 
@@ -453,27 +437,15 @@ export const updateCacheItemsCount = <T extends PlainObjectType>(
   });
 };
 
-// export const setCacheItem = (queryClient: QueryClient, key: QueryKey, id: number, updated: any) => {
-//     const data = queryClient.getQueryData<any>(key);
-//     if (data) {
-//         if (data.pages) {
-//             const newPagesArray = data.pages.map((page: any, i: number) => {
-//                 // update entity
-//                 page.data = [...page.data.map((item: any) => item.id === id ? updated : item)]
-//                 return page;
-//             }) ?? [];
-
-//             queryClient.setQueryData(key, (data: any) => ({
-//                 pages: newPagesArray,
-//                 pageParams: data.pageParams,
-//             }));
-//         } else {
-//             // not paged data...
-//         }
-//     }
-// }
-
-export function keepFirstPage(queryClient: QueryClient, queryKey: QueryKey, options?: SetDataOptions) {
+export function keepPages(
+  queryClient: QueryClient | undefined,
+  queryKey: QueryKey,
+  options?: SetDataOptions,
+  pagesLength: number = 1
+) {
+  if (!queryClient) {
+    return;
+  }
   const currentData: InfiniteData<unknown> | undefined = queryClient.getQueryData(queryKey);
 
   if (currentData?.pages?.length && currentData.pages.length > 1) {
@@ -481,11 +453,61 @@ export function keepFirstPage(queryClient: QueryClient, queryKey: QueryKey, opti
       queryKey,
       (data: InfiniteData<unknown>) => {
         return {
-          pages: data.pages.slice(0, 1),
-          pageParams: data.pageParams.slice(0, 1),
+          pages: data.pages.slice(0, pagesLength),
+          pageParams: data.pageParams.slice(0, pagesLength),
         };
       },
       options
     );
   }
+}
+
+/**
+ * Get a pending/placeholder item from (infinite) data in query cache (pending messages are identified by negative ids).
+ *
+ * @param {QueryClient} queryClient
+ * @param {QueryKey} queryKey
+ * @param {boolean} oldest - true to return the oldest pending item, false to return the most recent.
+ */
+export function getPendingCacheItem<T extends MsgType>(queryClient: QueryClient, queryKey: QueryKey, oldest: boolean) {
+  const query = queryClient.getQueryCache().find<InfiniteData<InfiniteQueryResultType<T>>>({ queryKey: queryKey });
+
+  if (query && query.state.data) {
+    // find pending items in cache and sort them in ascending order
+    const pendingItems = query.state.data.pages
+      .flatMap((pages) => pages.data)
+      .filter((item) => item && item.id < 0)
+      .sort((a, b) => a && b ? a.id - b.id : 0);
+
+    return pendingItems.length ? (oldest ? pendingItems[pendingItems.length - 1] : pendingItems[0]) : null;
+  }
+  return null;
+}
+
+/**
+ * Get item with specified id from (infinite) data in query cache.
+ *
+ * @param {QueryClient} queryClient
+ * @param {QueryKey} queryKey
+ * @param {number} id - id of the item to find.
+ */
+export function getCacheItem<T extends PlainObjectType>(queryClient: QueryClient, queryKey: QueryKey, id: number) {
+  const query = queryClient.getQueryCache().find<InfiniteData<InfiniteQueryResultType<T>>>({ queryKey: queryKey });
+
+  if (query && query.state.data) {
+    return query.state.data.pages.flatMap((pages) => pages.data).find((item) => item?.id === id);
+  }
+  return null;
+}
+
+/**
+ * Flattens a paged infinite query result to an array.
+ *
+ * @param data Infinite query result data
+ * @returns Flattened Array of the infinite query paged result
+ */
+export function getFlatInfiniteResultData<T extends PlainObjectType>(
+  data: InfiniteData<InfiniteQueryResultType<T>, unknown> | undefined
+) {
+  return (data?.pages.flatMap((page) => page.data) || []).filter((f) => f) as T[];
 }

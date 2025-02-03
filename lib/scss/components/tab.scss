@@ -10,6 +10,7 @@
     //container-type: inline-size;
     overflow-y: hidden;
     padding: var.default(--wy-padding);
+    flex: 1 1 auto;
 
     @include scroll.scroll-x;    
     @include scroll.thin-scrollbar;
@@ -87,7 +88,7 @@
     padding: var.default(--wy-button-padding-y) calc(var.default(--wy-button-padding-x) * .5);
     margin: var.default(--wy-padding) auto;
     font-size: var.default(--wy-font-size-sm);
-    height: calc(var.default(--wy-button-size) * .625);
+    height: calc(var.default(--wy-button-size) * .6);
     &::before {
         margin: calc(var.default(--wy-button-padding-x) * -.25) calc(var.default(--wy-button-padding-x) * 0);
     }

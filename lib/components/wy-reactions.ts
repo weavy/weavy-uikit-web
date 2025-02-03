@@ -1,19 +1,15 @@
 import { LitElement, html, nothing, css, type PropertyValueMap, PropertyValues } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
 import type { ReactableType, ReactionsResultType } from "../types/reactions.types";
-import {
-  addReactionMutation,
-  getReactionListOptions,
-  removeReactionMutation,
-  replaceReactionMutation,
-} from "../data/reactions";
+import { reactionMutation, getReactionListOptions } from "../data/reactions";
 import { QueryController } from "../controllers/query-controller";
 import { WeavyProps } from "../types/weavy.types";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
@@ -32,7 +28,7 @@ import emojiCss from "../scss/components/emoji.scss";
 
 @customElement("wy-reactions")
 @localized()
-export default class WyReactions extends BlockConsumerMixin(LitElement) {
+export default class WyReactions extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     rebootCss,
     reactionCss,
@@ -61,11 +57,14 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   @property({ attribute: false })
   emojis: string[] = [];
 
-  @property({ attribute: true, type: String })
-  messageType: "messages" | "posts" | "comments" = "messages";
+  @property({ type: String })
+  parentType: "posts" | "files" | "apps" = "apps";
 
   @property({ attribute: true, type: Number })
   parentId?: number;
+
+  @property({ attribute: true, type: String })
+  entityType: "messages" | "posts" | "comments" = "messages";
 
   @property({ attribute: true, type: Number })
   entityId!: number;
@@ -92,7 +91,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   show: boolean = false;
 
   @state()
-  private showSheet: boolean = false;
+  showSheet: boolean = false;
 
   private buttonRef: Ref<Element> = createRef();
   private menuRef: Ref<HTMLSlotElement> = createRef();
@@ -106,13 +105,13 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
       e.preventDefault();
 
       if (!this.menuRef.value?.popover) {
-        this.show = false
+        this.show = false;
       }
     }
   };
 
   private handleClose(e: ToggleEvent) {
-    if (e.type === "toggle" && e.newState === "closed" || e.type === "click") {
+    if ((e.type === "toggle" && e.newState === "closed") || e.type === "click") {
       this.show = false;
       this.dispatchEvent(new CustomEvent("close"));
       this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
@@ -124,47 +123,24 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     this.show = !this.show;
   }
 
-  private handleReaction = async (emoji: string) => {
+  private handleReaction = async (emoji: string | undefined) => {
     if (!this.weavy || !this.parentId || !this.user) {
       return;
     }
 
-    if (this.reactedEmoji === emoji) {
-      this.reactedEmoji = undefined;
-      const mutation = await removeReactionMutation(
-        this.weavy,
-        this.parentId,
-        this.entityId,
-        this.messageType,
-        this.user
-      );
-      await mutation.mutate();
-      this.reactionListQuery.observer?.refetch();
-    } else if (this.reactedEmoji === undefined) {
-      this.reactedEmoji = emoji;
-      const mutation = await addReactionMutation(
-        this.weavy,
-        this.parentId,
-        this.entityId,
-        this.messageType,
-        emoji,
-        this.user
-      );
-      await mutation.mutate();
-      this.reactionListQuery.observer?.refetch();
-    } else {
-      this.reactedEmoji = emoji;
-      const mutation = await replaceReactionMutation(
-        this.weavy,
-        this.parentId,
-        this.entityId,
-        this.messageType,
-        emoji,
-        this.user
-      );
-      await mutation.mutate();
-      this.reactionListQuery.observer?.refetch();
-    }
+    const mutation = reactionMutation(
+      this.weavy,
+      this.parentId,
+      this.parentType,
+      this.entityId,
+      this.entityType,
+      this.reactedEmoji === emoji ? undefined : emoji,
+      this.user
+    );
+    this.reactedEmoji = emoji;
+    await mutation.mutate();
+
+    this.reactionListQuery.observer?.refetch();
   };
 
   private handleReactionsClick() {
@@ -175,6 +151,16 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
 
   protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
+
+    // Start tracking reaction list data when showing the sheet
+    if (
+      (changedProperties.has("weavy") || changedProperties.has("entityId") || changedProperties.has("showSheet")) &&
+      this.weavy &&
+      this.entityId &&
+      this.showSheet
+    ) {
+      this.reactionListQuery.trackQuery(getReactionListOptions(this.weavy, this.entityType, this.entityId));
+    }
 
     if ((changedProperties.has("reactions") || changedProperties.has("user")) && this.user) {
       this.reactedEmoji = this.reactions?.find((r) => r.created_by?.id === this.user?.id)?.content;
@@ -212,7 +198,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
                     top: 0,
                     left: 0,
                     position: !this.menuRef.value.popover ? "fixed" : undefined,
-                    zIndex: !this.menuRef.value.popover ? 1075 : undefined
+                    zIndex: !this.menuRef.value.popover ? 1075 : undefined,
                   });
                 }
               });
@@ -269,8 +255,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
                 ${group.map((r) => {
                   const emojiClasses = {
                     "wy-emoji-icon": true,
-                    "wy-emoji-icon-sm": !this.small,
-                    "wy-emoji-icon-xs": this.small,
+                    "wy-emoji-icon-sm": this.small
                   };
                   return html`<span class=${classMap(emojiClasses)} title="">${r.content}</span>`;
                 })}
@@ -326,7 +311,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
     `;
 
     const reactionSheet = html`
-      ${this.weavy
+      ${this.weavy && this.showSheet
         ? html`
             <wy-sheet
               .show=${this.showSheet}
@@ -351,6 +336,7 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
       "wy-reactions-line-bottom": this.lineBottom,
       "wy-reactions-line-below": this.lineBelow,
     };
+
     return this.line || this.lineReverse || this.lineBottom || this.lineBelow
       ? html`
           <div part=${partMap(lineParts)}>${reactionButtons}</div>
@@ -360,13 +346,9 @@ export default class WyReactions extends BlockConsumerMixin(LitElement) {
   }
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
-    this.menuRef.value?.addEventListener(this.menuRef.value.popover ? "toggle" : "click", (e: Event) => this.handleClose(e as ToggleEvent));
-  }
-
-  protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>): void {
-    if ((changedProperties.has("weavy") || changedProperties.has("entityId")) && this.weavy && this.entityId) {
-      this.reactionListQuery.trackQuery(getReactionListOptions(this.weavy, this.messageType, this.entityId));
-    }
+    this.menuRef.value?.addEventListener(this.menuRef.value.popover ? "toggle" : "click", (e: Event) =>
+      this.handleClose(e as ToggleEvent)
+    );
   }
 
   override disconnectedCallback(): void {

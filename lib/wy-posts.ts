@@ -1,6 +1,6 @@
 import { localized, msg } from "@lit/localize";
-import { LitElement, type PropertyValues, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
+import { type PropertyValues, html, nothing } from "lit";
+import { customElement } from "./utils/decorators/custom-element";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
@@ -10,22 +10,23 @@ import { ThemeController } from "./controllers/theme-controller";
 import { PollMutationType, getPollMutation } from "./data/poll";
 import { RemovePostMutationType, getRestorePostMutation, getTrashPostMutation } from "./data/post-remove";
 import { SubscribePostMutationType, getSubscribePostMutation } from "./data/post-subscribe";
-import { MutatePostContextType, getAddPostMutationOptions, getPostsOptions } from "./data/posts";
-import { BlockProviderMixin } from "./mixins/block-mixin";
-import { type AppType, ContextualTypes, PermissionTypes } from "./types/app.types";
-import { Constructor } from "./types/generic.types";
+import { getAddPostMutationOptions, getPostsOptions } from "./data/posts";
+import { WeavyComponent } from "./classes/weavy-component";
+import { AppTypeString, PermissionType } from "./types/app.types";
 import type { MutatePostProps, PostType, PostsResultType } from "./types/posts.types";
 import { ProductTypes } from "./types/product.types";
 import { RealtimeCommentEventType, RealtimePostEventType, RealtimeReactionEventType } from "./types/realtime.types";
-import { WeavyProps } from "./types/weavy.types";
 import { hasPermission } from "./utils/permission";
-import { addCacheItem, updateCacheItem } from "./utils/query-cache";
+import { addCacheItem, getFlatInfiniteResultData, updateCacheItem } from "./utils/query-cache";
+import { MsgType } from "./types/msg.types";
+import { updateReaction } from "./data/reactions";
 
 import allStyles from "./scss/all.scss";
 import colorModesStyles from "./scss/color-modes.scss";
 import hostBlockStyles from "./scss/host-block.scss";
 import hostScrollYStyles from "./scss/host-scroll-y.scss";
 import hostFontStyles from "./scss/host-font.scss";
+import pagerStyles from "./scss/components/pager.scss";
 
 import "./components/wy-button";
 import "./components/wy-editor";
@@ -34,19 +35,35 @@ import "./components/wy-notification-button-list";
 import "./components/wy-post";
 import "./components/wy-spinner";
 
-@customElement("wy-posts")
+export const WY_POSTS_TAGNAME = "wy-posts";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [WY_POSTS_TAGNAME]: WyPosts;
+  }
+}
+
+/**
+ * Weavy component to render a feed of posts.
+ *
+ * @element wy-posts
+ * @class WyPosts
+ * @fires wy-preview-open {WyPreviewOpenEventType}
+ * @fires wy-preview-close {WyPreviewCloseEventType}
+ */
+@customElement(WY_POSTS_TAGNAME)
 @localized()
-export class WyPosts extends BlockProviderMixin(LitElement) {
-  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles];
+export class WyPosts extends WeavyComponent {
+  static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles, pagerStyles];
 
   override productType = ProductTypes.Feeds;
-  override contextualType = ContextualTypes.Posts;
+  override componentType = AppTypeString.Posts;
 
   protected postsQuery = new InfiniteQueryController<PostsResultType>(this);
 
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<HTMLElement> = createRef();
-  private addPostMutation = new MutationController<PostType, Error, MutatePostProps, MutatePostContextType>(this);
+  private addPostMutation = new MutationController<PostType, Error, MutatePostProps, void>(this);
   private subscribePostMutation?: SubscribePostMutationType;
   private removePostMutation?: RemovePostMutationType;
   private restorePostMutation?: RemovePostMutationType;
@@ -57,82 +74,89 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
     new ThemeController(this, WyPosts.styles);
   }
 
-  private handleSubmit(e: CustomEvent) {
-    if (this.app) {
-      this.addPostMutation.mutate({
-        appId: this.app.id,
-        text: e.detail.text,
-        meetingId: e.detail.meetingId,
-        blobs: e.detail.blobs,
-        pollOptions: e.detail.pollOptions,
-        embed: e.detail.embed,
-        user: this.user!,
-      });
-    }
+  private async handleSubmit(e: CustomEvent) {
+    const app = await this.whenApp();
+    const user = await this.whenUser();
+
+    this.addPostMutation.mutate({
+      appId: app.id,
+      text: e.detail.text,
+      meetingId: e.detail.meetingId,
+      blobs: e.detail.blobs,
+      pollOptions: e.detail.pollOptions,
+      embed: e.detail.embed,
+      user: user,
+    });
   }
 
-  handleRealtimePostCreated = (realtimeEvent: RealtimePostEventType) => {
-    if (
-      !this.weavy ||
-      realtimeEvent.post.app.id !== this.app!.id ||
-      realtimeEvent.post.created_by?.id === this.user!.id
-    ) {
+  handleRealtimePostCreated = async (realtimeEvent: RealtimePostEventType) => {
+    const weavy = await this.whenWeavy();
+    const app = await this.whenApp();
+    const user = await this.whenUser();
+
+    if (realtimeEvent.post.app.id !== app.id || realtimeEvent.post.created_by?.id === user.id) {
       return;
     }
 
     realtimeEvent.post.created_by = realtimeEvent.actor;
-    addCacheItem(this.weavy.queryClient, ["posts", this.app!.id], realtimeEvent.post, undefined, {
+    addCacheItem(weavy.queryClient, ["posts", app.id], realtimeEvent.post, {
       descending: true,
     });
   };
 
-  handleRealtimeCommentCreated = (realtimeEvent: RealtimeCommentEventType) => {
-    if (!this.weavy || realtimeEvent.actor.id === this.user!.id) {
+  handleRealtimeCommentCreated = async (realtimeEvent: RealtimeCommentEventType) => {
+    const weavy = await this.whenWeavy();
+    const app = await this.whenApp();
+    const user = await this.whenUser();
+
+    if (realtimeEvent.actor.id === user.id || !realtimeEvent.comment.parent) {
       return;
     }
 
-    updateCacheItem(
-      this.weavy.queryClient,
-      ["posts", this.app!.id],
-      realtimeEvent.comment.parent!.id,
-      (item: PostType) => {
-        if (item.comments) {
-          item.comments.count += 1;
-        } else {
-          item.comments = { count: 1 };
-        }
-      }
-    );
-  };
-
-  handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavy || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "post") {
-      return;
-    }
-
-    updateCacheItem(this.weavy.queryClient, ["posts", this.app!.id], realtimeEvent.entity.id, (item: PostType) => {
-      item.reactions.data = [
-        ...(item.reactions.data || []),
-        { content: realtimeEvent.reaction, created_by: realtimeEvent.actor },
-      ];
-    });
-  };
-
-  handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavy || realtimeEvent.actor.id === this.user!.id || realtimeEvent.entity.type !== "post") {
-      return;
-    }
-
-    updateCacheItem(this.weavy.queryClient, ["posts", this.app!.id], realtimeEvent.entity.id, (item: PostType) => {
-      if (item.reactions.data) {
-        item.reactions.data = item.reactions.data.filter((item) => item.created_by?.id !== realtimeEvent.actor.id);
+    updateCacheItem(weavy.queryClient, ["posts", app.id], realtimeEvent.comment.parent.id, (item: PostType) => {
+      if (item.comments) {
+        item.comments.count += 1;
+      } else {
+        item.comments = { count: 1 };
       }
     });
+
+    weavy.queryClient.invalidateQueries({ queryKey: ["posts", realtimeEvent.comment.app.id, "comments"] });
+  };
+
+  handleRealtimeReactionAdded = async (realtimeEvent: RealtimeReactionEventType) => {
+    const weavy = await this.whenWeavy();
+    const app = await this.whenApp();
+
+    if (realtimeEvent.entity.type !== "post") {
+      return;
+    }
+
+    updateCacheItem(weavy.queryClient, ["posts", app.id], realtimeEvent.entity.id, (item: MsgType) => {
+      updateReaction(item, realtimeEvent.reaction, realtimeEvent.actor);
+    });
+
+    // TODO: open sheet should also be updated in some way?
+  };
+
+  handleRealtimeReactionDeleted = async (realtimeEvent: RealtimeReactionEventType) => {
+    const weavy = await this.whenWeavy();
+    const app = await this.whenApp();
+
+    if (realtimeEvent.entity.type !== "post") {
+      return;
+    }
+
+    updateCacheItem(weavy.queryClient, ["posts", app.id], realtimeEvent.entity.id, (item: MsgType) => {
+      updateReaction(item, undefined, realtimeEvent.actor);
+    });
+
+    // TODO: open sheet should also be updated in some way?
   };
 
   #unsubscribeToRealtime?: () => void;
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyProps & { app: AppType }>) {
+  override willUpdate(changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
@@ -172,8 +196,8 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
   }
 
   override render() {
-    const { data: infiniteData, isPending } = this.postsQuery.result ?? {};
-    const flattenedPages = infiniteData?.pages.flatMap((messageResult) => messageResult.data);
+    const { data: infiniteData, isPending, hasNextPage } = this.postsQuery.result ?? {};
+    const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
     return this.app
       ? html`
@@ -182,33 +206,30 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
           </wy-buttons>
 
           <div class="wy-posts">
-            ${this.user && hasPermission(PermissionTypes.Create, this.app.permissions)
-              ? html`
-                  <div class="wy-post">
-                    <wy-editor
-                      editorLocation="apps"
-                      .typing=${false}
-                      .draft=${true}
-                      placeholder=${msg("Create a post...")}
-                      buttonText=${msg("Post")}
-                      @submit=${(e: CustomEvent) => this.handleSubmit(e)}
-                    ></wy-editor>
-                  </div>
-                `
-              : nothing}
+            <div class="wy-post">
+              <wy-editor
+                editorLocation="apps"
+                ?disabled=${!hasPermission(PermissionType.Create, this.app.permissions)}
+                .typing=${false}
+                .draft=${true}
+                placeholder=${msg("Create a post...")}
+                buttonText=${msg("Post")}
+                @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+              ></wy-editor>
+            </div>
+
             <!-- this.user ?? -->
             ${!isPending
               ? html`
-                  ${this.user && flattenedPages
+                  ${this.app && this.user && flattenedPages
                     ? repeat(
                         flattenedPages,
                         (post) => post.id,
                         (post) => {
-                          return this.user
+                          return this.app && this.user
                             ? html`<wy-post
                                 id="post-${post.id}"
                                 .postId=${post.id}
-                                .temp=${post.temp || false}
                                 .createdBy=${post.created_by}
                                 .createdAt=${post.created_at}
                                 .modifiedAt=${post.updated_at}
@@ -246,13 +267,13 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
                             : nothing;
                         }
                       )
-                    : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-                  <div ${ref(this.pagerRef)} class="wy-pager"></div>
+                    : html`<wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty>`}
+                  ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
                 `
-              : html` <wy-empty><wy-spinner padded></wy-spinner></wy-empty> `}
+              : html`<wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty> `}
           </div>
         `
-      : html` <wy-empty><wy-spinner padded></wy-spinner></wy-empty> `;
+      : html`<wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty>`;
   }
 
   override disconnectedCallback(): void {
@@ -260,5 +281,3 @@ export class WyPosts extends BlockProviderMixin(LitElement) {
     super.disconnectedCallback();
   }
 }
-
-export type WyPostsType = Constructor<WyPosts>;

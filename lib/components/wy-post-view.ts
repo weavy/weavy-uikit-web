@@ -1,5 +1,6 @@
 import { LitElement, PropertyValues, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import type WeavyPreview from "../components/wy-preview";
@@ -9,11 +10,13 @@ import type { MeetingType } from "../types/meetings.types";
 import type { FileOpenEventType, FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
-
 import { localized, msg, str } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
-import { BlockConsumerMixin } from "../mixins/block-consumer-mixin";
+import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { EntityTypeString } from "../types/app.types";
+import { hasEntityChildType, isEntityChainMatch } from "../utils/notifications";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 import chatCss from "../scss/all.scss";
 
@@ -27,13 +30,10 @@ import "./wy-poll";
 import "./wy-embed";
 import "./wy-comment-list";
 import "./wy-skeleton";
-import { EntityTypes } from "../types/app.types";
-import { hasEntityChildType, isEntityChainMatch } from "../utils/notifications";
-import { partMap } from "../utils/directives/shadow-part-map";
 
 @customElement("wy-post-view")
 @localized()
-export default class WyPostView extends BlockConsumerMixin(LitElement) {
+export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
     css`
@@ -47,9 +47,6 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
 
   @property({ type: Number })
   postId!: number;
-
-  @property({ type: Boolean })
-  temp: boolean = false;
 
   @property({ attribute: false })
   createdBy!: MemberType;
@@ -136,9 +133,9 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("link")) {
-      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypes.Post, { id: this.postId }));
+      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Post, { id: this.postId }));
       this.isCommentLinked = Boolean(
-        this.link && hasEntityChildType(this.link, EntityTypes.Post, { id: this.postId }, EntityTypes.Comment)
+        this.link && hasEntityChildType(this.link, EntityTypeString.Post, { id: this.postId }, EntityTypeString.Comment)
       );
     }
 
@@ -165,7 +162,7 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
           )
         : "";
 
-    return this.temp
+    return this.postId < 0
       ? html`<div class="wy-post">
           <div class="wy-item">
             <wy-avatar
@@ -190,7 +187,9 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
           </div>
         </div>`
       : html`
-          <div class="wy-post" part=${partMap({ "wy-highlight": this.highlight && !this.isCommentLinked })} ${ref(this.highlightRef)}>
+          <div class="wy-post" part=${partMap({ "wy-highlight": this.highlight && !this.isCommentLinked })} ${ref(
+          this.highlightRef
+        )}>
             <div class="wy-item">
               <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
           this.createdBy.display_name
@@ -299,6 +298,7 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
                   ${
                     this.hasFeatures?.comments
                       ? html` <wy-button
+                          small
                           kind="inline"
                           ?active=${this.showComments}
                           class="wy-meta"
@@ -315,10 +315,12 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
                     ? html`
                         <wy-reactions
                           line
+                          small
                           .reactions=${this.reactions}
                           parentId=${this.app.id}
+                          parentType="apps"
                           entityId=${this.postId}
-                          messageType="posts"
+                          entityType="posts"
                         ></wy-reactions>
                       `
                     : nothing
@@ -336,11 +338,17 @@ export default class WyPostView extends BlockConsumerMixin(LitElement) {
                   : nothing
               }
             </div>
-            <wy-preview
-              ${ref(this.previewRef)}
-              .files=${this.attachments}
-              .isAttachment=${true}
-              ></wy-preview>
+          
+            ${
+              this.attachments?.length
+                ? html`<wy-preview
+                    ${ref(this.previewRef)}
+                    .files=${this.attachments}
+                    .isAttachment=${true}
+                  ></wy-preview> `
+                : nothing
+            }
+           
           </div>
         `;
   }

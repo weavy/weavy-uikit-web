@@ -1,5 +1,6 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import { createRef, ref } from "lit/directives/ref.js";
@@ -33,6 +34,9 @@ export default class WyOverlay extends LitElement {
   maximized: boolean = false;
 
   @property({ type: Boolean })
+  filled: boolean = false;
+
+  @property({ type: Boolean })
   header: boolean = false;
 
   private viewportRef = createRef<HTMLDialogElement>();
@@ -63,7 +67,8 @@ export default class WyOverlay extends LitElement {
   override render() {
     const modalClasses = {
       "wy-open": this.show,
-      "wy-modal-full": this.maximized,
+      "wy-modal-padded": !this.filled && !this.maximized,
+      "wy-modal-full": this.maximized && !this.filled,
     };
     return html`
       <dialog class="wy-dialog wy-overlay-dialog" ${ref(this.viewportRef)}>

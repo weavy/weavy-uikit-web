@@ -1,20 +1,21 @@
 import { LitElement, css, html, type PropertyValueMap } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement } from "../utils/decorators/custom-element";
+import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
-
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
-import allCss from "../scss/all.scss";
+import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
+import { WeavyProps } from "../types/weavy.types";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 //import * as type pdfjsLibType from "pdfjs-dist";
 import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 //import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
 
-import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyProps } from "../types/weavy.types";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import allCss from "../scss/all.scss";
+
 import "./wy-button";
 import "./wy-icon";
 
@@ -373,58 +374,71 @@ export default class WyPdfViewer extends LitElement {
     if (this.weavy && this.viewerContainerRef.value && !this.pdfViewer) {
       const { pdfjsLib, pdfjsViewer } = await this.whenPdfjs;
 
-      // INIT PDF VIEWER
-      //console.log("new pdf viewer", this.viewerContainerRef.value);
-      this.pdfEventBus = new pdfjsViewer.EventBus();
-
-      this.pdfLinkService = new pdfjsViewer.PDFLinkService({
-        eventBus: this.pdfEventBus,
-      });
-
-      this.l10n = new pdfjsViewer.GenericL10n(this.weavy?.locale);
-
-      this.pdfViewer = new pdfjsViewer.PDFViewer({
-        container: this.viewerContainerRef.value,
-        eventBus: this.pdfEventBus,
-        linkService: this.pdfLinkService,
-        //findController: this.pdfFindController,
-        annotationEditorMode: pdfjsLib.AnnotationEditorType.DISABLE,
-        l10n: this.l10n,
-        maxCanvasPixels: this.MAX_CANVAS_PIXELS,
-        textLayerMode: this.TEXT_LAYER_MODE,
-      });
-      //pdfViewer!.MAX_AUTO_SCALE = 1.0;
-
-      this.pdfLinkService?.setViewer(this.pdfViewer);
-
-      this.pdfHistory = new pdfjsViewer.PDFHistory({
-        eventBus: this.pdfEventBus,
-        linkService: this.pdfLinkService,
-      });
-      this.pdfLinkService?.setHistory(this.pdfHistory);
-
-      this.pdfEventBus?.on("scalechanging", () => {
-        //console.debug("scalechanging")
-        if (this.zoomLevelRef.value) {
-          this.zoomLevelRef.value.value = Math.round(this.pdfViewer!.currentScale * 100).toFixed(0) + "%";
-        }
-      });
-
-      this.pdfEventBus?.on("pagechanging", () => {
-        //console.debug("pagechanging")
-        this.pageNumberRef.value!.value = this.pdfViewer!.currentPageNumber.toFixed(0);
-      });
-
-      this.pdfEventBus?.on("pagesinit", () => {
-        // We can use pdfViewer now, e.g. let's change default scale.
-        if (this.isConnected && this.pdfViewer) {
-          //console.log("PDF INIT", this.pdfViewer)
-          this.pdfViewer.currentScaleValue = this.DEFAULT_SCALE_VALUE; //"auto";
-          this.pageNumberRef.value!.value = "1";
-          this.totalPagesRef.value!.innerText = this.pdfViewer!.pagesCount.toFixed(0);
-          this.resizer.observe(this.pdfViewer.container);        }
-      });
-      //console.log("new pdf viewer", this.pdfViewer);
+      // Double check after awaiting loading to avoid double init
+      if (this.viewerContainerRef.value && !this.pdfViewer) {
+        // INIT PDF VIEWER
+        //console.log("new pdf viewer", this.viewerContainerRef.value);
+        
+        this.pdfEventBus = new pdfjsViewer.EventBus();
+  
+        this.pdfLinkService = new pdfjsViewer.PDFLinkService({
+          eventBus: this.pdfEventBus,
+        });
+  
+        this.l10n = new pdfjsViewer.GenericL10n(this.weavy?.locale);
+  
+        this.pdfViewer = new pdfjsViewer.PDFViewer({
+          container: this.viewerContainerRef.value,
+          eventBus: this.pdfEventBus,
+          linkService: this.pdfLinkService,
+          //findController: this.pdfFindController,
+          annotationEditorMode: pdfjsLib.AnnotationEditorType.DISABLE,
+          l10n: this.l10n,
+          maxCanvasPixels: this.MAX_CANVAS_PIXELS,
+          textLayerMode: this.TEXT_LAYER_MODE,
+        });
+        //pdfViewer!.MAX_AUTO_SCALE = 1.0;
+  
+        this.pdfLinkService?.setViewer(this.pdfViewer);
+  
+        this.pdfHistory = new pdfjsViewer.PDFHistory({
+          eventBus: this.pdfEventBus,
+          linkService: this.pdfLinkService,
+        });
+        this.pdfLinkService?.setHistory(this.pdfHistory);
+  
+        this.pdfEventBus?.on("scalechanging", () => {
+          //console.debug("scalechanging")
+          if (this.zoomLevelRef.value && this.pdfViewer) {
+            this.zoomLevelRef.value.value = Math.round(this.pdfViewer.currentScale * 100).toFixed(0) + "%";
+          } else {
+            console.warn("Could not set zoom level")
+          }
+        });
+  
+        this.pdfEventBus?.on("pagechanging", () => {
+          //console.debug("pagechanging")
+          if (this.pageNumberRef.value && this.pdfViewer) {
+            this.pageNumberRef.value.value = this.pdfViewer.currentPageNumber.toFixed(0);
+          } else {
+            console.warn("Could not set page number");
+          }
+        });
+  
+        this.pdfEventBus?.on("pagesinit", () => {
+          // We can use pdfViewer now, e.g. let's change default scale.
+          if (this.isConnected && this.pdfViewer && this.pageNumberRef.value && this.totalPagesRef.value) {
+            //console.log("PDF INIT", this.pdfViewer)
+            this.pdfViewer.currentScaleValue = this.DEFAULT_SCALE_VALUE; //"auto";
+            this.pageNumberRef.value.value = "1";
+            this.totalPagesRef.value.innerText = this.pdfViewer.pagesCount.toFixed(0);
+            this.resizer.observe(this.pdfViewer.container);        
+          } else {
+            console.warn("Could not init pdf page")
+          }
+        });
+        //console.log("new pdf viewer", this.pdfViewer);
+      }
     }
   }
 

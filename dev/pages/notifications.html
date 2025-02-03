@@ -40,26 +40,29 @@
   </wy-context>
     <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
     <script type="module">
-      import { ConversationTypes } from "/lib/index.ts";
+      import { MessengerTypes, MessengerBotTypes } from "/lib/index.ts";
       const wyContext = document.querySelector("wy-context");
       let linkWindow;
 
-      wyContext.addEventListener("wy:link", (e) => {
+      wyContext.addEventListener("wy-link", (e) => {
         // Prevents automatic sessionStorage link
         //e.preventDefault();
         
-        const appType = e.detail.app.type;
-        const appUid = e.detail.app.uid;
+        const appType = e.detail.link.app.type;
+        const appUid = e.detail.link.app.uid;
         let linkUrl;
 
-        console.log("notification link!", e.detail, ConversationTypes, ConversationTypes.has(appType));
+        console.log("notification link!", e.detail);
         
-        if (ConversationTypes.has(appType)) {
+        if (MessengerTypes.has(appType)) {
           linkUrl = new URL("./messenger.html", window.location);
-
+        } else if(MessengerBotTypes.has(appType)) {
+          linkUrl = new URL(`./botchat.html${`#${e.detail.link.bot}` || ''}`, window.location);
         } else if (appUid && appUid.startsWith("acme-")) {
           const pageName = appUid.substring("acme-".length);
           linkUrl = new URL(`./${pageName}.html`, window.location);
+        } else if(e.detail.source_url) {
+          linkUrl = new Url(e.detail.source_url);
         }
 
         if (linkUrl) {
