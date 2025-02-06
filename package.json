@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "26.0.0",
+  "version": "26.0.1",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -17,19 +17,19 @@
     "*.json",
     "*.md"
   ],
-  "main": "./dist/weavy.js",
-  "module": "./dist/weavy.esm.bundle.js",
+  "main": "./dist/build/weavy.js",
+  "module": "./dist/build/weavy.esm.bundle.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/weavy.esm.js",
-      "require": "./dist/weavy.js",
+      "import": "./dist/build/weavy.esm.js",
+      "require": "./dist/build/weavy.js",
       "types": "./dist/types/index.d.ts"
     },
     "./dist/weavy.js": {
-      "import": "./dist/weavy.esm.bundle.js",
-      "require": "./dist/weavy.js",
-      "default": "./dist/weavy.js"
+      "import": "./dist/build/weavy.esm.bundle.js",
+      "require": "./dist/build/weavy.js",
+      "default": "./dist/build/weavy.js"
     },
     "./dist/*": "./dist/*",
     "./lib/*": "./lib/*",
@@ -118,6 +118,7 @@
     "vite-plugin-cem": "^0.8.2",
     "vite-plugin-dts": "^4.5.0",
     "vite-plugin-lit-css": "^2.0.0",
+    "vite-plugin-static-copy": "^2.2.0",
     "web-component-analyzer": "^2.0.0"
   },
   "engines": {

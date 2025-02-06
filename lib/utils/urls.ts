@@ -1,8 +1,9 @@
 import { throwOnDomNotAvailable } from "./dom";
 
+/** Opens a url normally, in a specific target or as a download */
 export function openUrl(url: string = "", target: string = "", name: string = "", download: boolean = false) {
   throwOnDomNotAvailable();
-  
+
   if (url) {
     // a is needed for downloading object urls
     const a = document.createElement("a");
@@ -42,4 +43,16 @@ export function openUrl(url: string = "", target: string = "", name: string = ""
 
     document.body.removeChild(a);
   }
+}
+
+
+/** Provides an url that is served from the current environment and from source when in dev/serve mode */
+export function environmentUrl(url: URL | string, importMetaUrl?: URL | string) {
+  return new URL(
+    url,
+    typeof WEAVY_IMPORT_URL === "string" &&
+    (!importMetaUrl || !new URL(importMetaUrl).href.startsWith(WEAVY_IMPORT_URL))
+      ? WEAVY_IMPORT_URL
+      : importMetaUrl
+  );
 }

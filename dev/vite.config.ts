@@ -8,6 +8,7 @@ import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import { utf8BomPlugin, weavyAuthServer, weavyChunkNames, weavyImportUrlPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -20,6 +21,16 @@ export default defineConfig(({ command, mode }) => {
   console.log(sourceName, version);
 
   const env = loadEnv(mode, process.cwd(), "");
+
+  const define: Record<string, unknown> = {
+    WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
+    WEAVY_VERSION: JSON.stringify(version),
+    "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
+  };
+
+  if (command === "serve") {
+    define.WEAVY_IMPORT_URL = "/dist/"
+  }
 
   let httpsConfig;
 
@@ -51,16 +62,25 @@ export default defineConfig(({ command, mode }) => {
       VitePluginCustomElementsManifest({
         files: ["./lib/**/wy-*.ts"],
         lit: true,
+        output: "../custom-elements.json"
+      }),
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
+            dest: 'pdfjs'
+          },
+          {
+            src: 'node_modules/pdfjs-dist/cmaps/*.bcmap',
+            dest: 'pdfjs/cmaps'
+          }
+        ]
       }),
       weavyImportUrlPlugin(),
       litCss(),
       weavyAuthServer(command),
     ],
-    define: {
-      WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
-      WEAVY_VERSION: JSON.stringify(version),
-      "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
-    },
+    define,
     optimizeDeps: {
       esbuildOptions: {
         target: "esnext",
@@ -110,6 +130,7 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     build: {
+      outDir: "dist",
       lib: {
         // Could also be a dictionary or array of multiple entry points
         entry: "lib/index.ts",
@@ -131,6 +152,7 @@ export default defineConfig(({ command, mode }) => {
         output: [
           {
             format: "esm",
+            dir: "dist/build",
             minifyInternalExports: false,
             preserveModules: false,
             manualChunks: {

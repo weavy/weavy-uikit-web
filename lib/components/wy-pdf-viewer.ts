@@ -8,6 +8,7 @@ import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { environmentUrl } from "../utils/urls";
 
 //import * as type pdfjsLibType from "pdfjs-dist";
 import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
@@ -73,7 +74,8 @@ export default class WyPdfViewer extends LitElement {
   //MIN_SCALE = 0.2;
 
   ENABLE_XFA = true;
-  DEFAULT_WORKER_URL: string = "/js/pdf.worker.min.mjs";
+  DEFAULT_WORKER_URL: string = "/pdfjs/pdf.worker.min.mjs";
+  DEFAULT_CMAPS_URL: string = "/pdfjs/cmaps/";
   WORKER_URL?: URL;
 
   @property()
@@ -346,13 +348,14 @@ export default class WyPdfViewer extends LitElement {
         })
       }
       if (this.pdfjsLib && !this.WORKER_URL) {
-        this.WORKER_URL = new URL(this.DEFAULT_WORKER_URL, this.weavy.url);
+        this.WORKER_URL = environmentUrl(this.DEFAULT_WORKER_URL, import.meta.url);
+        this.WORKER_URL.searchParams.append("v", this.weavy.version);
         // Setting worker path to worker bundle.
         this.pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
       }
 
       if (!this.CMAP_URL) {
-        this.CMAP_URL = new URL("/cmaps/", this.weavy.url);
+        this.CMAP_URL = environmentUrl(this.DEFAULT_CMAPS_URL, import.meta.url);
       }
     }
   }

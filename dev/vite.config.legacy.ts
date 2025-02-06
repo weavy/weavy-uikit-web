@@ -1,10 +1,8 @@
 import { defineConfig, loadEnv } from "vite";
 import packageJson from "../package.json";
-import dts from "vite-plugin-dts";
 import fs from "node:fs";
 import path from "node:path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
-import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import { utf8BomPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
@@ -42,16 +40,6 @@ export default defineConfig(({ mode }) => {
     envPrefix: "WEAVY_",
     plugins: [
       excludeNodeInPdfJS(),
-      dts({
-        tsconfigPath: "dev/tsconfig.build.json",
-        outDir: "dist/types",
-        include: ["lib"],
-        entryRoot: "lib",
-      }),
-      VitePluginCustomElementsManifest({
-        files: ["./lib/**/wy-*.ts"],
-        lit: true,
-      }),
       litCss(),
       //weavyImportUrlPlugin(),
     ],
@@ -121,6 +109,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      outDir: "dist/build",
       emptyOutDir: false,
       lib: {
         // Could also be a dictionary or array of multiple entry points
@@ -143,6 +132,7 @@ export default defineConfig(({ mode }) => {
         output: [
           {
             format: "esm",
+            //dir: "dist/build",
             entryFileNames: "weavy.esm.bundle.js",
             minifyInternalExports: false,
             preserveModules: false,
