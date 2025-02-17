@@ -45,16 +45,22 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
     return this.dispatchEvent(event);
   }
 
-  private async dispatchLink(_e: Event) {
-    return await dispatchLinkEvent(this, this.weavy, this.notification);
-  }
-
   private dispatchMark(e: Event, markAsRead: boolean) {
     e.stopPropagation();
     // Note: comparing read with unread
     if (markAsRead === Boolean(this.notification.is_unread)) {
       const event = new CustomEvent("mark", {
         detail: { notificationId: this.notificationId, markAsRead: markAsRead },
+      });
+      return this.dispatchEvent(event);
+    }
+    return true;
+  }
+
+  private dispatchHide() {
+    if (this.standalone) {
+      const event = new CustomEvent("hide", {
+        bubbles: true,
       });
       return this.dispatchEvent(event);
     }
@@ -69,6 +75,14 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
       return this.dispatchEvent(event);
     }
     return true;
+  }
+
+  private async handleClick(e: Event) {
+    this.dispatchSelect(e);
+    this.dispatchMark(e, true);
+    this.dispatchHide();
+    await dispatchLinkEvent(this, this.weavy, this.notification);
+    this.dispatchClose();
   }
 
   override render() {
@@ -119,8 +133,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
           "wy-active": !this.standalone && this.selected,
         })}
         tabindex="0"
-        @click=${(e: Event) =>
-          this.dispatchSelect(e) && this.dispatchMark(e, true) && this.dispatchClose() && this.dispatchLink(e)}
+        @click=${(e: Event) => this.handleClick(e)}
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >

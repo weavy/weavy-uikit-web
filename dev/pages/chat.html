@@ -53,6 +53,7 @@
     <wy-context url="%WEAVY_URL%" reactions='["👍", "❤️", "😂", "😒", "😁"]' tokenUrl="/api/token"></wy-context>
     <div class="toolbar"><button onclick="toggle()">Toggle</button></div>
     <wy-chat uid="acme-chat" name="Acme Chit Chat"></wy-chat>
+    <wy-notification-toasts></wy-notification-toasts>
     <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
     <script>
       const chat = document.querySelector("wy-chat");
@@ -65,6 +66,9 @@
           });
           e.preventDefault();
         }
+      });
+      document.addEventListener("wy-link", (e) => {
+        console.log("wy-link", e);
       });
     </script>
   </body>

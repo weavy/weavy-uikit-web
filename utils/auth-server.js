@@ -120,50 +120,36 @@ export function getAuthServer(serverConfig, users) {
       });
     }
   });
-  
-  app.get("/api/contextual/:id", async (req, res) => {
-    // setup contextual app
-    let response = await fetch(new URL("/api/apps/init", serverConfig.weavyUrl), {
-      agent: serverConfig.agent,
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        Authorization: `Bearer ${serverConfig.apiKey}`,
-      },
-      body: JSON.stringify({
-        app: { uid: req.params.id, name: req.params.id, type: req.query.type },
-        user: { uid: getUser(req.session.user).username },
-      }),
-    });
-  
-    res.end(await response.text());
-  });
-  
+   
   app.get("/api/token", async (req, res) => {
     let username = getUser(req.session.user).username; // get user from session or default (first) user
   
     if ((!req.query.refresh || req.query.refresh === "false") && _tokens.find((t) => t.username === username)) {
       res.json({ access_token: _tokens.find((t) => t.username === username).access_token });
     } else {
-      let response = await fetch(new URL(`/api/users/${username}/tokens`, serverConfig.weavyUrl), {
-        agent: serverConfig.agent,
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          Authorization: `Bearer ${serverConfig.apiKey}`,
-        },
-        body: JSON.stringify({ name: username, expires_in: 3600 }),
-      });
-  
-      if (response.ok) {
-        let data = await response.json();
-        _tokens = [
-          ..._tokens.filter((t) => t.username !== username),
-          { username: username, access_token: data.access_token },
-        ];
-        res.json(data);
-      } else {
-        res.status(response.status).json({ access_token: "" });
+      try {
+        let response = await fetch(new URL(`/api/users/${username}/tokens`, serverConfig.weavyUrl), {
+          agent: serverConfig.agent,
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${serverConfig.apiKey}`,
+          },
+          body: JSON.stringify({ name: username, expires_in: 3600 }),
+        });
+    
+        if (response.ok) {
+          let data = await response.json();
+          _tokens = [
+            ..._tokens.filter((t) => t.username !== username),
+            { username: username, access_token: data.access_token },
+          ];
+          res.json(data);
+        } else {
+          res.status(response.status).json({ access_token: "" });
+        }
+      } catch {
+        res.status(400).json({ access_token: "" });
       }
     }
   });
@@ -171,11 +157,27 @@ export function getAuthServer(serverConfig, users) {
   return app
 }
 
+export async function whenServerOk(serverConfig) {
+  try {
+    const response = await fetch(new URL("/status", serverConfig.weavyUrl), {
+      agent: serverConfig.agent,
+    })
+
+    if (!response.ok || await response.text() !== "Ok") {
+      throw new Error();
+    }
+  } catch {
+    await new Promise((r) => setTimeout(() => { whenServerOk(serverConfig).then(r) }, 500))
+  }
+}
+
 export async function syncUsers(serverConfig, users) {
+    await whenServerOk(serverConfig);
+
     // sync users to weavy
     const whenUserPut = [];
     users.forEach((u) => {
-      console.log("Syncing", u.username);
+      console.info("Syncing", u.username);
       whenUserPut.push(fetch(new URL("/api/users/" + u.username, serverConfig.weavyUrl), {
         agent: serverConfig.agent,
         method: "PUT",

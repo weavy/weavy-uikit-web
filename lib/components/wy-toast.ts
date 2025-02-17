@@ -111,6 +111,10 @@ export class WyToast extends LitElement {
 
   private timeout?: number;
 
+  hide() {
+    this.show = false;
+  }
+
   async close(silent: boolean = false) {
     this.show = false;
     await new Promise((r) => requestAnimationFrame(r));
@@ -140,6 +144,7 @@ export class WyToast extends LitElement {
       <div
         ${ref(this.toastRef)}
         class="wy-toast wy-fade ${this.show ? "wy-show" : ""}"
+        @hide=${(e: CustomEvent) => { e.stopPropagation(); this.hide() }}
         @close=${() => this.close()}
         @keyup=${clickOnEnterAndSpace}
       >
