@@ -91,7 +91,7 @@ export class WyMessenger extends WeavyComponent {
     this.conversationId = null;
   }
 
-  @state()
+  @property({ type: Number})
   conversationId: number | null = null;
 
   protected conversationQuery = new QueryController<AppType>(this);
@@ -109,10 +109,13 @@ export class WyMessenger extends WeavyComponent {
   /**
    * Checks if a conversation belongs to Messenger.
    *
+   * @deprecated
    * @param conversation {AppRef | AppType | number} - The conversation or id to check if it belongs to Messenger.
    * @returns Promise<Boolean>
    */
   async conversationBelongsToMessenger(conversation: AppRef | AppType | number): Promise<boolean> {
+    console.warn("conversationBelongsToMessenger() is deprecated. Compare app to to .appTypes instead.");
+
     if (!this.weavy) {
       return false;
     }
@@ -121,9 +124,23 @@ export class WyMessenger extends WeavyComponent {
   }
 
   /**
+   * Set the active conversation.
+   *
+   * @deprecated
+   * @param id {number} - The id of the conversation to select.
+   */
+  async selectConversation(id: number) {
+    console.warn("selectConversation() is deprecated. Set .conversationId instead.")
+    this.conversationId = id;
+    return true
+  }
+
+  /**
    * Deselects any active conversation.
+   * @deprecated
    */
   clearConversation() {
+    console.warn("clearConversation() is deprecated. Set .conversationId to null instead.")
     this.conversationId = null;
   }
 
@@ -143,18 +160,8 @@ export class WyMessenger extends WeavyComponent {
       this.persistState.observe(["conversationId"], this.bot || "messenger", `u${this.user?.id}`);
     }
 
-    /*if (!this.botQuery.result?.isPending) {
-      this.botUser = this.botQuery.result?.data;
-    }*/
-
-    if (changedProperties.has("link")) {
-      if (this.link?.app) {
-        if (await this.conversationBelongsToMessenger(this.link.app)) {
-          this.conversationId = this.link.app.id;
-        } else {
-          throw new Error("Not a conversation");
-        }
-      }
+    if (changedProperties.has("link") && this.link?.app) {
+      this.conversationId = this.link.app.id;
     }
   }
 
