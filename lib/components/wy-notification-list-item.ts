@@ -16,9 +16,9 @@ import itemCss from "../scss/components/item.scss";
 import metaCss from "../scss/components/meta.scss";
 import notificationsCss from "../scss/components/notifications.scss";
 
-import "./wy-avatar";
-import "./wy-icon";
-import "./wy-button";
+import "./base/wy-avatar";
+import "./base/wy-icon";
+import "./base/wy-button";
 
 @customElement("wy-notification-list-item")
 @localized()
@@ -141,7 +141,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
           <wy-avatar
             class="wy-item-top"
             src=${ifDefined(otherMember?.avatar_url)}
-            name=${ifDefined(otherMember?.display_name)}
+            name=${ifDefined(otherMember?.name)}
             presence=${otherMember?.presence || "away"}
             ?isBot=${otherMember?.is_bot}
             id=${ifDefined(otherMember?.id)}

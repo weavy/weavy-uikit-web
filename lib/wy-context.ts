@@ -1,14 +1,14 @@
-import { css, html, LitElement, type PropertyValues } from "lit";
+import { html, LitElement, type PropertyValues } from "lit";
 import { property, state } from "lit/decorators.js";
-import { Weavy, type WeavyType } from "./client/weavy";
-import type { WeavyTokenFactory, WeavyOptions } from "./types/weavy.types";
+import { Weavy, WeavySettingsProps, type WeavyType } from "./client/weavy";
+import type { WeavyTokenFactory, WeavyOptions, StrictWeavyOptions } from "./types/weavy.types";
 import { indirectEvalObject } from "./converters/indirect-eval-object";
 import { toUrl } from "./converters/url";
-import { LocaleModule } from "@lit/localize";
 import { customElement } from "./utils/decorators/custom-element";
 
 import allStyles from "./scss/all.scss";
 import colorModesStyles from "./scss/color-modes.scss";
+import hostContentsCss from "./scss/host-contents.scss";
 
 function acceptedValue(value: unknown) {
   return value !== undefined && value !== null && value !== false;
@@ -33,15 +33,11 @@ declare global {
  * @slot
  */
 @customElement(WY_CONTEXT_TAGNAME)
-export class WyContext extends LitElement implements WeavyOptions {
+export class WyContext extends LitElement implements StrictWeavyOptions, WeavySettingsProps {
   static override styles = [
     allStyles,
     colorModesStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   /**
@@ -52,13 +48,14 @@ export class WyContext extends LitElement implements WeavyOptions {
   @property({ attribute: true, type: Boolean })
   provider: boolean = false;
 
+
   @property({
     attribute: true,
     converter: {
       fromAttribute: (value) => toUrl(value),
     },
   })
-  cloudFilePickerUrl?: string | URL;
+  cloudFilePickerUrl = Weavy.defaults.cloudFilePickerUrl;
 
   @property({
     attribute: true,
@@ -68,31 +65,25 @@ export class WyContext extends LitElement implements WeavyOptions {
   })
   
   @property({ type: Boolean })
-  disableEnvironmentImports?: boolean;
+  disableEnvironmentImports = Weavy.defaults.disableEnvironmentImports;
 
   @property({ attribute: true })
-  locale?: string;
+  locale = Weavy.defaults.locale;
 
   @property({ attribute: true, type: Array })
-  locales?: Array<[string, LocaleModule | Promise<LocaleModule> | (() => Promise<LocaleModule>)]>;
+  locales = Weavy.defaults.locales;
 
   @property({ attribute: true, type: Number })
-  gcTime?: number;
-
-  @property({ attribute: true, type: Array })
-  reactions?: string[];
+  gcTime = Weavy.defaults.gcTime;
 
   @property({ type: Boolean })
-  notificationEvents?: boolean;
-
-  @property({ type: Boolean })
-  notificationToasts?: boolean;
+  notificationEvents = Weavy.defaults.notificationEvents;
 
   @property({ attribute: true })
-  scrollBehavior?: "smooth" | "instant" | "auto";
+  scrollBehavior = Weavy.defaults.scrollBehavior;
 
   @property({ attribute: true, type: Number })
-  staleTime?: number;
+  staleTime = Weavy.defaults.staleTime;
 
   @property({
     attribute: true,
@@ -100,13 +91,13 @@ export class WyContext extends LitElement implements WeavyOptions {
       fromAttribute: (value) => indirectEvalObject<WeavyTokenFactory>(value),
     },
   })
-  tokenFactory?: WeavyTokenFactory;
+  tokenFactory = Weavy.defaults.tokenFactory;
 
   @property({ attribute: true, type: Number })
-  tokenFactoryRetryDelay?: number;
+  tokenFactoryRetryDelay = Weavy.defaults.tokenFactoryRetryDelay;
 
   @property({ attribute: true, type: Number })
-  tokenFactoryTimeout?: number;
+  tokenFactoryTimeout = Weavy.defaults.tokenFactoryTimeout;
 
   @property({
     attribute: true,
@@ -114,7 +105,7 @@ export class WyContext extends LitElement implements WeavyOptions {
       fromAttribute: (value) => toUrl(value),
     },
   })
-  tokenUrl?: string | URL;
+  tokenUrl? = Weavy.defaults.tokenUrl;
 
   @property({
     attribute: true,
@@ -122,7 +113,16 @@ export class WyContext extends LitElement implements WeavyOptions {
       fromAttribute: (value) => toUrl(value),
     },
   })
-  url?: string | URL;
+  url? = Weavy.defaults.url;
+
+  @property({ attribute: true })
+  notifications = Weavy.defaults.notifications
+
+  @property({ attribute: true })
+  notificationsBadge = Weavy.defaults.notificationsBadge;
+
+  @property({ attribute: true })
+  reactions = Weavy.defaults.reactions;
 
   @state()
   protected weavy?: WeavyType;

@@ -20,6 +20,8 @@ export const selectByWordBoundaryWithHyphensRegExp = new RegExp(
   `(?<=[${wordBoundaryWithHyphens}]|^)[^${wordBoundaryWithHyphens}]+(?=[${wordBoundaryWithHyphens}]|$)`,
   "g"
 );
+export const sentenceBoundary = ".!?";
+export const separateBySentenceBoundaryRegExp = new RegExp(`^|[${sentenceBoundary}]|$`);
 
 /**
  *  Converts Initial Letters To Uppercase.
@@ -57,7 +59,7 @@ export function toSnakeCase(str: string) {
  * @param {string} str - The string to change to kebab case
  * @returns {string} The processed string as kebab-case
  */
-export function toKebabCase<T extends string = string >(str: string) {
+export function toKebabCase<T extends string = string>(str: string) {
   if (str.length > 0) {
     return str
       .replace(/([a-z\d])([A-Z]+)/g, "$1-$2")
@@ -91,7 +93,8 @@ export function toCamelCase(str: string, pascal?: boolean) {
 }
 
 /**
- *
+ *  Gets a given number of initials (usually two) from a name.
+ * 
  * @param name {string} - A name for which to get get initials, e.g. "Eddie" or "John Doe"
  * @param length {number} - Max number of chars to return.
  * @returns
@@ -114,4 +117,38 @@ export function getInitials(name: string, length: number = 2) {
   }
 
   return initials.substring(0, length).toUpperCase();
+}
+
+/**
+ * Extracts something to use as title from a text.
+ * 
+ * @param text The text to take a title from
+ * @returns The first sentence as a title
+ */
+export function getTitleFromText(text: string) {
+  let title: string;
+  const sentences = text.split(separateBySentenceBoundaryRegExp).filter((w) => w);
+
+  if (sentences.length) {
+    title = sentences[0];
+  } else {
+    title = text;
+  }
+
+  return title;
+}
+
+/**
+ * Truncates a text and adds ellipsis in the end.
+ * 
+ * @param text The text to truncate
+ * @param maxLength The maximum length of the text. 
+ * @returns Truncated text
+ */
+export function truncateText(text: string, maxLength: number = 256) {
+  if (text.length > maxLength) {
+    // TODO: even better to truncate by last word
+    text = text.substring(0, maxLength - 1) + "…";
+  }
+  return text;
 }

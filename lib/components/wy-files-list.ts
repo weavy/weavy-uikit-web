@@ -2,7 +2,8 @@ import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
-import type { FileOpenEventType, FileOrderType, FileType, FileViewType } from "../types/files.types";
+import type { FileOrderType, FileType, FileViewType } from "../types/files.types";
+import type { FileOpenEventType } from "../types/events.types";
 import { repeat } from "lit/directives/repeat.js";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -19,9 +20,10 @@ import cardCss from "../scss/components/card.scss";
 
 import { renderFileTable } from "./wy-file-table";
 import { renderFileCard } from "./wy-file-grid";
-import "./wy-icon";
-import "./wy-dropdown";
+import "./base/wy-icon";
+import "./base/wy-dropdown";
 import "./wy-file-menu";
+import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-files-list")
 @localized()
@@ -54,7 +56,7 @@ export class WyFilesList extends WeavyComponentConsumerMixin(LitElement) {
   private highlightRef: Ref<HTMLElement> = createRef();
 
   dispatchFileOpen(fileId: number, tab?: "comments" | "versions") {
-    const event: FileOpenEventType = new CustomEvent("file-open", { detail: { fileId, tab } });
+    const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId, tab } });
     return this.dispatchEvent(event);
   }
 

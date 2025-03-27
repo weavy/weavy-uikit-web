@@ -1,13 +1,13 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import { createRef, ref } from "lit/directives/ref.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 
-import overlayStyles from "../scss/all.scss"
-import colorModesStyles from "../scss/color-modes.scss";
+import overlayStyles from "../../scss/all.scss"
+import colorModesStyles from "../../scss/color-modes.scss";
 
 import "./wy-button";
 import "./wy-icon";

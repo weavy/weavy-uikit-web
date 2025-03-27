@@ -1,3 +1,4 @@
+import { MetadataType } from "./lists.types";
 import { MsgType } from "./msg.types";
 import { PollOptionType } from "./polls.types";
 import { InfiniteQueryResultType } from "./query.types";
@@ -13,6 +14,8 @@ export type MutateMessageProps = {
   meeting_id?: number;
   poll_options: PollOptionType[];
   embed_id: number;
+  metadata?: MetadataType;
+  context_id?: number
 };
 
 export type MessageType = MsgType;

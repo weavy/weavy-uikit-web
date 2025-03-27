@@ -1,12 +1,13 @@
-import { LitElement, css, html } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, html } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { partMap } from "../utils/directives/shadow-part-map";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import { partMap } from "../../utils/directives/shadow-part-map";
 
-import rebootCss from "../scss/components/base/reboot.scss";
-import spinnerCss from "../scss/components/spinner.scss";
-import progressCss from "../scss/components/progress.scss";
+import rebootCss from "../../scss/components/base/reboot.scss";
+import spinnerCss from "../../scss/components/spinner.scss";
+import progressCss from "../../scss/components/progress.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 @customElement("wy-spinner")
 export default class WySpinner extends LitElement {
@@ -14,11 +15,7 @@ export default class WySpinner extends LitElement {
     rebootCss,
     spinnerCss,
     progressCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected shadowParts = new ShadowPartsController(this);

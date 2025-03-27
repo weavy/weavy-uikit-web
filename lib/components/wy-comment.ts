@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -11,6 +11,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 
 import chatCss from "../scss/all.scss"
+import hostContentsCss from "../scss/host-contents.scss";
 
 import "./wy-comment-trashed";
 import "./wy-comment-view";
@@ -19,7 +20,7 @@ import "./wy-comment-edit";
 @customElement("wy-comment")
 export default class WyComment extends LitElement {
   
-  static override styles = [chatCss, css`:host { display: contents; }`];
+  static override styles = [chatCss, hostContentsCss];
   
   protected exportParts = new ShadowPartsController(this);
 

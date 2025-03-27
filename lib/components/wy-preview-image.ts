@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
@@ -8,8 +8,9 @@ import { checkImageLoad, imageLoaded } from "../utils/images";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import allCss from "../scss/all.scss"
+import hostContentsCss from "../scss/host-contents.scss";
 
-import "./wy-spinner";
+import "./base/wy-spinner";
 
 @customElement("wy-preview-image")
 @localized()
@@ -17,11 +18,7 @@ export class WyPreviewImage extends LitElement {
   
   static override styles = [
     allCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

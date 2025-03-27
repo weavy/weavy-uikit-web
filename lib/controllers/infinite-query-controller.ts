@@ -27,7 +27,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
 
   get result() {
     return (
-      this._result && this.observer ? this.observer.trackResult(this._result) : { isPending: true }
+      this._result && this.observer ? this.observer.trackResult(this._result) : this.observer?.getCurrentResult() ?? { isPending: true }
     ) as InfiniteQueryObserverResult<InfiniteData<TData>>;
   }
 
@@ -88,8 +88,8 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
         if (this.observer) {
           // REVIEW: The replaceEqualDeep might now be redundant because of updates in Tanstack
           const nextResult = replaceEqualDeep(this.result, this.observer.getCurrentResult());
+
           if (nextResult !== this._result) {
-            //console.log("update", nextResult)
             this._result = nextResult;
             this.host.requestUpdate();
           }

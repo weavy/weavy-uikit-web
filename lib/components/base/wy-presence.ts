@@ -1,23 +1,20 @@
-import { LitElement, css, html } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, html } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
-import { Presence, type PresenceType } from "../types/presence.types";
-import { partMap } from "../utils/directives/shadow-part-map";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { Presence, type PresenceType } from "../../types/presence.types";
+import { partMap } from "../../utils/directives/shadow-part-map";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 
-import rebootCss from "../scss/components/base/reboot.scss";
-import presenceCss from "../scss/components/presence.scss";
+import rebootCss from "../../scss/components/base/reboot.scss";
+import presenceCss from "../../scss/components/presence.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 @customElement("wy-presence")
 export default class WyPresence extends LitElement {
   static override styles = [
     rebootCss,
     presenceCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

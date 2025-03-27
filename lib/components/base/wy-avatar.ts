@@ -1,20 +1,21 @@
-import { LitElement, css, html, nothing } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, html, nothing } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
-import { getInitials } from "../utils/strings";
-import { type MemberType } from "../types/members.types";
-import { type UserType } from "../types/users.types";
+import { getInitials } from "../../utils/strings";
+import { type MemberType } from "../../types/members.types";
+import { type UserType } from "../../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { Presence, type PresenceType } from "../types/presence.types";
+import { Presence, type PresenceType } from "../../types/presence.types";
 import { consume } from "@lit/context";
-import { UserContext } from "../contexts/user-context";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { partMap } from "../utils/directives/shadow-part-map";
-import { S4 } from "../utils/data";
+import { UserContext } from "../../contexts/user-context";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import { partMap } from "../../utils/directives/shadow-part-map";
+import { S4 } from "../../utils/data";
 
-import rebootCss from "../scss/components/base/reboot.scss";
-import avatarCss from "../scss/components/avatar.scss";
-import presenceCss from "../scss/components/presence.scss";
+import rebootCss from "../../scss/components/base/reboot.scss";
+import avatarCss from "../../scss/components/avatar.scss";
+import presenceCss from "../../scss/components/presence.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 import "./wy-presence";
 import "./wy-icon";
@@ -95,11 +96,7 @@ export class WyAvatarGroup extends LitElement {
   static override styles = [
     rebootCss,
     avatarCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -174,13 +171,13 @@ export class WyAvatarGroup extends LitElement {
           part="wy-avatar-back"
           style="mask-image: url(#${this.uniqueId}-mask); -webkit-mask-image: url(#${this.uniqueId}-mask);"
           .src=${backMember?.avatar_url}
-          .name=${backMember?.display_name}
+          .name=${backMember?.name}
           size=${(this.size * 2) / 3}
         ></wy-avatar>
         <wy-avatar
           part="wy-avatar-front"
           .src=${frontMember.avatar_url}
-          .name=${frontMember.display_name}
+          .name=${frontMember.name}
           .isBot=${frontMember.is_bot}
           size=${(this.size * 2) / 3}
         ></wy-avatar>

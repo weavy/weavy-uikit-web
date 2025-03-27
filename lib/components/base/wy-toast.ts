@@ -1,12 +1,13 @@
-import { LitElement, type PropertyValues, html, css } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, type PropertyValues, html } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { whenElementVisible } from "../utils/dom";
-import { clickOnEnterAndSpace } from "../utils/keyboard";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import { whenElementVisible } from "../../utils/dom";
+import { clickOnEnterAndSpace } from "../../utils/keyboard";
 
-import overlayStyles from "../scss/all.scss";
+import overlayCss from "../../scss/all.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 import "./wy-button";
 import "./wy-icon";
@@ -14,12 +15,8 @@ import "./wy-icon";
 @customElement("wy-toasts")
 export class WyToasts extends LitElement {
   static override styles = [
-    overlayStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    overlayCss,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -89,12 +86,8 @@ export class WyToasts extends LitElement {
 @customElement("wy-toast")
 export class WyToast extends LitElement {
   static override styles = [
-    overlayStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    overlayCss,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

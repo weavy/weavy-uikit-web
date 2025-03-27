@@ -3,7 +3,9 @@ import { Constructor } from "../types/generic.types";
 import { WyContextProvider as ContextProvider } from "../utils/context-provider";
 import { globalContextProvider, WeavyContext } from "../contexts/weavy-context";
 
-export interface WeavyContextProviderProps {}
+export interface WeavyContextProviderProps {
+  updateContext: () => void;
+}
 
 // WeavyQuery mixin/decorator
 export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
@@ -25,6 +27,14 @@ export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>
         });
       } else {
         globalContextProvider?.setValue(this as unknown as WeavyType);
+      }
+    }
+
+    updateContext() {
+      if (this.host !== document.documentElement) {
+        this.#hostContextProvider?.updateObservers()
+      } else {
+        globalContextProvider?.updateObservers();
       }
     }
 

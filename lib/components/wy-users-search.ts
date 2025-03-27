@@ -1,4 +1,4 @@
-import { LitElement, css, html, TemplateResult, nothing, type PropertyValueMap } from "lit";
+import { LitElement, html, TemplateResult, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
@@ -17,24 +17,23 @@ import { InfiniteQueryResultType } from "../types/query.types";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
 
 import chatCss from "../scss/all.scss";
-import pagerStyles from "../scss/components/pager.scss";
+import footerbarCss from "../scss/components/footerbar.scss";
+import pagerCss from "../scss/components/pager.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
-import "./wy-button";
-import "./wy-icon";
-import "./wy-avatar";
-import "./wy-spinner";
+import "./base/wy-button";
+import "./base/wy-icon";
+import "./base/wy-avatar";
+import "./base/wy-spinner";
 
 @customElement("wy-users-search")
 @localized()
 export default class WyUsersSearch extends LitElement {
   static override styles = [
     chatCss,
-    pagerStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    footerbarCss,
+    pagerCss,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -120,12 +119,12 @@ export default class WyUsersSearch extends LitElement {
               <wy-avatar
                 id=${member.id}
                 .src=${member.avatar_url}
-                .name=${member.display_name}
+                .name=${member.name}
                 .presence=${member.presence}
                 .isBot=${member.is_bot}
                 size=${32}
               ></wy-avatar>
-              <div class="wy-item-body"> ${member.display_name} </div>
+              <div class="wy-item-body"> ${member.name} </div>
               <wy-icon name="checkbox-marked"></wy-icon>
             </div>
           `;
@@ -166,12 +165,12 @@ export default class WyUsersSearch extends LitElement {
               <wy-avatar
                 id=${member.id}
                 .src=${member.avatar_url}
-                .name=${member.display_name}
+                .name=${member.name}
                 .presence=${member.presence}
                 .isBot=${member.is_bot}
                 size=${32}
               ></wy-avatar>
-              <div class="wy-item-body"> ${member.display_name} </div>
+              <div class="wy-item-body"> ${member.name} </div>
               <wy-icon name="${this.isChecked(member.id) ? "checkbox-marked" : "checkbox-blank"}"></wy-icon>
             </div>`;
           }) ?? nothing}`
@@ -227,7 +226,7 @@ export default class WyUsersSearch extends LitElement {
           ${this.getSelected()} ${this.getSearchResult()}
         </div>
       </div>
-      <div class="wy-footerbar wy-footerbar-sticky">
+      <div part="wy-footerbar wy-footerbar-sticky">
         <div class="wy-pane-group">
           <wy-buttons reverse>
             <wy-button

@@ -1,12 +1,12 @@
 import { LitElement, html, type PropertyValueMap } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
+import { type WeavyType, WeavyContext } from "../../contexts/weavy-context";
 import { localized, msg, str } from "@lit/localize";
-import { WeavyProps } from "../types/weavy.types";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { TypingController } from "../controllers/typing-controller";
+import { WeavyProps } from "../../types/weavy.types";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import { TypingController } from "../../controllers/typing-controller";
 
 @customElement("wy-typing")
 @localized()

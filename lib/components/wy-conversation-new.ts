@@ -2,7 +2,7 @@ import { LitElement, html, type PropertyValueMap, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { MemberType } from "../types/members.types";
-import { AddAppMutationType, getAddAppMutation } from "../data/app";
+import { CreateAppMutationType, getCreateAppMutation } from "../data/app";
 import { localized, msg } from "@lit/localize";
 import { WeavyProps } from "../types/weavy.types";
 import { AppTypeString } from "../types/app.types";
@@ -12,9 +12,9 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import allStyles from "../scss/all.scss";
 
 import "./wy-users-search";
-import "./wy-overlay";
-import "./wy-button";
-import "./wy-icon";
+import "./base/wy-overlay";
+import "./base/wy-button";
+import "./base/wy-icon";
 
 @customElement("wy-conversation-new")
 @localized()
@@ -29,7 +29,7 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
   @state()
   private show = false;
 
-  private addConversationMutation?: AddAppMutationType;
+  private addConversationMutation?: CreateAppMutationType;
 
   private open() {
     this.show = true;
@@ -56,7 +56,7 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
 
   protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
     if (changedProperties.has("weavy") && this.weavy) {
-      this.addConversationMutation = getAddAppMutation(this.weavy);
+      this.addConversationMutation = getCreateAppMutation(this.weavy);
     }
   }
 

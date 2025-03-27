@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
@@ -8,10 +8,11 @@ import type { FileProviderType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { iconNamesType } from "../utils/icons";
 
-import "./wy-spinner";
+import "./base/wy-spinner";
 import "./wy-preview-icon";
 
 import allCss from "../scss/all.scss"
+import hostContentsCss from "../scss/host-contents.scss";
 
 @customElement("wy-preview-embed")
 @localized()
@@ -19,11 +20,7 @@ export class WyPreviewEmbed extends LitElement {
   
   static override styles = [
     allCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

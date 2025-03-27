@@ -12,7 +12,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { partMap } from "../utils/directives/shadow-part-map";
 
 import "./wy-file-menu";
-import "./wy-icon";
+import "./base/wy-icon";
 
 export type FileOrderHeaderType = { by: FileOrderByType | undefined; title: string }[];
 

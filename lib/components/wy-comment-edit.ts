@@ -8,22 +8,14 @@ import { MutationController } from "../controllers/mutation-controller";
 import { getUpdateCommentMutationOptions } from "../data/comments";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "../types/members.types";
-import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import type { PollOptionType } from "../types/polls.types";
 import type { CommentType, MutateCommentProps } from "../types/comments.types";
 import type { WeavyProps } from "../types/weavy.types";
 
-import "./wy-attachment";
-import "./wy-image-grid";
-import "./wy-attachments-list";
-import "./wy-poll";
-import "./wy-embed";
-import "./wy-button";
-import "./wy-icon";
+import "./base/wy-button";
+import "./base/wy-icon";
 import "./wy-editor";
 
 import chatCss from "../scss/all.scss"
@@ -49,21 +41,6 @@ export default class WyCommentEdit extends LitElement {
   @property({ type: Number })
   commentId!: number;
 
-  @property({ attribute: false })
-  createdBy!: MemberType;
-
-  @property()
-  createdAt: string = "";
-
-  @property()
-  modifiedAt: string | undefined = undefined;
-
-  @property({ type: Boolean })
-  isSubscribed: boolean = false;
-
-  @property({ type: Boolean })
-  isTrashed: boolean = false;
-
   @property()
   text: string = "";
 
@@ -74,16 +51,7 @@ export default class WyCommentEdit extends LitElement {
   pollOptions: PollOptionType[] | undefined = [];
 
   @property({ attribute: false })
-  meeting?: MeetingType;
-
-  @property({ attribute: false })
   embed?: EmbedType;
-
-  @property({ type: Array })
-  reactions: ReactableType[] = [];
-
-  @property({ type: Array })
-  seenBy: MemberType[] = [];
 
   private updateCommentMutation = new MutationController<
     CommentType,

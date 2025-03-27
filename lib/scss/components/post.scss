@@ -23,13 +23,17 @@
 
   @include highlight.flash;
 
-  .wy-image-grid {
-    border-radius: 0;
-  }
-
   wy-comment-list {
     border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
   }
+}
+
+.wy-post-area {
+  border-radius: var.default(--wy-border-radius-sm);
+}
+
+.wy-post-area-full-width {
+  border-radius: 0;
 }
 
 .wy-post-body {

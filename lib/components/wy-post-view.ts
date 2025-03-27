@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, css, html, nothing } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -7,7 +7,8 @@ import type WeavyPreview from "../components/wy-preview";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
-import type { FileOpenEventType, FileType } from "../types/files.types";
+import type { FileType } from "../types/files.types";
+import type { FileOpenEventType } from "../types/events.types";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { localized, msg, str } from "@lit/localize";
@@ -17,30 +18,28 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypeString } from "../types/app.types";
 import { hasEntityChildType, isEntityChainMatch } from "../utils/notifications";
 import { partMap } from "../utils/directives/shadow-part-map";
+import { Feature } from "../types/features.types";
 
 import chatCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
-import "./wy-avatar";
+import "./base/wy-avatar";
 import "./wy-attachment";
-import "./wy-image-grid";
+import "./base/wy-image-grid";
 import "./wy-attachments-list";
-import "./wy-reactions";
+import "./base/wy-reactions";
 import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-embed";
 import "./wy-comment-list";
-import "./wy-skeleton";
+import "./base/wy-skeleton";
 
 @customElement("wy-post-view")
 @localized()
 export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -169,11 +168,11 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
               .src="${this.createdBy.avatar_url}"
               .isBot=${this.createdBy.is_bot}
               .size=${48}
-              .name=${this.createdBy.display_name}
+              .name=${this.createdBy.name}
             ></wy-avatar>
             <div class="wy-item-rows">
               <div class="wy-item-row">
-                <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
+                <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.name}</span></div>
               </div>
               <div class="wy-item-row">
                 <div class="wy-item-text">
@@ -192,11 +191,11 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
         )}>
             <div class="wy-item">
               <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
-          this.createdBy.display_name
+          this.createdBy.name
         }></wy-avatar>
               <div class="wy-item-rows">
                 <div class="wy-item-row">
-                  <div class="wy-item-title">${this.createdBy.display_name}</div>
+                  <div class="wy-item-title">${this.createdBy.name}</div>
                 </div>
                 <div class="wy-item-row">
                   <div class="wy-item-text">
@@ -246,6 +245,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
               ${
                 images && !!images.length
                   ? html`<wy-image-grid
+                      class="wy-post-area-full-width"
                       .images=${images}
                       @file-open=${(e: FileOpenEventType) => {
                         this.previewRef.value?.open(e.detail.fileId);
@@ -256,7 +256,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
 
               <!-- embeds -->
               ${
-                this.embed && this.hasFeatures?.embeds
+                this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embed
                   ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
                   : nothing
               }
@@ -296,7 +296,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
                 <div>
                   <!-- comment count -->
                   ${
-                    this.hasFeatures?.comments
+                    this.componentFeatures?.allowsFeature(Feature.Comments)
                       ? html` <wy-button
                           small
                           kind="inline"
@@ -311,7 +311,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
                   }
                 </div>
                 ${
-                  this.hasFeatures?.reactions && this.app
+                  this.componentFeatures?.allowsFeature(Feature.Reactions) && this.app
                     ? html`
                         <wy-reactions
                           line

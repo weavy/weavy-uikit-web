@@ -10,7 +10,7 @@ import { checkImageLoad, imageLoaded } from "../utils/images";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { msg, str } from "@lit/localize";
 
-import "./wy-icon";
+import "./base/wy-icon";
 import "./wy-file-menu";
 
 export function renderFileCard(

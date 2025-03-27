@@ -9,7 +9,7 @@ import type { BotType, UserType } from "../types/users.types";
 import { type AppType, AppContext } from "../contexts/app-context";
 import { type EntityType, LinkContext } from "../contexts/link-context";
 import { UserContext } from "../contexts/user-context";
-import { type ProductFeaturesType, ProductFeaturesContext } from "../contexts/features-context";
+import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/features-context";
 import { WeavyComponentContextProps } from "./weavy-component";
 import { BotContext } from "../contexts/bot-context";
 
@@ -24,9 +24,9 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
     @state()
     botUser: BotType | undefined;
 
-    @consume({ context: ProductFeaturesContext, subscribe: true })
+    @consume({ context: FeaturePolicyContext, subscribe: true })
     @state()
-    hasFeatures: ProductFeaturesType | undefined;
+    componentFeatures: ComponentFeaturePolicy | undefined;
 
     @consume({ context: LinkContext, subscribe: true })
     @state()
@@ -63,12 +63,12 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
       return await this.#whenBotUser;
     }
 
-    #resolveHasFeatures?: (hasFeatures: ProductFeaturesType) => void;
-    #whenHasFeatures = new Promise<ProductFeaturesType>((r) => {
-      this.#resolveHasFeatures = r;
+    #resolveComponentFeatures?: (componentFeatures: ComponentFeaturePolicy) => void;
+    #whenComponentFeatures = new Promise<ComponentFeaturePolicy>((r) => {
+      this.#resolveComponentFeatures = r;
     });
-    async whenHasFeatures() {
-      return await this.#whenHasFeatures;
+    async whenComponentFeatures() {
+      return await this.#whenComponentFeatures;
     }
 
     #resolveLink?: (link: EntityType) => void;
@@ -119,8 +119,8 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
         this.#resolveBotUser?.(this.botUser);
       }
 
-      if (changedProperties.has("hasFeatures") && this.hasFeatures) {
-        this.#resolveHasFeatures?.(this.hasFeatures);
+      if (changedProperties.has("componentFeatures") && this.componentFeatures) {
+        this.#resolveComponentFeatures?.(this.componentFeatures);
       }
 
       if (changedProperties.has("link") && this.link) {
@@ -151,8 +151,8 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
         this.requestUpdate("botUser");
       }
 
-      if (this.hasFeatures) {
-        this.requestUpdate("hasFeatures");
+      if (this.componentFeatures) {
+        this.requestUpdate("componentFeatures");
       }
 
       if (this.link) {

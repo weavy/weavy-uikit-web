@@ -30,14 +30,15 @@ import { WeavyProps } from "../types/weavy.types";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { hasPermission } from "../utils/permission";
+import { Feature } from "../types/features.types";
 
 import filesCss from "../scss/all.scss";
 
-import "./wy-button";
-import "./wy-dropdown";
-import "./wy-icon";
-import "./wy-spinner";
-import "./wy-sheet";
+import "./base/wy-button";
+import "./base/wy-dropdown";
+import "./base/wy-icon";
+import "./base/wy-spinner";
+import "./base/wy-sheet";
 import "./wy-file-item";
 import "./wy-cloud-files";
 import "./wy-notification-button-list";
@@ -231,7 +232,7 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
                     hidden
                     tabindex="-1"
                   />
-                  ${this.hasFeatures?.cloudFiles
+                  ${this.componentFeatures?.allowsFeature(Feature.CloudFiles)
                     ? html`
                         <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
                           <wy-icon name="cloud"></wy-icon>

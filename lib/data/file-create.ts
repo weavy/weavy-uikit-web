@@ -26,7 +26,6 @@ export const getTempFile = (
   const tempFile: FileType = {
     id: refId,
     app: { id: -1 },
-    refId: refId,
     name: name,
     kind: getKind(name),
     size: size,
@@ -97,29 +96,6 @@ export function getFileMutationsByConflictOrError(
   );
 }
 
-/*export function useRemoveMutatingFileUpload(weavy: WeavyType, filesKey: MutationKey) {
-    const queryClient = weavy.queryClient;
-    const mutationKey: MutationKey = filesKey;
-
-    return (mutation: FileMutationType) => {
-        if (queryClient.getMutationCache().find({ mutationKey: mutationKey, predicate: (m) => m === mutation })) {
-            queryClient.getMutationCache().remove(mutation); 
-        }
-    }
-}*/
-
-/*export function useClearMutatingFileUpload(weavy: WeavyType, filesKey: MutationKey) {
-    const queryClient = weavy.queryClient;
-    const mutationKey: MutationKey = filesKey;
-
-    return () => {
-        const mutations = queryClient.getMutationCache().findAll({ mutationKey: mutationKey });
-        mutations.forEach((mutation: Mutation) => {
-            queryClient.getMutationCache().remove(mutation); 
-        });
-        
-    }
-}*/
 export type CreateFileMutationType = Mutation<FileType, Error, CreateFileProps, FileMutationContextType | undefined>;
 
 export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name: string) {
@@ -167,15 +143,6 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
       removeSuccessfulUploadBlobMutations(weavy, app, variables.blob.name);
       removeSettledFileMutations(weavy, app, variables.blob.name);
 
-      //let files = queryClient.getQueryData<InfiniteData<FilesResultType>>(filesKey);
-      /*let file =  findAnyExistingItem<FileType>(files, "name", variables.blob.name, true) || variables.file;
-
-            if (!file) {
-                // If non existing add optimistic update
-                const meta = queryClient.getQueryCache().find<FilesResultType>({ queryKey: filesKey})!.meta;
-                const order = meta!.order as FileOrderType;
-                */
-
       let srcUrl: URL | undefined;
       try {
         srcUrl = (variables.blob.thumbnail_url && new URL(variables.blob.thumbnail_url)) || undefined;
@@ -184,10 +151,6 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
       }
 
       const file = getTempFile(srcUrl, variables.blob.name, variables.blob.size, variables.blob.media_type, user);
-      /*addCacheItem(queryClient, filesKey, file, file.id, order);
-            } else {
-                updateCacheItem(queryClient, filesKey, file?.refId || file?.id, (file: FileType) => Object.assign(file, { status: "pending" }));
-            }*/
 
       return <FileMutationContextType>{
         type: variables.replace ? "replace" : "create",
@@ -196,7 +159,6 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
       };
     },
     onSuccess: (_data: FileType, variables: CreateFileProps, _context: FileMutationContextType | undefined) => {
-      //updateCacheItem(queryClient, filesKey, context!.file?.refId || context!.file?.id, (file: FileType) => Object.assign(file, data, { status: "ok", statusText: undefined, progress: undefined }));
       updateMutationContext(queryClient, filesKey, variables, (context) => {
         if (context) {
           (context as FileMutationContextType).status.state = "ok";
@@ -207,9 +169,8 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
       //console.log("FILE SUCCESS");
       return queryClient.invalidateQueries({ queryKey: filesKey });
     },
-    onError(error: Error, variables: CreateFileProps, context: FileMutationContextType | undefined) {
+    onError(error: Error, variables: CreateFileProps, _context: FileMutationContextType | undefined) {
       if ((error?.cause as ServerErrorResponseType)?.status === 409) {
-        //updateCacheItem(queryClient, filesKey, context!.file?.refId || context!.file?.id, (file: FileType) => Object.assign(file, { status: "conflict", statusText: error.detail || error.title, progress: undefined }));
         updateMutationContext(queryClient, filesKey, variables, (context) => {
           if (context) {
             (context as FileMutationContextType).status.progress = undefined;
@@ -218,14 +179,6 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
           }
         });
       } else {
-        const errorId = context?.file?.refId || context?.file?.id;
-        if (errorId) {
-          if (errorId >= 1) {
-            //updateCacheItem(queryClient, filesKey, errorId, (file: FileType) => Object.assign(file, { status: "error", statusText: error.detail || error.title, progress: undefined }));
-          } else if (errorId > 0 && errorId < 1) {
-            //removeCacheItem(queryClient, mutationKey, errorId);
-          }
-        }
         updateMutationContext(queryClient, filesKey, variables, (context) => {
           if (context) {
             (context as FileMutationContextType).status.state = "error";

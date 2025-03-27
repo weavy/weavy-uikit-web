@@ -7,13 +7,12 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { WeavyPostalParent } from "../utils/postal-parent";
 import type { ExternalBlobType } from "../types/files.types";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import cloudFilesCss from "../scss/all.scss";
 
-import "./wy-overlay";
-import "./wy-spinner";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import WyOverlay from "./wy-overlay";
+import WyOverlay from "./base/wy-overlay";
+import "./base/wy-spinner";
 
 @customElement("wy-cloud-files")
 @localized()

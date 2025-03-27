@@ -1,10 +1,12 @@
 import {
+  FetchQueryOptions,
   InfiniteData,
   InfiniteQueryObserverOptions,
   MutationKey,
   MutationObserver,
   QueryFunctionContext,
   QueryKey,
+  QueryObserverOptions,
 } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import {
@@ -16,13 +18,6 @@ import {
   type AppType,
 } from "../types/app.types";
 import { getApi, getApiMutation, getApiOptions } from "./api";
-
-export type MutateAddAppVariables = {
-  members: (number | string)[];
-  type: AppTypeString;
-};
-
-export type AddAppMutationType = MutationObserver<AppType, Error, MutateAddAppVariables, void>;
 
 export function getAppOptions<T extends AppType = AppType>(
   weavy: WeavyType,
@@ -44,6 +39,93 @@ export function getApp<T extends AppType = AppType>(
   return type === ComponentType.Unknown
     ? getApi<T>(weavy, ["apps", uid])
     : getApi<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
+}
+
+export function getOrCreateAppOptions<T extends AppType = AppType>(
+  weavy: WeavyType,
+  uid: string,
+  type: AppTypeGuid | ComponentType = ComponentType.Unknown,
+  members?: (number | string)[],
+  appData?: AppUpProperties
+) {
+  return <QueryObserverOptions<T>>{
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ["apps", uid],
+    queryFn: async () => {
+      //console.log("API", method, apiPath ? apiPath : "/api/" + apiKey.join("/"));
+
+      const result = (
+        await Promise.allSettled(
+          [
+            weavy.fetch(`/api/apps/${uid}`),
+            type !== ComponentType.Unknown
+              ? weavy
+                  .fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ uid: uid, type, members, ...appData }) })
+                  .then(() => {
+                    //weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
+                  })
+              : undefined,
+          ].filter((p) => p)
+        )
+      ).find((result) => result.status === "fulfilled" && result.value?.ok);
+
+      const response = result?.status === "fulfilled" && result.value;
+
+      if (response) {
+        return (await response.json()) as T;
+      } else {
+        throw new Error(`Error getting or creating app ${uid}`);
+      }
+    },
+  };
+}
+
+export async function getOrCreateApp<T extends AppType = AppType>(
+  weavy: WeavyType,
+  uid: string,
+  type: AppTypeGuid | ComponentType = ComponentType.Unknown,
+  members?: (number | string)[],
+  appData?: AppUpProperties
+) {
+  const queryClient = weavy.queryClient;
+  const appOptions = getOrCreateAppOptions(weavy, uid, type, members, appData);
+
+  return await queryClient.fetchQuery<T>(appOptions as FetchQueryOptions<T>);
+}
+
+export type MutateAddAppVariables = {
+  name?: string;
+  members: (number | string)[];
+  type: AppTypeString;
+  uid?: string;
+};
+
+export type CreateAppMutationType = MutationObserver<AppType, Error, MutateAddAppVariables, void>;
+
+export function getCreateAppMutationOptions(weavy: WeavyType) {
+  const options = {
+    mutationFn: async ({ name, members, type, uid }: MutateAddAppVariables) => {
+      const response = await weavy.fetch(`/api/apps`, {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          members,
+          type,
+          uid,
+        }),
+      });
+      return await response.json();
+    },
+    onSettled: async () => {
+      await weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
+    },
+  };
+
+  return options;
+}
+
+export function getCreateAppMutation(weavy: WeavyType): CreateAppMutationType {
+  return new MutationObserver(weavy.queryClient, getCreateAppMutationOptions(weavy));
 }
 
 export async function mutateApp<T extends AppType = AppType>(weavy: WeavyType, app: T, appData?: AppUpProperties) {
@@ -123,42 +205,19 @@ export function getBadgeOptions(
   return getApiOptions<AppsResultType>(weavy, queryKey, url, options);
 }
 
-export function getAddAppMutationOptions(weavy: WeavyType) {
-  const options = {
-    mutationFn: async ({ members, type }: MutateAddAppVariables) => {
-      const response = await weavy.fetch(`/api/apps`, {
-        method: "POST",
-        body: JSON.stringify({
-          members,
-          type,
-        }),
-      });
-      return await response.json();
-    },
-    onSettled: async () => {
-      await weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
-    },
-  };
-
-  return options;
-}
-
-export function getAddAppMutation(weavy: WeavyType): AddAppMutationType {
-  return new MutationObserver(weavy.queryClient, getAddAppMutationOptions(weavy));
-}
-
 export function getAppListOptions(
   weavy: WeavyType,
   options: object = {},
   types?: AppTypeGuid[] | null,
   member?: string,
   searchText?: () => string | undefined,
-  orderBy?: string | null
+  orderBy?: string | null,
+  includeUid?: boolean | null
 ): InfiniteQueryObserverOptions<AppsResultType, Error, InfiniteData<AppsResultType>> {
   return {
     ...options,
     initialPageParam: 0,
-    queryKey: ["apps", "list", types, member, orderBy],
+    queryKey: ["apps", "list", types, member, orderBy, includeUid],
     queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
       const queryParams = new URLSearchParams();
 
@@ -179,6 +238,10 @@ export function getAppListOptions(
       const q = searchText?.();
       if (q) {
         queryParams.append("q", q);
+      }
+
+      if (includeUid === false) {
+        queryParams.append("uid", "false");
       }
 
       const url = `/api/apps?${queryParams.toString()}`;

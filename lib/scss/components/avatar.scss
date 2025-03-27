@@ -42,9 +42,12 @@
   bottom: 0;
   right: calc(-100%/12);
   border-radius: 50%;
-  background-color: #{color.token(--wy-primary)};
-  color: #{color.token(--wy-on-primary)};
+  // background-color: #{color.token(--wy-primary)};
+  // color: #{color.token(--wy-on-primary)};
+  color: #{color.token(--wy-primary-50)};
+  stroke: #{color.token(--wy-on-primary)};
 }
+
 
 :host(wy-avatar-group) {
   position: relative;

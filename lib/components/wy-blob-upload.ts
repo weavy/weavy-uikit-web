@@ -10,7 +10,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 
-import "./wy-button";
+import "./base/wy-button";
 
 @customElement("wy-blob-upload")
 @localized()

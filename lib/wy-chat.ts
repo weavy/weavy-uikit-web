@@ -1,10 +1,10 @@
 import { customElement } from "./utils/decorators/custom-element";
 import { ThemeController } from "./controllers/theme-controller";
-import { html } from "lit";
-import { AppTypeString } from "./types/app.types";
+import { html, nothing } from "lit";
+import { AppTypeGuid } from "./types/app.types";
 import { WeavyComponent } from "./classes/weavy-component";
-import { ProductTypes } from "./types/product.types";
 import { localized } from "@lit/localize";
+import { ComponentFeatures, Feature } from "./contexts/features-context";
 
 import allStyles from "./scss/all.scss";
 import hostBlockStyles from "./scss/host-block.scss";
@@ -15,8 +15,8 @@ import colorModesStyles from "./scss/color-modes.scss";
 import "./components/wy-conversation";
 import "./components/wy-notification-button-list";
 import "./components/wy-empty";
-import "./components/wy-button";
-import "./components/wy-spinner";
+import "./components/base/wy-button";
+import "./components/base/wy-spinner";
 
 export const WY_CHAT_TAGNAME = "wy-chat";
 
@@ -39,22 +39,38 @@ declare global {
 export class WyChat extends WeavyComponent {
   static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
-  override productType = ProductTypes.Chat;
-  override componentType = AppTypeString.Chat;
+  override componentType = AppTypeGuid.Chat;
 
-  constructor() {
-    super();
-    new ThemeController(this, WyChat.styles);
-  }
+  override componentFeatures = new ComponentFeatures({
+    // All available features as enabled/disabled by default
+    [Feature.Attachments]: true,
+    [Feature.CloudFiles]: true,
+    [Feature.Embeds]: true,
+    [Feature.GoogleMeet]: true,
+    [Feature.Meetings]: true,
+    [Feature.Mentions]: true,
+    [Feature.MicrosoftTeams]: true,
+    [Feature.Polls]: true,
+    [Feature.Previews]: true,
+    [Feature.Reactions]: true,
+    [Feature.Receipts]: false,
+    [Feature.Typing]: false,
+    [Feature.ZoomMeetings]: true,
+  });
+
+  protected theme = new ThemeController(this, WyChat.styles);
 
   override render() {
-    return this.app
-      ? html`
-          <wy-buttons floating reverse>
-            <wy-notification-button-list></wy-notification-button-list>
-          </wy-buttons>
-          <wy-conversation .conversation=${this.app} .conversationId=${this.app.id}></wy-conversation>
-        `
-      : html` <wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty> `;
+    return html`
+      ${this.app
+        ? html`
+            <wy-buttons floating reverse>
+              <wy-notification-button-list></wy-notification-button-list>
+            </wy-buttons>
+          `
+        : nothing}
+
+      <wy-conversation .conversation=${this.app} .conversationId=${this.app?.id}></wy-conversation>
+    `;
   }
 }

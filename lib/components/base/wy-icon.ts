@@ -1,5 +1,5 @@
-import { LitElement, html, type PropertyValues, css, svg } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, html, type PropertyValues, svg } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import {
   getIconMapping,
@@ -8,27 +8,24 @@ import {
   getSvgMapping,
   type iconNamesType,
   type svgIconNamesType,
-} from "../utils/icons";
-import { toKebabCase } from "../utils/strings";
+} from "../../utils/icons";
+import { toKebabCase } from "../../utils/strings";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { partMap } from "../utils/directives/shadow-part-map";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import { partMap } from "../../utils/directives/shadow-part-map";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
-import { S4 } from "../utils/data";
+import { S4 } from "../../utils/data";
 
-import rebootCss from "../scss/components/base/reboot.scss";
-import iconCss from "../scss/components/icons.scss";
+import rebootCss from "../../scss/components/base/reboot.scss";
+import iconCss from "../../scss/components/icons.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 @customElement("wy-icon")
 export default class WyIcon extends LitElement {
   static override styles = [
     rebootCss,
     iconCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -139,7 +136,7 @@ export default class WyIcon extends LitElement {
             .icon-mask {
               width: calc(var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))));
               height: calc(var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem))));
-              ry: calc(var(--wy-border-radius-pill, var(--wy-border-radius, 50%)) * 2);
+              ry: calc(var(--wy-border-radius-pill, var(--wy-border-radius, 50%)));
               x: calc(var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))) / 2);
               y: calc(var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem))) / 2);
               stroke: black;

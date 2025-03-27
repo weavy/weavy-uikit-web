@@ -97,7 +97,12 @@ import {
   
     dispatchRequest() {
       this.ref.dispatchEvent(
-        new ContextRequestEvent(this.context, this._callback, this.subscribe)
+        new ContextRequestEvent(
+          this.context,
+          this.host,
+          this._callback,
+          this.subscribe
+        )
       );
     }
   

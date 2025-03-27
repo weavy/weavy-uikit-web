@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html style="--wy-theme-color: #61afef">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <script>
+      //fetch("/api/contextual/acme-chat?type=chat")
+    </script>
+    <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          "Open Sans", "Helvetica Neue", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      .wyx-header {
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        padding-inline: 1rem;
+        gap: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: lightgoldenrodyellow;
+      }
+
+      main {
+        display: flex;
+        position: relative;
+      }
+
+      .wyx-article {
+        padding: 1rem;
+      }
+
+      .wyx-aside {
+        flex: 0 0 320px;
+        display: flex;
+        max-width: 38%;
+        position: sticky;
+        top: 3rem;
+
+        height: calc(100vh - 3rem);
+
+        /* iPhone compatible height */
+        @supports (height: 100dvh) {
+          height: calc(100dvh - 3rem);
+        }
+      }
+
+      wy-copilot:not(:defined) {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="wyx-header">
+      <select id="bots"></select>
+    </header>
+    <main>
+      <article class="wyx-article" id="example-content">
+        <h1 id="important-weavy-concepts">Important Weavy concepts</h1>
+        <p
+          >This article discusses some important Weavy concepts. Understanding them will help you make the most of Weavy
+          when adding it to your application.</p
+        >
+        <h2 id="environment">Environment</h2>
+        <p
+          >One of the most important concepts to grasp is the <a href="/docs/learn/environment">environment</a>. To put
+          it simply, an environment is the backend/server part of Weavy that keeps track of all interactions and data
+          created when users collaborate using Weavy functionality.</p
+        >
+        <h2 id="component">Component</h2>
+        <p
+          >A Weavy <a href="/docs/learn/components">component</a> is an interactive building block you add to your UI to
+          enable Weavy functionality in your application. The component communicates with your Weavy environment using
+          standard HTTP requests.</p
+        >
+        <h2 id="app">App</h2>
+        <p
+          >Many Weavy components are backed by a corresponding <em>app</em> in the Weavy environment. The app is
+          required for permission and access control, and for keeping track of data generated when users interact with a
+          Weavy component.</p
+        >
+        <p
+          >Apps are normally created automatically by components when needed, but for better access control and
+          individually assigning permissions you can also use the <a href="/docs/reference/api/apps">Apps API</a> to
+          create apps ahead of time or to modify already created apps.</p
+        >
+        <h4 id="app-identifiers">App identifiers</h4>
+        <p
+          >When creating apps you can specify a <code>uid</code> which is a string that uniquely identifies the app. One
+          thing to consider when generating app identifiers is that it is often useful being able to do a reverse lookup
+          from a <code>uid</code> to a location in your app. It is therefore a good idea to base the <code>uid</code> on
+          something that identifies the location in your app where the Weavy component is being rendered. Typically you
+          would use something like a product id, page id, path or URL.</p
+        >
+        <blockquote>
+          <p>Note that the <code>uid</code> cannot contain whitespace and must contain at least one non-digit.</p>
+        </blockquote>
+        <h4 id="access-control">Access control</h4>
+        <p
+          >Controlling access to apps can be done on two levels. First you can set the <code>access</code> property whan
+          creating the app. This property defines the permissions for users who are <strong>not</strong> members of the
+          app. Additionally, the <code>directory</code> property let's you reference a
+          <a href="#directory">user directory</a> and is used in combination with <code>access</code> to specify that
+          only users in a specific directory can access the app.</p
+        >
+        <ul>
+          <li
+            >If you want an <em>open</em> app where all authenticated users are allowed to create content: set
+            <code>access=write</code>.
+            <em>This is the default when apps are created automatically by components.</em></li
+          >
+          <li
+            >If you want a <em>read-only</em> app where users can see content but cannot create anything: set
+            <code>access=read</code>.</li
+          >
+          <li>If you want a <em>closed</em> app that only members can access: set <code>access=none</code>.</li>
+        </ul>
+        <p
+          >By adding members to an app you can override the default <code>access</code> property on the app for
+          individual users. Adding members to an app is done with the
+          <a href="/docs/reference/api/apps#upsert-member">upsert member</a> endpoint in the
+          <a href="/docs/reference/api/apps">Apps API</a>.</p
+        >
+        <ul>
+          <li
+            >If you want to give a member permission to create content in the app: set <code>access=write</code>.
+            <em>This is the default when members are added to an app.</em></li
+          >
+          <li>If you want to give a member permission to read content in the app: set <code>access=read</code>.</li>
+          <li>If you want to block a member from accessing the app: set <code>access=none</code>.</li>
+        </ul>
+        <p
+          >If you have a large number of users that should have to access an app it is often convenient to set
+          <code>access</code> on the app to <code>read</code> or <code>write</code>. If needed you can also define a few
+          members with different <code>access</code>, for instance <code>none</code> to block them from accessing the
+          app.</p
+        >
+        <p
+          >For maximum control over who can access an app, set <code>access=none</code> on the app and define members
+          with individual <code>access</code> levels. You could for instance give <code>write</code> access to a few
+          members, and <code>read</code> access to others.</p
+        >
+        <h2 id="user">User</h2>
+        <p
+          >In order to integrate Weavy, your application must have some sort of <em>user</em> system in place, and there
+          must be a way to identify the currenty logged in user. Weavy then provides a mechanism for
+          <a href="/docs/learn/authentication">seamless authentication</a> and for syncing profile information from your
+          application to the Weavy environment.</p
+        >
+        <h4 id="syncing-users">Syncing users</h4>
+        <p
+          >Users in your application are automatically added to the Weavy environment as part of the authentication
+          processs, but syncing them in advance or on a schedule can improve the experience for features like @mentions
+          and direct messages.</p
+        >
+        <p
+          >To keep the user details (name, email, profile picture etc) up to date in Weavy, you can use the
+          <a href="/docs/reference/api/users">Users API</a>. We recommend updating Weavy's user records whenever a user
+          is updated in your application, such as during sign-up or when a user updates their profile.</p
+        >
+        <h4 id="user-identifiers">User identifiers</h4>
+        <p
+          >As part of the authentication process and when syncing users to Weavy you need to supply a
+          <code>uid</code> property. The <code>uid</code> is a string that uniquely identifies your user (typically your
+          internal user id).</p
+        >
+        <blockquote>
+          <p
+            >Note that the uid cannot contain whitespace and must contain at least one non-digit, for instance, if a
+            user has the integer id <code>256</code> in your system you can create a <code>uid</code> by adding a one
+            letter prefix, e.g. <code>u256</code>.</p
+          >
+        </blockquote>
+        <h2 id="directory">Directory</h2>
+        <p
+          ><em>User directories</em> is an advanced concept for multi-tenant scenarios where you want multiple
+          applications and/or organizations using the same Weavy environment while making sure users in the different
+          directories cannot see each other.</p
+        >
+        <ul>
+          <li>Users can only be members in one directory at a time.</li>
+          <li>User within the same directory can always interact with each other.</li>
+          <li>Users in different directories cannot see or interact with each other.</li>
+          <li
+            >By adding users from different directories as members of the same
+            <a href="/docs/concepts#apps">app</a> they can interact with each other <em>regardless</em> of the directory
+            they are in. This enables communication across organizations, something which is not possible with multiple
+            environments.</li
+          >
+        </ul>
+        <p
+          >To specify that a user belongs to a directory, use the <a href="/docs/reference/api/users">Users API</a> and
+          specify a <code>directory</code> when creating or updating a user.</p
+        >
+      </article>
+      <aside class="wyx-aside">
+        <wy-copilot>
+          <wy-button slot="actions" kind="icon" onclick="document.querySelector('wy-copilot').reset()">
+            <wy-icon name="stars"></wy-icon>
+          </wy-button>
+          <wy-button slot="suggestion-list" class="suggestion">Summarize this page</wy-button>
+          <wy-button slot="suggestion-list" class="suggestion">What's a uid?</wy-button>
+        </wy-copilot>
+      </aside>
+    </main>
+    <wy-notification-toasts></wy-notification-toasts>
+    <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
+    <script type="module">
+      import { Weavy } from "/lib/index.ts";
+
+      const weavy = new Weavy({
+        url: "%WEAVY_URL%",
+        tokenUrl: "/api/token",
+      });
+
+      const copilot = document.querySelector("wy-copilot");
+      const botSelector = document.getElementById("bots");
+
+      const bots = fetch("/api/bots")
+        .then((res) => res.json())
+        .then((bots) => {
+          bots.forEach((bot) => {
+            const option = document.createElement("option");
+            option.value = bot.username;
+            option.text = bot.name;
+            if (bot.username === document.location.hash.substr(1)) {
+              option.selected = true;
+              copilot.setAttribute("bot", bot.username);
+            }
+            botSelector.add(option);
+          });
+
+          // Set default
+          botSelector.value = copilot.getAttribute("bot");
+        });
+
+      botSelector.addEventListener("change", () => {
+        console.log("bot ->", botSelector.value);
+        copilot.setAttribute("bot", botSelector.value);
+        document.location.hash = botSelector.value;
+      });
+
+      window.addEventListener("hashchange", (e) => {
+        const botHash = document.location.hash.substr(1);
+        if (botSelector.value !== botHash) {
+          console.log("bot changed by url hash", botHash);
+          botSelector.value = botHash;
+        }
+      });
+
+      copilot.addEventListener("wy-preview-open", (e) => {
+        if (window.top !== window.self) {
+          console.log("requesting external preview", e.detail.fileId, e.detail.tab);
+          window.top.postMessage({
+            name: "wy-preview-open",
+            ...e.detail,
+          });
+          e.preventDefault();
+        }
+      });
+
+      //copilot.instructions = `Use the provided text, answer in a piratey way with lots of emojis. Don't forget to brag about how great everything is in Sweden.`;
+
+      const data = []
+
+      // Increase length to create a huge upload
+      data.length = 1
+      data.fill(document.getElementById("example-content").innerHTML)
+
+      //copilot.data = [document.getElementById("example-content").innerHTML]; // normal usage
+      //copilot.data = [data.join("\n")] // concat the upload array
+      copilot.data = data // Provide an array (only first item is currently used)
+
+
+      /*copilot.instructions = `Page:
+        ${document.getElementById("example-content").innerHTML}
+      `*/
+
+      document.addEventListener("wy-link", (e) => {
+        console.log("wy-link", e);
+      });
+
+      copilot.addEventListener("wy-app", (e) => {
+        console.log("wy-app", e.detail);
+      });
+      copilot.addEventListener("wy-message", (e) => {
+        console.log("wy-message", e.detail);
+      });
+    </script>
+  </body>
+</html>

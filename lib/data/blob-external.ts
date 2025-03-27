@@ -46,9 +46,9 @@ export async function externalBlob(weavy: WeavyType, externalBlob: ExternalBlobT
   return blob;
 }
 
-export function getExternalBlobMutationOptions(weavy: WeavyType, user: UserType, app: AppType, uniqueId?: string) {
+export function getExternalBlobMutationOptions(weavy: WeavyType, user: UserType, appId: AppType["id"], uniqueId?: string) {
   const queryClient = weavy.queryClient;
-  const blobsKey: MutationKey = ["apps", app.id, "blobs", uniqueId];
+  const blobsKey: MutationKey = ["apps", appId, "blobs", uniqueId];
 
   const options = {
     mutationFn: async (variables: MutateExternalBlobVariables) => {
@@ -106,8 +106,8 @@ export function getExternalBlobMutationOptions(weavy: WeavyType, user: UserType,
 export function getExternalBlobMutation(
   weavy: WeavyType,
   user: UserType,
-  app: AppType,
+  appId: AppType["id"],
   uniqueId?: string
 ): ExternalBlobMutationType {
-  return new MutationObserver(weavy.queryClient, getExternalBlobMutationOptions(weavy, user, app, uniqueId));
+  return new MutationObserver(weavy.queryClient, getExternalBlobMutationOptions(weavy, user, appId, uniqueId));
 }

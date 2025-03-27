@@ -200,8 +200,8 @@
         <target state="">Maximera sidopanel</target>
       </trans-unit>
       <trans-unit id="s6e68e284db76e5b4">
-        <source>Seen by <x id="0" equiv-text="${member.display_name}"/> at <x id="1" equiv-text="${dateSeenFull}"/></source>
-        <target state="">Sedd av <x id="0" equiv-text="${member.display_name}"/> vid <x id="1" equiv-text="${dateSeenFull}"/></target>
+        <source>Seen by <x id="0" equiv-text="${member.name}"/> at <x id="1" equiv-text="${dateSeenFull}"/></source>
+        <target state="">Sedd av <x id="0" equiv-text="${member.name}"/> vid <x id="1" equiv-text="${dateSeenFull}"/></target>
       </trans-unit>
       <trans-unit id="sd3b60ec2f9fb421b">
         <source>New messages</source>
@@ -695,6 +695,14 @@
       <trans-unit id="s7c23790a4d2b3420">
         <source>You are not subscribed to updates yet.</source>
         <target>Du prenumererar inte på uppdateringar ännu.</target>
+      </trans-unit>
+      <trans-unit id="s19bee21a859fbea0">
+        <source>Leave</source>
+        <target>Lämna</target>
+      </trans-unit>
+      <trans-unit id="sa6b88405214f8c17">
+        <source>Error uploading context data.</source>
+        <target>Fel vid uppladdning av kontext-data.</target>
       </trans-unit>
     </body>
   </file>

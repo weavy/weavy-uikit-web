@@ -13,11 +13,13 @@ import {
   LeaveConversationMutationType,
   MarkConversationMutationType,
   PinConversationMutationType,
+  RemoveConversationMutationType,
   StarConversationMutationType,
   TrashConversationMutationType,
   getLeaveConversationMutation,
   getMarkConversationMutation,
   getPinConversationMutation,
+  getRemoveConversationMutation,
   getStarConversationMutation,
   getTrashConversationMutation,
 } from "../data/conversation";
@@ -35,10 +37,10 @@ import pagerStyles from "../scss/components/pager.scss";
 
 import "./wy-conversation-list-item";
 import "./wy-conversation-new";
-import "./wy-presence";
-import "./wy-avatar";
+import "./base/wy-presence";
+import "./base/wy-avatar";
 import "./wy-empty";
-import "./wy-spinner";
+import "./base/wy-spinner";
 
 @customElement("wy-conversation-list")
 @localized()
@@ -86,6 +88,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
   private starConversationMutation?: StarConversationMutationType;
   private pinConversationMutation?: PinConversationMutationType;
   private leaveConversationMutation?: LeaveConversationMutationType;
+  private removeConversationMutation?: RemoveConversationMutationType;
   private trashConversationMutation?: TrashConversationMutationType;
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<HTMLElement> = createRef();
@@ -142,6 +145,12 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
     this.conversationsQuery.result.refetch();
   }
 
+  private async handleRemoveConversation(appId: number) {
+    await this.removeConversationMutation?.mutate({ appId });
+    this.dispatchSelected(undefined);
+    this.conversationsQuery.result.refetch();
+  }
+
   private async handleTrashConversation(appId: number) {
     await this.trashConversationMutation?.mutate({ appId });
     this.dispatchSelected(undefined);
@@ -167,13 +176,14 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
 
     if ((changedProperties.has("weavy") || changedProperties.has("conversationTypes")) && this.weavy) {
       this.conversationsQuery.trackInfiniteQuery(
-        getAppListOptions(this.weavy, {}, this.conversationTypes, this.bot, () => this.searchText, "pinned_at desc,rev desc")
+        getAppListOptions(this.weavy, {}, this.conversationTypes, this.bot, () => this.searchText, "pinned_at desc,rev desc", false)
       );
 
       this.markConversationMutation = getMarkConversationMutation(this.weavy);
       this.starConversationMutation = getStarConversationMutation(this.weavy);
       this.pinConversationMutation = getPinConversationMutation(this.weavy);
       this.leaveConversationMutation = getLeaveConversationMutation(this.weavy);
+      this.removeConversationMutation = getRemoveConversationMutation(this.weavy);
       this.trashConversationMutation = getTrashConversationMutation(this.weavy);
 
       this.#unsubscribeToRealtime?.();
@@ -225,7 +235,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
               .conversationId=${conversation?.id}
               .avatarUrl=${conversation?.avatar_url}
               .hideAvatar=${Boolean(this.bot)}
-              .displayName=${conversation.display_name}
+              .name=${conversation.name}
               .lastMessage=${conversation.last_message}
               .members=${conversation.members}
               .unread=${conversation.is_unread}
@@ -238,6 +248,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
               @star=${(e: CustomEvent) => this.handleStar(e.detail.id, e.detail.star)}
               @pin=${(e: CustomEvent) => this.handlePin(e.detail.id, e.detail.pin)}
               @leave=${(e: CustomEvent) => this.handleLeaveConversation(e.detail.id)}
+              @remove=${(e: CustomEvent) => this.handleRemoveConversation(e.detail.id)}
               @trash=${(e: CustomEvent) => this.handleTrashConversation(e.detail.id)}
             ></wy-conversation-list-item>`,
           ];
@@ -261,12 +272,12 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
                   : html`
                       <wy-avatar
                         .src=${this.avatarUser?.avatar_url}
-                        .name=${this.avatarUser?.display_name}
+                        .name=${this.avatarUser?.name}
                         .size=${24}
                       ></wy-avatar>
                     `}
                 <div class="wy-appbar-text"
-                  >${this.name ?? (this.bot ? this.avatarUser?.display_name : msg("Messenger"))}</div
+                  >${this.name ?? (this.bot ? this.avatarUser?.name : msg("Messenger"))}</div
                 >
                 <wy-conversation-new
                   .bot=${this.bot}

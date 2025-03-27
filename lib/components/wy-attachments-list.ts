@@ -1,12 +1,15 @@
 import { LitElement, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
-import { FileOpenEventType, FileType } from "../types/files.types";
+import { FileType } from "../types/files.types";
+import { FileOpenEventType } from "../types/events.types";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
-
-import chatCss from "../scss/all.scss"
-import "./wy-icon";
 import { ifDefined } from "lit/directives/if-defined.js";
+
+import chatCss from "../scss/all.scss";
+
+import "./base/wy-icon";
+import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-attachments-list")
 export default class WyAttachmentsList extends LitElement {
@@ -26,7 +29,7 @@ export default class WyAttachmentsList extends LitElement {
 
   dispatchFileOpen(e: Event, file: FileType) {
     e.preventDefault();
-    const event: FileOpenEventType = new CustomEvent("file-open", { detail: { fileId: file.id } });
+    const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId: file.id } });
     return this.dispatchEvent(event);
   }
 
@@ -47,7 +50,8 @@ export default class WyAttachmentsList extends LitElement {
               }}
               class="wy-item wy-list-item"
               href="${ifDefined(a.download_url)}"
-              title=${a.name}>
+              title=${a.name}
+            >
               <wy-icon name=${icon} .overlayName=${provider} size="48" kind=${kind} ext=${ext}></wy-icon>
               <div class="wy-item-body ">
                 <div class="wy-item-title">${a.name}</div>

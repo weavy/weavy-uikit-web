@@ -52,13 +52,13 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
   }
 
   async setContext() {
-    this.whenContext = new Promise((r) => this.resolveContext = r)
+    this.whenContext = new Promise((r) => (this.resolveContext = r));
     await whenParentsDefined(this.host as LitElement);
     this.context = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
   }
 
   hostUpdate(): void {
-    if(this.context?.value) {
+    if (this.context?.value) {
       this.resolveContext?.();
     }
   }
@@ -79,10 +79,10 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
     this.mutationCacheUnsubscribe?.();
 
     this.options = options;
-    
+
     this.mutationCache = queryClient.getMutationCache();
     this.mutationCacheSubscribe();
-    
+
     return this.result;
   }
 
@@ -90,22 +90,33 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
     if (this.mutationCache && this.options) {
       this.result = getResult(this.mutationCache, this.options);
       //console.log("track mutations", options.filters?.mutationKey, this.result)
-  
+
       this.mutationCacheUnsubscribe = this.mutationCache.subscribe((event) => {
         if (this.mutationCache && this.options && /added|removed|updated/.test(event.type)) {
           //const nextResult = replaceEqualDeep(this.result, getResult(mutationCache, options));
           const nextResult = getResult(this.mutationCache, this.options);
-          if (this.result !== nextResult || eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)) {
+          if (
+            this.result !== nextResult ||
+            eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)
+          ) {
             //console.log("trackMutationState update", this.result, nextResult)
-  
+
             this.result = nextResult;
             this.host.requestUpdate();
           }
         }
       });
-  
+
       this.host.requestUpdate();
     }
+  }
+
+  get isMutating(): number {
+    if (!this.mutationCache || !this.options?.filters) {
+      return 0;
+    }
+
+    return getResult(this.mutationCache, { filters: { ...this.options.filters, status: "pending" } }).length;
   }
 
   untrackMutationState() {

@@ -50,7 +50,7 @@
   //border-top: 1px solid #{color.token(--wy-outline-variant)};
   padding: var.default(--wy-padding) var.default(--wy-padding-sm);
   min-height: calc(var.default(--wy-input-font-size) * var.wy-rem(1.5) + var.default(--wy-input-padding-y) * 2 + var.default(--wy-padding-sm) * 2);
-  gap: var.default(--wy-gap-sm);
+  //gap: var.default(--wy-gap-sm); // Using .wy-message-editor-text margin instead
 }
 
 .wy-message-editor-buttons {
@@ -61,6 +61,7 @@
   flex: 1 1 100%;
   display: flex;
   flex-direction: column;
+  margin-inline: var.default(--wy-padding-sm);
 }
 
 .wy-message-editor-mention {

@@ -14,7 +14,7 @@ import { ComponentType } from "./types/app.types";
 
 import "./components/wy-notification-list";
 import "./components/wy-empty";
-import "./components/wy-spinner";
+import "./components/base/wy-spinner";
 
 export const WY_NOTIFICATIONS_TAGNAME = "wy-notifications";
 
@@ -42,12 +42,9 @@ export class WyNotifications extends WeavyComponent {
    */
   override componentType = ComponentType.Unknown;
 
-  protected notificationsRef: Ref<WyNotificationList> = createRef();
+  protected theme = new ThemeController(this, WyNotifications.styles);
 
-  constructor() {
-    super();
-    new ThemeController(this, WyNotifications.styles);
-  }
+  protected notificationsRef: Ref<WyNotificationList> = createRef();
 
   /**
    * Mark all events as read.

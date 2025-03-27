@@ -1,4 +1,4 @@
-import { LitElement, css, html, type PropertyValueMap } from "lit";
+import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -9,10 +9,11 @@ import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-empty";
-import "./wy-spinner";
+import "./base/wy-spinner";
 
 import colorModeCss from "../scss/color-modes.scss"
 import allCss from "../scss/all.scss"
+import hostContentsCss from "../scss/host-contents.scss";
 
 @customElement("wy-preview-text")
 export class WyPreviewText extends LitElement {
@@ -20,11 +21,7 @@ export class WyPreviewText extends LitElement {
   static override styles = [
     allCss,
     colorModeCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

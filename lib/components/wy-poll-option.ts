@@ -11,9 +11,9 @@ import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import "./wy-sheet";
-import "./wy-avatar";
-import "./wy-icon";
+import "./base/wy-sheet";
+import "./base/wy-avatar";
+import "./base/wy-icon";
 
 @customElement("wy-poll-option")
 @localized()
@@ -104,8 +104,8 @@ export default class WyPollOption extends WeavyComponentConsumerMixin(LitElement
                     ${data.votes?.data ? data.votes.data.map(
                       (vote) => html`
                         <div class="wy-item wy-list-item">
-                          <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.display_name}></wy-avatar>
-                          <div class="wy-item-body">${vote.display_name}</div>
+                          <wy-avatar .size=${32} .src=${vote.avatar_url} .name=${vote.name}></wy-avatar>
+                          <div class="wy-item-body">${vote.name}</div>
                         </div>
                       `
                     ) : nothing}

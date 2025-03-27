@@ -40,11 +40,10 @@
   --wy-component-color: #{color.token(--wy-on-surface-variant)};
 
   @include highlight.flash;
+}
 
-  .wy-image-grid,
-  .wy-attachments {
-    border-radius: var.default(--wy-border-radius-sm);
-  }
+.wy-message-area {
+  border-radius: var.default(--wy-border-radius-sm);
 }
 
 .wy-message-meta {
@@ -75,7 +74,9 @@
 
 
 .wy-message-author {
-  margin: var.wy-rem(1.375) var.wy-rem(.5) 0 0;
+  // Match .wy-message-meta positioning
+  font-size: var.default(--wy-font-size-xs);
+  margin: calc(1lh + .5 * var.default(--wy-gap)) var.wy-rem(.5) 0 0;
 }
 
 .wy-message-content {

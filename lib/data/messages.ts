@@ -63,6 +63,8 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
             .map((o: PollOptionType) => {
               return { text: o.text };
             }),
+          metadata: variables.metadata || null,
+          context_id: variables.context_id || null
         }),
       });
       return response.json();
@@ -71,7 +73,8 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
     onMutate: async (variables: MutateMessageProps) => {
       const queryKey = ["messages", variables.app_id];
 
-      await weavy.queryClient.cancelQueries({ queryKey: queryKey });
+      // TODO: wait for any queries to finish instead of cancelling
+      //await weavy.queryClient.cancelQueries({ queryKey: queryKey });
       const newest = getPendingCacheItem<MessageType>(weavy.queryClient, queryKey, false);
 
       const pending: MessageType = {

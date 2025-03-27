@@ -14,6 +14,7 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
 
 import chatCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
 import "./wy-message";
 
@@ -22,10 +23,8 @@ import "./wy-message";
 export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
+    hostContentsCss,
     css`
-      :host(wy-messages) {
-        display: contents;
-      }
       wy-message {
         scroll-margin-block: 6rem;
       }
@@ -122,7 +121,7 @@ export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) 
                       .isBot=${message.created_by.is_bot || false}
                       .isPrivateChat=${this.conversation?.type === AppTypeGuid.PrivateChat ||
                       this.conversation?.type === AppTypeGuid.BotChat}
-                      .displayName=${message.created_by.display_name}
+                      .name=${message.created_by.name}
                       .avatar=${message.created_by.avatar_url}
                       .createdAt=${message.created_at}
                       .text=${message.plain}

@@ -1,7 +1,8 @@
 import tanstackQuery from "@tanstack/eslint-plugin-query";
-import lit from "eslint-plugin-lit";
+import * as lit from "eslint-plugin-lit";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-import wc from "eslint-plugin-wc";
+import * as wc from "eslint-plugin-wc";
 import globals from "globals";
 import ts_eslint from "typescript-eslint";
 
@@ -9,10 +10,8 @@ import eslint from "@eslint/js";
 import { fixupPluginRules } from "@eslint/compat";
 import { rules as litA11yRules, configs as litA11yConfigs } from "eslint-plugin-lit-a11y";
 
-export default [
-  {
-    ignores: ["**/dist/"],
-  },
+export default defineConfig([
+  globalIgnores(["**/dist/"]),
   eslint.configs.recommended,
   ...ts_eslint.configs.recommended,
   wc.configs["flat/recommended"],
@@ -100,4 +99,4 @@ export default [
       "@typescript-eslint/no-unused-expressions": "off",
     },
   },
-];
+]);

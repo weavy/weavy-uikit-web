@@ -1,10 +1,11 @@
-import { LitElement, type PropertyValues, html, css } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, type PropertyValues, html } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 
-import overlayStyles from "../scss/all.scss";
+import overlayStyles from "../../scss/all.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 import "./wy-button";
 import "./wy-icon";
@@ -13,11 +14,7 @@ import "./wy-icon";
 export default class WySheet extends LitElement {
   static override styles = [
     overlayStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

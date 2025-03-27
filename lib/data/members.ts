@@ -10,11 +10,11 @@ import type {
   QueryOptions,
 } from "@tanstack/query-core";
 
-export function getMemberOptions(weavy: WeavyType, appId: number, options: QueryOptions<MembersResultType>) {
+export function getMemberOptions(weavy: WeavyType, appId: number, options: QueryOptions<MembersResultType>, bots?: boolean) {
   return <QueryObserverOptions<MembersResultType>> {
-    queryKey: ["members", appId],
+    queryKey: ["members", appId, bots],
     queryFn: async () => {
-      const response = await weavy.fetch("/api/apps/" + appId + "/members");
+      const response = await weavy.fetch(`/api/apps/${appId}/members${bots !== undefined ? `?member=false&bot=${Boolean(bots)}` : ""}`);
       const result: MembersResultType = await response.json();
       return result;
     },

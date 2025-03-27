@@ -8,7 +8,8 @@ import { keyed } from "lit/directives/keyed.js";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
-import type { FileOpenEventType, FileType } from "../types/files.types";
+import type { FileType } from "../types/files.types";
+import type { FileOpenEventType } from "../types/events.types";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
@@ -18,18 +19,19 @@ import { type AppType, EntityTypeString} from "../types/app.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { isEntityChainMatch } from "../utils/notifications";
 import { partMap } from "../utils/directives/shadow-part-map";
+import { Feature } from "../types/features.types";
 
 import chatCss from "../scss/all.scss";
 
-import "./wy-avatar";
+import "./base/wy-avatar";
 import "./wy-embed";
-import "./wy-icon";
+import "./base/wy-icon";
 import "./wy-attachment";
-import "./wy-image-grid";
+import "./base/wy-image-grid";
 import "./wy-attachments-list";
-import "./wy-reactions";
+import "./base/wy-reactions";
 import "./wy-meeting-card";
-import "./wy-skeleton";
+import "./base/wy-skeleton";
 import "./wy-preview";
 import "./wy-poll";
 
@@ -56,7 +58,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
   isPrivateChat: boolean = false;
 
   @property()
-  displayName: string = "";
+  name: string = "";
 
   @property()
   avatar?: string = "";
@@ -130,7 +132,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                 <wy-avatar
                   .src="${this.avatar}"
                   .size=${32}
-                  .name="${this.displayName}"
+                  .name="${this.name}"
                   .isBot=${this.isBot}
                 ></wy-avatar>
               </div>
@@ -139,7 +141,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
 
         <div class="wy-message-content">
           <div class="wy-message-meta">
-            ${!this.isPrivateChat && !this.me ? html` <span>${this.displayName} · </span> ` : ""}
+            ${!this.isPrivateChat && !this.me ? html` <span>${this.name} · </span> ` : ""}
             <time datetime=${this.createdAt} title=${dateFull}>${timeShort}</time>
           </div>
 
@@ -150,6 +152,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                   <!-- image grid -->
                   ${images && !!images.length
                     ? html`<wy-image-grid
+                        class="wy-message-area"
                         .images=${images}
                         @file-open=${(e: FileOpenEventType) => {
                           this.previewRef.value?.open(e.detail.fileId);
@@ -158,7 +161,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                     : ``}
 
                   <!-- embeds -->
-                  ${this.embed && this.hasFeatures?.embeds
+                  ${this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embed
                     ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
                     : nothing}
 
@@ -181,6 +184,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                   <!-- files -->
                   ${files && !!files.length
                     ? html`<wy-attachments-list
+                        class="wy-message-area"
                         .files=${files}
                         @file-open=${(e: FileOpenEventType) => {
                           this.previewRef.value?.open(e.detail.fileId);
@@ -189,7 +193,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                     : ``}
 
                   <!-- reactions -->
-                  ${this.hasFeatures?.reactions && this.conversation
+                  ${this.componentFeatures?.allowsFeature(Feature.Reactions) && this.conversation
                     ? html`
                         ${keyed(
                           `reactions-${this.conversation.id}-${this.messageId}`,
@@ -213,7 +217,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
           </div>
         </div>
       </div>
-      ${this.hasFeatures?.receipts
+      ${this.componentFeatures?.allowsFeature(Feature.Receipts)
         ? html`<div class="wy-readby-status">
             ${this.seenBy && this.seenBy.length
               ? html`
@@ -225,8 +229,8 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                         }).format(new Date(member.marked_at))
                       : "";
                     return html`<wy-avatar
-                      title=${msg(str`Seen by ${member.display_name} at ${dateSeenFull}`)}
-                      .name=${member.display_name}
+                      title=${msg(str`Seen by ${member.name} at ${dateSeenFull}`)}
+                      .name=${member.name}
                       .src=${member.avatar_url}
                       size=${18}
                     ></wy-avatar>`;

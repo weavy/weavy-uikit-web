@@ -26,6 +26,10 @@ export type MutateLeaveConversationVariables = {
   members: number[];
 };
 
+export type MutateRemoveConversationVariables = {
+  appId: number;
+};
+
 export type MutateUpdateMemberVariables = {
   appId: number;
   userId: number;
@@ -52,6 +56,7 @@ export type MarkConversationMutationType = MutationObserver<void, Error, MutateM
 export type StarConversationMutationType = MutationObserver<void, Error, MutateStarConversationVariables, void>;
 export type PinConversationMutationType = MutationObserver<void, Error, MutatePinConversationVariables, void>;
 export type LeaveConversationMutationType = MutationObserver<void, Error, MutateLeaveConversationVariables, void>;
+export type RemoveConversationMutationType = MutationObserver<void, Error, MutateRemoveConversationVariables, void>;
 export type UpdateMemberMutationType = MutationObserver<void, Error, MutateUpdateMemberVariables, void>;
 export type AddMembersToConversationMutationType = MutationObserver<
   void,
@@ -196,6 +201,22 @@ export function getLeaveConversationMutationOptions(weavy: WeavyType) {
   return options;
 }
 
+export function getRemoveConversationMutationOptions(weavy: WeavyType) {
+  const options = {
+    mutationFn: async ({ appId }: MutateRemoveConversationVariables) => {
+      await weavy.fetch(`/api/apps/${appId}/remove`, { method: "POST" });
+    },
+    onMutate: async (variables: MutateRemoveConversationVariables) => {
+      removeCacheItem(weavy.queryClient, ["apps", "list"], variables.appId);
+    },
+    onSettled: () => {
+      weavy.queryClient.invalidateQueries({ queryKey: ["apps"]})
+    }
+  };
+
+  return options;
+}
+
 export function getUpdateMemberMutationOptions(weavy: WeavyType) {
   const options = {
     mutationFn: async ({ appId, userId, access }: MutateUpdateMemberVariables) => {
@@ -246,7 +267,7 @@ export function getUpdateConversationMutationOptions(weavy: WeavyType) {
     onMutate: async (variables: MutateUpdateConversationVariables) => {
       const modifyAppItem = (item: AppType) => {
         if (typeof variables.name === "string") {
-          item.display_name = variables.name;
+          item.name = variables.name;
         }
 
         if (typeof variables?.thumbnailUrl === "string") {
@@ -292,6 +313,10 @@ export function getPinConversationMutation(weavy: WeavyType): PinConversationMut
 
 export function getLeaveConversationMutation(weavy: WeavyType): LeaveConversationMutationType {
   return new MutationObserver(weavy.queryClient, getLeaveConversationMutationOptions(weavy));
+}
+
+export function getRemoveConversationMutation(weavy: WeavyType): RemoveConversationMutationType {
+  return new MutationObserver(weavy.queryClient, getRemoveConversationMutationOptions(weavy));
 }
 
 export function getUpdateMemberMutation(weavy: WeavyType): UpdateMemberMutationType {

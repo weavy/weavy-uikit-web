@@ -14,6 +14,34 @@ export const svgIconMapping = {
     '<path d="M15.56 9.91h4.65c.44 0 .8.36.8.8v4.24c0 1.61-1.31 2.92-2.92 2.92h-.01c-1.61 0-2.92-1.31-2.92-2.92v-4.62c0-.23.19-.42.42-.42z" fill="#5059c9"/><circle cx="18.7" cy="7.19" r="1.88" fill="#5059c9"/><circle cx="12.84" cy="6.35" r="2.72" fill="#7b83eb"/><path d="M16.47 9.91H8.8a.79.79 0 00-.77.8v4.83c-.06 2.6 2 4.77 4.6 4.83 2.6-.06 4.67-2.23 4.6-4.83v-4.83a.783.783 0 00-.77-.8z" fill="#7b83eb"/><path d="M3.77 7.4h7.67c.42 0 .77.34.77.77v7.67c0 .42-.34.77-.77.77H3.77a.77.77 0 01-.77-.77V8.17c0-.42.34-.77.77-.77z" fill="#5a62c3"/><path d="M9.62 10.32H8.09v4.18h-.98v-4.18H5.58v-.81h4.04v.81z" fill="#fff"/>',
 };
 
+const logoIconMapping = {
+  "box": 
+    "M15.39,14.04V14.04C15.39,12.62 14.24,11.47 12.82,11.47C11.41,11.47 10.26,12.62 10.26,14.04V14.04C10.26,15.45 11.41,16.6 12.82,16.6C14.24,16.6 15.39,15.45 15.39,14.04M17.1,14.04C17.1,16.4 15.18,18.31 12.82,18.31C11.19,18.31 9.77,17.39 9.05,16.04C8.33,17.39 6.91,18.31 5.28,18.31C2.94,18.31 1.04,16.43 1,14.11V14.11H1V7H1V7C1,6.56 1.39,6.18 1.86,6.18C2.33,6.18 2.7,6.56 2.71,7V7H2.71V10.62C3.43,10.08 4.32,9.76 5.28,9.76C6.91,9.76 8.33,10.68 9.05,12.03C9.77,10.68 11.19,9.76 12.82,9.76C15.18,9.76 17.1,11.68 17.1,14.04V14.04M7.84,14.04V14.04C7.84,12.62 6.69,11.47 5.28,11.47C3.86,11.47 2.71,12.62 2.71,14.04V14.04C2.71,15.45 3.86,16.6 5.28,16.6C6.69,16.6 7.84,15.45 7.84,14.04M22.84,16.96V16.96C22.95,17.12 23,17.3 23,17.47C23,17.73 22.88,18 22.66,18.15C22.5,18.26 22.33,18.32 22.15,18.32C21.9,18.32 21.65,18.21 21.5,18L19.59,15.47L17.7,18V18C17.53,18.21 17.28,18.32 17.03,18.32C16.85,18.32 16.67,18.26 16.5,18.15C16.29,18 16.17,17.72 16.17,17.46C16.17,17.29 16.23,17.11 16.33,16.96V16.96H16.33V16.96L18.5,14.04L16.33,11.11V11.11H16.33V11.11C16.22,10.96 16.17,10.79 16.17,10.61C16.17,10.35 16.29,10.1 16.5,9.93C16.89,9.65 17.41,9.72 17.7,10.09V10.09L19.59,12.61L21.5,10.09C21.76,9.72 22.29,9.65 22.66,9.93C22.89,10.1 23,10.36 23,10.63C23,10.8 22.95,10.97 22.84,11.11V11.11H22.84V11.11L20.66,14.04L22.84,16.96V16.96H22.84Z",
+  "dropbox": 
+    "M3 6.2L8 9.39L13 6.2L8 3L3 6.2M13 6.2L18 9.39L23 6.2L18 3L13 6.2M3 12.55L8 15.74L13 12.55L8 9.35L3 12.55M18 9.35L13 12.55L18 15.74L23 12.55L18 9.35M8.03 16.8L13.04 20L18.04 16.8L13.04 13.61L8.03 16.8Z",
+  "google-drive": 
+    "M7.71,3.5L1.15,15L4.58,21L11.13,9.5M9.73,15L6.3,21H19.42L22.85,15M22.28,14L15.42,2H8.58L8.57,2L15.43,14H22.28Z",
+  "onedrive": 
+    "M18.21 10.29Q19 10.34 19.7 10.68 20.39 11 20.9 11.57 21.41 12.12 21.71 12.83 22 13.54 22 14.34 22 15.18 21.68 15.92 21.36 16.66 20.8 17.21 20.25 17.76 19.5 18.08 18.78 18.41 17.94 18.41H7Q5.97 18.41 5.06 18 4.15 17.61 3.47 16.94 2.79 16.26 2.4 15.35 2 14.44 2 13.41 2 12.59 2.26 11.83 2.5 11.08 3 10.45 3.44 9.82 4.08 9.35 4.72 8.88 5.5 8.63 5.87 8.5 6.21 8.5 6.56 8.43 6.93 8.41H6.94Q7.37 7.75 7.95 7.23 8.5 6.71 9.2 6.34 9.87 6 10.62 5.78 11.37 5.59 12.16 5.59 13.22 5.59 14.2 5.94 15.18 6.29 16 6.91 16.8 7.53 17.37 8.39 17.95 9.26 18.21 10.29M12.16 6.84Q11.05 6.84 10.06 7.3 9.06 7.75 8.36 8.6 8.73 8.7 9.07 8.85 9.4 9 9.73 9.2L13.71 11.58L16 10.62Q16.21 10.53 16.44 10.45 16.67 10.38 16.92 10.33 16.68 9.55 16.21 8.91 15.74 8.27 15.11 7.81 14.5 7.35 13.73 7.1 13 6.84 12.16 6.84M4 15.66L12.27 12.18L9.08 10.26Q8.59 9.97 8.06 9.81 7.5 9.66 6.95 9.66 6.19 9.66 5.5 9.96 4.84 10.26 4.34 10.77 3.84 11.29 3.54 11.97 3.25 12.65 3.25 13.41 3.25 14 3.45 14.59 3.64 15.19 4 15.66M17.94 17.16Q18.41 17.16 18.84 17 19.27 16.86 19.64 16.58L13.61 13L5.03 16.59Q5.47 16.86 5.97 17 6.47 17.16 7 17.16M20.45 15.61Q20.75 15 20.75 14.34 20.75 13.7 20.5 13.17 20.26 12.65 19.85 12.28 19.43 11.91 18.88 11.71 18.32 11.5 17.7 11.5 17.35 11.5 17 11.6 16.66 11.68 16.33 11.81 16 11.93 15.67 12.08 15.35 12.23 15.04 12.37Z",
+};
+
+const fileIconMapping = {
+  "email": mdi.mdiEmail,
+  "file": mdi.mdiFile,
+  "file-upload": mdi.mdiFileUpload,
+  "file-music": mdi.mdiFileMusic,
+  "file-image": mdi.mdiFileImage,
+  "file-video": mdi.mdiFileVideo,
+  "file-code": mdi.mdiFileCode,
+  "file-xml": mdi.mdiFileCode,
+  "file-document": mdi.mdiFileDocument,
+  "file-word": mdi.mdiFileWord,
+  "file-excel": mdi.mdiFileExcel,
+  "file-pdf": mdi.mdiFileDocument,
+  "file-powerpoint": mdi.mdiFilePowerpoint,
+  "file-compressed": mdi.mdiFolderZip,
+}
+
 // Custom mapping to MDI instead of symbols
 export const iconMapping = {
   "account-minus": mdi.mdiAccountMinus,
@@ -26,7 +54,7 @@ export const iconMapping = {
   "backup-restore": mdi.mdiBackupRestore,
   "bell": mdi.mdiBell,
   "bell-off": mdi.mdiBellOff,
-  "bot": mdi.mdiMemory,
+  "bot": mdi.mdiStarFourPoints,
   "check": mdi.mdiCheck,
   "check-all": mdi.mdiCheckAll,
   "check-circle-outline": mdi.mdiCheckCircleOutline,
@@ -36,6 +64,7 @@ export const iconMapping = {
   "check-circle": mdi.mdiCheckCircle,
   "close": mdi.mdiClose,
   "close-circle": mdi.mdiCloseCircle,
+  "cloud": mdi.mdiCloud,
   "comment": mdi.mdiComment,
   "comment-outline": mdi.mdiCommentOutline,
   "content-save": mdi.mdiContentSave,
@@ -52,6 +81,7 @@ export const iconMapping = {
   "help-circle": mdi.mdiHelpCircle,
   "information": mdi.mdiInformationOutline,
   "magnify": mdi.mdiMagnify,
+  "meeting": mdi.mdiMonitorAccount,
   "menu-down": mdi.mdiMenuDown,
   "menu-up": mdi.mdiMenuUp,
   "minus": mdi.mdiMinus,
@@ -74,6 +104,7 @@ export const iconMapping = {
   "sort": mdi.mdiSort,
   "star": mdi.mdiStar,
   "unstar": mdi.mdiStarOff,
+  "stars": mdi.mdiCreation,
   "swap-horizontal": mdi.mdiSwapHorizontal,
   "textbox": mdi.mdiFormTextbox,
   "thumb-up": mdi.mdiThumbUp,
@@ -83,28 +114,8 @@ export const iconMapping = {
   "view-list-outline": mdi.mdiViewListOutline,
   "view-module-outline": mdi.mdiViewModuleOutline,
   "wifi-off": mdi.mdiWifiOff,
-  // Files
-  "email": mdi.mdiEmail,
-  "file": mdi.mdiFile,
-  "file-upload": mdi.mdiFileUpload,
-  "file-music": mdi.mdiFileMusic,
-  "file-image": mdi.mdiFileImage,
-  "file-video": mdi.mdiFileVideo,
-  "file-code": mdi.mdiFileCode,
-  "file-xml": mdi.mdiFileCode,
-  "file-document": mdi.mdiFileDocument,
-  "file-word": mdi.mdiFileWord,
-  "file-excel": mdi.mdiFileExcel,
-  "file-pdf": mdi.mdiFileDocument,
-  "file-powerpoint": mdi.mdiFilePowerpoint,
-  "file-compressed": mdi.mdiFolderZip,
-  // Integrations
-  "meeting": mdi.mdiMonitorAccount,
-  "box": mdi.mdiBox,
-  "cloud": mdi.mdiCloud,
-  "dropbox": mdi.mdiDropbox,
-  "google-drive": mdi.mdiGoogleDrive,
-  "onedrive": mdi.mdiMicrosoftOnedrive,
+  ...fileIconMapping,
+  ...logoIconMapping
 };
 
 export const fileActionIconMapping: { [index in FileActionType]: string } = {

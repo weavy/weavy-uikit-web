@@ -97,6 +97,25 @@ export function asArray(maybeArray: unknown) {
 }
 
 /**
+ * Async version of Array.find()
+ * 
+ * @param array The array to search in
+ * @param predicate The predicate for the search
+ * @returns Any found item.
+ */
+export async function findAsyncSequential<T>(
+  array: T[],
+  predicate: (t: T) => Promise<boolean>,
+): Promise<T | undefined> {
+  for (const t of array) {
+    if (await predicate(t)) {
+      return t;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Case insensitive string comparison
  *
  * @param {any} str1 - The first string to compare

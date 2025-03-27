@@ -13,9 +13,9 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import filesCss from "../scss/all.scss"
 
-import "./wy-icon";
+import "./base/wy-icon";
 import "./wy-file-menu";
-import "./wy-spinner";
+import "./base/wy-spinner";
 
 @customElement("wy-file-item")
 export class WyFileItem extends LitElement {

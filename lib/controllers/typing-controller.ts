@@ -143,7 +143,7 @@ export class TypingController implements ReactiveController {
       this.ellipsis = ".".repeat(dots); //+ (".").repeat(3 - dots);
   
       // merge names of people typing
-      this.names = this.typingMembers.map((member) => member.display_name).sort();
+      this.names = this.typingMembers.map((member) => member.name).sort();
   
       // schedule another call to updateTyping in 1 second
       this.typingTimeout = window.setTimeout(() => this.updateTyping(), 1000);

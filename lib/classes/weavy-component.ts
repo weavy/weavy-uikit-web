@@ -9,20 +9,12 @@ import {
 import { defaultVisibilityCheckOptions, whenParentsDefined } from "../utils/dom";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 import type { BotType, UserType } from "../types/users.types";
-import {
-  ProductFeatureMapping,
-  ProductFeaturePropMapping,
-  ProductFeaturesType,
-  ProductTypes,
-  type ProductFeatureProps,
-  type ProductFeaturesListType,
-} from "../types/product.types";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
-import { getAppOptions } from "../data/app";
+import { getOrCreateAppOptions } from "../data/app";
 import { type AppType, AppContext } from "../contexts/app-context";
 import { UserContext } from "../contexts/user-context";
-import { ProductFeaturesContext } from "../contexts/features-context";
+import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/features-context";
 import {
   AppTypeString,
   AppTypeGuid,
@@ -43,17 +35,14 @@ import type {
 } from "../types/notifications.types";
 import { objectAsIterable } from "../utils/objects";
 import { BotContext } from "../contexts/bot-context";
+import { ComponentFeatures } from "../contexts/features-context";
+import { WeavyClient } from "../client/weavy";
 
 export interface WeavyComponentProps {
   /**
-   * Any product type for the weavy component.
-   */
-  productType?: ProductTypes;
-
-  /**
    * Any app type for the weavy component.
    */
-  componentType?: AppTypeString | ComponentType;
+  componentType?: AppTypeGuid | ComponentType;
 
   /**
    * Any app types handled by the component.
@@ -81,14 +70,26 @@ export interface WeavyComponentProps {
 // Define the interface for the mixin
 export interface WeavyComponentSettingProps {
   /**
-   * Sets the appearance of the built in notifications.
+   * Appearance of the built in notifications.
    */
   notifications: NotificationsAppearanceType;
 
   /**
-   * Sets the appearance of the notifications badge.
+   * Appearance of the notifications badge.
    */
   notificationsBadge: NotificationsBadgeType;
+
+  /**
+   * A space separated string of available reaction emojis in unicode.
+   */
+  reactions: string;
+}
+
+export interface WeavyComponentFeatureProps {
+  /**
+   * Config for only enabling specific features in the weavy component.
+   */
+  features?: string;
 }
 
 export interface WeavyComponentContextProps {
@@ -113,15 +114,14 @@ export interface WeavyComponentContextProps {
   whenBotUser: () => Promise<BotType>;
 
   /**
-   * Config for disabling features in the weavy component.
-   * *Note: You can't enable any features that aren't available in your license.*
+   * Policy for checking which features are available.
    */
-  hasFeatures: ProductFeaturesType | undefined;
+  componentFeatures: ComponentFeaturePolicy | undefined;
 
   /**
    * Resolves when weavy component features config is available.
    */
-  whenHasFeatures: () => Promise<ProductFeaturesType>;
+  whenComponentFeatures: () => Promise<ComponentFeaturePolicy>;
 
   /**
    * Any provided link that should be loaded, shown and highlighted.
@@ -166,7 +166,7 @@ export interface WeavyComponentContextProps {
 
 export class WeavyComponent
   extends LitElement
-  implements WeavyComponentProps, WeavyComponentContextProps, WeavyComponentSettingProps, ProductFeatureProps
+  implements WeavyComponentProps, WeavyComponentContextProps, WeavyComponentSettingProps, WeavyComponentFeatureProps
 {
   // CONTEXT CONSUMERS
   weavyContextConsumer?: ContextConsumer<{ __context__: WeavyType }, this>;
@@ -184,9 +184,9 @@ export class WeavyComponent
   @state()
   botUser: BotType | undefined;
 
-  @provide({ context: ProductFeaturesContext })
+  @provide({ context: FeaturePolicyContext })
   @state()
-  hasFeatures: ProductFeaturesType | undefined;
+  componentFeatures: ComponentFeaturePolicy | undefined;
 
   @provide({ context: WeavyComponentSettingsContext })
   @state()
@@ -217,8 +217,8 @@ export class WeavyComponent
       link &&
       link.app &&
       this.componentType !== ComponentType.Unknown &&
-      this.uid &&
-      link.app?.uid === this.uid
+      ((this.uid && link.app?.uid === this.uid) || // Normal app
+        (this.bot && link.app.type === this.componentType && link.bot === this.bot)) // Bot app
     ) {
       return true;
     } else {
@@ -335,13 +335,13 @@ export class WeavyComponent
 
   // PROPERTIES
   @state()
-  productType?: ProductTypes;
-
-  @state()
-  componentType?: AppTypeString | ComponentType;
+  componentType?: AppTypeGuid | ComponentType;
 
   @state()
   appTypes?: AppTypeGuid[];
+
+  @property()
+  features?: string;
 
   protected _bot?: string;
 
@@ -350,7 +350,7 @@ export class WeavyComponent
     return this._bot;
   }
   set bot(bot: string | undefined) {
-    this._bot = bot || undefined
+    this._bot = bot || undefined;
   }
 
   @property({ type: String })
@@ -369,63 +369,46 @@ export class WeavyComponent
   }
 
   // SETTINGS
-  @property({ type: String })
-  notifications: NotificationsAppearanceType = "button-list";
+
+  // notifications
+  #notifications?: WeavyComponentSettingProps["notifications"];
 
   @property({ type: String })
-  notificationsBadge: NotificationsBadgeType = "count";
+  set notifications(notifications) {
+    this.#notifications = notifications;
+  }
 
-  // FEATURES
-  @property({ type: Boolean })
-  noAttachments = false;
+  get notifications() {
+    return this.#notifications ?? this.weavy?.notifications ?? WeavyClient.defaults.notifications;
+  }
 
-  @property({ type: Boolean })
-  noCloudFiles = false;
+  // notificationsBadge
+  #notificationsBadge?: WeavyComponentSettingProps["notificationsBadge"];
 
-  @property({ type: Boolean })
-  noComments = false;
+  @property({ type: String })
+  set notificationsBadge(notificationsBadge) {
+    this.#notificationsBadge = notificationsBadge;
+  }
 
-  @property({ type: Boolean })
-  noEmbeds = false;
+  get notificationsBadge() {
+    return this.#notificationsBadge ?? this.weavy?.notificationsBadge ?? WeavyClient.defaults.notificationsBadge;
+  }
 
-  @property({ type: Boolean })
-  noGoogleMeet = false;
+  // reactions
+  #reactions?: WeavyComponentSettingProps["reactions"];
 
-  @property({ type: Boolean })
-  noMentions = false;
+  @property({ type: String })
+  set reactions(reactions) {
+    this.#reactions = reactions;
+  }
 
-  @property({ type: Boolean })
-  noMicrosoftTeams = false;
-
-  @property({ type: Boolean })
-  noPolls = false;
-
-  @property({ type: Boolean })
-  noPreviews = false;
-
-  @property({ type: Boolean })
-  noReactions = false;
-
-  @property({ type: Boolean })
-  noReceipts = false;
-
-  @property({ type: Boolean })
-  noThumbnails = false;
-
-  @property({ type: Boolean })
-  noTyping = false;
-
-  @property({ type: Boolean })
-  noVersions = false;
-
-  @property({ type: Boolean })
-  noWebDAV = false;
-
-  @property({ type: Boolean })
-  noZoomMeetings = false;
+  get reactions() {
+    return this.#reactions ?? this.weavy?.reactions ?? WeavyClient.defaults.reactions;
+  }
 
   // PROMISES
   // TODO: Switch to Promise.withResolvers() when allowed by typescript
+  // Promise.withResolvers() is available in ES2024, that needs to be set in TSConfig
 
   #resolveApp?: (app: AppType) => void;
   #whenApp = new Promise<AppType>((r) => {
@@ -443,12 +426,12 @@ export class WeavyComponent
     return await this.#whenBotUser;
   }
 
-  #resolveHasFeatures?: (hasFeatures: ProductFeaturesType) => void;
-  #whenHasFeatures = new Promise<ProductFeaturesType>((r) => {
-    this.#resolveHasFeatures = r;
+  #resolveComponentFeatures?: (componentFeatures: ComponentFeaturePolicy) => void;
+  #whenComponentFeatures = new Promise<ComponentFeaturePolicy>((r) => {
+    this.#resolveComponentFeatures = r;
   });
-  async whenHasFeatures() {
-    return await this.#whenHasFeatures;
+  async whenComponentFeatures() {
+    return await this.#whenComponentFeatures;
   }
 
   #resolveLink?: (link: LinkType) => void;
@@ -487,7 +470,6 @@ export class WeavyComponent
 
   #appQuery = new QueryController<AppType>(this);
   #botUserQuery = new QueryController<BotType>(this);
-  #featuresQuery = new QueryController<ProductFeaturesListType>(this);
   #userQuery = new QueryController<UserType>(this);
 
   // PROPERTY INIT
@@ -510,8 +492,8 @@ export class WeavyComponent
       this.requestUpdate("botUser");
     }
 
-    if (this.hasFeatures) {
-      this.requestUpdate("hasFeatures");
+    if (this.componentFeatures) {
+      this.requestUpdate("componentFeatures");
     }
 
     if (this.link) {
@@ -553,7 +535,7 @@ export class WeavyComponent
     }
 
     const settingKeys = Object.keys(this.settings);
-    if (settingKeys.find((setting) => changedProperties.has(setting as keyof this))) {
+    if (changedProperties.has("weavy") || settingKeys.find((setting) => changedProperties.has(setting as keyof this))) {
       this.settings = new WeavyComponentSettings(this);
     }
 
@@ -572,34 +554,19 @@ export class WeavyComponent
       this.user = this.#userQuery.result?.data;
     }
 
-    if ((changedProperties.has("productType") || changedProperties.has("weavy")) && this.productType && this.weavy) {
-      this.#featuresQuery.trackQuery(
-        getApiOptions<ProductFeaturesListType>(this.weavy, ["features", this.productType])
-      );
-    }
+    if (changedProperties.has("features") && this.componentFeatures) {
+      this.componentFeatures.setAllowedFeatures(this.features);
 
-    if (!this.#featuresQuery.result?.isPending) {
-      const availableFeatures = this.#featuresQuery.result?.data;
-
-      if (availableFeatures) {
-        const enabledFeatures: ProductFeaturesType = {};
-        availableFeatures.forEach((feature) => {
-          const featureDisabled = this[ProductFeaturePropMapping[feature] as keyof ProductFeatureProps];
-          if (ProductFeatureMapping[feature]) {
-            enabledFeatures[ProductFeatureMapping[feature]] = !featureDisabled;
-          } else {
-            console.warn("Unknown feature provided:", feature);
-          }
-        });
-        const prevFeatures = this.hasFeatures;
-        this.hasFeatures = enabledFeatures;
-        this.requestUpdate("features", prevFeatures);
+      if (this.componentFeatures instanceof ComponentFeatures) {
+        // Immutable update
+        this.componentFeatures = this.componentFeatures.immutable();
       }
     }
 
     if (
       changedProperties.has("componentType") ||
       changedProperties.has("uid") ||
+      changedProperties.has("bot") ||
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
@@ -610,7 +577,8 @@ export class WeavyComponent
 
       if (this.componentType && this.uid && this.weavy) {
         const appData = this.name ? { name: this.name } : undefined;
-        this.#appQuery.trackQuery(getAppOptions(this.weavy, this.uid, this.componentType, appData));
+        const appMembers = this.bot ? [this.bot] : undefined;
+        this.#appQuery.trackQuery(getOrCreateAppOptions(this.weavy, this.uid, this.componentType, appMembers, appData));
       } else {
         this.#appQuery.untrackQuery();
         this.app = undefined;
@@ -655,7 +623,11 @@ export class WeavyComponent
     }
 
     if (changedProperties.has("link") && this.link) {
-      console.info(`Opening notification link in ${this.uid ?? this.componentType ?? this.productType}`);
+      console.info(
+        `Opening notification link in ${
+          this.uid ?? AppTypeGuids.get(this.componentType as AppTypeGuid) ?? this.constructor.name
+        }`
+      );
       this.consumeStorageLink();
     }
 
@@ -669,8 +641,8 @@ export class WeavyComponent
       this.#resolveBotUser?.(this.botUser);
     }
 
-    if (changedProperties.has("hasFeatures") && this.hasFeatures) {
-      this.#resolveHasFeatures?.(this.hasFeatures);
+    if (changedProperties.has("componentFeatures") && this.componentFeatures) {
+      this.#resolveComponentFeatures?.(this.componentFeatures);
     }
 
     if (changedProperties.has("link") && this.link) {

@@ -8,28 +8,189 @@
 
   overflow-wrap: break-word;
   min-width: 0;
-  
-  // inline code
-  :not(pre) > code {
-    font-family: var.default(--wy-font-monospace);
-    overflow-wrap: inherit;
-  }
-  
-  // code block
-  pre, pre > code[class*=language-] {
-    white-space: pre-wrap;
-  }
-
-  :first-child {
-    margin-top: 0;
-  }
-
-  :last-child {
-    margin-bottom: 0;
-  }
 
   &:empty {
     display: none;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  b, strong {
+    font-weight: var.default(--wy-font-weight-bold);
+  }
+
+  blockquote {
+    border-left: calc(2  * var.default(--wy-border)) solid color.default(--wy-neutral-80);
+    margin: var.default(--wy-size) 0;
+    padding: var.default(--wy-gap);
+    padding-left: var.default(--wy-size);
+
+    > p {
+      margin: 0;
+    }
+}
+
+  // code
+  pre,
+  code {
+    font-family: var.default(--wy-font-monospace);
+    font-size: var.default(--wy-font-size-sm);
+  }
+
+  // code (inline)
+  :not(pre) > code {
+    overflow-wrap: inherit;
+  }
+
+  // code (block)
+  pre > code {
+    font-size: var.default(--wy-font-size);
+    white-space: pre-wrap;
+  }
+
+  // headings
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var.default(--wy-headings-font-family);
+    font-weight: var.default(--wy-headings-font-weight);
+    line-height: var.default(--wy-headings-line-height);
+    margin: 0 0 var.default(--wy-gap) 0;
+  }
+
+  h1 {
+    font-size: calc(2 * var.default(--wy-font-size));
+  }
+
+  h2 {
+    font-size: calc(1.8 * var.default(--wy-font-size));
+  }
+
+  h3 {
+    font-size: calc(1.6 * var.default(--wy-font-size));
+  }
+
+  h4 {
+    font-size: calc(1.4 * var.default(--wy-font-size));
+  }
+
+  h5 {
+    font-size: calc(1.2 * var.default(--wy-font-size));
+  }
+
+  h6 {
+    font-size: var.default(--wy-font-size);
+  }
+
+  // tables
+  table {
+    /* For scrolling */
+    display: block; /* This is needed for scrollbar */
+    width: 100%; 
+    max-width: -moz-max-content;
+    max-width: max-content; 
+    margin: 0 auto; /* this centers the table */
+    overflow-x: auto; /* This is needed for scrollbar */
+    white-space: nowrap; /* Keeps each cell on one line */
+
+    /* Other table styles */
+    border-collapse: separate;
+    border-spacing: 0 0;
+    margin-bottom: var.default(--wy-size);
+
+    th,
+    td {
+      padding: var.default(--wy-padding-sm) var.default(--wy-padding);
+      border-color: inherit;
+      border-style: solid;
+    }
+
+    th {
+      text-align: inherit;
+      text-align: -webkit-match-parent;
+      border-width: var.default(--wy-border) 0 var.default(--wy-border) var.default(--wy-border);
+      font-weight: var.default(--wy-headings-font-weight);
+
+      &:first-child {
+        border-top-left-radius: var.default(--wy-border-radius-sm);
+      }
+
+      &:last-child {
+        border-top-right-radius: var.default(--wy-border-radius-sm);
+        border-right-width: var.default(--wy-border);
+      }
+    }
+
+    td {
+      border-width: 0 0 var.default(--wy-border) var.default(--wy-border);
+
+      &:last-child {
+        border-right-width: var.default(--wy-border);
+      }
+    }
+
+    tr:last-child td:first-child {
+      border-bottom-left-radius: var.default(--wy-border-radius-sm);
+    }
+
+    tr:last-child td:last-child {
+      border-bottom-right-radius: var.default(--wy-border-radius-sm);
+    }
+
+    > tbody {
+      vertical-align: inherit;
+    }
+
+    > thead {
+      vertical-align: bottom;
+    }
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: var.default(--wy-border-radius-sm);
+    margin-block: var.default(--wy-padding-sm);
+  }
+}
+
+// lists
+ol {
+  list-style-type: decimal;
+}
+
+ul {
+  list-style-type: disc;
+}
+
+li {
+  margin: var.default(--wy-gap-sm) 0;
+}
+
+ol,
+ul {
+  margin: var.default(--wy-size) 0;
+  padding: 0 0 0 1.625em;
+
+  > li {
+    padding-left: var.default(--wy-gap-sm);
+
+    > :first-child {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
   }
 }
 

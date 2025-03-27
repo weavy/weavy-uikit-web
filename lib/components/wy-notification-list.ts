@@ -25,12 +25,12 @@ import chatCss from "../scss/all.scss";
 import pagerStyles from "../scss/components/pager.scss";
 
 import "./wy-notification-list-item";
-import "./wy-icon";
-import "./wy-presence";
-import "./wy-avatar";
+import "./base/wy-icon";
+import "./base/wy-presence";
+import "./base/wy-avatar";
 import "./wy-empty";
-import "./wy-spinner";
-import "./wy-button";
+import "./base/wy-spinner";
+import "./base/wy-button";
 
 @customElement("wy-notification-list")
 @localized()

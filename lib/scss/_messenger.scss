@@ -10,22 +10,18 @@
 
 // weavy ui components 
 @use "components/appbar";
-//@use "components/avatar";
 @use "components/badge";
 @use "components/button";
 @use "components/code";
 @use "components/content";
-//@use "components/dropdown";
 @use "components/emoji";
 @use "components/icons";
-@use "components/image-grid";
 @use "components/input";
 @use "components/item";
 @use "components/list";
 @use "components/messages";
 @use "components/meta";
 @use "components/overlays";
-//@use "components/pager";
 @use "components/pane";
 @use "components/picker-list";
 @use "components/preview";
@@ -36,9 +32,7 @@
 @use "components/preview-media";
 @use "components/preview-pdf";
 @use "components/preview-text";
-@use "components/reactions";
 @use "components/sheet";
-//@use "components/spinner";
 @use "components/tab";
 @use "components/type";
 @use "components/toast";

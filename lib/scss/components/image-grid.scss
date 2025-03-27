@@ -1,74 +1,74 @@
 @use "base/var";
 @use "base/color";
 
+[part~="wy-image"] {
+  padding: 0;
+  width: 50%;
+  position: relative;
+  flex: auto;
+  background-color: inherit;
+  background-clip: content-box;
+}
+
+[part~="wy-image-full-width"] {
+  flex-basis: 100% !important;
+}
+
 // images in posts, messages and comments
-.wy-image-grid {
+[part~="wy-image-grid"] {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-evenly;
   position: relative;
-  border-radius: var.default(--wy-border-radius);
+  //border-radius: var.default(--wy-border-radius);
   overflow: hidden;
   //background-color: $body-bg;
   column-gap: 1px;
   row-gap: 1px;
+}
 
-  .wy-image {
-    padding: 0;
-    width: 50%;
-    position: relative;
-    flex: auto;
-    background-color: inherit;
-    background-clip: content-box;
+[part~="wy-image-area"] {
+  display: block;
+  height: 100%;
+  cursor: pointer;
+}
 
-    // 1 of not 2
-    &:first-of-type:not(:nth-last-of-type(2)) {
-      flex-basis: 100% !important;
-    }
-  }
+[part~="wy-image-content"] {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  // TODO: scale down only for small images like icons (with inline style?)
+  object-fit: contain;
 
-  .wy-image-area {
-    display: block;
-    height: 100%;
-    cursor: pointer;
+  // image loading classes
+  &[part~=wy-loading] {
+    transition: opacity 0.15s ease-out;
+    opacity: 0;
 
-    img {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      // TODO: scale down only for small images like icons (with inline style?)
-      object-fit: contain;
+    &[part~=wy-loaded] {
+      opacity: 1;
+      transition: opacity 0.15s ease-out;
 
-      &.wy-loading {
-        transition: opacity 0.15s ease-out;
+      ~ [part~="wy-image-preview"] {
+        // hide any previous images/thumbs, wait for loaded image transition
+        transition-delay: 0.15s;
         opacity: 0;
-       
-        &.wy-loaded {
-          opacity: 1;
-          transition: opacity 0.15s ease-out;
-       
-          ~ img {
-            // hide any previous images/thumbs, wait for loaded image transition
-            transition-delay: 0.15s;
-            opacity: 0;
-          }
-        }
-       }
+      }
     }
   }
+}
 
-  .wy-more {
-    position: absolute;
-    line-height: 100%;
-    color: color.default(--wy-white);
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var.wy-rem(1.5);
-    background: rgba(0, 0, 0, var.default(--wy-opacity-disabled));
-  }
+[part~="wy-image-grid-more"] {
+  position: absolute;
+  line-height: 100%;
+  color: color.default(--wy-white);
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var.wy-rem(1.5);
+  background: rgba(0, 0, 0, var.default(--wy-opacity-disabled));
 }

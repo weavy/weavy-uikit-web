@@ -7,6 +7,11 @@
   display: flex;
   flex-direction: column;
   gap: var.default(--wy-gap-xl);
+  margin-bottom: var.default(--wy-gap);
+}
+
+.wy-comments-padded {
+  margin: var.default(--wy-gap);
 }
 
 .wy-comment {
@@ -34,4 +39,8 @@
   display: flex;
   flex-direction: column;
   gap: var.default(--wy-gap);
+}
+
+.wy-comment-area {
+    border-radius: var.default(--wy-border-radius-sm);
 }

@@ -24,11 +24,11 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import filesCss from "../scss/all.scss";
 
-import "./wy-icon";
-import "./wy-dropdown";
+import "./base/wy-icon";
+import "./base/wy-dropdown";
 import "./wy-empty";
 import "./wy-file-menu";
-import "./wy-spinner";
+import "./base/wy-spinner";
 
 @customElement("wy-file-versions")
 @localized()
@@ -146,7 +146,7 @@ export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
                             <time datetime=${versionFile.updated_at || versionFile.created_at} title=${dateFull}
                               >${dateFromNow}</time
                             >
-                            · ${versionFile.updated_by?.display_name}</div
+                            · ${versionFile.updated_by?.name}</div
                           >
                         </div>
 

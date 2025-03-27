@@ -7,6 +7,7 @@ import { Mutation, MutationKey } from "@tanstack/query-core";
 import { getTempFile } from "./file-create";
 import { updateMutationContext } from "../utils/mutation-cache";
 import { HeaderContentType } from "../types/http.types";
+import { getHash } from "../utils/files";
 
 export type UploadBlobProps = {
   file: File;
@@ -19,14 +20,14 @@ export type UploadProgressProps = {
 
 export type UploadBlobMutationType = Mutation<BlobType, Error, MutateFileProps, FileMutationContextType | undefined>;
 
-export function removeSuccessfulUploadBlobMutations(weavy: WeavyType, app: AppType, name: string, uniqueId?: string) {
+export function removeSuccessfulUploadBlobMutations(weavy: WeavyType, app: AppType, name: string, uniqueId?: string, type: "blobs" | "data" = "blobs") {
   const queryClient = weavy.queryClient;
 
   // Remove successful blobs
   queryClient
     .getMutationCache()
     .findAll({
-      mutationKey: ["apps", app.id, "blobs", uniqueId],
+      mutationKey: ["apps", app.id, type, uniqueId],
       exact: true,
       status: "success",
       predicate: (mutation) => (mutation as UploadBlobMutationType).state.data?.name === name,
@@ -66,9 +67,9 @@ export function getSimpleUploadBlobMutationOptions(weavy: WeavyType) {
   return options;
 }
 
-export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, app: AppType, uniqueId?: string) {
+export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, appId: AppType["id"], uniqueId?: string, type: "blobs" | "data" = "blobs") {
   const queryClient = weavy.queryClient;
-  const blobsKey: MutationKey = ["apps", app.id, "blobs", uniqueId];
+  const blobsKey: MutationKey = ["apps", appId, type, uniqueId];
 
   const options = {
     mutationFn: async (variables: MutateFileProps) => {
@@ -94,7 +95,9 @@ export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, a
         });
       };
 
-      return <FileMutationContextType>{ type: "upload", file, status: { state: "pending" } };
+      const sha256 = await getHash(variables.file);
+
+      return <FileMutationContextType>{ type: "upload", file, status: { state: "pending" }, sha256 };
     },
     onSuccess: (_data: BlobType, variables: MutateFileProps, _context: FileMutationContextType | undefined) => {
       updateMutationContext(queryClient, blobsKey, variables, (context) => {

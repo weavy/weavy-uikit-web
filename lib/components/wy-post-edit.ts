@@ -17,15 +17,9 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all.scss"
 
-import "./wy-avatar";
-import "./wy-attachment";
 import "./wy-editor";
-import "./wy-image-grid";
-import "./wy-attachments-list";
-import "./wy-reactions";
-import "./wy-meeting-card";
-import "./wy-poll";
-import "./wy-embed";
+import "./base/wy-button";
+import "./base/wy-icon";
 
 @customElement("wy-post-edit")
 @localized()

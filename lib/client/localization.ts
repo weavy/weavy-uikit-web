@@ -85,7 +85,7 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
         throw new DestroyError();
       }
 
-      if (!this.locale && !newLocale) {
+      if (!this._locale && !newLocale) {
         return;
       }
 
@@ -93,17 +93,17 @@ export const WeavyLocalizationMixin = <TBase extends Constructor<WeavyClient>>(B
 
       this._locale = newLocale;
       if (this.localization) {
-        this.localization.setLocale(this.locale);
+        this.localization.setLocale(this._locale);
       } else {
         queueMicrotask(() => {
           if (this.localization) {
-            this.localization.setLocale(this.locale);
-          } else if (this.locale !== WeavyLocalization.sourceLocale) {
-            if (this._locales.has(this.locale)) {
+            this.localization.setLocale(this._locale);
+          } else if (this._locale !== WeavyLocalization.sourceLocale) {
+            if (this._locales.has(this._locale)) {
               this.configureLocalization();
             }
             if (this.localization) {
-              (this.localization as ReturnType<typeof configureLocalization>).setLocale(this.locale);
+              (this.localization as ReturnType<typeof configureLocalization>).setLocale(this._locale);
             } else {
               console.error(
                 this.weavyId,

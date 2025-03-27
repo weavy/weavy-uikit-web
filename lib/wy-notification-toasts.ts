@@ -23,7 +23,7 @@ import hostFontStyles from "./scss/host-font.scss";
 import hostContentsStyles from "./scss/host-contents.scss";
 
 import "./components/wy-notification-list-item";
-import { WyToast } from "./components/wy-toast";
+import { WyToast } from "./components/base/wy-toast";
 
 export const WY_NOTIFICATION_TOASTS_TAGNAME = "wy-notification-toasts";
 
@@ -47,6 +47,8 @@ export class WyNotificationToasts extends WeavyComponent {
   static override styles = [colorModesStyles, hostContentsStyles, hostFontStyles];
 
   override componentType = ComponentType.Unknown;
+
+  protected theme = new ThemeController(this, WyNotificationToasts.styles);
 
   /**
    * What type of notifications to display.
@@ -248,11 +250,6 @@ export class WyNotificationToasts extends WeavyComponent {
   }
 
   #unsubscribeToRealtime?: () => void;
-
-  constructor() {
-    super();
-    new ThemeController(this, WyNotificationToasts.styles);
-  }
 
   protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);

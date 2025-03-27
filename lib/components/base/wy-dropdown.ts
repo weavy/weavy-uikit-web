@@ -1,17 +1,18 @@
-import { LitElement, html, css, type PropertyValues } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { LitElement, html, type PropertyValues } from "lit";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property, queryAssignedElements, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../utils/keyboard";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import type { iconNamesType } from "../utils/icons";
+import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../../utils/keyboard";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import type { iconNamesType } from "../../utils/icons";
 import { computePosition, autoUpdate, offset, flip, shift, type Placement } from "@floating-ui/dom";
-import { isPopoverPolyfilled } from "../utils/dom";
+import { isPopoverPolyfilled } from "../../utils/dom";
 
-import rebootStyles from "../scss/components/base/reboot.scss";
-import dropdownStyles from "../scss/components/dropdown.scss";
+import rebootCss from "../../scss/components/base/reboot.scss";
+import dropdownCss from "../../scss/components/dropdown.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 import WeavyIcon from "./wy-icon";
 import "./wy-button";
@@ -19,13 +20,8 @@ import "./wy-button";
 @customElement("wy-dropdown")
 export default class WyDropdown extends LitElement {
   static override styles = [
-    rebootStyles,
-    dropdownStyles,
-    css`
-      /*:host {
-        position: relative;
-      }*/
-    `,
+    rebootCss,
+    dropdownCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -210,13 +206,9 @@ export default class WyDropdown extends LitElement {
 @customElement("wy-dropdown-item")
 export class WyDropdownItem extends LitElement {
   static override styles = [
-    rebootStyles,
-    dropdownStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    rebootCss,
+    dropdownCss,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -234,13 +226,9 @@ export class WyDropdownItem extends LitElement {
 @customElement("wy-dropdown-option")
 export class WyDropdownOption extends LitElement {
   static override styles = [
-    rebootStyles,
-    dropdownStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    rebootCss,
+    dropdownCss,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -270,13 +258,9 @@ export class WyDropdownOption extends LitElement {
 @customElement("wy-dropdown-divider")
 export class WyDropdownDivider extends LitElement {
   static override styles = [
-    rebootStyles,
-    dropdownStyles,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    rebootCss,
+    dropdownCss,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

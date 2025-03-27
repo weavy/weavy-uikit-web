@@ -511,3 +511,15 @@ export function getFlatInfiniteResultData<T extends PlainObjectType>(
 ) {
   return (data?.pages.flatMap((page) => page.data) || []).filter((f) => f) as T[];
 }
+
+/**
+ * Checks if infinite query result is empty.
+ *
+ * @param data Infinite query result data
+ * @returns boolean
+ */
+export function isInfiniteResultDataEmpty<T extends PlainObjectType>(
+  data: InfiniteData<InfiniteQueryResultType<T>, unknown> | undefined
+) {
+  return !data || !data?.pages.some((page) => page.data?.length);
+}

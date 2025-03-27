@@ -41,13 +41,20 @@ import type { Completion, CompletionContext, CompletionResult } from "@codemirro
 import { desktop } from "../utils/browser";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { Feature } from "../types/features.types";
+import type { MetadataType } from "../types/lists.types";
+import { DataRefType } from "../types/refs.types";
+import { getHash } from "../utils/files";
+import { getFileMutationsTotalProgress, getFileMutationsTotalStatus } from "../data/file-create";
+import { findAsyncSequential } from "../utils/objects";
 
 import chatCss from "../scss/all.scss";
 
-import WeavyAvatar from "./wy-avatar";
+import WeavyAvatar from "./base/wy-avatar";
 import "./wy-embed";
-import "./wy-dropdown";
+import "./base/wy-dropdown";
 import "./wy-file-item";
+import "./base/wy-progress-linear";
 
 @customElement("wy-editor")
 @localized()
@@ -76,6 +83,9 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   @property()
   text?: string = "";
 
+  @property({ type: Object })
+  metadata?: MetadataType = {};
+
   @property({ attribute: false })
   embed?: EmbedType;
 
@@ -103,6 +113,31 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   @property()
   editorLocation: "messages" | "posts" | "apps" | "files" = "apps";
 
+  @property({ attribute: false, type: Array })
+  contextDataRefs?: DataRefType[] | null;
+
+  selectAllContent() {
+    this.editor?.dispatch({
+      selection: {
+        anchor: 0,
+        head: this.editor.state.doc.length,
+      },
+    });
+  }
+
+  setCursorLast() {
+    this.editor?.dispatch({
+      selection: {
+        anchor: this.editor.state.doc.length,
+        head: this.editor.state.doc.length,
+      },
+    });
+  }
+
+  focusInput() {
+    this.editor?.focus();
+  }
+
   @state()
   protected meeting?: MeetingType;
 
@@ -121,6 +156,9 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   @state()
   protected draftKey: string = "";
 
+  @state()
+  protected mutationAppId: number = -1;
+
   protected uploadBlobMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(
     this
   );
@@ -135,6 +173,16 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   protected fileInputRef: Ref<HTMLInputElement> = createRef();
   protected cloudFilesRef: Ref<WeavyCloudFiles> = createRef();
   protected dropZone: DropZoneController = new DropZoneController(this);
+
+  protected uploadDataMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(
+    this
+  );
+  protected mutatingContextData = new MutationStateController<
+    BlobType | FileType | EmbedType,
+    Error,
+    MutateFileProps,
+    FileMutationContextType
+  >(this);
 
   @state()
   protected keyMap: KeyBinding[] = [];
@@ -177,6 +225,28 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     { leading: true, trailing: true }
   );
 
+  async updateContextDataMutations() {
+    if (this.componentFeatures?.allowsFeature(Feature.ContextData) && this.contextDataRefs) {
+      for (const refIndex in this.contextDataRefs) {
+        const dataRef = this.contextDataRefs[refIndex];
+        if (dataRef.type === "file") {
+          const sha256 = await getHash(dataRef.item);
+
+          const existingUpload = await findAsyncSequential(this.mutatingContextData.result ?? [], async (fileUpload) => {
+            const existingSha256 = fileUpload.context?.sha256 ?? (await getHash(fileUpload.variables?.file));
+            return existingSha256 === sha256;
+          });
+
+          if (!existingUpload) {
+            this.uploadDataMutation.mutate({ file: dataRef.item });
+          }
+
+          // TODO: remove old mutations
+        }
+      }
+    }
+  }
+
   constructor() {
     super();
 
@@ -194,35 +264,64 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
         changedProperties.has("user") ||
         changedProperties.has("parentId")) &&
       this.weavy &&
-      this.app &&
       this.user
     ) {
-      this.draftKey = `draft-${this.editorType}-${this.parentId || this.app.id}`;
+      this.mutationAppId = this.app?.id ?? Date.now() * -1;
+
+      this.draftKey = `draft-${this.editorType}-${this.parentId || this.mutationAppId}`;
       this.uploadBlobMutation.trackMutation(
         getUploadBlobMutationOptions(
           this.weavy,
           this.user,
-          this.app,
-          `${this.editorLocation}-${this.parentId || this.app.id}`
+          this.mutationAppId,
+          `${this.editorLocation}-${this.parentId || this.mutationAppId}`
         )
       );
 
-      const mutateFileTrackKey = [
-        "apps",
-        this.app.id,
-        "blobs",
-        `${this.editorLocation}-${this.parentId || this.app.id}`,
-      ];
-
       this.mutatingFiles.trackMutationState(
-        { filters: { mutationKey: mutateFileTrackKey, exact: true } },
+        {
+          filters: {
+            mutationKey: [
+              "apps",
+              this.mutationAppId,
+              "blobs",
+              `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
+            ],
+            exact: true,
+          },
+        },
         this.weavy.queryClient
       );
       this.externalBlobMutation = getExternalBlobMutation(
         this.weavy,
         this.user,
-        this.app,
-        `${this.editorLocation}-${this.parentId || this.app.id}`
+        this.mutationAppId,
+        `${this.editorLocation}-${this.parentId || this.mutationAppId}`
+      );
+
+      this.uploadDataMutation.trackMutation(
+        getUploadBlobMutationOptions(
+          this.weavy,
+          this.user,
+          this.mutationAppId,
+          `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
+          "data"
+        )
+      );
+
+      this.mutatingContextData.trackMutationState(
+        {
+          filters: {
+            mutationKey: [
+              "apps",
+              this.mutationAppId,
+              "data",
+              `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
+            ],
+            exact: true,
+          },
+        },
+        this.weavy.queryClient
       );
 
       if (this.draft) {
@@ -258,8 +357,12 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     }
 
     // set editor text if text property is update (from saved draft)
-    if (changedProperties.has("text") && this.editor) {
+    if (changedProperties.has("text") && this.editor && this.editor.state.doc.toString() !== this.text) {
       this.editor.dispatch({ changes: { from: 0, to: this.editor.state.doc.length, insert: this.text } });
+    }
+
+    if (changedProperties.has("contextDataRefs")) {
+      this.updateContextDataMutations();
     }
   }
 
@@ -270,7 +373,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
         changedProperties.has("user") ||
         changedProperties.has("parentId")) &&
       this.weavy &&
-      this.app &&
       this.user &&
       this.editorRef.value
     ) {
@@ -320,7 +422,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
               dropCursor(),
               mentions,
               autocompletion({
-                override: this.hasFeatures?.mentions
+                override: this.componentFeatures?.allowsFeature(Feature.Mentions)
                   ? [(context: CompletionContext) => this.autocomplete(context)]
                   : null, //showMention
                 closeOnBlur: false,
@@ -340,11 +442,11 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
                       const avatar = document.createElement("wy-avatar") as WeavyAvatar;
                       avatar.src = completion.item?.avatar_url || "";
-                      avatar.name = completion.item?.display_name || "";
+                      avatar.name = completion.item?.name || "";
 
                       const name = document.createElement("div");
                       name.classList.add("wy-item-body");
-                      name.innerText = completion.item?.display_name || "";
+                      name.innerText = completion.item?.name || "";
 
                       div.appendChild(avatar);
                       div.appendChild(name);
@@ -374,7 +476,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                     }
                   }
 
-                  if (files.length > 0 && this.hasFeatures?.attachments) {
+                  if (this.componentFeatures?.allowsFeature(Feature.Attachments) && files.length > 0) {
                     for (let i = 0; i < files.length; i++) {
                       this.handleUploadFiles(files);
                     }
@@ -382,7 +484,13 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                   }
                 },
                 keyup: (evt: KeyboardEvent, _view: EditorView) => {
-                  if (this.typing && _view.state.doc.toString() !== "" && this.hasFeatures?.typing) {
+                  this.text = _view.state.doc.toString();
+
+                  if (
+                    this.componentFeatures?.allowsFeature(Feature.Typing) &&
+                    this.typing &&
+                    _view.state.doc.toString() !== ""
+                  ) {
                     this.throttledTyping();
                   }
 
@@ -390,7 +498,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                     this.throttledDrafting();
                   }
 
-                  if (this.hasFeatures?.embeds && _view.state.doc.toString() !== "") {
+                  if (this.componentFeatures?.allowsFeature(Feature.Embeds) && _view.state.doc.toString() !== "") {
                     this.handleEmbeds(_view.state.doc.toString());
                   }
                 },
@@ -487,13 +595,13 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
     if (result.data) {
       completions = result.data
-        .filter((item) => typeof item.display_name !== "undefined")
+        .filter((item) => typeof item.name !== "undefined")
         .map((item) => {
           return {
             item: item,
-            label: item.display_name,
+            label: item.name,
             apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
-              const toInsert = "[" + item.display_name + "](@u" + item.id.toString() + ")";
+              const toInsert = "[" + item.name + "](@u" + item.id.toString() + ")";
               let transaction = view.state.update({ changes: { from: from - 1, to: from } });
               view.dispatch(transaction);
               transaction = view.state.update({
@@ -552,13 +660,13 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   }
 
   protected handleRemoveUpload(mutation: MutationState<BlobType, Error, MutateFileProps, FileMutationContextType>) {
-    if (!this.weavy || !this.app) {
+    if (!this.weavy || !this.mutationAppId) {
       return;
     }
 
     removeMutation(
       this.weavy.queryClient,
-      ["apps", this.app.id, "blobs", `${this.editorLocation}-${this.parentId || this.app.id}`],
+      ["apps", this.mutationAppId, "blobs", `${this.editorLocation}-${this.parentId || this.mutationAppId}`],
       (m) =>
         (m as Mutation<BlobType, Error, MutateFileProps, FileMutationContextType>).state.data?.id === mutation.data?.id
     );
@@ -575,7 +683,13 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
       text = this.text;
     }
 
-    if ((!files || !files.length) && !this.meeting && !this.embeds.length && (!this.pollOptions.length || this.pollOptions.filter((option) => option.text.trim() !== "").length === 0) && text === "") {
+    if (
+      (!files || !files.length) &&
+      !this.meeting &&
+      !this.embeds.length &&
+      (!this.pollOptions.length || this.pollOptions.filter((option) => option.text.trim() !== "").length === 0) &&
+      text === ""
+    ) {
       localStorage.removeItem(this.draftKey);
     } else {
       localStorage.setItem(
@@ -596,18 +710,22 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
   protected async submit() {
     const fileMutationResults = this.mutatingFiles.result;
+    const contextDataMutationResults = this.mutatingContextData.result;
 
-    const currentlyUploading = fileMutationResults?.some((upload) => upload.status === "pending");
+    const currentlyUploadingFiles = fileMutationResults?.some((upload) => upload.status === "pending");
+    const currentlyUploadingContextData = contextDataMutationResults?.some((upload) => upload.status === "pending");
 
     const text = this.editor?.state.doc.toString().trim();
     const meetingId = this.meeting?.id;
     const blobs = fileMutationResults?.map((mutation) => mutation.data?.id);
+    const contextData = contextDataMutationResults?.map((mutation) => mutation.data?.id).reverse();
     const attachments = this.attachments?.map((attachment) => attachment.id) || [];
     const pollOptions = this.pollOptions.filter((p) => p.text.trim() !== "");
 
     if (
       isFetchingEmbeds() ||
-      currentlyUploading ||
+      currentlyUploadingFiles ||
+      currentlyUploadingContextData ||
       (!text &&
         !meetingId &&
         blobs?.length == 0 &&
@@ -619,10 +737,12 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     }
 
     const options = {
-      detail: { text, meetingId, blobs, attachments, pollOptions, embed: this.embeds[0]?.id },
+      detail: { text, meetingId, blobs, attachments, pollOptions, embed: this.embeds[0]?.id, contextData },
       bubbles: true,
       composed: true,
     };
+
+    // TODO: FIX EVENT TYPE
     this.dispatchEvent(new CustomEvent("submit", options));
 
     this.resetEditor();
@@ -631,12 +751,12 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   protected resetEditor() {
     this.clearEditor();
 
-    if (this.weavy && this.app) {
+    if (this.weavy && this.mutationAppId) {
       removeMutations(this.weavy.queryClient, [
         "apps",
-        this.app.id,
+        this.mutationAppId,
         "blobs",
-        `${this.editorLocation}-${this.parentId || this.app.id}`,
+        `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
       ]);
     }
 
@@ -650,6 +770,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     this.pollOptions = [];
     this.showPolls = false;
     this.embeds = [];
+    this.metadata = {};
     clearEmbeds();
   }
 
@@ -750,26 +871,29 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
    * Hard copy of the rendered nodes when the editor is empty. Cleaned up to not be editable.
    */
   protected renderEditorDummy(): TemplateResult | typeof nothing {
-    return !this.editorInitialized ? html`
-      <div class="cm-editor">
-        <div class="cm-announced"></div>
-        <div tabindex="-1" class="cm-scroller">
-          <div class="cm-content cm-lineWrapping">
-            <div class="cm-line"
-              ><img class="cm-widgetBuffer" aria-hidden="true" /><span class="cm-placeholder">${this.placeholder}</span
-              ><br
-            /></div>
+    return !this.editorInitialized
+      ? html`
+          <div class="cm-editor">
+            <div class="cm-announced"></div>
+            <div tabindex="-1" class="cm-scroller">
+              <div class="cm-content cm-lineWrapping">
+                <div class="cm-line"
+                  ><img class="cm-widgetBuffer" aria-hidden="true" /><span class="cm-placeholder"
+                    >${this.placeholder}</span
+                  ><br
+                /></div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    ` : nothing;
+        `
+      : nothing;
   }
 
-  protected renderTopSlot(): TemplateResult | typeof nothing {
+  protected renderTopSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return nothing;
   }
 
-  protected renderMiddleSlot(): TemplateResult | typeof nothing {
+  protected renderMiddleSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return html`
       <!-- Input -->
       <div class=${classMap({ "wy-post-editor-text": true, "wy-is-invalid": this.editorError })} ${ref(this.editorRef)}>
@@ -778,7 +902,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
       <div class="wy-post-editor-inputs">
         <div class="wy-post-editor-buttons">
-          ${this.hasFeatures?.attachments
+          ${this.componentFeatures?.allowsFeature(Feature.Attachments)
             ? html`<wy-button
                   kind="icon"
                   @click=${this.openFileInput}
@@ -802,7 +926,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                   ?disabled=${this.disabled}
                 />`
             : nothing}
-          ${this.hasFeatures?.cloudFiles
+          ${this.componentFeatures?.allowsFeature(Feature.CloudFiles)
             ? html`<wy-button
                 kind="icon"
                 @click=${this.openCloudFiles}
@@ -812,7 +936,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                 <wy-icon name="cloud"></wy-icon>
               </wy-button>`
             : nothing}
-          ${this.hasFeatures?.zoomMeetings
+          ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.ZoomMeetings)
             ? html`
                 <wy-button
                   kind="icon"
@@ -824,7 +948,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                 </wy-button>
               `
             : nothing}
-          ${this.hasFeatures?.googleMeet
+          ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.GoogleMeet)
             ? html`
                 <wy-button
                   kind="icon"
@@ -836,7 +960,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                 </wy-button>
               `
             : nothing}
-          ${this.hasFeatures?.microsoftTeams
+          ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.MicrosoftTeams)
             ? html`
                 <wy-button
                   kind="icon"
@@ -848,7 +972,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                 </wy-button>
               `
             : nothing}
-          ${this.hasFeatures?.polls
+          ${this.componentFeatures?.allowsFeature(Feature.Polls)
             ? html`<wy-button kind="icon" @click=${this.openPolls} title=${msg("Poll")} ?disabled=${this.disabled}>
                 <wy-icon name="poll"></wy-icon>
               </wy-button>`
@@ -863,8 +987,8 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     `;
   }
 
-  protected renderBottomSlot(): TemplateResult | typeof nothing {
-    return this.renderLists();
+  protected renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
+    return [this.renderContextData(), this.renderLists()];
   }
 
   protected renderLists(): TemplateResult | typeof nothing {
@@ -876,7 +1000,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
     return html`
       <!-- polls -->
-      ${this.hasFeatures?.polls && this.showPolls && this.pollOptions.length > 0
+      ${this.componentFeatures?.allowsFeature(Feature.Polls) && this.showPolls && this.pollOptions.length > 0
         ? html`
             <div class="wy-poll-form">
               ${this.pollOptions.map((p: PollOptionType, index: number) => {
@@ -895,9 +1019,12 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
         : nothing}
 
       <!-- meetings -->
-      ${(this.meeting?.provider === "zoom" && this.hasFeatures?.zoomMeetings) ||
-      (this.meeting?.provider === "google" && this.hasFeatures?.googleMeet) ||
-      (this.meeting?.provider === "microsoft" && this.hasFeatures?.microsoftTeams)
+      ${(this.meeting?.provider === "zoom" &&
+        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.ZoomMeetings)) ||
+      (this.meeting?.provider === "google" &&
+        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.GoogleMeet)) ||
+      (this.meeting?.provider === "microsoft" &&
+        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.MicrosoftTeams))
         ? html`
             <div class="wy-item wy-list-item">
               <wy-icon svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
@@ -965,7 +1092,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
       )}
 
       <!-- embeds -->
-      ${this.hasFeatures?.embeds && this.embeds.length > 0
+      ${this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embeds.length > 0
         ? html`<div class="wy-embed-preview">
             ${this.embeds.map(
               (embed: EmbedType) => html`
@@ -981,6 +1108,76 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
           </div> `
         : nothing}
     `;
+  }
+
+  protected renderContextData(): TemplateResult | typeof nothing {
+    const { result: contextDataMutationResults, isMutating } = this.mutatingContextData;
+
+    const contextDataUploadMutations = contextDataMutationResults?.filter((mutation) => mutation.variables?.file) as
+      | MutationState<BlobType | FileType, Error, MutateFileProps, FileMutationContextType>[]
+      | undefined;
+
+    const fileProgress = getFileMutationsTotalProgress(contextDataUploadMutations);
+    const fileStatus = getFileMutationsTotalStatus(contextDataUploadMutations);
+
+    return this.componentFeatures?.allowsFeature(Feature.ContextData) &&
+      contextDataMutationResults &&
+      contextDataMutationResults.length
+      ? html`
+          ${isMutating || (fileProgress.percent !== null && fileProgress.percent < 100)
+            ? html`
+                <wy-progress-linear
+                  ?indeterminate=${!fileProgress.percent}
+                  overlay
+                  reveal
+                  value=${fileProgress.percent ?? 0}
+                  max=${100}
+                ></wy-progress-linear>
+              `
+            : nothing}
+          ${fileStatus === "error"
+            ? html`
+                <div class="wy-item wy-item-sm">
+                  <wy-icon name="alert" color="yellow"></wy-icon>
+                  <div class="wy-item-body">${msg("Error uploading context data.")}</div>
+                </div>
+              `
+            : nothing}
+
+          <!-- context data -->
+          ${
+            /*repeat(
+            contextDataMutationResults,
+            (mutation) => "mutation" + mutation.submittedAt,
+            (mutation) => {
+              if (mutation.context?.file) {
+                const file = mutation.context.file;
+                const fileStatus: FileStatusType = {
+                  ...mutation.context.status,
+                };
+                return html`
+                  <wy-file-item
+                    .hasHover=${false}
+                    .file=${mutation.context.file}
+                    .status=${fileStatus}
+                    title="${toUpperCaseFirst(mutation.context.type)}: ${file.name +
+                    (fileStatus.text ? `: ${fileStatus.text}` : "")}"
+                  >
+                    <span slot="title"
+                      ><strong></strong> ${file.name}
+                      ${fileStatus.text ? html`: <em>${fileStatus.text}</em>` : nothing}</span
+                    >
+                    <span slot="actions"></span>
+                  </wy-file-item>
+                `;
+              }
+
+              return nothing;
+            }
+          )*/ nothing
+          }
+        `
+      : nothing;
   }
 
   protected renderCloudFiles(): TemplateResult | typeof nothing {

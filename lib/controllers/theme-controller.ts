@@ -9,6 +9,10 @@ import {
 } from "lit";
 import { generateThemeColors, getCSSThemeColor, getMetaThemeColor, observeCSSThemeColor, observeMetaThemeColor } from "../utils/styles";
 
+/**
+ * Controller for generating theme colors from a resolved `--wy-theme-color`or meta theme color.
+ * Regenerates when theme color is updated. 
+ */
 export class ThemeController implements ReactiveController {
   constructor(host: ReactiveControllerHost & LitElement & Element, styles?: CSSResultOrNative[]) {
     host.addController(this);
@@ -19,12 +23,21 @@ export class ThemeController implements ReactiveController {
     }
   }
 
-  firstUpdate = true;
+  #firstUpdate = true;
 
   host: ReactiveControllerHost & LitElement & Element;
   styles: CSSResultOrNative[] = [];
 
-  themeColor?: string;
+  #themeColor?: string;
+  get themeColor() {
+    return this.#themeColor;
+  }
+  set themeColor(themeColor: string | undefined) {
+    this.#themeColor = themeColor;
+    this.checkThemeUpdate();
+  }
+
+
   private _resolvedThemeColor?: string;
 
   private cssObserverDisconnect?: () => void;
@@ -47,9 +60,9 @@ export class ThemeController implements ReactiveController {
   }
 
   hostUpdate() {
-    if (this.firstUpdate) {
+    if (this.#firstUpdate) {
       this.checkThemeUpdate();
-      this.firstUpdate = false;
+      this.#firstUpdate = false;
     }
   }
 

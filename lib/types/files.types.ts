@@ -1,7 +1,6 @@
-import { AppRef, AppType, EntityType } from "./app.types";
+import { AppRef, EntityType } from "./app.types";
 import { CommentsResultType } from "./comments.types";
 import type { MetadataType, SortOrderType } from "./lists.types";
-import { ProductFeaturesType } from "./product.types";
 import { InfiniteQueryResultType } from "./query.types";
 import type { UserType } from "./users.types";
 import { type Mutation } from "@tanstack/query-core";
@@ -81,7 +80,6 @@ export type FileType = {
   is_subscribed: boolean;
   is_starred: boolean;
   is_trashed: boolean;
-  refId?: number; //*
   raw?: string;
 };
 
@@ -114,6 +112,7 @@ export type FileMutationContextType = {
   type: FileActionType;
   file?: FileType;
   status: FileStatusType;
+  sha256?: string;
 };
 
 export type CreateFileProps = {
@@ -136,16 +135,3 @@ export type FileMutationType = Mutation<
   MutateFileProps,
   FileMutationContextType | undefined
 >;
-
-export type FileOpenEventType = CustomEvent<{ fileId: number; tab?: "comments" | "versions" }>;
-
-export type WyPreviewOpenEventType = CustomEvent<{
-  fileId: number;
-  tab?: "comments" | "versions";
-  files: FileType[];
-  app: AppType;
-  hasFeatures: ProductFeaturesType;
-  isAttachment: boolean;
-}> & { type: "wy-preview-open" };
-
-export type WyPreviewCloseEventType = CustomEvent & { type: "wy-preview-close"}

@@ -3,7 +3,7 @@ import { customElement } from "./utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { classMap } from "lit/directives/class-map.js";
-import { AppTypeString, type AppType } from "./types/app.types";
+import { AppTypeGuid, type AppType } from "./types/app.types";
 import { getInfiniteFileListOptions } from "./data/files";
 import type {
   FileOrderType,
@@ -14,8 +14,10 @@ import type {
   MutateFileProps,
   FileMutationContextType,
   FileViewType,
-  FileOpenEventType,
 } from "./types/files.types";
+import type {
+  FileOpenEventType,
+} from "./types/events.types";
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
 import { InfiniteScrollController } from "./controllers/infinite-scroll-controller";
 import { MutationController } from "./controllers/mutation-controller";
@@ -44,8 +46,8 @@ import { PersistStateController } from "./controllers/persist-state-controller";
 import { ThemeController } from "./controllers/theme-controller";
 import { RealtimeFileEventType } from "./types/realtime.types";
 import { WeavyComponent } from "./classes/weavy-component";
-import { ProductTypes } from "./types/product.types";
 import { getFlatInfiniteResultData } from "./utils/query-cache";
+import { ComponentFeatures, Feature } from "./contexts/features-context";
 
 import allStyles from "./scss/all.scss";
 import hostBlockStyles from "./scss/host-block.scss";
@@ -56,9 +58,9 @@ import pagerStyles from "./scss/components/pager.scss";
 import "./components/wy-files-appbar";
 import "./components/wy-files-list";
 import "./components/wy-preview";
-import "./components/wy-spinner";
+import "./components/base/wy-spinner";
 import "./components/wy-empty";
-import "./components/wy-icon";
+import "./components/base/wy-icon";
 
 export const WY_FILES_TAGNAME = "wy-files";
 
@@ -81,9 +83,29 @@ declare global {
 export class WyFiles extends WeavyComponent {
   static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostFontStyles, pagerStyles];
 
-  override productType = ProductTypes.Files;
-  override componentType = AppTypeString.Files;
+  override componentType = AppTypeGuid.Files;
 
+  override componentFeatures = new ComponentFeatures({
+    // All available features as enabled/disabled by default
+    [Feature.Attachments]: true,
+    [Feature.CloudFiles]: true,
+    [Feature.Comments]: true,
+    [Feature.Embeds]: true,  
+    [Feature.GoogleMeet]: false,
+    [Feature.Meetings]: false,
+    [Feature.Mentions]: true,
+    [Feature.MicrosoftTeams]: false,
+    [Feature.Polls]: true,
+    [Feature.Previews]: true,
+    [Feature.Reactions]: true,
+    [Feature.Typing]: false, // Has no effect currently
+    [Feature.Versions]: true,
+    [Feature.WebDAV]: true,
+    [Feature.ZoomMeetings]: false,
+  });
+
+  protected theme = new ThemeController(this, WyFiles.styles);
+  
   /**
    * The view for showing the file list.
    * This value is persisted in sessionStorage.
@@ -235,7 +257,6 @@ export class WyFiles extends WeavyComponent {
   constructor() {
     super();
     this.addEventListener("drop-files", this.handleBlobUpload);
-    new ThemeController(this, WyFiles.styles);
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
@@ -276,9 +297,9 @@ export class WyFiles extends WeavyComponent {
     ) {
       this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
 
-      this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavy, this.user, this.app));
+      this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavy, this.user, this.app.id));
       this.createFileMutation.trackMutation(getCreateFileMutationOptions(this.weavy, this.user, this.app));
-      this.externalBlobMutation = getExternalBlobMutation(this.weavy, this.user, this.app);
+      this.externalBlobMutation = getExternalBlobMutation(this.weavy, this.user, this.app.id);
 
       this.renameFileMutation = getRenameFileMutation(this.weavy, this.app);
       this.subscribeFileMutation = getSubscribeFileMutation(this.weavy, this.app);

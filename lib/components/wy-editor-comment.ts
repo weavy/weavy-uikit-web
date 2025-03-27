@@ -6,9 +6,10 @@ import { ref } from "lit/directives/ref.js";
 import { WeavyProps } from "../types/weavy.types";
 
 import WyEditor from "./wy-editor";
-import "./wy-dropdown";
-import "./wy-icon";
-import "./wy-button";
+import "./base/wy-dropdown";
+import "./base/wy-icon";
+import "./base/wy-button";
+import { Feature } from "../types/features.types";
 
 @customElement("wy-comment-editor")
 @localized()
@@ -34,13 +35,17 @@ export default class WyCommentEditor extends WyEditor {
   protected override renderMiddleSlot() {
     return html`<div class="wy-comment-editor-inputs">
       <!-- Add -->
-      ${this.hasFeatures?.attachments ||
-      this.hasFeatures?.cloudFiles ||
-      this.hasFeatures?.zoomMeetings ||
-      this.hasFeatures?.googleMeet ||
-      this.hasFeatures?.microsoftTeams
+      ${this.componentFeatures?.allowsAnyFeature(
+        Feature.Attachments,
+        Feature.CloudFiles,
+        Feature.Meetings,
+        Feature.ZoomMeetings,
+        Feature.GoogleMeet,
+        Feature.MicrosoftTeams,
+        Feature.Polls
+      )
         ? html`<wy-dropdown icon="plus" directionY="up" ?disabled=${this.disabled}>
-            ${this.hasFeatures?.attachments
+            ${this.componentFeatures?.allowsFeature(Feature.Attachments)
               ? html`<wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
                     <wy-icon name="attachment"></wy-icon>
                     <span>${msg("From device")}</span>
@@ -59,13 +64,13 @@ export default class WyCommentEditor extends WyEditor {
                     tabindex="-1"
                   />`
               : nothing}
-            ${this.hasFeatures?.cloudFiles
+            ${this.componentFeatures?.allowsFeature(Feature.CloudFiles)
               ? html`<wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
                   <wy-icon name="cloud"></wy-icon>
                   <span>${msg("From cloud")}</span>
                 </wy-dropdown-item>`
               : nothing}
-            ${this.hasFeatures?.zoomMeetings
+            ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.ZoomMeetings)
               ? html`
                   <wy-dropdown-item @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
                     <wy-icon svg="zoom-meetings"></wy-icon>
@@ -73,7 +78,7 @@ export default class WyCommentEditor extends WyEditor {
                   </wy-dropdown-item>
                 `
               : nothing}
-            ${this.hasFeatures?.googleMeet
+            ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.GoogleMeet)
               ? html`
                   <wy-dropdown-item @click=${() => this.handleMeetingClick("google")} title=${msg("Google Meet")}>
                     <wy-icon svg="google-meet"></wy-icon>
@@ -81,7 +86,7 @@ export default class WyCommentEditor extends WyEditor {
                   </wy-dropdown-item>
                 `
               : nothing}
-            ${this.hasFeatures?.microsoftTeams
+            ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.MicrosoftTeams)
               ? html`
                   <wy-dropdown-item
                     @click=${() => this.handleMeetingClick("microsoft")}
@@ -92,7 +97,7 @@ export default class WyCommentEditor extends WyEditor {
                   </wy-dropdown-item>
                 `
               : nothing}
-            ${this.hasFeatures?.polls
+            ${this.componentFeatures?.allowsFeature(Feature.Polls)
               ? html`<wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}>
                   <wy-icon name="poll"></wy-icon>
                   <span>${msg("Poll")}</span>
@@ -116,7 +121,10 @@ export default class WyCommentEditor extends WyEditor {
     </div>`;
   }
 
-  protected override renderBottomSlot() {
-    return this.renderLists();
+  protected override renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
+    return [
+      this.renderContextData(),
+      this.renderLists()
+    ];
   }
 }

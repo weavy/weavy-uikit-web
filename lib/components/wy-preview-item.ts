@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { getExtension, getIcon } from "../utils/files";
@@ -14,16 +14,13 @@ import "./wy-preview-embed";
 import "./wy-pdf-viewer";
 
 import allCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
 @customElement("wy-preview-item")
 export class WyPreviewItem extends LitElement {
   static override styles = [
     allCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

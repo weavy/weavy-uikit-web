@@ -6,7 +6,7 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import chatCss from "../scss/all.scss"
 
-import "./wy-button";
+import "./base/wy-button";
 
 @customElement("wy-post-trashed")
 @localized()
@@ -28,7 +28,7 @@ export default class WyPostTrashed extends LitElement {
     return html`
       <div class="wy-item">
         <div class="wy-item-body">${msg("Post was trashed.")}</div>
-        <wy-button @click=${() => this.dispatchRestore()} class="wy-button-variant">${msg("Undo")}</wy-button>
+        <wy-button @click=${() => this.dispatchRestore()} color="variant">${msg("Undo")}</wy-button>
       </div>
     `;
   }

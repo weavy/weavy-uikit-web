@@ -521,3 +521,23 @@ export function handleSelectFilename(e: Event) {
     target?.setSelectionRange(0, i);
   }
 }
+
+export async function getHash(blob?: Blob, algorithm: AlgorithmIdentifier = "SHA-256"): Promise<string> {
+  return await new Promise((resolve) => {
+    if (blob) {
+      const a = new FileReader();
+      a.readAsArrayBuffer(blob);
+      a.onloadend = async () => {
+        const hashBuffer = await crypto.subtle.digest(algorithm, a.result as ArrayBuffer); // it outputs a promise
+        let hashHex = "";
+        if (hashBuffer) {
+          const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+          hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join(""); // convert bytes to hex string
+        }
+        resolve(hashHex);
+      };
+    } else {
+      resolve('');
+    }
+  });
+}

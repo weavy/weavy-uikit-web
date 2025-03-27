@@ -1,13 +1,14 @@
 import { LitElement, css, html } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { partMap } from "../utils/directives/shadow-part-map";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
+import { partMap } from "../../utils/directives/shadow-part-map";
 
-import rebootCss from "../scss/components/base/reboot.scss";
-import buttonCss from "../scss/components/button.scss";
-import tabCss from "../scss/components/tab.scss";
+import rebootCss from "../../scss/components/base/reboot.scss";
+import buttonCss from "../../scss/components/button.scss";
+import tabCss from "../../scss/components/tab.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 @customElement("wy-button")
 export default class WyButton extends LitElement {
@@ -15,9 +16,9 @@ export default class WyButton extends LitElement {
     rebootCss,
     buttonCss,
     tabCss,
+    hostContentsCss,
     css`
       :host {
-        display: contents;
         position: relative;
       }
     `,
@@ -79,11 +80,7 @@ export class WyButtons extends LitElement {
     rebootCss,
     buttonCss,
     tabCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

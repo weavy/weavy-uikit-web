@@ -1,4 +1,4 @@
-import { LitElement, html, type PropertyValues, nothing, css } from "lit";
+import { LitElement, html, type PropertyValues, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
@@ -26,23 +26,20 @@ import { type AppType, AppTypeGuid, AccessType, PermissionType } from "../types/
 import { hasPermission } from "../utils/permission";
 
 import chatCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
-import "./wy-presence";
+import "./base/wy-presence";
 import "./wy-users-search";
-import "./wy-dropdown";
+import "./base/wy-dropdown";
 import "./wy-blob-upload";
-import "./wy-overlay";
+import "./base/wy-overlay";
 
 @customElement("wy-conversation-appbar")
 @localized()
 export default class WyConversationAppbar extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);
@@ -95,7 +92,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
       return;
     }
 
-    this.conversationTitle = this.conversationTitleInput = realtimeEvent.app.display_name;
+    this.conversationTitle = this.conversationTitleInput = realtimeEvent.app.name;
   };
 
   private async addMembers(members: MemberType[]) {
@@ -250,7 +247,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
 
     // conversation object is updated
     if (changedProperties.has("conversation") && this.conversation) {
-      this.conversationTitleInput = this.conversationTitle = this.conversation.display_name;
+      this.conversationTitleInput = this.conversationTitle = this.conversation.name;
     }
   }
 
@@ -329,7 +326,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                                     ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
                                     : html`<wy-avatar-group
                                         .members=${membersData?.data}
-                                        title=${this.conversation.display_name}
+                                        title=${this.conversation.name}
                                         .size=${96}
                                       ></wy-avatar-group>`}
                                 </div>
@@ -345,7 +342,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                           : html`
                               <wy-avatar
                                 src=${ifDefined(otherMember?.avatar_url)}
-                                name=${ifDefined(otherMember?.display_name)}
+                                name=${ifDefined(otherMember?.name)}
                                 presence=${otherMember?.presence || "away"}
                                 ?isBot=${otherMember?.is_bot}
                                 id=${ifDefined(otherMember?.id)}
@@ -382,12 +379,12 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                                           <div class="wy-item wy-list-item">
                                             <wy-avatar
                                               .src=${member.avatar_url}
-                                              .name=${member.display_name}
+                                              .name=${member.name}
                                               .isBot=${member.is_bot}
                                               size=${32}
                                             ></wy-avatar>
                                             <div class="wy-item-body">
-                                              ${member.display_name}
+                                              ${member.name}
                                               ${member.access === AccessType.Admin
                                                 ? html` <wy-icon
                                                     size="20"

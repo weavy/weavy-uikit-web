@@ -9,11 +9,9 @@
 
 // weavy ui components 
 @use "components/appbar";
-//@use "components/avatar";
 @use "components/button";
 @use "components/code";
 @use "components/content";
-//@use "components/dropdown";
 @use "components/emoji";
 @use "components/empty";
 @use "components/icons";
@@ -24,7 +22,6 @@
 @use "components/post";
 @use "components/meta";
 @use "components/overlays";
-//@use "components/pager";
 @use "components/pane";
 @use "components/picker-list";
 @use "components/preview";
@@ -35,13 +32,10 @@
 @use "components/preview-media";
 @use "components/preview-pdf";
 @use "components/preview-text";
-@use "components/reactions";
 @use "components/sheet";
-//@use "components/spinner";
 @use "components/poll";
 @use "components/embed";
 @use "components/type";
-//@use "components/toasts";
 @use "components/meeting";
 @use "components/placeholder";
 @use "components/post-editor";

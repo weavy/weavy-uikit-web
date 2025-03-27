@@ -19,11 +19,11 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { updateCacheItem, updateCacheItems } from "../utils/query-cache";
 import { AppType, AppTypeGuid } from "../types/app.types";
 
-import "./wy-avatar";
-import "./wy-typing";
-import "./wy-icon";
-import "./wy-button";
-import "./wy-dropdown";
+import "./base/wy-avatar";
+import "./base/wy-typing";
+import "./base/wy-icon";
+import "./base/wy-button";
+import "./base/wy-dropdown";
 
 @customElement("wy-conversation-list-item")
 @localized()
@@ -48,7 +48,7 @@ export default class WyConversationListItem extends LitElement {
   hideAvatar: boolean = false;
 
   @property({ attribute: true })
-  displayName: string = "";
+  name: string = "";
 
   @property({ attribute: true, type: String, reflect: true })
   type: AppTypeGuid = AppTypeGuid.PrivateChat;
@@ -146,6 +146,13 @@ export default class WyConversationListItem extends LitElement {
     return this.dispatchEvent(event);
   }
 
+  private handleRemoveConversation() {
+    const event = new CustomEvent("remove", {
+      detail: { id: this.conversationId },
+    });
+    return this.dispatchEvent(event);
+  }
+
   private handleTrashConversation() {
     const event = new CustomEvent("trash", {
       detail: { id: this.conversationId },
@@ -210,13 +217,13 @@ export default class WyConversationListItem extends LitElement {
             : this.type == AppTypeGuid.ChatRoom
             ? html` <wy-avatar-group
                 .members=${this.members?.data}
-                title=${this.displayName}
+                title=${this.name}
                 .size=${48}
               ></wy-avatar-group>`
             : html`
                 <wy-avatar
                   src=${ifDefined(otherMember?.avatar_url)}
-                  name=${ifDefined(otherMember?.display_name)}
+                  name=${ifDefined(otherMember?.name)}
                   presence=${otherMember?.presence || "away"}
                   ?isBot=${otherMember?.is_bot}
                   id=${ifDefined(otherMember?.id)}
@@ -228,7 +235,7 @@ export default class WyConversationListItem extends LitElement {
         <div class="wy-item-rows">
           <div class="wy-item-row">
             <div class="wy-item-title"
-              >${this.displayName || this.lastMessage?.plain || msg("Untitled conversation")}</div
+              >${this.name || this.lastMessage?.plain || msg("Untitled conversation")}</div
             >
             ${this.lastMessage
               ? html`<time class="wy-meta" datetime=${this.lastMessage.created_at.toString()} title=${dateFull}
@@ -245,7 +252,7 @@ export default class WyConversationListItem extends LitElement {
                         ? html`
                             ${this.user.id === this.lastMessage.created_by.id ? html`${msg("You")}: ` : nothing}
                             ${this.members.count > 2 && this.user.id !== this.lastMessage?.created_by.id
-                              ? html`${this.lastMessage?.created_by.display_name}: `
+                              ? html`${this.lastMessage?.created_by.name}: `
                               : nothing}
                           `
                         : nothing}
@@ -299,17 +306,23 @@ export default class WyConversationListItem extends LitElement {
                   <wy-icon name=${this.starred ? "unstar" : "star"}></wy-icon>
                   ${this.starred ? msg("Unstar") : msg("Star")}
                 </wy-dropdown-item>
+                ${this.type === AppTypeGuid.PrivateChat
+                  ? html`<wy-dropdown-item @click=${() => this.handleRemoveConversation()}>
+                      <wy-icon name="trashcan"></wy-icon>
+                      ${msg("Delete")}
+                    </wy-dropdown-item>`
+                  : nothing}
                 ${this.type === AppTypeGuid.ChatRoom
                   ? html`<wy-dropdown-item @click=${() => this.handleLeaveConversation()}>
                       <wy-icon name="account-minus"></wy-icon>
-                      ${msg("Leave conversation")}
+                      ${msg("Leave")}
                     </wy-dropdown-item>`
                   : nothing}
                 ${this.type === AppTypeGuid.BotChat
                   ? html`
                       <wy-dropdown-item @click=${() => this.handleTrashConversation()}>
                         <wy-icon name="trashcan"></wy-icon>
-                        ${msg("Trash")}
+                        ${msg("Delete")}
                       </wy-dropdown-item>
                     `
                   : nothing}

@@ -12,6 +12,7 @@ export * from "./wy-component";
 
 export * from "./wy-chat";
 export * from "./wy-comments";
+export * from "./wy-copilot";
 export * from "./wy-files";
 export * from "./wy-messenger";
 export * from "./wy-notifications";

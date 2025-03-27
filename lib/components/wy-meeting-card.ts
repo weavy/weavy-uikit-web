@@ -8,8 +8,8 @@ import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
 
 import chatCss from "../scss/all.scss";
 
-import "./wy-icon";
-import "./wy-button";
+import "./base/wy-icon";
+import "./base/wy-button";
 
 @customElement("wy-meeting-card")
 @localized()

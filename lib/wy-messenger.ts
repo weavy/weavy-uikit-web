@@ -10,8 +10,9 @@ import { QueryController } from "./controllers/query-controller";
 import type { BotType } from "./types/users.types";
 import { cache } from "lit/directives/cache.js";
 import { WeavyComponent } from "./classes/weavy-component";
-import { ProductTypes } from "./types/product.types";
 import { getConversationOptions, resolveAppWithType } from "./data/conversation";
+import { ComponentFeatures, Feature } from "./contexts/features-context";
+import type { ComponentFeaturePolicyConfig } from "./types/features.types";
 
 import allStyles from "./scss/all.scss";
 import messengerStyles from "./scss/components/messenger.scss";
@@ -23,11 +24,10 @@ import "./components/wy-empty";
 import "./components/wy-conversation-appbar";
 import "./components/wy-conversation-list";
 import "./components/wy-conversation";
-import "./components/wy-conversation-extended";
-import "./components/wy-button";
-import "./components/wy-icon";
+import "./components/base/wy-button";
+import "./components/base/wy-icon";
 import "./components/wy-messenger-badge";
-import "./components/wy-spinner";
+import "./components/base/wy-spinner";
 
 /**
  * The conversation app type strings and app type guids associated with the Messenger.
@@ -59,6 +59,34 @@ declare global {
   }
 }
 
+const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
+  // All available features as enabled/disabled by default
+  [Feature.Attachments]: true,
+  [Feature.CloudFiles]: true,
+  [Feature.Embeds]: true,
+  [Feature.GoogleMeet]: true,
+  [Feature.Meetings]: true,
+  [Feature.Mentions]: true,
+  [Feature.MicrosoftTeams]: true,
+  [Feature.Polls]: true,
+  [Feature.Previews]: true,
+  [Feature.Reactions]: true,
+  [Feature.Receipts]: true,
+  [Feature.Typing]: true,
+  [Feature.ZoomMeetings]: true,
+}
+
+const DefaultMessengerBotFeatures: ComponentFeaturePolicyConfig = {
+  // All available features as enabled/disabled by default
+  [Feature.Attachments]: true,
+  [Feature.Embeds]: true,
+  [Feature.Previews]: true,
+  [Feature.Reactions]: false,
+  [Feature.Receipts]: true,
+  [Feature.Typing]: true,
+}
+
+
 /**
  * Weavy messenger component to render multiple one-to-one conversations, group chats or bot conversations.
  *
@@ -72,7 +100,9 @@ declare global {
 export class WyMessenger extends WeavyComponent {
   static override styles = [colorModesStyles, allStyles, messengerStyles, hostBlockStyles, hostFontStyles];
 
-  override productType = ProductTypes.Messenger;
+  override componentFeatures = new ComponentFeatures(DefaultMessengerFeatures);
+
+  protected theme = new ThemeController(this, WyMessenger.styles);
 
   @state()
   override appTypes: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
@@ -85,8 +115,10 @@ export class WyMessenger extends WeavyComponent {
     super.bot = bot
     if (this._bot) {
       this.appTypes = [AppTypeGuid.BotChat];
+      this.componentFeatures = new ComponentFeatures(DefaultMessengerBotFeatures, this.componentFeatures.allowedFeatures());
     } else {
       this.appTypes = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
+      this.componentFeatures = new ComponentFeatures(DefaultMessengerFeatures, this.componentFeatures.allowedFeatures());
     }
     this.conversationId = null;
   }
@@ -142,11 +174,6 @@ export class WyMessenger extends WeavyComponent {
   clearConversation() {
     console.warn("clearConversation() is deprecated. Set .conversationId to null instead.")
     this.conversationId = null;
-  }
-
-  constructor() {
-    super();
-    new ThemeController(this, WyMessenger.styles);
   }
 
   protected override async willUpdate(changedProperties: PropertyValues<this>) {
@@ -213,15 +240,11 @@ export class WyMessenger extends WeavyComponent {
           ${cache(
             this.conversationId
               ? !isPending
-                ? this.bot
-                  ? html`<wy-conversation
+                ? html`<wy-conversation
                       .conversationId=${this.conversationId}
                       .conversation=${conversation}
+                      .header=${!this.bot}
                     ></wy-conversation>`
-                  : html`<wy-conversation-extended
-                      .conversationId=${this.conversationId}
-                      .conversation=${conversation}
-                    ></wy-conversation-extended>`
                 : html`<wy-empty><wy-spinner reveal></wy-spinner></wy-empty>`
               : html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
           )}

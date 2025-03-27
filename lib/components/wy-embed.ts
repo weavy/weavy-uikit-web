@@ -9,8 +9,8 @@ import { ifDefined } from "lit/directives/if-defined.js";
 
 import chatCss from "../scss/all.scss";
 
-import "./wy-button";
-import "./wy-icon";
+import "./base/wy-button";
+import "./base/wy-icon";
 
 @customElement("wy-embed")
 export default class WyEmbed extends LitElement {

@@ -1,12 +1,10 @@
 import { createContext } from "@lit/context";
 import { WeavyComponentSettingProps } from "../classes/weavy-component";
-import { LitElement } from "lit";
-import { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
-
-export type { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
+import { WeavyClient } from "../client/weavy";
 
 export class WeavyComponentSettings implements WeavyComponentSettingProps {
-  #component: LitElement;
+  
+  #component: WeavyComponentSettingProps;
 
   /**
    * Provides a reference to the host.
@@ -16,12 +14,12 @@ export class WeavyComponentSettings implements WeavyComponentSettingProps {
   }
 
   // SETTINGS
-  notifications: NotificationsAppearanceType = "button-list";
-  notificationsBadge: NotificationsBadgeType = "count";
-  //notificationsToasts: NotificationsToastsType = "browser";
+  notifications = WeavyClient.defaults.notifications;
+  notificationsBadge = WeavyClient.defaults.notificationsBadge;
+  reactions = WeavyClient.defaults.reactions;
 
   // PROPERTY INIT
-  constructor(host: LitElement) {
+  constructor(host: WeavyComponentSettingProps) {
     this.#component = host;
 
     const settingKeys = Object.keys(this);

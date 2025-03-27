@@ -63,7 +63,6 @@ export type AppType = {
   access: AccessType;
   permissions: PermissionType[];
   uid?: string;
-  display_name: string;
   name: string;
   description: string;
   archive_url: string;

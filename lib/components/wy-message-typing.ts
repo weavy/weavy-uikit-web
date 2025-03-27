@@ -15,7 +15,7 @@ import rebootCss from "../scss/components/base/reboot.scss";
 import messagesCss from "../scss/components/messages.scss";
 import bouncerCss from "../scss/components/bouncer.scss";
 
-import "./wy-avatar";
+import "./base/wy-avatar";
 
 /**
  * Shows a typing message whenever a member is typing
@@ -44,13 +44,13 @@ export default class WyMessageTyping extends LitElement {
   userId?: number;
 
   @property({ type: Boolean })
-  isBot: boolean = false;
-
-  @property({ type: Boolean })
   isPrivateChat: boolean = false;
 
   @property({ attribute: false })
   members?: MemberType[];
+
+  @property({ attribute: false })
+  bots?: MemberType[];
 
   @state()
   private typingMembers: TypingUserType[] = [];
@@ -83,8 +83,8 @@ export default class WyMessageTyping extends LitElement {
 
   override render() {
     const members = this.typingMembers.map((typingMember) =>
-      this.members?.find((member) => member.id === typingMember.id)
-    );
+      [...(this.members ?? []), ...(this.bots ?? [])].find((member) => member.id === typingMember.id)
+    ).filter((x) => x);
 
     // Make a readable list
     const typingNames = new Intl.ListFormat(this.weavy?.locale, { style: "long", type: "conjunction" }).format(
@@ -108,7 +108,7 @@ export default class WyMessageTyping extends LitElement {
 
     return members.length
       ? html`
-          <div class=${classMap({ "wy-message": true, "wy-message-bot": this.isBot })}>
+          <div class=${classMap({ "wy-message": true, "wy-message-bot": Boolean(members[0]?.is_bot) })}>
             <div class="wy-message-author">
               ${members.length > 1
                 ? html`
@@ -123,7 +123,7 @@ export default class WyMessageTyping extends LitElement {
                       .size=${32}
                       .src=${members[0]?.avatar_url}
                       .name=${typingNames}
-                      .isBot=${this.isBot}
+                      .isBot=${members[0]?.is_bot}
                     ></wy-avatar>
                   `}
             </div>

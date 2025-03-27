@@ -43,10 +43,6 @@
   .wy-badge {
     align-self: center;
   }
-
-  .wy-button {
-    max-height: var.default(--wy-button-size);
-  }
 }
 
 .wy-appbar-buttons, .wy-toolbar-buttons, .wy-appbar-section {
@@ -139,54 +135,3 @@
 .wy-toolbar-text {
   margin-left: var.default(--wy-gap);
 }
-
-/*.wy-footerbars {
-  padding-bottom: var.default(--wy-footerbar-height);
-
-  > .wy-toolbar {
-    box-shadow: none;
-  }
-}*/
-
-.wy-footerbar {
-  --wy-component-background-color: #{color.token(--wy-surface-1)};
-  --wy-component-color: #{color.token(--wy-on-surface)};
-  
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: const.$zindex-sticky;
-
-  &::after {
-    content: "";
-    background-color: var(--wy-component-background-color);
-    color: var(--wy-component-color);
-    box-shadow: #{color.token(--wy-outline-variant)} 0px #{var.default(--wy-border)} 0px 0px inset;
-    position: absolute;
-    width: 100%;
-    left: 0;
-    bottom: 0;
-    height: 100%;
-    z-index: -1;
-
-    //@include backdrop.filter;
-  }
-}
-
-.wy-footerbar-sticky {
-  position: sticky;
-}
-
-/*
-.wy-footerbars-fixed {
-  .wy-footerbar {
-    position: fixed;
-
-    &::after {
-      position: fixed;
-      height: var.default(--wy-footerbar-height);
-    }
-  }
-}
-*/

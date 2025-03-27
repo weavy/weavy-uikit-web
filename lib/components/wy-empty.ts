@@ -1,26 +1,24 @@
-import { LitElement, html, css, type PropertyValueMap } from "lit";
+import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
-import chatCss from "../scss/all.scss";
 import { localized, msg } from "@lit/localize";
 import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import "./wy-icon";
-import "./wy-spinner";
+import chatCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
+
+import "./base/wy-icon";
+import "./base/wy-spinner";
 
 @customElement("wy-empty")
 @localized()
 export default class WyEmpty extends LitElement {
   static override styles = [
     chatCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
   
   protected exportParts = new ShadowPartsController(this);

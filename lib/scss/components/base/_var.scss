@@ -64,11 +64,11 @@
    
   /* Typography */
   --wy-font-family:               unset, // Font should be inherited/unset by default
-  --wy-font-monospace:            "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  --wy-font-monospace:            "ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace",
   --wy-font-size:                 var(--wy-size, 1em), // Assumes the inherited font-size, typically 16px
 
   --wy-font-weight:               unset, // #{$font-weight-normal};
-  --wy-font-weight-bold:          bolder,
+  --wy-font-weight-bold:          600,
 
   --wy-line-height:               1.5,
 
@@ -80,8 +80,8 @@
   --wy-headings-font-size:        1.25em,
   --wy-headings-font-style:       unset,
   --wy-headings-font-family:      var(--wy-font-family, unset),
-  --wy-headings-font-weight:      var(--wy-font-weight-bold, bolder),
-  --wy-headings-line-height:      var(--wy-line-height, 1.5),
+  --wy-headings-font-weight:      var(--wy-font-weight-bold, 600),
+  --wy-headings-line-height:      var(--wy-line-height, 1.2),
 
   /* Links */
   //--wy-link-color:              #{color.token(--wy-primary)},  ---> --wy-link in colors

@@ -12,14 +12,14 @@ import { RemovePostMutationType, getRestorePostMutation, getTrashPostMutation } 
 import { SubscribePostMutationType, getSubscribePostMutation } from "./data/post-subscribe";
 import { getAddPostMutationOptions, getPostsOptions } from "./data/posts";
 import { WeavyComponent } from "./classes/weavy-component";
-import { AppTypeString, PermissionType } from "./types/app.types";
+import { AppTypeGuid, PermissionType } from "./types/app.types";
 import type { MutatePostProps, PostType, PostsResultType } from "./types/posts.types";
-import { ProductTypes } from "./types/product.types";
 import { RealtimeCommentEventType, RealtimePostEventType, RealtimeReactionEventType } from "./types/realtime.types";
 import { hasPermission } from "./utils/permission";
 import { addCacheItem, getFlatInfiniteResultData, updateCacheItem } from "./utils/query-cache";
 import { MsgType } from "./types/msg.types";
 import { updateReaction } from "./data/reactions";
+import { ComponentFeatures, Feature } from "./contexts/features-context";
 
 import allStyles from "./scss/all.scss";
 import colorModesStyles from "./scss/color-modes.scss";
@@ -28,12 +28,12 @@ import hostScrollYStyles from "./scss/host-scroll-y.scss";
 import hostFontStyles from "./scss/host-font.scss";
 import pagerStyles from "./scss/components/pager.scss";
 
-import "./components/wy-button";
+import "./components/base/wy-button";
 import "./components/wy-editor";
 import "./components/wy-empty";
 import "./components/wy-notification-button-list";
 import "./components/wy-post";
-import "./components/wy-spinner";
+import "./components/base/wy-spinner";
 
 export const WY_POSTS_TAGNAME = "wy-posts";
 
@@ -56,9 +56,27 @@ declare global {
 export class WyPosts extends WeavyComponent {
   static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles, pagerStyles];
 
-  override productType = ProductTypes.Feeds;
-  override componentType = AppTypeString.Posts;
+  override componentType = AppTypeGuid.Posts;
 
+  override componentFeatures = new ComponentFeatures({
+    // All available features as enabled/disabled by default
+    [Feature.Attachments]: true,
+    [Feature.CloudFiles]: true,
+    [Feature.Comments]: true,
+    [Feature.Embeds]: true,
+    [Feature.GoogleMeet]: false,
+    [Feature.Meetings]: false,
+    [Feature.Mentions]: true,
+    [Feature.MicrosoftTeams]: false,
+    [Feature.Polls]: true,
+    [Feature.Previews]: true,
+    [Feature.Reactions]: true,
+    [Feature.Typing]: false, // Has no effect currently
+    [Feature.ZoomMeetings]: false,
+  });
+
+  protected theme = new ThemeController(this, WyPosts.styles);
+  
   protected postsQuery = new InfiniteQueryController<PostsResultType>(this);
 
   private infiniteScroll = new InfiniteScrollController(this);
@@ -68,11 +86,6 @@ export class WyPosts extends WeavyComponent {
   private removePostMutation?: RemovePostMutationType;
   private restorePostMutation?: RemovePostMutationType;
   private pollMutation?: PollMutationType;
-
-  constructor() {
-    super();
-    new ThemeController(this, WyPosts.styles);
-  }
 
   private async handleSubmit(e: CustomEvent) {
     const app = await this.whenApp();
@@ -163,7 +176,7 @@ export class WyPosts extends WeavyComponent {
       this.postsQuery.trackInfiniteQuery(getPostsOptions(this.weavy, this.app.id));
     }
 
-    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
+    if ((changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("componentFeatures")) && this.weavy && this.app) {
       this.addPostMutation.trackMutation(getAddPostMutationOptions(this.weavy, ["posts", this.app.id]));
       this.subscribePostMutation = getSubscribePostMutation(this.weavy, this.app);
       this.removePostMutation = getTrashPostMutation(this.weavy, this.app);
@@ -177,8 +190,11 @@ export class WyPosts extends WeavyComponent {
 
       this.weavy.subscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);
       this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+      if (this.componentFeatures?.allowsFeature(Feature.Reactions)) {
+        this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+      }
 
       this.#unsubscribeToRealtime = () => {
         this.weavy?.unsubscribe(subscribeGroup, "post_created", this.handleRealtimePostCreated);

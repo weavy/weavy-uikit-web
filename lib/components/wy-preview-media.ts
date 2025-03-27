@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
@@ -6,20 +6,17 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { codecError, mediaError, mediaLoaded } from "../utils/media";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
-import "./wy-spinner";
+import "./base/wy-spinner";
 import "./wy-preview-icon";
 
 import allCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
 @customElement("wy-preview-media")
 export class WyPreviewMedia extends LitElement {
   static override styles = [
     allCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

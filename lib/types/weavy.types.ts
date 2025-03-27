@@ -1,6 +1,7 @@
 import { LocaleModule } from "@lit/localize";
 import { WeavyType } from "../client/weavy";
 import { Nullable } from "./generic.types";
+import { WeavyComponentSettingProps } from "../classes/weavy-component";
 /**
  * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
  */
@@ -10,17 +11,17 @@ export interface StrictWeavyOptions {
   /**
    * The url to the cloud file picker.
    */
-  cloudFilePickerUrl?: string | URL;
+  cloudFilePickerUrl: string | URL;
 
   /**
    * Should the dynamic import of modules from the environment be disabled?
    */
-  disableEnvironmentImports?: boolean;
+  disableEnvironmentImports: boolean;
 
   /**
    * Selected locale. The locale must be pre configured in `.locales`.
    */
-  locale?: string;
+  locale: string;
 
   /**
    * Array with locale template modules. The corresponding locales must be available for loading as a locale .js file.
@@ -32,35 +33,25 @@ export interface StrictWeavyOptions {
    * The max-allowed age of the cache in milliseconds. If a persisted cache is found that is older than this time, it will be discarded.
    * If set to `Infinity`, the cache will never be considered old.
    */
-  gcTime?: number;
-
-  /**
-   * An array of available reaction emojis in unicode.
-   */
-  reactions?: string[];
+  gcTime: number;
 
   /**
    * Enable the realtime `wy-notifications` event.
    */
-  notificationEvents?: boolean;
-
-  /**
-   * Enable notification toasts in the browser.
-   */
-  notificationToasts?: boolean;
+  notificationEvents: boolean;
 
   /**
    * Which scroll behavior to use (where applicable).
    * > Note that not all browsers (Chrome) have similar scroll transitions, they may be very slow.
    * See https://developer.mozilla.org/en-US/docs/Web/API/Element/scroll#behavior
    */
-  scrollBehavior?: "smooth" | "instant" | "auto";
+  scrollBehavior: "smooth" | "instant" | "auto";
 
   /**
    * The time in milliseconds after data is considered stale.
    * If set to `Infinity`, the data will never be considered stale.
    */
-  staleTime?: number;
+  staleTime: number;
 
   /**
    * An URL to an endpoint returning an JSON data containing an `access_token` string property for _your_ authenticated user. A boolean `refresh=true` query parameter is provided in the request to let you now if when a fresh token is needed from Weavy.
@@ -75,13 +66,13 @@ export interface StrictWeavyOptions {
   /**
    * The time between tokenFactory attempts when a valid token isn't provided yet.
    */
-  tokenFactoryRetryDelay?: number;
+  tokenFactoryRetryDelay: number;
 
   /**
    * The time allowed to pass before tokenFactory is considered to have timed out.
    * `Infinity` disables the timeout.
    */
-  tokenFactoryTimeout?: number;
+  tokenFactoryTimeout: number;
 
   /**
    * The URL to the weavy environment.
@@ -89,7 +80,7 @@ export interface StrictWeavyOptions {
   url?: string | URL;
 }
 
-export type WeavyOptions = Nullable<StrictWeavyOptions>
+export type WeavyOptions = Nullable<Partial<StrictWeavyOptions & WeavyComponentSettingProps>>
 
 export type WeavyProps = { weavy: WeavyType };
 

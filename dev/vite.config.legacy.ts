@@ -6,6 +6,7 @@ import path from "node:path";
 import { utf8BomPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
+import { removeImportMetaUrl } from "../utils/vite-plugins";
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -41,6 +42,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       excludeNodeInPdfJS(),
       litCss(),
+      removeImportMetaUrl(),
       //weavyImportUrlPlugin(),
     ],
     define: {

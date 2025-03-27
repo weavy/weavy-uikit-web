@@ -1,10 +1,10 @@
 import { html } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { localized } from "@lit/localize";
-import { AppTypeString } from "./types/app.types";
+import { AppTypeGuid } from "./types/app.types";
 import { ThemeController } from "./controllers/theme-controller";
 import { WeavyComponent } from "./classes/weavy-component";
-import { ProductTypes } from "./types/product.types";
+import { ComponentFeatures, Feature } from "./contexts/features-context";
 
 import colorModesStyles from "./scss/color-modes.scss";
 import allStyles from "./scss/all.scss";
@@ -14,8 +14,8 @@ import hostFontStyles from "./scss/host-font.scss";
 
 import "./components/wy-comment-list";
 import "./components/wy-empty";
-import "./components/wy-spinner";
-import "./components/wy-button";
+import "./components/base/wy-spinner";
+import "./components/base/wy-button";
 import "./components/wy-notification-button-list";
 
 export const WY_COMMENTS_TAGNAME = "wy-comments";
@@ -39,13 +39,25 @@ declare global {
 export class WyComments extends WeavyComponent {
   static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
-  override productType = ProductTypes.Comments;
-  override componentType = AppTypeString.Comments;
+  override componentType = AppTypeGuid.Comments;
+  
+  override componentFeatures = new ComponentFeatures({
+    // All available features as enabled/disabled by default
+    [Feature.Attachments]: true,
+    [Feature.CloudFiles]: true,
+    [Feature.Embeds]: true,
+    [Feature.GoogleMeet]: false,
+    [Feature.Meetings]: false,
+    [Feature.Mentions]: true,
+    [Feature.MicrosoftTeams]: false,
+    [Feature.Polls]: true,
+    [Feature.Previews]: true,
+    [Feature.Reactions]: true,
+    [Feature.Typing]: false, // Has no effect currently
+    [Feature.ZoomMeetings]: false,
+  });
 
-  constructor() {
-    super();
-    new ThemeController(this, WyComments.styles);
-  }
+  protected theme = new ThemeController(this, WyComments.styles);
 
   override render() {
     return this.app

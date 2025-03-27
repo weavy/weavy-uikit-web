@@ -31,10 +31,9 @@
 
       const weavy = new Weavy({
         url: "%WEAVY_URL%",
-        reactions: ["👍", "❤️"]
+        reactions: "👍 ❤️"
       });
 
-      //weavy.notificationToasts = true;
       weavy.locales = [["sv-SE", svSE]];
       weavy.locale = "sv-SE";
       weavy.tokenFactory = async (refresh) => {

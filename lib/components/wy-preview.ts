@@ -2,7 +2,8 @@ import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
-import type { FilesResultType, FileType, WyPreviewCloseEventType, WyPreviewOpenEventType } from "../types/files.types";
+import type { FilesResultType, FileType, } from "../types/files.types";
+import type {  WyPreviewCloseEventType, WyPreviewOpenEventType } from "../types/events.types";
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
 import { localized, msg } from "@lit/localize";
 import type { UserType } from "../types/users.types";
@@ -15,22 +16,23 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
 import { NamedEvent } from "../types/generic.types";
 
-import "./wy-button";
-import "./wy-icon";
-import "./wy-overlay";
-import "./wy-spinner";
-import "./wy-dropdown";
+import "./base/wy-button";
+import "./base/wy-icon";
+import "./base/wy-overlay";
+import "./base/wy-spinner";
+import "./base/wy-dropdown";
 import "./wy-preview-item";
 import "./wy-file-menu";
 import "./wy-comment-list";
 import "./wy-file-versions";
 
 import allCss from "../scss/all.scss";
+import { Feature } from "../types/features.types";
 
 /**
  * Preview component.
  * Consumes WeavyComponent contexts.
- * 
+ *
  * @fires wy-preview-open {WyPreviewOpenEventType}
  * @fires wy-preview-close {WyPreviewCloseEventType}
  */
@@ -105,14 +107,14 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
 
   async dispatchOpen() {
     const app = await this.whenApp();
-    const hasFeatures = await this.whenHasFeatures();
+    const componentFeatures = await this.whenComponentFeatures();
     const fileId = this.currentId;
     const tab = this.commentsOpen ? "comments" : this.versionsOpen ? "versions" : undefined;
     const files = this.currentFile ? [this.currentFile] : [];
     const isAttachment = this.isAttachment;
-    
+
     const event: WyPreviewOpenEventType = new (CustomEvent as NamedEvent)("wy-preview-open", {
-      detail: { fileId, tab, files, app, hasFeatures, isAttachment },
+      detail: { fileId, tab, files, app, features: componentFeatures.allowedFeatures().join(" "), isAttachment },
       cancelable: true,
       bubbles: false,
       composed: true,
@@ -127,7 +129,11 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
   }
 
   async dispatchClose() {
-    const event: WyPreviewCloseEventType = new (CustomEvent as NamedEvent)("wy-preview-close", { cancelable: false, bubbles: false, composed: true });
+    const event: WyPreviewCloseEventType = new (CustomEvent as NamedEvent)("wy-preview-close", {
+      cancelable: false,
+      bubbles: false,
+      composed: true,
+    });
     this.dispatchEvent(event);
   }
 
@@ -321,7 +327,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
         <div class="wy-appbar-buttons wy-appbar-buttons-last">
           ${activeFile
             ? html`
-                ${activeFile.id >= 1 && !this.isAttachment && this.hasFeatures?.comments
+                ${this.componentFeatures?.allowsFeature(Feature.Comments) && activeFile.id >= 1 && !this.isAttachment
                   ? html`
                       <wy-button
                         kind="icon"
@@ -340,7 +346,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
                     `
                   : nothing}
                 <wy-file-menu .file=${activeFile}>
-                  ${activeFile.id >= 1 && !this.isAttachment && this.hasFeatures?.versions
+                  ${this.componentFeatures?.allowsFeature(Feature.Versions) && activeFile.id >= 1 && !this.isAttachment
                     ? html`
                         <wy-dropdown-item
                           ?active=${this.versionsOpen}

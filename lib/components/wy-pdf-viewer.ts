@@ -1,4 +1,4 @@
-import { LitElement, css, html, type PropertyValueMap } from "lit";
+import { LitElement, html, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
@@ -16,9 +16,10 @@ import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } fro
 //import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
 
 import allCss from "../scss/all.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
-import "./wy-button";
-import "./wy-icon";
+import "./base/wy-button";
+import "./base/wy-icon";
 
 type pdfjsLibType = typeof import("pdfjs-dist");
 type pdfjsViewerType = typeof import("pdfjs-dist/web/pdf_viewer.mjs");
@@ -35,11 +36,7 @@ type pdfjsViewerType = typeof import("pdfjs-dist/web/pdf_viewer.mjs");
 export default class WyPdfViewer extends LitElement {
   static override styles = [
     allCss,
-    css`
-      :host {
-        display: contents;
-      }
-    `,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

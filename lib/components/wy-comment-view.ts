@@ -7,7 +7,8 @@ import { localized, msg } from "@lit/localize";
 import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
-import type { FileOpenEventType, FileType } from "../types/files.types";
+import type { FileType } from "../types/files.types";
+import type { FileOpenEventType } from "../types/events.types";
 import { PollOptionType } from "../types/polls.types";
 import type { EmbedType } from "../types/embeds.types";
 import { relativeTime } from "../utils/datetime";
@@ -15,22 +16,23 @@ import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypeString } from "../types/app.types";
 import { isEntityChainMatch } from "../utils/notifications";
+import { Feature } from "../types/features.types";
 
 import chatCss from "../scss/all.scss";
 
-import "./wy-avatar";
+import "./base/wy-avatar";
+import "./base/wy-dropdown";
+import "./base/wy-icon";
 import "./wy-attachment";
-import "./wy-image-grid";
+import "./base/wy-image-grid";
 import "./wy-attachments-list";
-import "./wy-reactions";
+import "./base/wy-reactions";
 import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-embed";
 import "./wy-comment-list";
-import "./wy-dropdown";
-import "./wy-icon";
 import WeavyPreview from "./wy-preview";
-import "./wy-skeleton";
+import "./base/wy-skeleton";
 
 @customElement("wy-comment-view")
 @localized()
@@ -131,11 +133,11 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
             <wy-avatar
               .src="${this.createdBy.avatar_url}"
               .size=${32}
-              .name=${this.createdBy.display_name}
+              .name=${this.createdBy.name}
               .isBot=${this.createdBy.is_bot}
             ></wy-avatar>
             <div class="wy-item-body">
-              <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.display_name}</span></div>
+              <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.name}</span></div>
               <div class="wy-item-text">
                 <time class="wy-placeholder">${dateFromNow}</time>
               </div>
@@ -150,11 +152,11 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
             <wy-avatar
               .src=${this.createdBy.avatar_url}
               .size=${32}
-              .name=${this.createdBy.display_name}
+              .name=${this.createdBy.name}
               .isBot=${this.createdBy.is_bot}
             ></wy-avatar>
             <div class="wy-item-body">
-              <div class="wy-item-title">${this.createdBy.display_name}</div>
+              <div class="wy-item-title">${this.createdBy.name}</div>
               <div class="wy-item-text">
                 <time datetime=${this.createdAt} title=${dateFull}>${dateFromNow}</time>
                 ${this.modifiedAt ? html`<time datetime=${this.modifiedAt}> · ${msg("edited")}</time>` : nothing}
@@ -187,6 +189,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
               <!-- image grid -->
               ${images && !!images.length
                 ? html`<wy-image-grid
+                    class="wy-comment-area"
                     .images=${images}
                     @file-open=${(e: FileOpenEventType) => {
                       this.previewRef.value?.open(e.detail.fileId);
@@ -195,7 +198,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
                 : ``}
 
               <!-- embeds -->
-              ${this.embed && this.hasFeatures?.embeds
+              ${this.embed && this.componentFeatures?.allowsFeature(Feature.Embeds)
                 ? html` <wy-embed class="wy-embed" .embed=${this.embed}></wy-embed> `
                 : nothing}
               ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
@@ -225,7 +228,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
             </div>
           </div>
 
-          ${this.hasFeatures?.reactions
+          ${this.componentFeatures?.allowsFeature(Feature.Reactions)
             ? html` <wy-reactions
                 lineBottom
                 small

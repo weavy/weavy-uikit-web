@@ -8,7 +8,6 @@ import { CommentType, CommentsResultType, MutateCommentProps } from "../types/co
 import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
 import { PermissionType } from "../types/app.types";
 import { hasPermission } from "../utils/permission";
-import { InfiniteData } from "@tanstack/query-core";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 import { updateReaction } from "../data/reactions";
@@ -21,13 +20,16 @@ import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer
 import type { RealtimeReactionEventType } from "../types/realtime.types";
 import type { WeavyProps } from "../types/weavy.types";
 import type { MsgType } from "../types/msg.types";
+import { classMap } from "lit/directives/class-map.js";
+import { Feature } from "../types/features.types";
 
 import chatCss from "../scss/all.scss";
 import pagerStyles from "../scss/components/pager.scss";
 
 import "./wy-comment";
-import "./wy-spinner";
+import "./base/wy-spinner";
 import "./wy-editor-comment";
+import "./wy-empty";
 
 @customElement("wy-comment-list")
 @localized()
@@ -57,7 +59,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
   override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("parentId") || changedProperties.has("weavy")) && this.parentId && this.weavy) {
+    if ((changedProperties.has("parentId") || changedProperties.has("weavy") || changedProperties.has("componentFeatures")) && this.parentId && this.weavy) {
       this.commentsQuery.trackInfiniteQuery(getCommentsOptions(this.weavy, this.location, this.parentId));
       this.addCommentMutation.trackMutation(getAddCommentMutationOptions(this.weavy));
       this.removeCommentMutation = getTrashCommentMutation(this.weavy, this.location, this.parentId);
@@ -73,8 +75,11 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
       const subscribeGroup = `a${this.app.id}`;
 
       this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-      this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-      this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+      if (this.componentFeatures?.allowsFeature(Feature.Reactions)) {
+        this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+      }
 
       this.#unsubscribeToRealtime = () => {
         this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
@@ -139,10 +144,8 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
     }
   }
 
-  private renderComments(infiniteData?: InfiniteData<CommentsResultType>) {
-    if (infiniteData) {
-      const flattenedPages = getFlatInfiniteResultData(infiniteData);
-
+  private renderComments(flattenedPages?: MsgType[]) {
+    if (flattenedPages) {
       return repeat(
         flattenedPages,
         (comment) => comment.id,
@@ -199,16 +202,24 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
 
   override render() {
     const { data: infiniteData, hasNextPage, isPending } = this.commentsQuery.result ?? {};
+    const flattenedPages = getFlatInfiniteResultData(infiniteData);
+
+    const commentsClass = {
+      "wy-comments": true,
+      "wy-comments-padded": this.location === "files"
+    }
 
     return html`
-      <div class="wy-comments">
-        ${infiniteData
-          ? this.renderComments(infiniteData)
-          : isPending
-          ? html`<wy-spinner padded reveal></wy-spinner>`
-          : nothing}
-        ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
-      </div>
+      ${flattenedPages && flattenedPages.length
+        ? html`
+            <div class=${classMap(commentsClass)}>
+              ${this.renderComments(flattenedPages)}
+              ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
+            </div>
+          `
+        : isPending
+        ? html`<wy-empty noNetwork><wy-spinner padded reveal></wy-spinner></wy-empty>`
+        : nothing}
 
       <wy-comment-editor
         editorLocation=${this.location}

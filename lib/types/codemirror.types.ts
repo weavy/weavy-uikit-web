@@ -5,7 +5,7 @@ interface MentionsCompletion extends Completion {
   item?: {
     is_member: boolean;
     avatar_url: string;
-    display_name: string;
+    name: string;
     access: AccessType;
   };
 }

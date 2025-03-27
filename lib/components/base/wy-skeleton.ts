@@ -1,10 +1,10 @@
 import { LitElement, html } from "lit";
-import { customElement } from "../utils/decorators/custom-element";
+import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 
-import chatCss from "../scss/all.scss"
+import chatCss from "../../scss/all.scss"
 
 @customElement("wy-skeleton")
 export default class WySkeleton extends LitElement {

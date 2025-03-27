@@ -8,12 +8,12 @@ import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer
 import { MutateAppSubscribeContextType, MutateAppSubscribeProps, getAppSubscribeMutationOptions } from "../data/app";
 import { MutationController } from "../controllers/mutation-controller";
 
-import "./wy-icon";
-import "./wy-button";
-import "./wy-sheet";
+import "./base/wy-icon";
+import "./base/wy-button";
+import "./base/wy-sheet";
 import WyNotificationList from "./wy-notification-list";
 import "./wy-notification-badge";
-import "./wy-dropdown";
+import "./base/wy-dropdown";
 
 @customElement("wy-notification-button-list")
 @localized()

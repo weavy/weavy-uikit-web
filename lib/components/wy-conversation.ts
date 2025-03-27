@@ -11,14 +11,20 @@ import { hasScroll, isParentAtBottom, scrollParentToBottom } from "../utils/scro
 import {
   addCacheItem,
   getCacheItem,
+  getFlatInfiniteResultData,
   getPendingCacheItem,
+  isInfiniteResultDataEmpty,
   keepPages,
   updateCacheItem,
   updateCacheItems,
 } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import type { RealtimeMessageEventType, RealtimeReactionEventType } from "../types/realtime.types";
+import type {
+  RealtimeAppMarkedEventType,
+  RealtimeMessageEventType,
+  RealtimeReactionEventType,
+} from "../types/realtime.types";
 import { whenConnected, whenDocumentVisible, whenElementVisible } from "../utils/dom";
 import { ReactableType } from "../types/reactions.types";
 import { PollMutationType, getPollMutation } from "../data/poll";
@@ -37,36 +43,37 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { QueryController } from "../controllers/query-controller";
 import { MembersResultType, MemberType } from "../types/members.types";
 import { getMemberOptions } from "../data/members";
+import { Feature } from "../types/features.types";
+import { ifDefined } from "lit/directives/if-defined.js";
+import { MetadataType } from "../types/lists.types";
+import { ContextDataType, DataRefType } from "../types/refs.types";
+import { getContextDataRef } from "../utils/contextdata";
+import { getTitleFromText, truncateText } from "../utils/strings";
 
 import chatCss from "../scss/all.scss";
-import pagerStyles from "../scss/components/pager.scss";
+import footerbarCss from "../scss/components/footerbar.scss";
+import pagerCss from "../scss/components/pager.scss";
 
+import "./base/wy-avatar";
 import "./wy-empty";
 import "./wy-messages";
-import "./wy-editor-message";
+import { WyMessageEditor } from "./wy-editor-message";
 import "./wy-message-typing";
-import "./wy-spinner";
+import "./base/wy-spinner";
 
 @customElement("wy-conversation")
 @localized()
-export default class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
+export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
   static override styles = [
     chatCss,
-    pagerStyles,
+    pagerCss,
+    footerbarCss,
     css`
       :host {
         position: relative;
         display: flex;
         flex-direction: column;
         flex: 1 1 auto;
-      }
-
-      wy-messages {
-        display: contents;
-      }
-
-      wy-message {
-        scroll-margin-block: 6rem;
       }
     `,
   ];
@@ -81,8 +88,17 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
   @property({ type: Number })
   conversationId?: number;
 
+  @property({ type: Boolean })
+  header: boolean = false;
+
   @property()
-  cssClass?: string;
+  contextInstructions?: string;
+
+  @property({ type: Array })
+  contextData?: ContextDataType[];
+
+  @state()
+  contextDataRefs: Map<ContextDataType, DataRefType> = new Map();
 
   @state()
   lastReadMessagePosition: "above" | "below" = "below";
@@ -92,6 +108,12 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
 
   @state()
   showNewMessages: boolean = false;
+
+  @state()
+  isCreatingConversation: boolean = false;
+
+  createConversation?: (payload: Omit<MutateMessageProps, "app_id">) => Promise<AppType>;
+  requestMetadata?: (payload: MutateMessageProps) => Promise<MetadataType | undefined>;
 
   /**
    * A keyboard-consuming element releases focus.
@@ -110,26 +132,39 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
     return (conversation ?? this.conversation)?.type === AppTypeGuid.ChatRoom;
   }
 
+  protected messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
+  protected membersQuery = new QueryController<MembersResultType>(this);
+  protected botsQuery = new QueryController<MembersResultType>(this);
+
   protected markConversationMutation?: MarkConversationMutationType;
-
-  messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
-  membersQuery = new QueryController<MembersResultType>(this);
-
-  private updateConversationMutation?: UpdateConversationMutationType;
-
+  protected updateConversationMutation?: UpdateConversationMutationType;
   protected pollMutation?: PollMutationType;
-
   protected addMessageMutation = new MutationController<MessageType, Error, MutateMessageProps, unknown>(this);
 
   protected infiniteScroll = new ReverseInfiniteScrollController(this);
 
   protected pagerRef: Ref<HTMLElement> = createRef();
-
   protected bottomRef: Ref<HTMLElement> = createRef();
+  protected editorRef: Ref<WyMessageEditor> = createRef();
 
   protected shouldBeAtBottom = true;
-
   protected isTyping = false;
+
+  get isAtBottom() {
+    return this.bottomRef.value ? isParentAtBottom(this.bottomRef.value) : true;
+  }
+
+  async scrollToBottom(smooth: boolean = false) {
+    if (this.bottomRef.value) {
+      await whenElementVisible(this.bottomRef.value);
+    }
+    if (hasScroll(this.bottomRef.value) && this.conversationId && this.conversationId > 0) {
+      requestAnimationFrame(() => {
+        keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
+      });
+      scrollParentToBottom(this.bottomRef.value, smooth);
+    }
+  }
 
   protected async handleTyping(e: CustomEvent) {
     this.isTyping = Boolean(e.detail.count);
@@ -142,18 +177,42 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
   }
 
   protected async handleSubmit(e: CustomEvent) {
-    if (!this.conversation || !this.user) {
-      throw new Error("Error submitting message. Missing user or conversation.");
+    // TODO: refactor outside of conv?
+
+    if (!this.user) {
+      throw new Error("Error submitting message. Missing user.");
     }
 
-    const messageData: MessageType = await this.addMessageMutation.mutate({
-      app_id: this.conversation.id,
+    const initialPayload: Omit<MutateMessageProps, "app_id"> = {
       text: e.detail.text,
       meeting_id: e.detail.meetingId,
       poll_options: e.detail.pollOptions,
       embed_id: e.detail.embed,
       blobs: e.detail.blobs,
       user: this.user,
+      context_id: e.detail.contextData?.[0],
+    };
+
+    if (this.contextInstructions) {
+      initialPayload.metadata = {
+        instructions: this.contextInstructions
+      }
+    }
+
+    if (!this.conversation && this.weavy && this.createConversation) {
+      this.isCreatingConversation = true;
+      // Create new bot conversation
+      await this.createConversation(initialPayload);
+      await this.updateComplete;
+    }
+
+    if (!this.conversation) {
+      throw new Error("Error submitting message. Missing conversation.");
+    }
+
+    const messageData: MessageType = await this.addMessageMutation.mutate({
+      ...initialPayload,
+      app_id: this.conversation.id,
     });
 
     this.showNewMessages = false;
@@ -162,21 +221,62 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
       this.scrollToBottom();
     });
 
+    this.isCreatingConversation = false;
+
     return messageData;
   }
 
+  setEditorText(text: string) {
+    if (this.editorRef.value) {
+      this.editorRef.value.text = text;
+    }
+  }
+
+  async setEditorMetadata(metadata: MetadataType = {}) {
+    await this.updateComplete;
+    if (this.editorRef.value) {
+      this.editorRef.value.metadata = metadata;
+    }
+  }
+
+  async selectAllInEditor() {
+    if (this.editorRef.value) {
+      await this.updateComplete;
+      await this.editorRef.value.updateComplete;
+      this.editorRef.value?.selectAllContent();
+    }
+  }
+
+  async setCursorLastInEditor() {
+    if (this.editorRef.value) {
+      await this.updateComplete;
+      await this.editorRef.value.updateComplete;
+      this.editorRef.value?.setCursorLast();
+    }
+  }
+
+  focusEditor() {
+    if (this.editorRef.value) {
+      this.editorRef.value?.focusInput();
+    }
+  }
+
   async setEmptyConversationTitle(name: string) {
-    if (!this.conversation || this.conversation.display_name) {
+    if (!this.conversation || this.conversation.name) {
       return;
     }
+
+    name = truncateText(name);
 
     await this.updateConversationMutation?.mutate({ appId: this.conversation.id, name: name });
   }
 
-  private handleRealtimeMessage = (realtimeEvent: RealtimeMessageEventType) => {
-    if (!this.weavy || !this.conversation || !this.conversationId || !this.user) {
+  private handleRealtimeMessage = async (realtimeEvent: RealtimeMessageEventType) => {
+    if (!this.weavy || !this.conversation || !(this.conversationId && this.conversationId > 0) || !this.user) {
       return;
     }
+
+    await this.messagesQuery.observer?.getCurrentQuery().promise;
 
     // set message in messages cache
     const queryKey = ["messages", realtimeEvent.message.app.id];
@@ -214,11 +314,6 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
     this.weavy.queryClient.setQueryData(["apps", realtimeEvent.message.app.id], (app: AppType) =>
       app ? { ...app, last_message: realtimeEvent.message } : app
     );
-
-    // special handing of bot chat?
-    if (!this.conversation.display_name && realtimeEvent.message.plain) {
-      this.setEmptyConversationTitle(realtimeEvent.message.plain);
-    }
 
     // 3. mark as read/unread (including updating both details and list cache)
     if (realtimeEvent.actor.id !== this.user.id) {
@@ -291,21 +386,21 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
     );
   };
 
-  get isAtBottom() {
-    return this.bottomRef.value ? isParentAtBottom(this.bottomRef.value) : true;
-  }
+  private handleRealtimeMarked = (realtimeEvent: RealtimeAppMarkedEventType) => {
+    if (!this.weavy || !this.conversation) {
+      return;
+    }
 
-  async scrollToBottom(smooth: boolean = false) {
-    if (this.bottomRef.value) {
-      await whenElementVisible(this.bottomRef.value);
-    }
-    if (hasScroll(this.bottomRef.value) && this.conversationId) {
-      requestAnimationFrame(() => {
-        keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
-      });
-      scrollParentToBottom(this.bottomRef.value, smooth);
-    }
-  }
+    updateCacheItem(
+      this.weavy.queryClient,
+      ["members", this.conversation.id],
+      realtimeEvent.actor.id,
+      (item: MemberType) => {
+        item.marked_id = realtimeEvent.marked_id;
+        item.marked_at = realtimeEvent.marked_at;
+      }
+    );
+  };
 
   async markAsRead(messageId?: number) {
     await whenDocumentVisible();
@@ -333,7 +428,7 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
     super.willUpdate(changedProperties);
 
     // if context updated
@@ -343,22 +438,28 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
     }
 
     // conversationId is changed
-    if ((changedProperties.has("weavy") || changedProperties.has("conversationId")) && this.weavy) {
+    if (
+      (changedProperties.has("weavy") ||
+        changedProperties.has("conversationId") ||
+        changedProperties.has("componentFeatures")) &&
+      this.weavy
+    ) {
       this.#unsubscribeToRealtime?.();
 
       // Optimize pages cache for the conversation we're leaving
       const lastConversationId = changedProperties.get("conversationId");
-      if (lastConversationId) {
+      if (lastConversationId && lastConversationId > 0) {
         requestAnimationFrame(() => {
           keepPages(this.weavy?.queryClient, ["messages", lastConversationId], undefined, 1);
         });
       }
 
-      if (this.conversationId) {
+      if (this.conversationId && this.conversationId > 0) {
         this.membersQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}));
+        this.botsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
 
-        this.messagesQuery.trackInfiniteQuery(getMessagesOptions(this.weavy, this.conversationId));
-        this.addMessageMutation.trackMutation(
+        await this.messagesQuery.trackInfiniteQuery(getMessagesOptions(this.weavy, this.conversationId));
+        await this.addMessageMutation.trackMutation(
           getAddMessageMutationOptions(this.weavy, ["messages", this.conversationId])
         );
 
@@ -371,19 +472,28 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
         const subscribeGroup = `a${this.conversationId}`;
 
         this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
-        this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+
+        if (this.componentFeatures?.allowsFeature(Feature.Reactions)) {
+          this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+          this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        }
+
+        if (this.componentFeatures?.allowsFeature(Feature.Receipts)) {
+          this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
+        }
 
         this.#unsubscribeToRealtime = () => {
           this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
           this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
           this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+          this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
         this.messagesQuery.untrackInfiniteQuery();
         this.addMessageMutation.untrackMutation();
         this.membersQuery.untrackQuery();
+        this.botsQuery.untrackQuery();
       }
     }
 
@@ -422,8 +532,8 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
           // mark as read?
           if (
             oldConversation?.id !== this.conversation?.id ||
-            (oldConversation?.last_message.id !== this.conversation?.last_message.id) &&
-            (this.shouldBeAtBottom || this.isAtBottom)
+            (oldConversation?.last_message.id !== this.conversation?.last_message.id &&
+              (this.shouldBeAtBottom || this.isAtBottom))
           ) {
             this.markAsRead();
           }
@@ -433,6 +543,37 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
         }
       }
     }
+
+    // Update context data refs
+    if (changedProperties.has("contextData") && this.contextData) {
+      const prevContextDataRefs = this.contextDataRefs;
+      this.contextDataRefs = new Map();
+
+      // Add items
+      this.contextData.forEach((dataItem) => {
+        const prevItem = prevContextDataRefs.get(dataItem);
+        if (prevItem) {
+          this.contextDataRefs.set(dataItem, prevItem);
+        } else {
+          const dataRef = getContextDataRef(dataItem);
+          if (dataRef) {
+            //console.log("context data item", dataRef);
+            this.contextDataRefs.set(dataItem, dataRef);
+          }
+        }
+      });
+    }
+
+    // Update title
+    if (!this.conversation?.name && !isInfiniteResultDataEmpty(this.messagesQuery.result.data)) {
+      const messages = getFlatInfiniteResultData(this.messagesQuery.result.data);
+      // special handing of bot chat?
+      const lastPlainMessage = messages.find((message) => message.plain);
+
+      if (lastPlainMessage) {
+        this.setEmptyConversationTitle(getTitleFromText(lastPlainMessage.plain));
+      }
+    }
   }
 
   protected override update(changedProperties: PropertyValues<this>): void {
@@ -440,17 +581,62 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
     this.infiniteScroll.observe(this.messagesQuery.result, this.pagerRef.value);
   }
 
+  renderConversationHeader() {
+    if (!this.header) {
+      return html` <!-- Top of the conversation --> `;
+    }
+
+    const { isPending: messagesIsPending, hasNextPage } = this.messagesQuery.result ?? {};
+
+    if (!this.conversation || messagesIsPending || hasNextPage) {
+      return nothing;
+    }
+
+    const { data: membersData } = this.membersQuery.result ?? {};
+
+    const otherMember =
+      this.user && this.isPrivateChat()
+        ? (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user
+        : null;
+
+    return html`
+      <wy-avatar-header>
+        ${this.conversation.avatar_url
+          ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
+          : this.isChatRoom()
+          ? html` <wy-avatar-group
+              .members=${membersData?.data}
+              title=${this.conversation.name}
+              .size=${96}
+            ></wy-avatar-group>`
+          : otherMember?.avatar_url
+          ? html`
+              <wy-avatar
+                src=${ifDefined(otherMember?.avatar_url)}
+                name=${this.conversation.name}
+                ?isBot=${otherMember?.is_bot}
+                size=${96}
+              ></wy-avatar>
+            `
+          : nothing}
+      </wy-avatar-header>
+    `;
+  }
+
   override render() {
     const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
+    const { data: membersData } = this.membersQuery.result ?? {};
+    const { data: botsData } = this.botsQuery.result ?? {};
 
     return html`
-      ${this.conversation && infiniteData
+      ${this.renderConversationHeader()}
+      ${this.conversation && infiniteData && !isInfiniteResultDataEmpty(infiniteData)
         ? html`
-            ${!hasNextPage && !isPending ? html` <!-- Top of the conversation --> ` : nothing}
             <wy-messages
               .conversation=${this.conversation}
               .infiniteMessages=${infiniteData}
+              .members=${membersData}
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
               .unreadMarkerShow=${this.showNewMessages}
@@ -462,13 +648,16 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
                 });
               }}
             >
-              ${hasNextPage ? html`<div slot="start" ${ref(this.pagerRef)} part="wy-pager wy-pager-top"></div>` : nothing}
+              ${hasNextPage
+                ? html`<div slot="start" ${ref(this.pagerRef)} part="wy-pager wy-pager-top"></div>`
+                : nothing}
               <wy-message-typing
                 slot="end"
                 .conversationId=${this.conversation.id}
                 .userId=${this.user?.id}
                 .isPrivateChat=${this.isPrivateChat()}
-                .members=${this.conversation.members.data}
+                .members=${membersData?.data}
+                .bots=${botsData?.data}
                 @typing=${(e: CustomEvent) => this.handleTyping(e)}
               ></wy-message-typing>
             </wy-messages>
@@ -476,25 +665,23 @@ export default class WyConversation extends WeavyComponentConsumerMixin(LitEleme
         : html`
             <div class="wy-messages">
               <wy-empty class="wy-pane">
-                ${isPending || !this.conversation
+                ${(isPending && this.conversationId) || this.isCreatingConversation
                   ? html`<wy-spinner overlay></wy-spinner>`
-                  : msg("Start the conversation!")}
+                  : html` <slot name="empty">${msg("Start the conversation!")}</slot> `}
               </wy-empty>
             </div>
           `}
-      ${this.conversation
-        ? html`
-            <div ${ref(this.bottomRef)}></div>
-            <div class="wy-footerbar wy-footerbar-sticky">
-              <wy-message-editor
-                .draft=${true}
-                placeholder=${msg("Type a message...")}
-                ?disabled=${!hasPermission(PermissionType.Create, this.conversation?.permissions)}
-                @submit=${(e: CustomEvent) => this.handleSubmit(e)}
-              ></wy-message-editor>
-            </div>
-          `
-        : nothing}
+      <div ${ref(this.bottomRef)}></div>
+      <div part="wy-footerbar wy-footerbar-sticky">
+        <wy-message-editor
+          ${ref(this.editorRef)}
+          .draft=${true}
+          .contextDataRefs=${Array.from(this.contextDataRefs.values())}
+          placeholder=${msg("Type a message...")}
+          ?disabled=${this.conversation && !hasPermission(PermissionType.Create, this.conversation?.permissions)}
+          @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+        ></wy-message-editor>
+      </div>
     `;
   }
 

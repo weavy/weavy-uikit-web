@@ -16,9 +16,11 @@ import { SOURCE_LOCALE, WeavyLocalizationMixin, WeavyLocalizationProps } from ".
 import { WeavyNetworkMixin, WeavyNetworkProps } from "./network";
 import { WeavyQueryMixin, WeavyQueryProps } from "./query";
 import { WeavyRealtimeMixin, WeavyRealtimeProps, type WyNotificationsEventType } from "./realtime";
+import { WeavySettingsMixin, WeavySettingsProps } from "./settings";
 import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
 import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 import { WeavyContextProviderMixin, WeavyContextProviderProps } from "./context";
+import { WeavyComponentSettingProps } from "../classes/weavy-component";
 
 export type { WeavyOptions, Destructable, WeavyClientOptionsType, WeavyTokenFactory, StrictWeavyOptions };
 export type * from "./api";
@@ -29,16 +31,19 @@ export type * from "./localization";
 export type * from "./network";
 export type * from "./query";
 export type * from "./realtime";
+export type * from "./settings";
 export type * from "./styles";
 export type * from "./version";
 
 /**
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
- * 
+ *
  * @fires wy-notifications {WyNotificationsEventType}
  */
 export type WeavyType = WeavyClient &
+  StrictWeavyOptions &
+  WeavySettingsProps &
   WeavyNetworkProps &
   WeavyAuthenticationProps &
   WeavyLocalizationProps &
@@ -54,10 +59,10 @@ export type WeavyType = WeavyClient &
 /**
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
- * 
+ *
  * @fires wy-notifications {WyNotificationsEventType}
  */
-export class WeavyClient implements StrictWeavyOptions, Destructable {
+export class WeavyClient implements WeavyOptions, Destructable {
   /**
    * The semver version of the package.
    */
@@ -70,17 +75,21 @@ export class WeavyClient implements StrictWeavyOptions, Destructable {
 
   // CONFIG
 
-  static defaults: StrictWeavyOptions = {
+  static defaults: StrictWeavyOptions & WeavyComponentSettingProps = {
+    // StrictWeavyOptions
     cloudFilePickerUrl: "https://filebrowser.weavy.io/v14/",
     disableEnvironmentImports: false,
     gcTime: 1000 * 60 * 60 * 24, // 24h,
     locale: SOURCE_LOCALE,
-    reactions: ["😍", "😎", "😉", "😜", "👍"],
     notificationEvents: false,
     scrollBehavior: "auto",
     staleTime: 1000 * 1, // 1s
     tokenFactoryRetryDelay: 2000,
     tokenFactoryTimeout: 20000,
+    // WeavyComponentSettingProps
+    notifications: "button-list",
+    notificationsBadge: "count",
+    reactions: "😍 😎 😉 😜 👍",
   };
 
   readonly weavySid: string = S4();
@@ -96,7 +105,6 @@ export class WeavyClient implements StrictWeavyOptions, Destructable {
   cloudFilePickerUrl = WeavyClient.defaults.cloudFilePickerUrl;
   disableEnvironmentImports = WeavyClient.defaults.disableEnvironmentImports;
   gcTime = WeavyClient.defaults.gcTime;
-  reactions = WeavyClient.defaults.reactions;
   scrollBehavior = WeavyClient.defaults.scrollBehavior;
   staleTime = WeavyClient.defaults.staleTime;
   tokenFactoryRetryDelay = WeavyClient.defaults.tokenFactoryRetryDelay;
@@ -215,7 +223,7 @@ export class WeavyClient implements StrictWeavyOptions, Destructable {
 /**
  * Context for Weavy that handles communication with the server, data handling and common options.
  * Requires a `url` to the Weavy environment and an async `tokenFactory` that provides user access tokens.
- * 
+ *
  * @fires wy-notifications {WyNotificationsEventType}
  */
 export class Weavy
@@ -226,7 +234,7 @@ export class Weavy
           WeavyConnectionMixin(
             WeavyNetworkMixin(
               WeavyAuthenticationMixin(
-                WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavyClient))))
+                WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavySettingsMixin(WeavyClient)))))
               )
             )
           )

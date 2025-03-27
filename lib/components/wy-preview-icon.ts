@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized, msg, str } from "@lit/localize";
@@ -8,8 +8,9 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { iconNamesType } from "../utils/icons";
 
 import allCss from "../scss/all.scss"
+import hostContentsCss from "../scss/host-contents.scss";
 
-import "./wy-icon";
+import "./base/wy-icon";
 
 @customElement("wy-preview-icon")
 @localized()
@@ -17,11 +18,7 @@ export class WyPreviewIcon extends LitElement {
   
   static override styles = [
     allCss,
-    css`
-      :host {
-        display: contents;
-      }
-      `,
+    hostContentsCss,
   ];
   
   protected exportParts = new ShadowPartsController(this);
