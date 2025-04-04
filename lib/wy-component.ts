@@ -23,7 +23,11 @@ declare global {
  *
  * @element wy-component
  * @class WyComponent
- * @slot
+ * @extends {WeavyComponent}
+ * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
+ * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed. 
+ * @slot - Generic slot for any consuming sub components.
  */
 @customElement(WY_COMPONENT_TAGNAME)
 export class WyComponent extends WeavyComponent {

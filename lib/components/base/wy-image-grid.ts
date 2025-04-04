@@ -4,7 +4,7 @@ import { property } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ref } from "lit/directives/ref.js";
 import type { FileType } from "../../types/files.types";
-import type { FileOpenEventType } from "../../types/events.types";
+import type { FileOpenEventType } from "../../types/files.events";
 import { checkImageLoad, imageLoaded } from "../../utils/images";
 import { partMap } from "../../utils/directives/shadow-part-map";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";

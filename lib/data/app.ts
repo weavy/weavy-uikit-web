@@ -54,20 +54,29 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
     queryFn: async () => {
       //console.log("API", method, apiPath ? apiPath : "/api/" + apiKey.join("/"));
 
-      const result = (
-        await Promise.allSettled(
-          [
-            weavy.fetch(`/api/apps/${uid}`),
-            type !== ComponentType.Unknown
-              ? weavy
-                  .fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ uid: uid, type, members, ...appData }) })
-                  .then(() => {
-                    //weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
-                  })
-              : undefined,
-          ].filter((p) => p)
-        )
-      ).find((result) => result.status === "fulfilled" && result.value?.ok);
+      const appsRequests = [weavy.fetch(`/api/apps/${uid}`)];
+
+      if (type !== ComponentType.Unknown) {
+        if (appData?.name) {
+          // Update app with name
+          appsRequests.push(
+            weavy.fetch(`/api/apps/${uid}`, {
+              method: "PATCH",
+              body: JSON.stringify({
+                name: appData.name,
+              }),
+            })
+          );
+        }
+
+        appsRequests.push(
+          weavy.fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ uid: uid, type, members, ...appData }) })
+        );
+      }
+
+      const result = (await Promise.allSettled(appsRequests)).findLast(
+        (result) => result.status === "fulfilled" && result.value?.ok
+      );
 
       const response = result?.status === "fulfilled" && result.value;
 

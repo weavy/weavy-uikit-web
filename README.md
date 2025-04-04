@@ -64,6 +64,12 @@ You should see a list of available component demos, choose any you like.
 
 ## Documentation
 
+In-code documentation is provided as JSDoc3. It follows Typescript flavor and Open WC flavor.
+
+- [Typescript JSDoc Reference](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html)
+- [OpenWC API Viewer: JSDoc Guide](https://api-viewer.open-wc.org/docs/guide/writing-jsdoc/)
+- [Web Component Analyzer](https://github.com/runem/web-component-analyzer)
+
 There is some Markdown documentation for the api available in the `dist/docs` folder. You can generate it by running `npm run docs`.
 
 There is also a [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest) available in `dist/custom-elements.json`

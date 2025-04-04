@@ -3,7 +3,7 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 import type { FileOrderType, FileType, FileViewType } from "../types/files.types";
-import type { FileOpenEventType } from "../types/events.types";
+import type { FileOpenEventType } from "../types/files.events";
 import { repeat } from "lit/directives/repeat.js";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";

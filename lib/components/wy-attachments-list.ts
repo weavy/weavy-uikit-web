@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { FileType } from "../types/files.types";
-import { FileOpenEventType } from "../types/events.types";
+import { FileOpenEventType } from "../types/files.events";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
 import { ifDefined } from "lit/directives/if-defined.js";
 

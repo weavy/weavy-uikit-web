@@ -17,7 +17,7 @@ import type {
 } from "./types/files.types";
 import type {
   FileOpenEventType,
-} from "./types/events.types";
+} from "./types/files.events";
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
 import { InfiniteScrollController } from "./controllers/infinite-scroll-controller";
 import { MutationController } from "./controllers/mutation-controller";
@@ -75,8 +75,10 @@ declare global {
  *
  * @element wy-files
  * @class WyFiles
- * @fires wy-preview-open {WyPreviewOpenEventType}
- * @fires wy-preview-close {WyPreviewCloseEventType}
+ * @extends {WeavyComponent}
+ * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
+ * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  */
 @customElement(WY_FILES_TAGNAME)
 @localized()

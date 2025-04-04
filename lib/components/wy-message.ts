@@ -9,7 +9,7 @@ import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import type { FileOpenEventType } from "../types/events.types";
+import type { FileOpenEventType } from "../types/files.events";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";

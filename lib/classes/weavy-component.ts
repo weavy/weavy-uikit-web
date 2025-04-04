@@ -30,13 +30,17 @@ import { getStorage } from "../utils/data";
 import type {
   NotificationsAppearanceType,
   NotificationsBadgeType,
+} from "../types/notifications.types";
+import type {
   WyLinkEventType,
   WyNotificationEventType,
-} from "../types/notifications.types";
+} from "../types/notifications.events";
 import { objectAsIterable } from "../utils/objects";
 import { BotContext } from "../contexts/bot-context";
 import { ComponentFeatures } from "../contexts/features-context";
 import { WeavyClient } from "../client/weavy";
+import { WyAppEventType } from "../types/app.events";
+import { NamedEvent } from "../types/generic.types";
 
 export interface WeavyComponentProps {
   /**
@@ -62,12 +66,21 @@ export interface WeavyComponentProps {
   name?: string | null;
 
   /**
-   * Optional bot name for the weavy component.
+   * The configured uid of the bot for the weavy component.
    */
   bot?: string | null;
+
+  /**
+   * Sets the uid property with automatically appended user and bot name (where applicable).
+   */
+  autoUid?: string;
+
+  /**
+   * It sets the component to it's initial state and resets the app state.
+   */
+  reset: () => void;
 }
 
-// Define the interface for the mixin
 export interface WeavyComponentSettingProps {
   /**
    * Appearance of the built in notifications.
@@ -160,14 +173,20 @@ export interface WeavyComponentContextProps {
 
   /**
    * Resolves when a weavy context is available.
+   * @function
    */
   whenWeavy: () => Promise<WeavyType>;
 }
 
+/**
+ * Base class for exposed/public weavy components. This class provides common external properties and internal data provided as contexts for sub components.
+ */
 export class WeavyComponent
   extends LitElement
   implements WeavyComponentProps, WeavyComponentContextProps, WeavyComponentSettingProps, WeavyComponentFeatureProps
 {
+  protected storage = getStorage("localStorage");
+
   // CONTEXT CONSUMERS
   weavyContextConsumer?: ContextConsumer<{ __context__: WeavyType }, this>;
 
@@ -196,7 +215,13 @@ export class WeavyComponent
   @state()
   user: UserType | undefined;
 
-  protected storage = getStorage("localStorage");
+  @property({ attribute: true })
+  autoUid?: string;
+
+  reset() {
+    this.app = undefined;
+    this.name = this._initialAppName;
+  }
 
   /**
    * Checks if an Entity is matching the component.
@@ -563,6 +588,27 @@ export class WeavyComponent
       }
     }
 
+    // Generate UID using autoUid?
+    if (
+      (changedProperties.has("autoUid") || changedProperties.has("user") || changedProperties.has("bot")) &&
+      this.autoUid &&
+      this.user &&
+      (this.componentType && BotAppTypeGuids.has(this.componentType) && this.bot || 
+      this.componentType && !BotAppTypeGuids.has(this.componentType))
+    ) {
+      const uidParts: (string|number)[] = [this.autoUid];
+
+      if (this.bot) {
+        uidParts.push(this.bot);
+      }
+
+      if (this.user) {
+        uidParts.push(this.user.uid || this.user.id);
+      }
+
+      this.uid = uidParts.join("-")
+    }
+
     if (
       changedProperties.has("componentType") ||
       changedProperties.has("uid") ||
@@ -570,6 +616,7 @@ export class WeavyComponent
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
+
       // Reset whenApp
       this.#whenApp = new Promise<AppType>((r) => {
         this.#resolveApp = r;
@@ -581,8 +628,7 @@ export class WeavyComponent
         this.#appQuery.trackQuery(getOrCreateAppOptions(this.weavy, this.uid, this.componentType, appMembers, appData));
       } else {
         this.#appQuery.untrackQuery();
-        this.app = undefined;
-        this.name = this._initialAppName;
+        this.reset();
       }
     }
 
@@ -590,7 +636,9 @@ export class WeavyComponent
       this.app = this.#appQuery.result?.data;
 
       if (this.app?.name) {
-        this.name = this.app.name;
+        const oldName = this.name;
+        this._appName = this.app.name;
+        this.requestUpdate("name", oldName);
       }
     }
 
@@ -629,6 +677,19 @@ export class WeavyComponent
         }`
       );
       this.consumeStorageLink();
+    }
+
+    // Events
+
+    if (changedProperties.has("app") && this.app) {
+      const appEvent: WyAppEventType = new (CustomEvent as NamedEvent)("wy-app", {
+        bubbles: false,
+        composed: true,
+        detail: {
+          app: this.app,
+        },
+      });
+      this.dispatchEvent(appEvent);
     }
 
     // Promises

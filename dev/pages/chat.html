@@ -70,6 +70,11 @@
       document.addEventListener("wy-link", (e) => {
         console.log("wy-link", e);
       });
+      
+      chat.addEventListener("wy-app", (e) => {
+        console.log("wy-app", e.detail);
+      });
+
     </script>
   </body>
 </html>

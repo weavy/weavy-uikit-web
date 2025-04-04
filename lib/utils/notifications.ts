@@ -6,7 +6,8 @@ import {
   EntityTypeString,
   MetadataSourceType,
 } from "../types/app.types";
-import { WyLinkEventType, NotificationType } from "../types/notifications.types";
+import { NotificationType } from "../types/notifications.types";
+import { WyLinkEventType } from "../types/notifications.events";
 import { msg, str } from "@lit/localize";
 import { type WeavyType } from "../client/weavy";
 import { AppTypeGuids, BotAppTypeGuids } from "../classes/weavy-component";

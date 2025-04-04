@@ -5,12 +5,8 @@ import { localized } from "@lit/localize";
 import { ThemeController } from "./controllers/theme-controller";
 import { WeavyComponent } from "./classes/weavy-component";
 import { ComponentType } from "./types/app.types";
-import {
-  FormattedNotificationType,
-  NotificationType,
-  NotificationTypes,
-  WyNotificationEventType,
-} from "./types/notifications.types";
+import { FormattedNotificationType, NotificationType, NotificationTypes } from "./types/notifications.types";
+import { WyNotificationEventType } from "./types/notifications.events";
 import { repeat } from "lit/directives/repeat.js";
 import { getMarkNotificationMutation } from "./data/notifications";
 import { RealtimeNotificationEventType } from "./types/realtime.types";
@@ -38,8 +34,10 @@ declare global {
  *
  * @element wy-notification-toasts
  * @class WyNotificationToasts
- * @fires wy-notification {WyNotificationEventType}
- * @fires wy-link
+ * @extends {WeavyComponent}
+ * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyNotificationEventType} wy-notification - Fired when a notification should be shown.
+ * @fires {WyLinkEventType} wy-link  - Fired when a notification is clicked.
  */
 @customElement(WY_NOTIFICATION_TOASTS_TAGNAME)
 @localized()
@@ -112,7 +110,7 @@ export class WyNotificationToasts extends WeavyComponent {
           composed: true,
           cancelable: true,
           detail: formattedNotification,
-        })
+        });
 
         /**
          * `wy-notification` event with formatted notification data.

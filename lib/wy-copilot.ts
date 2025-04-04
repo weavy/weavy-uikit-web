@@ -12,9 +12,6 @@ import { v4 as uuid_v4 } from "uuid";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "./utils/keyboard";
 import { ContextDataType } from "./types/refs.types";
 import { asArray } from "./utils/objects";
-import { NamedEvent } from "./types/generic.types";
-import { WyAppEventType, WyMessageEventType } from "./types/events.types";
-import { RealtimeMessageEventType } from "./types/realtime.types";
 import { getTitleFromText, truncateText } from "./utils/strings";
 
 import hostBlockStyles from "./scss/host-block.scss";
@@ -29,6 +26,7 @@ import "./components/wy-empty";
 import "./components/base/wy-button";
 import "./components/base/wy-spinner";
 import "./components/base/wy-icon";
+import { handleRealtimeMessage } from "./realtime/messages.realtime";
 
 export const WY_COPILOT_TAGNAME = "wy-copilot";
 
@@ -40,11 +38,89 @@ declare global {
 
 /**
  * Weavy component to render a single contextual personal copilot.
+ * 
+ * The copilot component renders a complete and functional user interface for a contextual AI bot chat. It needs to be configured with a chat bot and can have instructions and use any contextual data you provide (as long as it's a string).
+ * 
+ * The copilot chat is bot-to-user which means each user has their own chat with the bot. Each time the chat is loaded a fresh chat is started. It can optionally be configured with a `uid` to persist the conversation. The `uid` needs to be unique to each _user_ and each _bot_ (if you intend to use several bots). You can make a _uid_ with automatically appended _user_ and _bot_ by using the `autoUid` property instead, which generates a value for the `uid` property.
  *
  * @element wy-copilot
  * @class WyCopilot
- * @fires wy-preview-open {WyPreviewOpenEventType}
- * @fires wy-preview-close {WyPreviewCloseEventType}
+ * @extends {WeavyComponent}
+ * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyMessageEventType} wy-message - Fired when a message has been appended to the conversation.
+ * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
+ * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
+ * 
+ * @slot actions - Floating buttons placed in the top right.
+ * @slot empty - All the content for the empty state.
+ * @slot empty/header - Header for the empty state.
+ * @slot empty/header/icon - Display icon in the header.
+ * @slot empty/suggestions - Suggestion content.
+ * @slot empty/suggestions/suggestion-list - Items for the list in the suggestion content.
+ * @slot empty/footer - Footer for the empty state.
+ * 
+ * @example <caption>Generic Copilot</caption>
+ * The bot name is required and should correspond to any configured bot you have. You may switch between different bots whenever you like, but remember that the conversation also changes.
+ * 
+ * Here we use the built-in *assistant* chat bot.
+ * 
+ * ```html
+ * <wy-copilot bot="assistant"></wy-copilot>
+ * ```
+ * 
+ * > It's optional to provide a uid and in many cases not needed. When using a uid it's often useful to base the uid on something that identifies the location where the component is rendered. Typically you would use something like a product id, page id, path or URL.
+ * 
+ * @example <caption>Copilot with instructions and contextual data</caption>
+ * ```html
+ * <div id="my-sample-content">
+ *  <h1>ACME</h1>
+ *  <ul>
+ *    <li>Wile E. Coyote</li>
+ *    <li>Daffy Duck</li>
+ *    <li>Porky Pig</li>
+ *  </ul>
+ * </div>
+ *
+ * <wy-copilot id="my-copilot" bot="assistant"></wy-copilot>
+ *
+ * <script>
+ *  const copilot = document.querySelector("#my-copilot");
+ *  const sampleContent = document.querySelector("#my-sample-content");
+ *
+ *  copilot.instructions = "Answer in a whacky way with many emojis.";
+ *  copilot.data = [sampleContent.innerHTML];
+ * </script>
+ * ```
+ * 
+ * @example <caption>Copilot with a custom button and suggestions</caption>
+ * You may use slots to provide custom functionality to the copilot. This example shows a button to reset the conversation and some custom suggestions.
+ *
+ * When the suggestions have the `.suggestion` class, they automatically get their text inserted into the editor when clicked.
+ * 
+ * In this example we use the pre-styled weavy sub components, but you may use any elements or components you like.
+ * 
+ * ```html
+ * <wy-copilot id="my-copilot" bot="assistant">
+ *   <wy-button
+ *     slot="actions"
+ *     kind="icon"
+ *     onclick="document.querySelector('#my-copilot').reset()"
+ *   >
+ *     <wy-icon name="stars"></wy-icon>
+ *   </wy-button>
+ * 
+ *   <wy-button slot="suggestion-list" class="suggestion">Summarize this page</wy-button>
+ *   <wy-button slot="suggestion-list" class="suggestion">What keywords are used?</wy-button>
+ * </wy-copilot>
+ * ```
+ * 
+ * @example <caption>Preventing child nodes from flashing during load</caption>
+ * 
+ * To prevent child nodes from rendering before the component has loaded you can hide them using CSS.
+ * 
+ * ```css
+ * wy-copilot:not(:defined) { display: none; }
+ * ```
  */
 @customElement(WY_COPILOT_TAGNAME)
 @localized()
@@ -65,19 +141,22 @@ export class WyCopilot extends WeavyComponent {
   });
 
   protected theme = new ThemeController(this, WyCopilot.styles);
+  protected addConversationMutation?: CreateAppMutationType;
+  protected conversationRef: Ref<WyConversation> = createRef();
+  protected handleRealtimeMessage = handleRealtimeMessage.bind(this);
+  protected unsubscribeToRealtime?: () => void;
 
-  private addConversationMutation?: CreateAppMutationType;
-
-  @property({ attribute: true })
-  autoUid?: string;
-
-  reset() {
-    this.app = undefined;
-  }
-
+  /**
+   * Any specific instructions for the bot. Overrides any pre configured bot instructions.
+   */
   @property({ attribute: true })
   instructions?: string;
 
+  /**
+   * Array with any contextual data. The data is uploaded upon change.
+   *
+   * *Note: Only the first item in the array is currently used.*
+   */
   @property({
     attribute: true,
     type: String,
@@ -89,47 +168,16 @@ export class WyCopilot extends WeavyComponent {
   })
   data?: ContextDataType[];
 
-  protected conversationRef: Ref<WyConversation> = createRef();
-
+  /**
+   * Sets the editor input to a suggested text. This replaces the text content of the editor. This can be used to create any custom suggestions.
+   *
+   * @param {string} text - The text suggestion to place in the editor.
+   */
   setSuggestion(text: string) {
     this.conversationRef.value?.setEditorText(text);
   }
 
-  private handleRealtimeMessage = async (realtimeEvent: RealtimeMessageEventType) => {
-    if (!this.weavy || !this.app) {
-      return;
-    }
-
-    const messageDetail: WyMessageEventType["detail"] = {
-      message: realtimeEvent.message,
-      direction: realtimeEvent.message.created_by.id === this.user?.id ? "outbound" : "inbound",
-    }
-
-    if (realtimeEvent.message.created_by.is_bot) {
-      messageDetail.bot = realtimeEvent.message.created_by.uid
-    }
-
-    const messageEvent: WyMessageEventType = new (CustomEvent as NamedEvent)("wy-message", {
-      bubbles: false,
-      cancelable: false,
-      composed: true,
-      detail: messageDetail,
-    });
-    this.dispatchEvent(messageEvent);
-  };
-
-  #unsubscribeToRealtime?: () => void;
-
   protected override willUpdate(changedProperties: PropertyValues): void {
-    if (
-      (changedProperties.has("autoUid") || changedProperties.has("user") || changedProperties.has("bot")) &&
-      this.autoUid &&
-      this.user &&
-      this.bot
-    ) {
-      this.uid = `${this.autoUid}-${this.bot}-${this.user.uid || this.user.id}`;
-    }
-
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("weavy") && this.weavy) {
@@ -137,29 +185,18 @@ export class WyCopilot extends WeavyComponent {
     }
 
     if ((changedProperties.has("app") || changedProperties.has("weavy")) && this.weavy) {
-      this.#unsubscribeToRealtime?.();
+      this.unsubscribeToRealtime?.();
 
       if (this.app) {
         const subscribeGroup = `a${this.app.id}`;
 
         this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
 
-        this.#unsubscribeToRealtime = () => {
+        this.unsubscribeToRealtime = () => {
           this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
-          this.#unsubscribeToRealtime = undefined;
+          this.unsubscribeToRealtime = undefined;
         };
       }
-    }
-
-    if (changedProperties.has("app") && this.app) {
-      const appEvent: WyAppEventType = new (CustomEvent as NamedEvent)("wy-app", {
-        bubbles: false,
-        composed: true,
-        detail: {
-          app: this.app,
-        },
-      });
-      this.dispatchEvent(appEvent);
     }
   }
 

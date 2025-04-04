@@ -92,8 +92,9 @@ const DefaultMessengerBotFeatures: ComponentFeaturePolicyConfig = {
  *
  * @element wy-messenger
  * @class WyMessenger
- * @fires wy-preview-open {WyPreviewOpenEventType}
- * @fires wy-preview-close {WyPreviewCloseEventType}
+ * @extends {WeavyComponent}
+ * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
+ * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  */
 @customElement(WY_MESSENGER_TAGNAME)
 @localized()

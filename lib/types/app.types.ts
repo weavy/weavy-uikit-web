@@ -53,6 +53,7 @@ export enum BotAppTypeStringMapping {
 }
 
 export enum ComponentType {
+  /** Unknown componentType will enable optional uid. */
   Unknown = "unknown"
 }
 

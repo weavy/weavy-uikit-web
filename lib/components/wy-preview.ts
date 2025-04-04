@@ -3,7 +3,7 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import type { FilesResultType, FileType, } from "../types/files.types";
-import type {  WyPreviewCloseEventType, WyPreviewOpenEventType } from "../types/events.types";
+import type { WyPreviewCloseEventType, WyPreviewOpenEventType } from "../types/files.events";
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
 import { localized, msg } from "@lit/localize";
 import type { UserType } from "../types/users.types";
@@ -33,8 +33,8 @@ import { Feature } from "../types/features.types";
  * Preview component.
  * Consumes WeavyComponent contexts.
  *
- * @fires wy-preview-open {WyPreviewOpenEventType}
- * @fires wy-preview-close {WyPreviewCloseEventType}
+ * @fires wy-preview-open {WyPreviewOpenEventType} - Fired when a preview overlay is about to open.
+ * @fires wy-preview-close {WyPreviewCloseEventType} - Fired when a preview overlay is closed.
  */
 @customElement("wy-preview")
 @localized()

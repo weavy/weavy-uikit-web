@@ -44,6 +44,11 @@
         console.log("preview closed");
       });
 
+      previewAppContext.addEventListener("wy-app", (e) => {
+        console.log("preview wy-app", e.detail);
+      });
+
+
       const weavy = document.getElementById("wy-provider");
       weavy.tokenFactory = async (refresh) => {
         let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);

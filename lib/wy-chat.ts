@@ -31,8 +31,10 @@ declare global {
  *
  * @element wy-chat
  * @class WyChat
- * @fires wy-preview-open {WyPreviewOpenEventType}
- * @fires wy-preview-close {WyPreviewCloseEventType}
+ * @extends {WeavyComponent}
+ * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
+ * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  */
 @customElement(WY_CHAT_TAGNAME)
 @localized()

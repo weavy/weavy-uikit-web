@@ -29,21 +29,18 @@ declare global {
  *
  * @element wy-notifications
  * @class WyNotifications
- * @fires wy-link
+ * @extends {WeavyComponent}
+ * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyLinkEventType} wy-link - Fired when a notification is clicked.
  */
 @customElement(WY_NOTIFICATIONS_TAGNAME)
 @localized()
 export class WyNotifications extends WeavyComponent {
   static override styles = [colorModesStyles, allStyles, hostBlockStyles, hostScrollYStyles, hostFontStyles];
 
-  /**
-   * Unknown componentType will enable optional uid.
-   * @ignore
-   */
   override componentType = ComponentType.Unknown;
 
   protected theme = new ThemeController(this, WyNotifications.styles);
-
   protected notificationsRef: Ref<WyNotificationList> = createRef();
 
   /**

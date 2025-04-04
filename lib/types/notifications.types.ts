@@ -1,7 +1,6 @@
-import { AppTypeString, ComponentType, EntityType, LinkType } from "./app.types";
+import { EntityType, LinkType } from "./app.types";
 import { MetadataType } from "./lists.types";
 import { InfiniteQueryResultType } from "./query.types";
-import { RealtimeNotificationsEventDetailType } from "./realtime.types";
 import { UserType } from "./users.types";
 
 export type NotificationType = {
@@ -59,49 +58,3 @@ export type NotificationsResultType = InfiniteQueryResultType<NotificationType>;
 export type NotificationsAppearanceType = "button-list" | "none";
 export type NotificationsBadgeType = "count" | "dot" | "none";
 export type NotificationsToastsType = "browser" | "none";
-
-export type WyLinkEventType = CustomEvent<{
-  /** Link with entity data. */
-  link: LinkType;
-
-  /** Readable app type string. */
-  app_type?: AppTypeString | ComponentType;
-
-  /** The name of the context where the app lives. */
-  source_name?: string;
-
-  /** Url to the context where the app lives. */
-  source_url?: string;
-
-  /** Any additional data needed to show the app in the context where it lives. */
-  source_data?: string;
-}> & { type: "wy-link" };
-
-/**
- * Realtime notifications event.
- */
-export type WyNotificationsEventType = CustomEvent<RealtimeNotificationsEventDetailType> & { type: "wy-notifications" };
-
-/**
- * Notification event.
- */
-export type WyNotificationEventType = CustomEvent<FormattedNotificationType> & { type: "wy-notification" };
-
-declare global {
-  interface GlobalEventHandlersEventMap {
-    /**
-     * A 'wy-notifications' event can be emitted by the Weavy client instance on it's host when realtime notification events occur.
-     */
-    "wy-notifications": WyNotificationsEventType;
-
-    /**
-     * A 'wy-notification' event can be emitted when notification events occur.
-     */
-    "wy-notification": WyNotificationEventType;
-
-    /**
-     * A 'wy-link' event is emitted when navigation outside a weavy component is requested.
-     */
-    "wy-link": WyLinkEventType;
-  }
-}

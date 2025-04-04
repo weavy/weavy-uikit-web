@@ -34,6 +34,11 @@
           e.preventDefault();
         }
       });
+
+      posts.addEventListener("wy-app", (e) => {
+        console.log("wy-app", e.detail);
+      });
+
     </script>
   </body>
 </html>

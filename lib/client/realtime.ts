@@ -6,7 +6,7 @@ import {
   RealtimeNotificationsEventDetailType,
   RealtimeNotificationsEventType,
 } from "../types/realtime.types";
-import { WyNotificationsEventType } from "../types/notifications.types";
+import { WyNotificationsEventType } from "../types/notifications.events";
 import { throwOnDomNotAvailable } from "../utils/dom";
 
 export interface WeavyRealtimeProps {

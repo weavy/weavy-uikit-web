@@ -8,7 +8,7 @@ import type { ReactableType } from "../types/reactions.types";
 import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
-import type { FileOpenEventType } from "../types/events.types";
+import type { FileOpenEventType } from "../types/files.events";
 import { PollOptionType } from "../types/polls.types";
 import type { EmbedType } from "../types/embeds.types";
 import { relativeTime } from "../utils/datetime";

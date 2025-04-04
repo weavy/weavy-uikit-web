@@ -1,0 +1,54 @@
+import { AppTypeString, ComponentType, LinkType } from "./app.types";
+import { FormattedNotificationType } from "./notifications.types";
+import { RealtimeNotificationsEventDetailType } from "./realtime.types";
+
+export type WyLinkEventDetailType = {
+  /** Link with entity data. */
+  link: LinkType;
+
+  /** Readable app type string. */
+  app_type?: AppTypeString | ComponentType;
+
+  /** The name of the context where the app lives. */
+  source_name?: string;
+
+  /** Url to the context where the app lives. */
+  source_url?: string;
+
+  /** Any additional data needed to show the app in the context where it lives. */
+  source_data?: string;
+}
+
+/**
+ * Fired when a notification is clicked.
+ */
+export type WyLinkEventType = CustomEvent<WyLinkEventDetailType> & { type: "wy-link" };
+
+/**
+ * Realtime notifications event. Fired when any notification is received.
+ */
+export type WyNotificationsEventType = CustomEvent<RealtimeNotificationsEventDetailType> & { type: "wy-notifications" };
+
+/**
+ * Fired when a notification should be shown.
+ */
+export type WyNotificationEventType = CustomEvent<FormattedNotificationType> & { type: "wy-notification" };
+
+declare global {
+  interface GlobalEventHandlersEventMap {
+    /**
+     * A 'wy-notifications' event can be emitted by the Weavy client instance on it's host when realtime notification events occur.
+     */
+    "wy-notifications": WyNotificationsEventType;
+
+    /**
+     * A 'wy-notification' event can be emitted when notification events occur.
+     */
+    "wy-notification": WyNotificationEventType;
+
+    /**
+     * A 'wy-link' event is emitted when navigation outside a weavy component is requested.
+     */
+    "wy-link": WyLinkEventType;
+  }
+}
