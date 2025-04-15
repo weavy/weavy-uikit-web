@@ -15,9 +15,7 @@ import type {
   FileMutationContextType,
   FileViewType,
 } from "./types/files.types";
-import type {
-  FileOpenEventType,
-} from "./types/files.events";
+import type { FileOpenEventType } from "./types/files.events";
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
 import { InfiniteScrollController } from "./controllers/infinite-scroll-controller";
 import { MutationController } from "./controllers/mutation-controller";
@@ -92,7 +90,7 @@ export class WyFiles extends WeavyComponent {
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
     [Feature.Comments]: true,
-    [Feature.Embeds]: true,  
+    [Feature.Embeds]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
     [Feature.Mentions]: true,
@@ -107,7 +105,7 @@ export class WyFiles extends WeavyComponent {
   });
 
   protected theme = new ThemeController(this, WyFiles.styles);
-  
+
   /**
    * The view for showing the file list.
    * This value is persisted in sessionStorage.
@@ -271,7 +269,15 @@ export class WyFiles extends WeavyComponent {
       this.weavy &&
       this.user
     ) {
-      this.persistState.observe(["view", "order", "showTrashed"], this.uid, `u${this.user.id}`);
+      this.persistState.observe(
+        [
+          { name: "view", override: true },
+          { name: "order", override: true },
+          { name: "showTrashed", override: true },
+        ],
+        this.uid,
+        `u${this.user.id}`
+      );
       //this.history.observe(['view'], this.uid)
     }
 
@@ -405,7 +411,9 @@ export class WyFiles extends WeavyComponent {
                         this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
                       }}
                     >
-                      ${hasNextPage ? html`<div slot="end" ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
+                      ${hasNextPage
+                        ? html`<div slot="end" ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>`
+                        : nothing}
                     </wy-files-list>
                   `
                 : html`

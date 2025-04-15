@@ -6,6 +6,7 @@ export interface Storage {
   removeItem: (key: string) => void;
 }
 
+export type PersistProp<T extends object> = { name: keyof T, override: boolean }
 
 export class PersistStorageCache {
   #cache = new Map<PropertyKey, unknown>();
@@ -49,25 +50,25 @@ export class PersistStorageCache {
     }
   }
 
-  async persistProperties<T = object>(parent: T, key: string, properties: Array<keyof T>, cachePrefix?: string) {
+  async persistProperties<T extends object = object>(parent: T, key: string, properties: Array<PersistProp<T>>, cachePrefix?: string) {
     const prefix = `${this.keyPrefix}:${cachePrefix ? `${cachePrefix}:` : ''}${typeof parent}:${key}`;
   
     properties.forEach(async (property) => {
       // Try to initialize property from storage
-      if (!this.#cache.has(property)) {
-        const item = await this.getStorageItem(prefix, property);
-        if (item) {
+      if (!this.#cache.has(property.name)) {
+        const item = await this.getStorageItem(prefix, property.name);
+        if (item && (property.override || !parent[property.name])) {
           //console.log("Restoring property", property, item)
-          parent[property] = item;
+          parent[property.name] = item;
         }
-        this.#cache.set(property, item);
+        this.#cache.set(property.name, item);
       }
   
       // Update cache and storage
-      if (parent[property] !== this.#cache.get(property)) {
-        const item = parent[property];
-        this.#cache.set(property, item);
-        this.setStorageItem(prefix, property, item);
+      if (parent[property.name] !== this.#cache.get(property.name)) {
+        const item = parent[property.name];
+        this.#cache.set(property.name, item);
+        this.setStorageItem(prefix, property.name, item);
       }
     });
   }

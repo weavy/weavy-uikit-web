@@ -27,14 +27,8 @@ import {
 } from "../types/app.types";
 import { LinkContext } from "../contexts/link-context";
 import { getStorage } from "../utils/data";
-import type {
-  NotificationsAppearanceType,
-  NotificationsBadgeType,
-} from "../types/notifications.types";
-import type {
-  WyLinkEventType,
-  WyNotificationEventType,
-} from "../types/notifications.events";
+import type { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
+import type { WyLinkEventType, WyNotificationEventType } from "../types/notifications.events";
 import { objectAsIterable } from "../utils/objects";
 import { BotContext } from "../contexts/bot-context";
 import { ComponentFeatures } from "../contexts/features-context";
@@ -73,7 +67,7 @@ export interface WeavyComponentProps {
   /**
    * Sets the uid property with automatically appended user and bot name (where applicable).
    */
-  autoUid?: string;
+  autoUid?: string | null;
 
   /**
    * It sets the component to it's initial state and resets the app state.
@@ -215,12 +209,14 @@ export class WeavyComponent
   @state()
   user: UserType | undefined;
 
-  @property({ attribute: true })
-  autoUid?: string;
-
   reset() {
+    // Reset whenApp
+    this.#whenApp = new Promise<AppType>((r) => {
+      this.#resolveApp = r;
+    });
+
     this.app = undefined;
-    this.name = this._initialAppName;
+    this._appName = this._initialAppName;
   }
 
   /**
@@ -378,6 +374,9 @@ export class WeavyComponent
     this._bot = bot || undefined;
   }
 
+  @property()
+  autoUid?: string | null;
+
   @property({ type: String })
   uid?: string | null;
 
@@ -386,7 +385,7 @@ export class WeavyComponent
 
   @property({ type: String })
   set name(name) {
-    this._initialAppName ??= name;
+    this._initialAppName = name;
     this._appName = name;
   }
   get name() {
@@ -593,10 +592,10 @@ export class WeavyComponent
       (changedProperties.has("autoUid") || changedProperties.has("user") || changedProperties.has("bot")) &&
       this.autoUid &&
       this.user &&
-      (this.componentType && BotAppTypeGuids.has(this.componentType) && this.bot || 
-      this.componentType && !BotAppTypeGuids.has(this.componentType))
+      ((this.componentType && BotAppTypeGuids.has(this.componentType) && this.bot) ||
+        (this.componentType && !BotAppTypeGuids.has(this.componentType)))
     ) {
-      const uidParts: (string|number)[] = [this.autoUid];
+      const uidParts: (string | number)[] = [this.autoUid];
 
       if (this.bot) {
         uidParts.push(this.bot);
@@ -606,7 +605,7 @@ export class WeavyComponent
         uidParts.push(this.user.uid || this.user.id);
       }
 
-      this.uid = uidParts.join("-")
+      this.uid = uidParts.join("-");
     }
 
     if (
@@ -616,11 +615,7 @@ export class WeavyComponent
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
-
-      // Reset whenApp
-      this.#whenApp = new Promise<AppType>((r) => {
-        this.#resolveApp = r;
-      });
+      this.reset();
 
       if (this.componentType && this.uid && this.weavy) {
         const appData = this.name ? { name: this.name } : undefined;
@@ -628,7 +623,6 @@ export class WeavyComponent
         this.#appQuery.trackQuery(getOrCreateAppOptions(this.weavy, this.uid, this.componentType, appMembers, appData));
       } else {
         this.#appQuery.untrackQuery();
-        this.reset();
       }
     }
 

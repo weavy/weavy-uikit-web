@@ -19,6 +19,9 @@
   position: relative;
   order: 9999;
 
+  /* Fix for hidden sidebar being displayed */
+  overflow: clip;
+
   > * {
     transition: opacity #{var.default(--wy-transition-fast)} calc(#{var.default(--wy-transition-duration)} - #{var.default(--wy-transition-duration-fast)});
     min-width: var.wy-rem(18);

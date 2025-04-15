@@ -1,12 +1,12 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { PersistStorageCache } from "../utils/persist-properties";
+import { type PersistProp, PersistStorageCache } from "../utils/persist-properties";
 import { WeavyComponentContextProps } from "../classes/weavy-component";
 
 export class PersistStateController<T extends ReactiveControllerHost & WeavyComponentContextProps> implements ReactiveController {
   host: T;
   #prefixKey: string = "";
   #cachePrefix?: string;
-  properties: Array<keyof T> = [];
+  properties: Array<PersistProp<T>> = [];
 
   persistStorageCache = new PersistStorageCache();
 
@@ -39,7 +39,7 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
     this.host = host;
   }
 
-  public observe(properties: Array<keyof T>, prefixKey?: string, cachePrefix?: string) {
+  public observe(properties: Array<PersistProp<T>>, prefixKey?: string, cachePrefix?: string) {
     this.properties = properties;
 
     if (prefixKey) {

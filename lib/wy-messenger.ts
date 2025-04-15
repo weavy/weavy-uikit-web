@@ -74,7 +74,7 @@ const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
   [Feature.Receipts]: true,
   [Feature.Typing]: true,
   [Feature.ZoomMeetings]: true,
-}
+};
 
 const DefaultMessengerBotFeatures: ComponentFeaturePolicyConfig = {
   // All available features as enabled/disabled by default
@@ -84,8 +84,7 @@ const DefaultMessengerBotFeatures: ComponentFeaturePolicyConfig = {
   [Feature.Reactions]: false,
   [Feature.Receipts]: true,
   [Feature.Typing]: true,
-}
-
+};
 
 /**
  * Weavy messenger component to render multiple one-to-one conversations, group chats or bot conversations.
@@ -113,18 +112,24 @@ export class WyMessenger extends WeavyComponent {
     return super.bot;
   }
   override set bot(bot: string | undefined) {
-    super.bot = bot
+    super.bot = bot;
     if (this._bot) {
       this.appTypes = [AppTypeGuid.BotChat];
-      this.componentFeatures = new ComponentFeatures(DefaultMessengerBotFeatures, this.componentFeatures.allowedFeatures());
+      this.componentFeatures = new ComponentFeatures(
+        DefaultMessengerBotFeatures,
+        this.componentFeatures.allowedFeatures()
+      );
     } else {
       this.appTypes = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
-      this.componentFeatures = new ComponentFeatures(DefaultMessengerFeatures, this.componentFeatures.allowedFeatures());
+      this.componentFeatures = new ComponentFeatures(
+        DefaultMessengerFeatures,
+        this.componentFeatures.allowedFeatures()
+      );
     }
     this.conversationId = null;
   }
 
-  @property({ type: Number})
+  @property({ type: Number })
   conversationId: number | null = null;
 
   protected conversationQuery = new QueryController<AppType>(this);
@@ -163,9 +168,9 @@ export class WyMessenger extends WeavyComponent {
    * @param id {number} - The id of the conversation to select.
    */
   async selectConversation(id: number) {
-    console.warn("selectConversation() is deprecated. Set .conversationId instead.")
+    console.warn("selectConversation() is deprecated. Set .conversationId instead.");
     this.conversationId = id;
-    return true
+    return true;
   }
 
   /**
@@ -173,7 +178,7 @@ export class WyMessenger extends WeavyComponent {
    * @deprecated
    */
   clearConversation() {
-    console.warn("clearConversation() is deprecated. Set .conversationId to null instead.")
+    console.warn("clearConversation() is deprecated. Set .conversationId to null instead.");
     this.conversationId = null;
   }
 
@@ -185,7 +190,11 @@ export class WyMessenger extends WeavyComponent {
       this.weavy &&
       this.user
     ) {
-      this.persistState.observe(["conversationId"], this.bot || "messenger", `u${this.user?.id}`);
+      this.persistState.observe(
+        [{ name: "conversationId", override: false }],
+        this.bot || "messenger",
+        `u${this.user?.id}`
+      );
     }
 
     if (changedProperties.has("link") && this.link?.app) {
@@ -242,10 +251,10 @@ export class WyMessenger extends WeavyComponent {
             this.conversationId
               ? !isPending
                 ? html`<wy-conversation
-                      .conversationId=${this.conversationId}
-                      .conversation=${conversation}
-                      .header=${!this.bot}
-                    ></wy-conversation>`
+                    .conversationId=${this.conversationId}
+                    .conversation=${conversation}
+                    .header=${!this.bot}
+                  ></wy-conversation>`
                 : html`<wy-empty><wy-spinner reveal></wy-spinner></wy-empty>`
               : html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
           )}

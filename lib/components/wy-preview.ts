@@ -2,7 +2,7 @@ import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
-import type { FilesResultType, FileType, } from "../types/files.types";
+import type { FilesResultType, FileType } from "../types/files.types";
 import type { WyPreviewCloseEventType, WyPreviewOpenEventType } from "../types/files.events";
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
 import { localized, msg } from "@lit/localize";
@@ -238,7 +238,14 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
       this.user &&
       !this.isAttachment
     ) {
-      this.persistState.observe(["commentsOpen", "versionsOpen"], `a${this.app.id}-preview`, `u${this.user.id}`);
+      this.persistState.observe(
+        [
+          { name: "commentsOpen", override: true },
+          { name: "versionsOpen", override: true },
+        ],
+        `a${this.app.id}-preview`,
+        `u${this.user.id}`
+      );
 
       if (this.commentsOpen && this.versionsOpen) {
         this.versionsOpen = false;
