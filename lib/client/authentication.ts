@@ -1,5 +1,5 @@
 import { WeavyClient, type WeavyType } from "./weavy";
-import type { WeavyTokenFactory } from "../types/weavy.types";
+import type { WeavyAccessTokenResponseType, WeavyTokenFactory } from "../types/weavy.types";
 import { DestroyError } from "../utils/errors";
 import { Constructor } from "../types/generic.types";
 
@@ -19,9 +19,10 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
-      Promise.all([this.whenUrl(), this.whenTokenFactory()]).then(() => {
+      void Promise.all([this.whenUrl(), this.whenTokenFactory()]).then(() => {
         if (this.url && this.tokenFactory) {
           this._resolveUrlAndTokenFactory?.(true);
         }
@@ -76,8 +77,8 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
       }
 
       if (this._tokenFactory && this._tokenFactory !== tokenFactory) {
-        this.whenTokenFactory().then(() => {
-          (this as unknown as WeavyType).queryClient.refetchQueries({ stale: true });
+        void this.whenTokenFactory().then(() => {
+          void (this as unknown as WeavyType).queryClient.refetchQueries({ stale: true });
         });
       }
 
@@ -114,7 +115,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
         } else if (tokenUrl === undefined || tokenUrl === null) {
           this._tokenUrl = undefined;
         } else {
-          throw -1;
+          throw new Error();
         }
       } catch (e) {
         throw new Error("Invalid url", e as Error);
@@ -138,7 +139,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
           const response = await fetch(tokenUrl);
 
           if (response.ok) {
-            const data = await response.json();
+            const data = await response.json() as WeavyAccessTokenResponseType;
 
             if (data.access_token === undefined) {
               throw new Error("Token response does not contain required property: access_token");
@@ -208,7 +209,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
       }
 
       this._resolveTokenFactory?.(true);
-      this.whenUrl().then(this._resolveUrlAndTokenFactory);
+      void this.whenUrl().then(this._resolveUrlAndTokenFactory);
 
       return token;
     };

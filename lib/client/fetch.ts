@@ -182,7 +182,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
               .then(resolve)
               .catch(reject);
           } else {
-            resolve(new Response(xhr.response, { status: xhr.status, statusText: xhr.statusText }));
+            resolve(new Response(xhr.response as BodyInit, { status: xhr.status, statusText: xhr.statusText }));
           }
         };
         xhr.onerror = reject;

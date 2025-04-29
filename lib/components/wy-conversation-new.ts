@@ -8,6 +8,9 @@ import { WeavyProps } from "../types/weavy.types";
 import { AppTypeString } from "../types/app.types";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { MemberSearchSubmitEventType } from "../types/members.events";
+import { SelectedEventType } from "../types/app.events";
+import { NamedEvent } from "../types/generic.types";
 
 import allStyles from "../scss/all.scss";
 
@@ -50,7 +53,7 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
     // close modal
     this.close();
 
-    const eventSelect = new CustomEvent("selected", { detail: { id: conversation?.id } });
+    const eventSelect: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: conversation?.id } });
     return this.dispatchEvent(eventSelect);
   }
 
@@ -84,7 +87,7 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
               </nav>
             </header>
             ${this.show
-              ? html` <wy-users-search @submit=${(e: CustomEvent) => this.submit(e.detail.members)}></wy-users-search> `
+              ? html` <wy-users-search @submit=${(e: MemberSearchSubmitEventType) => this.submit(e.detail.members)}></wy-users-search> `
               : nothing}
           </wy-overlay>`
         : nothing}

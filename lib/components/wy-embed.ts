@@ -11,7 +11,13 @@ import chatCss from "../scss/all.scss";
 
 import "./base/wy-button";
 import "./base/wy-icon";
+import { EmbedRemoveEventType, EmbedSwapEventType } from "../types/embeds.events";
+import { NamedEvent } from "../types/generic.types";
 
+/**
+ * @fires {EmbedRemoveEventType} embed-remove
+ * @fires {EmbedSwapEventType} embed-swap
+ */
 @customElement("wy-embed")
 export default class WyEmbed extends LitElement {
   
@@ -30,12 +36,12 @@ export default class WyEmbed extends LitElement {
   }
 
   private dispatchRemove(id: number) {
-    const event = new CustomEvent("embed-remove", { detail: { id: id } });
+    const event: EmbedRemoveEventType = new (CustomEvent as NamedEvent)("embed-remove", { detail: { id: id } });
     return this.dispatchEvent(event);
   }
 
   private dispatchSwap() {
-    const event = new CustomEvent("embed-swap", { detail: {} });
+    const event: EmbedSwapEventType = new (CustomEvent as NamedEvent)("embed-swap", { detail: {} });
     return this.dispatchEvent(event);
   }
 

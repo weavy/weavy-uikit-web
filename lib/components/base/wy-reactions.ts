@@ -110,8 +110,8 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
     }
   }
 
-  private handleClickToggle(_e: Event) {
-    _e.stopPropagation();
+  private handleClickToggle(e: Event) {
+    e.stopPropagation();
     this.show = !this.show;
   }
 
@@ -132,16 +132,16 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
     this.reactedEmoji = emoji;
     await mutation.mutate();
 
-    this.reactionListQuery.observer?.refetch();
+    void this.reactionListQuery.observer?.refetch();
   };
 
   private handleReactionsClick() {
-    this.reactionListQuery.observer?.refetch();
+    void this.reactionListQuery.observer?.refetch();
     this.showSheet = !this.showSheet;
     this.show = false;
   }
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     // Start tracking reaction list data when showing the sheet
@@ -151,7 +151,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
       this.entityId &&
       this.showSheet
     ) {
-      this.reactionListQuery.trackQuery(getReactionListOptions(this.weavy, this.entityType, this.entityId));
+      await this.reactionListQuery.trackQuery(getReactionListOptions(this.weavy, this.entityType, this.entityId));
     }
 
     if ((changedProperties.has("reactions") || changedProperties.has("user")) && this.user) {
@@ -174,7 +174,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
         this._computePositionCleanup = autoUpdate(this.buttonRef.value, this.menuRef.value, () => {
           requestAnimationFrame(() => {
             if (this.buttonRef.value && this.menuRef.value) {
-              computePosition(this.buttonRef.value, this.menuRef.value, {
+              void computePosition(this.buttonRef.value, this.menuRef.value, {
                 placement: this._placement,
                 strategy: !this.menuRef.value.popover ? "fixed" : "absolute",
                 middleware: [
@@ -252,7 +252,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
                 kind="icon-inline"
                 ?active=${this.showSheet}
                 ?small=${this.small}
-                @click=${this.handleReactionsClick}
+                @click=${() => this.handleReactionsClick()}
               >
                 <div part="wy-reactions">
                   <span class=${classMap(emojiClasses)}>
@@ -269,7 +269,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
               ?small=${this.small}
               ?active=${this.reactedEmoji === singleReaction}
               @click=${() => {
-                this.handleReaction(singleReaction);
+                void this.handleReaction(singleReaction);
               }}
               @keydown=${clickOnEnterAndConsumeOnSpace}
               @keyup=${clickOnSpace}
@@ -286,7 +286,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
                   kind="icon-inline"
                   ?active=${this.showSheet}
                   ?small=${this.small}
-                  @click=${this.handleReactionsClick}
+                  @click=${() => this.handleReactionsClick()}
                 >
                   <div part="wy-reactions">
                     ${groupedReactions.map((r) => {
@@ -306,7 +306,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
               kind="icon"
               ?active=${this.show}
               ?small=${this.small}
-              @click=${this.handleClickToggle}
+              @click=${(e: MouseEvent) => this.handleClickToggle(e)}
               @keydown=${clickOnEnterAndConsumeOnSpace}
               @keyup=${clickOnSpace}
               title=${msg("React", { desc: "Button action to react" })}
@@ -318,7 +318,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
           <div
             ${ref(this.menuRef)}
             part="wy-reaction-menu"
-            @click=${this.handleClickToggle}
+            @click=${(e: MouseEvent) => this.handleClickToggle(e)}
             @keyup=${clickOnEnterAndSpace}
             ?hidden=${!this.show}
             ?popover=${!isPopoverPolyfilled()}
@@ -332,7 +332,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
                       color="none"
                       ?active=${this.reactedEmoji === emoji}
                       @click=${() => {
-                        this.handleReaction(emoji);
+                        void this.handleReaction(emoji);
                       }}
                     >
                       <span class="wy-emoji-icon">${emoji}</span>

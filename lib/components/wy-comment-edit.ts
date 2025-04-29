@@ -7,19 +7,24 @@ import { localized, msg } from "@lit/localize";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdateCommentMutationOptions } from "../data/comments";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import type { PollOptionType } from "../types/polls.types";
 import type { CommentType, MutateCommentProps } from "../types/comments.types";
 import type { WeavyProps } from "../types/weavy.types";
+import type { EditorSubmitEventType } from "../types/editor.events";
+import type { CommentEditEventType } from "../types/comments.events";
+import type { NamedEvent } from "../types/generic.types";
+
+import chatCss from "../scss/all.scss"
 
 import "./base/wy-button";
 import "./base/wy-icon";
 import "./wy-editor";
 
-import chatCss from "../scss/all.scss"
-
+/**
+ * @fires {CommentEditEventType} edit
+ */
 @customElement("wy-comment-edit")
 @localized()
 export default class WyCommentEdit extends LitElement {
@@ -62,12 +67,12 @@ export default class WyCommentEdit extends LitElement {
 
 
   private dispatchEdit(edit: boolean) {
-    const event = new CustomEvent("edit", { detail: { edit: edit } });
+    const event: CommentEditEventType = new (CustomEvent as NamedEvent)("edit", { detail: { edit: edit } });
     return this.dispatchEvent(event);
   }
 
-  private handleSubmit(e: CustomEvent) {
-    this.updateCommentMutation.mutate({
+  private handleSubmit(e: EditorSubmitEventType) {
+    void this.updateCommentMutation.mutate({
       id: this.commentId,
       type: this.location,
       parentId: this.parentId,
@@ -82,9 +87,11 @@ export default class WyCommentEdit extends LitElement {
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+    super.willUpdate(changedProperties);
+
     if ((changedProperties.has("parentId") || changedProperties.has("weavy")) && this.parentId && this.weavy) {
-      this.updateCommentMutation.trackMutation(
+      await this.updateCommentMutation.trackMutation(
         getUpdateCommentMutationOptions(this.weavy, [this.location, this.parentId, "comments"])
       );
     }
@@ -112,7 +119,7 @@ export default class WyCommentEdit extends LitElement {
         .draft=${false}
         placeholder=${msg("Edit comment...")}
         buttonText=${msg("Update", { desc: "Button action to update" })}
-        @submit=${(e: CustomEvent) => this.handleSubmit(e)}></wy-editor>
+        @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}></wy-editor>
     `;
   }
 }

@@ -17,6 +17,9 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypeString } from "../types/app.types";
 import { isEntityChainMatch } from "../utils/notifications";
 import { Feature } from "../types/features.types";
+import type { CommentEditEventType, CommentTrashEventType } from "../types/comments.events";
+import type { NamedEvent } from "../types/generic.types";
+import type { PollVoteEventType } from "../types/polls.events";
 
 import chatCss from "../scss/all.scss";
 
@@ -34,6 +37,11 @@ import "./wy-comment-list";
 import WeavyPreview from "./wy-preview";
 import "./base/wy-skeleton";
 
+/** 
+ * @fires {PollVoteEventType} vote
+ * @fires {CommentTrashEventType} trash
+ * @fires {CommentEditEventType} edit 
+ **/
 @customElement("wy-comment-view")
 @localized()
 export default class WyCommentView extends WeavyComponentConsumerMixin(LitElement) {
@@ -89,22 +97,24 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
   @property({ type: Boolean })
   highlight: boolean = false;
 
-  private dispatchVote(id: number) {
-    const event = new CustomEvent("vote", { detail: { id: id } });
+  private dispatchVote(optionId: number) {
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId } });
     return this.dispatchEvent(event);
   }
 
   private dispatchTrash() {
-    const event = new CustomEvent("trash", { detail: { id: this.commentId } });
+    const event: CommentTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.commentId } });
     return this.dispatchEvent(event);
   }
 
   private dispatchEdit(edit: boolean) {
-    const event = new CustomEvent("edit", { detail: { edit: edit } });
+    const event: CommentEditEventType = new (CustomEvent as NamedEvent)("edit", { detail: { edit: edit } });
     return this.dispatchEvent(event);
   }
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this>) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("link")) {
       this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.commentId }));
     }
@@ -192,7 +202,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
                     class="wy-comment-area"
                     .images=${images}
                     @file-open=${(e: FileOpenEventType) => {
-                      this.previewRef.value?.open(e.detail.fileId);
+                      void this.previewRef.value?.open(e.detail.fileId);
                     }}
                   ></wy-image-grid>`
                 : ``}
@@ -208,7 +218,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
                 ? html`
                     <wy-poll
                       .pollOptions=${this.pollOptions}
-                      @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}
+                      @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
                     ></wy-poll>
                   `
                 : nothing}
@@ -218,7 +228,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
                 ? html`<wy-attachments-list
                     .files=${files ?? []}
                     @file-open=${(e: FileOpenEventType) => {
-                      this.previewRef.value?.open(e.detail.fileId);
+                      void this.previewRef.value?.open(e.detail.fileId);
                     }}
                   ></wy-attachments-list>`
                 : ``}

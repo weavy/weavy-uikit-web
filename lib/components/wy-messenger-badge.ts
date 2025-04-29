@@ -36,16 +36,18 @@ export default class WyMessengerBadge extends LitElement {
   };
 
   handleRealtimeMessage = (_realtimeEvent: RealtimeMessageEventType) => {
-    this.handleBadgeRefresh();
+    void this.handleBadgeRefresh();
   };
 
   handleRealtimeSeenBy = (_realtimeEvent: RealtimeAppMarkedEventType) => {
-    this.handleBadgeRefresh();
+    void this.handleBadgeRefresh();
   };
 
   #unsubscribeToRealtime?: () => void;
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("weavy") && this.weavy) {
       const typeFilter = [];
 
@@ -61,16 +63,16 @@ export default class WyMessengerBadge extends LitElement {
         typeFilter.push(AppTypeGuid.BotChat);
       }
 
-      this.badgeQuery.trackQuery(getBadgeOptions(this.weavy, typeFilter, this.bot), true);
+      await this.badgeQuery.trackQuery(getBadgeOptions(this.weavy, typeFilter, this.bot), true);
 
       this.#unsubscribeToRealtime?.();
 
-      this.weavy.subscribe(null, "message_created", this.handleRealtimeMessage);
-      this.weavy.subscribe(null, "app_marked", this.handleBadgeRefresh);
+      void this.weavy.subscribe(null, "message_created", this.handleRealtimeMessage);
+      void this.weavy.subscribe(null, "app_marked", this.handleBadgeRefresh);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(null, "message_created", this.handleRealtimeMessage);
-        this.weavy?.unsubscribe(null, "app_marked", this.handleBadgeRefresh);
+        void this.weavy?.unsubscribe(null, "message_created", this.handleRealtimeMessage);
+        void this.weavy?.unsubscribe(null, "app_marked", this.handleBadgeRefresh);
         this.#unsubscribeToRealtime = undefined;
       };
     }

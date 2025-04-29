@@ -12,6 +12,8 @@ import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
+import { PollVoteEventType } from "../types/polls.events";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss";
 import hostContentsCss from "../scss/host-contents.scss";
@@ -54,8 +56,8 @@ export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) 
   @property({ attribute: false })
   unreadMarkerShow: boolean = true;
 
-  private dispatchVote(id: number, parentId: number) {
-    const event = new CustomEvent("vote", { detail: { id: id, parentId: parentId, parentType: "messages" } });
+  private dispatchVote(optionId: number, parentId: number) {
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentId, parentType: "messages" } });
     return this.dispatchEvent(event);
   }
 
@@ -136,8 +138,10 @@ export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) 
                             return member.marked_id === message.id && member.id !== this.user?.id;
                           })
                         : []}
-                      @vote=${(e: CustomEvent) => {
-                        this.dispatchVote(e.detail.id, e.detail.parentId);
+                      @vote=${(e: PollVoteEventType) => {
+                        if (e.detail.parentId) {
+                          this.dispatchVote(e.detail.optionId, e.detail.parentId);
+                        }
                       }}
                     ></wy-message>`
                   ),

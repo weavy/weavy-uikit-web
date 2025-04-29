@@ -15,7 +15,7 @@ export interface WeavyConnectionProps {
   subscribe: <T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
-    callback: (realTimeEvent: T) => void
+    callback: (realTimeEvent: T) => void | Promise<void>
   ) => Promise<void>;
   unsubscribe: <T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
@@ -27,14 +27,16 @@ export interface WeavyConnectionProps {
 // WeavyConnection mixin/decorator
 export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyConnection extends Base implements WeavyConnectionProps, Destructable {
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
-      this.whenConnectionRequested().then(() => {
+      void this.whenConnectionRequested().then(() => {
         if (!this.isDestroyed) {
           //console.log(this.weavyId, "Weavy url and tokenFactory configured.");
-          (this as this & WeavyType).createConnection();
+          void (this as this & WeavyType).createConnection();
         }
       });
     }
@@ -104,7 +106,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           );
           await this.disconnect();
           this._connection.baseUrl = connectionUrl.toString();
-          this.connect();
+          void this.connect();
         }
       } else {
         this.connectionState = "connecting";
@@ -145,7 +147,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           })
           .build();
 
-        this._connection.onclose(async () => {
+        this._connection.onclose(() => {
           console.info(this.weavyId, "SignalR closed.");
           this.connectionState = "disconnected";
 
@@ -158,7 +160,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
             this._whenConnectionStartedResolve = resolve;
             this._whenConnectionStartedReject = reject;
           });
-          this.connect();
+          void this.connect();
         });
         this._connection.onreconnecting(() => {
           console.info(this.weavyId, "SignalR reconnecting...");
@@ -170,11 +172,11 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           this.connectionState = "connected";
           this.networkStateIsPending = false;
           for (let i = 0; i < this._connectionEventListeners.length; i++) {
-            this._connection?.invoke("Subscribe", this._connectionEventListeners[i].name);
+            void this._connection?.invoke("Subscribe", this._connectionEventListeners[i].name);
           }
         });
         this._resolveConnectionCreated?.(this._connection);
-        this.connect();
+        void this.connect();
       }
 
       return this._connection;
@@ -254,7 +256,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         }
 
         // Check version in parallel to attempting to reconnect.
-        this.checkVersion();
+        void this.checkVersion();
 
         // Reconnect
         this.networkStateIsPending = true;
@@ -340,7 +342,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
     override destroy(this: this & WeavyType) {
       super.destroy();
 
-      this.disconnect();
+      void this.disconnect();
 
       if (this._whenConnectionStartedReject) {
         // add default catch

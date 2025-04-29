@@ -2,6 +2,23 @@ import { AppTypeString, ComponentType, LinkType } from "./app.types";
 import { FormattedNotificationType } from "./notifications.types";
 import { RealtimeNotificationsEventDetailType } from "./realtime.types";
 
+// Local ShadowDOM events (composed: false, bubbling: true)
+
+export type NotificationSelectEventType = CustomEvent<{
+  notificationId: number;
+}> & { type: "select" };
+
+export type NotificationMarkEventType = CustomEvent<{
+  notificationId: number;
+  markAsRead: boolean;
+}> & { type: "mark" };
+
+export type NotificationHideEventType = CustomEvent & { type: "hide" };
+
+export type NotificationCloseEventType = CustomEvent & { type: "close" };
+
+// Public component API events (composed: true, bubbling: false)
+
 export type WyLinkEventDetailType = {
   /** Link with entity data. */
   link: LinkType;
@@ -17,7 +34,7 @@ export type WyLinkEventDetailType = {
 
   /** Any additional data needed to show the app in the context where it lives. */
   source_data?: string;
-}
+};
 
 /**
  * Fired when a notification is clicked.

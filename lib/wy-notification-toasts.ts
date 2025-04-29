@@ -181,11 +181,11 @@ export class WyNotificationToasts extends WeavyComponent {
         body: formattedNotification.detail,
         icon: otherMember.avatar_url,
         // @ts-expect-error Property `renotify` not available in ts types yet
-        renotify: updatedExistingNotification && e.notification.is_unread,
+        renotify: updatedExistingNotification && formattedNotification.is_unread,
       });
 
       nativeNotification.onclick = async () => {
-        this.handleMark(true, formattedNotification.id);
+        await this.handleMark(true, formattedNotification.id);
         await dispatchLinkEvent(this, this.weavy, formattedNotification);
       };
 
@@ -249,21 +249,21 @@ export class WyNotificationToasts extends WeavyComponent {
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
-    super.willUpdate(changedProperties);
+  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>): Promise<void> {
+    await super.willUpdate(changedProperties);
 
     if (changedProperties.has("weavy") && this.weavy) {
       this.markNotificationMutation = getMarkNotificationMutation(this.weavy);
 
       this.#unsubscribeToRealtime?.();
 
-      this.weavy.subscribe(null, "notification_created", this.handleEvent);
-      this.weavy.subscribe(null, "notification_updated", this.handleEvent);
+      void this.weavy.subscribe(null, "notification_created", this.handleEvent);
+      void this.weavy.subscribe(null, "notification_updated", this.handleEvent);
       //this.weavy.subscribe(null, "notification_deleted", this.handleEvent);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(null, "notification_created", this.handleEvent);
-        this.weavy?.unsubscribe(null, "notification_updated", this.handleEvent);
+        void this.weavy?.unsubscribe(null, "notification_created", this.handleEvent);
+        void this.weavy?.unsubscribe(null, "notification_updated", this.handleEvent);
         //this.weavy?.unsubscribe(null, "notification_deleted", this.handleEvent);
         this.#unsubscribeToRealtime = undefined;
       };
@@ -273,7 +273,7 @@ export class WyNotificationToasts extends WeavyComponent {
       (changedProperties.has("requestUserPermission") && this.requestUserPermission) ||
       (changedProperties.has("appearance") && this.appearance === "native")
     ) {
-      this.hasUserPermission();
+      void this.hasUserPermission();
     }
   }
 
@@ -281,7 +281,7 @@ export class WyNotificationToasts extends WeavyComponent {
     return html`
       ${this.user && this.appearance === "internal"
         ? html`
-            <wy-toasts ?show=${Boolean(this._notifications.length)} @hide=${this.clearNotifications}>
+            <wy-toasts ?show=${Boolean(this._notifications.length)} @hide=${() => this.clearNotifications()}>
               ${repeat(
                 this._notifications,
                 (notification) => notification.id,
@@ -291,7 +291,7 @@ export class WyNotificationToasts extends WeavyComponent {
                       duration=${this.duration}
                       @closed=${(e: CustomEvent<{ silent: boolean }>) => {
                         if (!e.detail.silent) {
-                          this.handleMark(true, notification.id);
+                          void this.handleMark(true, notification.id);
                         }
                         this.removeNotification(notification.id);
                       }}

@@ -15,6 +15,8 @@ import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { InfiniteQueryResultType } from "../types/query.types";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
+import { MemberSearchSubmitEventType } from "../types/members.events";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss";
 import footerbarCss from "../scss/components/footerbar.scss";
@@ -68,7 +70,7 @@ export default class WyUsersSearch extends LitElement {
 
   private dispatchSubmit() {
     this.selected = [...this.selected, ...this.select];
-    const event = new CustomEvent("submit", { detail: { members: this.selected } });
+    const event: MemberSearchSubmitEventType = new (CustomEvent as NamedEvent)("submit", { detail: { members: this.selected } });
     return this.dispatchEvent(event);
   }
 
@@ -93,12 +95,12 @@ export default class WyUsersSearch extends LitElement {
     }
   }
 
-  private async clear() {
+  private clear() {
     this.text = "";
   }
 
   private throttledSearch = throttle(
-    async () => {
+    () => {
       this.text = this.inputRef.value?.value || "";
     },
     250,
@@ -197,7 +199,7 @@ export default class WyUsersSearch extends LitElement {
               @keyup=${inputConsume}
               placeholder=${msg("Search...")}
             />
-            <wy-button type="reset" @click=${this.clear} kind="icon" class="wy-input-group-button-icon">
+            <wy-button type="reset" @click=${() => this.clear()} kind="icon" class="wy-input-group-button-icon">
               <wy-icon name="close-circle"></wy-icon>
             </wy-button>
             <wy-button kind="icon" class="wy-input-group-button-icon">
@@ -231,7 +233,7 @@ export default class WyUsersSearch extends LitElement {
           <wy-buttons reverse>
             <wy-button
               color="primary"
-              @click=${this.dispatchSubmit}
+              @click=${() => this.dispatchSubmit()}
               ?disabled=${this.selected.length === 0 && this.select.length === 0 ? true : undefined}
               >${this.buttonTitle ?? msg("Create")}</wy-button
             >
@@ -241,9 +243,11 @@ export default class WyUsersSearch extends LitElement {
     </div>`;
   }
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("weavy") && this.weavy) {
-      this.peopleQuery.trackInfiniteQuery(
+      await this.peopleQuery.trackInfiniteQuery(
         getInfiniteSearchMemberOptions(
           this.weavy,
           () => this.text,

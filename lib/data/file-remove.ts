@@ -30,7 +30,7 @@ export function getTrashFileMutationOptions(weavy: WeavyType, app: AppType) {
         throw new Error(`Could not trash ${file.name}.`);
       }
     },
-    onMutate: async (variables: MutateFileVariables) => {
+    onMutate: (variables: MutateFileVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -89,7 +89,7 @@ export function getRestoreFileMutationOptions(weavy: WeavyType, app: AppType) {
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
     },
-    onMutate: async (variables: MutateFileVariables) => {
+    onMutate: (variables: MutateFileVariables) => {
       // File must be considered trashed until successful restore
       updateCacheItems(
         queryClient,
@@ -149,7 +149,7 @@ export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppTy
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
     },
-    onMutate: async (variables: MutateFileVariables) => {
+    onMutate: (variables: MutateFileVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },

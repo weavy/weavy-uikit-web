@@ -33,7 +33,7 @@ export function getTrashCommentMutationOptions(weavy: WeavyType, type: "posts" |
         throw new Error();
       }
     },
-    onMutate: async (variables: MutateCommentVariables) => {
+    onMutate: (variables: MutateCommentVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -74,7 +74,7 @@ export function getRestoreCommentMutationOptions(weavy: WeavyType, type: "posts"
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }      
     },
-    onMutate: async (variables: MutateCommentVariables) => {
+    onMutate: (variables: MutateCommentVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },

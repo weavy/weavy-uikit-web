@@ -20,7 +20,7 @@ export default class WyCommentEditor extends WyEditor {
     this.editorClass = "wy-comment-editor";
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
+  override willUpdate(changedProperties: PropertyValues<this & WeavyProps>): void {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("editorLocation") && this.editorLocation === "files") {
@@ -98,7 +98,7 @@ export default class WyCommentEditor extends WyEditor {
                 `
               : nothing}
             ${this.componentFeatures?.allowsFeature(Feature.Polls)
-              ? html`<wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}>
+              ? html`<wy-dropdown-item @click=${() => this.openPolls()} title=${msg("Poll")}>
                   <wy-icon name="poll"></wy-icon>
                   <span>${msg("Poll")}</span>
                 </wy-dropdown-item>`
@@ -115,7 +115,7 @@ export default class WyCommentEditor extends WyEditor {
       </div>
 
       <!-- Button -->
-      <wy-button kind="icon" @click="${this.submit}" title=${this.buttonText} ?disabled=${this.disabled}>
+      <wy-button kind="icon" @click="${() => this.submit()}" title=${this.buttonText} ?disabled=${this.disabled}>
         <wy-icon name="send"></wy-icon>
       </wy-button>
     </div>`;

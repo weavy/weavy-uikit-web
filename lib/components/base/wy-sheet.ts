@@ -48,12 +48,6 @@ export default class WySheet extends LitElement {
     }
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>): void {
-    super.willUpdate(changedProperties);
-
-    
-  }
-
   override render() {
     return html`
       <dialog class="wy-dialog" tabindex="0" ${ref(this.viewportRef)} popover>

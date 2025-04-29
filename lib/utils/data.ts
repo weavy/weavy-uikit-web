@@ -51,7 +51,7 @@ export function keysToCamelCase(obj: PlainObjectType, pascal?: boolean): object 
     return n;
   } else if (Array.isArray(obj)) {
     return obj.map((o) => {
-      return keysToCamelCase(o, pascal);
+      return keysToCamelCase(o as PlainObjectType, pascal);
     });
   }
 
@@ -106,7 +106,7 @@ export function getTextStreamFromResponse(response: Response) {
     const reader = response.body.getReader();
     return new ReadableStream({
       start(controller) {
-        const pump: () => void = () => {
+        const pump: () => Promise<void> = () => {
           return reader.read().then(({ done, value }) => {
             // When no more data needs to be consumed, close the stream
             if (done) {
@@ -130,7 +130,7 @@ export function getTextStreamFromResponse(response: Response) {
 export function getStorage(type: "sessionStorage" | "localStorage" | "sharedStorage") {
   let storage: Storage | undefined;
   try {
-    storage = window[type as keyof typeof window];
+    storage = window[type as keyof typeof window] as Storage | undefined;
     if (storage) {
       const x = "__storage_test__";
       storage.setItem(x, x);

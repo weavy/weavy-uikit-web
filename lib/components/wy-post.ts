@@ -8,6 +8,9 @@ import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { PostEditEventType, PostRestoreEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
+import { PollVoteEventType } from "../types/polls.events";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss"
 
@@ -76,23 +79,23 @@ export default class WyPost extends LitElement {
   @state()
   private editing: boolean = false;
 
-  private dispatchVote(id: number) {
-    const event = new CustomEvent("vote", { detail: { id: id, parentId: this.postId, parentType: "posts" } });
+  private dispatchVote(optionId: number) {
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentId: this.postId, parentType: "posts" } });
     return this.dispatchEvent(event);
   }
 
   private dispatchSubscribe(subscribe: boolean) {
-    const event = new CustomEvent("subscribe", { detail: { id: this.postId, subscribe } });
+    const event: PostSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", { detail: { id: this.postId, subscribe } });
     return this.dispatchEvent(event);
   }
 
   private dispatchTrash() {
-    const event = new CustomEvent("trash", { detail: { id: this.postId } });
+    const event: PostTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.postId } });
     return this.dispatchEvent(event);
   }
 
   private dispatchRestore() {
-    const event = new CustomEvent("restore", { detail: { id: this.postId } });
+    const event: PostRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { id: this.postId } });
     return this.dispatchEvent(event);
   }
 
@@ -114,7 +117,7 @@ export default class WyPost extends LitElement {
             .embed=${this.embed}
             .pollOptions=${this.pollOptions}
             .attachments=${this.attachments}
-            @edit=${(e: CustomEvent) => {
+            @edit=${(e: PostEditEventType) => {
               this.editing = e.detail.edit;
             }}></wy-post-edit> `
         : nothing}
@@ -135,17 +138,17 @@ export default class WyPost extends LitElement {
             .embed=${this.embed}
             .reactions=${this.reactions}
             .commentCount=${this.commentCount}
-            @edit=${(e: CustomEvent) => {
+            @edit=${(e: PostEditEventType) => {
               this.editing = e.detail.edit;
             }}
-            @subscribe=${(e: CustomEvent) => {
+            @subscribe=${(e: PostSubscribeEventType) => {
               this.dispatchSubscribe(e.detail.subscribe);
             }}
             @trash=${() => {
               this.dispatchTrash();
             }}
-            @vote=${(e: CustomEvent) => {
-              this.dispatchVote(e.detail.id);
+            @vote=${(e: PollVoteEventType) => {
+              this.dispatchVote(e.detail.optionId);
             }}></wy-post-view> `
         : nothing}
     `;

@@ -29,7 +29,7 @@ function getResult<TResult = MutationState>(
     .map(
       (mutation): TResult =>
         (options.select
-          ? options.select(mutation as Mutation<unknown, DefaultError, unknown, unknown>)
+          ? options.select(mutation)
           : mutation.state) as TResult
     );
 }
@@ -48,7 +48,7 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
     this.host = host;
-    this.setContext();
+    void this.setContext();
   }
 
   async setContext() {

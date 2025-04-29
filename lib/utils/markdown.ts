@@ -50,6 +50,7 @@ export function md(strings: string[], ...values: unknown[]) {
     (text, rule) => text.replace(rule.regex, rule.replacement as never),
 
     (Array.isArray(strings) ? strings : [strings])
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
       .map((part, index) => `${part}${values[index] ? values[index] : ""}`)
       .join("")
   );

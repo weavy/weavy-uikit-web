@@ -33,7 +33,7 @@ export function findAnyExistingItem<TDataItem extends PlainObjectType>(
     }
   }
 
-  return existingItem && copy ? <TDataItem>{ ...existingItem } : existingItem;
+  return existingItem && copy ? { ...existingItem } : existingItem;
 }
 
 export function addToQueryData<
@@ -49,7 +49,7 @@ export function addToQueryData<
 ) {
   if (queryData) {
     // True immutable copy
-    queryData = JSON.parse(JSON.stringify(queryData));
+    queryData = JSON.parse(JSON.stringify(queryData)) as typeof queryData;
 
     if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>)?.pages) {
       let foundIndex = -1;
@@ -218,7 +218,7 @@ export function updateQueryData<TDataItem extends PlainObjectType>(
 
   if (queryData) {
     // True immutable copy
-    queryData = JSON.parse(JSON.stringify(queryData));
+    queryData = JSON.parse(JSON.stringify(queryData)) as typeof queryData;
 
     if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages) {
       const newPagesArray =
@@ -288,7 +288,7 @@ export function removeQueryData<TDataItem extends PlainObjectType>(
 
     if (queryData) {
       // True immutable copy
-      queryData = JSON.parse(JSON.stringify(queryData));
+      queryData = JSON.parse(JSON.stringify(queryData)) as typeof queryData;
 
       if ((queryData as InfiniteData<InfiniteQueryResultType<TDataItem>>).pages) {
         const newPagesArray =

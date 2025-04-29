@@ -12,7 +12,7 @@ export async function getFeatures<T>(weavy: WeavyType, type: string) {
     queryKey: ["features", type],
     queryFn: async () => {
       const response = await weavy.fetch("/api/features/" + type);
-      return await response.json();
+      return await response.json() as T;
     },
   });
 }

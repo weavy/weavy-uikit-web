@@ -56,7 +56,7 @@ export class ContextController<TContext extends Context<unknown, unknown>> imple
     host.addController(this);
     this.host = host;
     this.ref = ref;
-    this.setContext(context);
+    void this.setContext(context);
   }
 
   private async setContext(context: TContext) {

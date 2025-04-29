@@ -42,7 +42,7 @@ export async function externalBlob(weavy: WeavyType, externalBlob: ExternalBlobT
     const serverError = <ServerErrorResponseType>await response.json();
     throw new Error(serverError.detail || serverError.title, { cause: serverError });
   }
-  const blob: BlobType = await response.json();
+  const blob = await response.json() as BlobType;
   return blob;
 }
 

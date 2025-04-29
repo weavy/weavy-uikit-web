@@ -11,18 +11,13 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import "./wy-empty";
 import "./base/wy-spinner";
 
-import colorModeCss from "../scss/color-modes.scss"
-import allCss from "../scss/all.scss"
+import colorModeCss from "../scss/color-modes.scss";
+import allCss from "../scss/all.scss";
 import hostContentsCss from "../scss/host-contents.scss";
 
 @customElement("wy-preview-text")
 export class WyPreviewText extends LitElement {
-  
-  static override styles = [
-    allCss,
-    colorModeCss,
-    hostContentsCss,
-  ];
+  static override styles = [allCss, colorModeCss, hostContentsCss];
 
   protected exportParts = new ShadowPartsController(this);
 
@@ -45,10 +40,12 @@ export class WyPreviewText extends LitElement {
   @state()
   loading = true;
 
-  override async updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
     if ((changedProperties.has("weavy") || changedProperties.has("src")) && this.weavy) {
       this.loading = true;
-      fetch(this.src, await this.weavy.fetchOptions())
+      void this.weavy
+        .fetchOptions()
+        .then((fetchOptions) => fetch(this.src, fetchOptions))
         .then(getTextStreamFromResponse)
         // Create a new response out of the stream
         .then((stream) => new Response(stream))
@@ -62,10 +59,9 @@ export class WyPreviewText extends LitElement {
   }
 
   override render() {
-    return this.loading ? html`
-      <wy-empty><wy-spinner></wy-spinner></wy-empty>
-    ` :
-    this.html
+    return this.loading
+      ? html` <wy-empty><wy-spinner></wy-spinner></wy-empty> `
+      : this.html
       ? this.code
         ? html` <div class="wy-content-code wy-code">${unsafeHTML(this.textOrHtmlContent)}</div> `
         : html`

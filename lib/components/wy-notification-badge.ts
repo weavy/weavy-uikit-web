@@ -29,31 +29,31 @@ export default class WyNotificationBadge extends WeavyComponentConsumerMixin(Lit
   protected badgeQuery = new QueryController<NotificationsResultType>(this);
 
   private handleRefresh = () => {
-    this.badgeQuery.result.refetch();
+    void this.badgeQuery.result.refetch();
   };
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app")) && this.weavy ) {
-      this.badgeQuery.trackQuery(getBadgeOptions(this.weavy, this.typeFilter, this.app?.id), true);
+      await this.badgeQuery.trackQuery(getBadgeOptions(this.weavy, this.typeFilter, this.app?.id), true);
     }
 
     if (changedProperties.has("weavy") && this.weavy) {
       this.#unsubscribeToRealtime?.();
 
-      this.weavy.subscribe(null, "notification_created", this.handleRefresh);
-      this.weavy.subscribe(null, "notification_updated", this.handleRefresh);
-      //this.weavy.subscribe(null, "notification_deleted", this.handleRefresh);
-      this.weavy.subscribe(null, "notifications_marked", this.handleRefresh);
+      void this.weavy.subscribe(null, "notification_created", this.handleRefresh);
+      void this.weavy.subscribe(null, "notification_updated", this.handleRefresh);
+      //void this.weavy.subscribe(null, "notification_deleted", this.handleRefresh);
+      void this.weavy.subscribe(null, "notifications_marked", this.handleRefresh);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(null, "notification_created", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "notification_updated", this.handleRefresh);
-        //this.weavy?.unsubscribe(null, "notification_deleted", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "notifications_marked", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "notification_created", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "notification_updated", this.handleRefresh);
+        //void this.weavy?.unsubscribe(null, "notification_deleted", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "notifications_marked", this.handleRefresh);
         this.#unsubscribeToRealtime = undefined;
       }
     }

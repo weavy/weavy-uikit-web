@@ -81,7 +81,7 @@ export class WyPreviewEmbed extends LitElement {
   override render() {
     /* iframe needs to be object to not render error pages when content is blocked */
     return html`
-      <object title=${msg("Preview")} ${ref(this.registerLoading)} class="wy-content-iframe" data=${this.src}></object>
+      <object title=${msg("Preview")} ${ref((ref) => this.registerLoading(ref))} class="wy-content-iframe" data=${this.src}></object>
       <wy-spinner overlay></wy-spinner>
       <wy-preview-icon
         src=${this.src}

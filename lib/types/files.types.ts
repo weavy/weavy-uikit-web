@@ -1,18 +1,15 @@
 import { AppRef, EntityType } from "./app.types";
 import { CommentsResultType } from "./comments.types";
-import type { MetadataType, SortOrderType } from "./lists.types";
+import type { MetadataType, SortOrderType, ViewType } from "./lists.types";
 import { InfiniteQueryResultType } from "./query.types";
 import type { UserType } from "./users.types";
 import { type Mutation } from "@tanstack/query-core";
 
 export type FileOrderByType = "name" | "updated_at" | "size";
 
-export type FileOrderType = SortOrderType & {
-  by: FileOrderByType;
-  descending: boolean;
-};
+export type FileOrderType = SortOrderType<FileOrderByType>;
 
-export type FileViewType = "grid" | "list";
+export type FileViewType = ViewType;
 
 export type FileKindType =
   | "archive"

@@ -114,7 +114,7 @@ export default class WyPdfViewer extends LitElement {
       this.delayedResize = window.setTimeout(() => {
         if (this.pdfViewer) {
           // Update/Set scale
-          this.pdfViewer.currentScaleValue = this.pdfViewer._currentScaleValue;
+          this.pdfViewer.currentScaleValue = this.pdfViewer._currentScaleValue as string;
         }  
       }, 100)
     }
@@ -169,7 +169,7 @@ export default class WyPdfViewer extends LitElement {
       } else if (reason instanceof pdfjsLib.UnexpectedResponseException) {
         key = "pdfjs-unexpected-response-error";
       }
-      this.l10n.get(key, undefined, undefined).then((errorMsg: string) => {
+      await this.l10n.get(key, undefined, undefined).then((errorMsg: string) => {
         this.pdfViewError(pdfjsLib, errorMsg, { message: (reason as Error | undefined)?.message });
       });
       //this.loadingBar.hide();
@@ -228,7 +228,7 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  zoomIn(ticks: number) {
+  zoomIn(ticks: number = 0) {
     if (this.pdfViewer) {
       let newScale = this.pdfViewer.currentScale;
       do {
@@ -240,7 +240,7 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  zoomOut(ticks: number) {
+  zoomOut(ticks: number = 0) {
     if (this.pdfViewer) {
       let newScale = this.pdfViewer.currentScale;
       do {
@@ -327,7 +327,9 @@ export default class WyPdfViewer extends LitElement {
   //   }
   // }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("weavy") && this.weavy) {
       if (!this.pdfjsLib) {
         await this.weavy.whenUrl();
@@ -366,7 +368,7 @@ export default class WyPdfViewer extends LitElement {
       this.src &&
       this.pdfViewer
     ) {
-      this.open();
+      void this.open();
     }
   }
 
@@ -455,14 +457,14 @@ export default class WyPdfViewer extends LitElement {
                 ${ref(this.pageNumberRef)}
                 @keydown=${inputBlurOnEscape}
                 @keyup=${inputConsume}
-                @change=${this.updatePage}
-                @click=${this.select}
+                @change=${() => this.updatePage()}
+                @click=${(e: MouseEvent) => this.select(e)}
               />
               <span class="wy-toolbar-text">/</span>
               <span class="wy-toolbar-text" ${ref(this.totalPagesRef)}>1</span>
             </div>
             <div class="wy-toolbar-buttons">
-              <wy-button kind="icon" class="btn-zoom-out" @click=${this.zoomOut} title=${msg("Zoom out")}>
+              <wy-button kind="icon" class="btn-zoom-out" @click=${() => this.zoomOut()} title=${msg("Zoom out")}>
                 <wy-icon name="minus"></wy-icon>
               </wy-button>
               <input
@@ -471,19 +473,19 @@ export default class WyPdfViewer extends LitElement {
                 ${ref(this.zoomLevelRef)}
                 @keydown=${inputBlurOnEscape}
                 @keyup=${inputConsume}
-                @change=${this.updateZoom}
-                @click=${this.select}
+                @change=${() => this.updateZoom()}
+                @click=${(e: MouseEvent) => this.select(e)}
                 value="100%"
               />
-              <wy-button kind="icon" class="btn-zoom-in" @click=${this.zoomIn} title=${msg("Zoom in")}>
+              <wy-button kind="icon" class="btn-zoom-in" @click=${() => this.zoomIn()} title=${msg("Zoom in")}>
                 <wy-icon name="plus"></wy-icon>
               </wy-button>
             </div>
             <div class="wy-toolbar-buttons">
-              <wy-button kind="icon" class="btn-fit-page" @click=${this.fitToWidth} title=${msg("Fit to width")}>
+              <wy-button kind="icon" class="btn-fit-page" @click=${() => this.fitToWidth()} title=${msg("Fit to width")}>
                 <wy-icon name="fit-width"></wy-icon>
               </wy-button>
-              <wy-button kind="icon" @click=${this.fitToPage} title=${msg("Fit to screen")}>
+              <wy-button kind="icon" @click=${() => this.fitToPage()} title=${msg("Fit to screen")}>
                 <wy-icon name="fit-screen"></wy-icon>
               </wy-button>
             </div>
@@ -507,7 +509,7 @@ export default class WyPdfViewer extends LitElement {
     this.resizer.unobserve(this);
 
     try {
-      this.close();
+      void this.close();
       this.pdfViewer?.cleanup();
     } catch {
       /* No worries */

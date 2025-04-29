@@ -76,10 +76,10 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
       
       this.properties.forEach((property) => {
         this.prevPropertyValues ??= {};
-        const currentValue = (this.host as T)[property as keyof T];
+        const currentValue = (this.host as T)[property];
         if (this.prevPropertyValues[property] !== currentValue) {
           //console.log("updating prev value", this.prefixKey, property, currentValue)
-          this.prevPropertyValues[property] = currentValue ? JSON.parse(JSON.stringify(currentValue)) : currentValue;
+          this.prevPropertyValues[property] = currentValue ? JSON.parse(JSON.stringify(currentValue)) as typeof currentValue : currentValue;
         }
       });
     }
@@ -88,7 +88,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
   private restoreHistory = (_e: PopStateEvent) => {
     if (this.prefixKey && this.properties) {
       //console.log("restore history state", this.prefixKey, _e.state, window.history.state, itemHasChanged(e.state, window.history.state))
-      restoreHistoryProperties<T>(this.host as T, this.prefixKey, this.properties as (keyof T)[]);
+      restoreHistoryProperties<T>(this.host as T, this.prefixKey, this.properties);
       try {
         this._backCount = getBrowserStateProperty(this.prefixKey, "_backCount") || 0;
       } catch {
@@ -108,7 +108,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
         const anyPropertyHasChanged = this.properties.some(
           (property) => {
             const prevValue = this.prevPropertyValues?.[property]
-            const hostValue = (this.host as T)[property as keyof T];
+            const hostValue = (this.host as T)[property];
             return itemHasChanged(prevValue, hostValue);
           }
         );
@@ -118,7 +118,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
           pushHistoryProperties<typeof this.prevPropertyValues>(
             this.prevPropertyValues,
             this.prefixKey,
-            this.properties as (keyof T)[]
+            this.properties
           );
           this._backCount++;
           setBrowserState(this.prefixKey, { _backCount: this._backCount }, "replace");
@@ -128,7 +128,7 @@ export class HistoryController<T = ReactiveControllerHost> implements ReactiveCo
       }
 
       //console.log("update history state", this.prefixKey)
-      updateHistoryProperties(this.host as T, this.prefixKey, this.properties as (keyof T)[]);
+      updateHistoryProperties(this.host as T, this.prefixKey, this.properties);
       this.updatePrevPropertyValues();
     }
   }

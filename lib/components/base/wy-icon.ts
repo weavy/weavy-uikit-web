@@ -86,7 +86,9 @@ export default class WyIcon extends LitElement {
 
   protected uniqueId = `wy-icon-${S4()}`;
 
-  override willUpdate(changedProperties: PropertyValues<this>) {
+  override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("name") && this.name) {
       this.path = getIconMapping(this.name) || defaultIcon;
       this.overlayPath = getIconMapping(this.overlayName) || this.overlayPath;

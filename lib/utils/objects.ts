@@ -31,6 +31,7 @@ export function isPlainObject(maybePlainObject: unknown) {
   if (ctor === undefined) return true;
 
   // If has modified prototype
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const prot = ctor.prototype;
   if (isObject(prot) === false) return false;
 
@@ -71,7 +72,7 @@ export function assign<TTarget>(target: TTarget, properties: TTarget, recursive:
       if (recursive && copy[property] && isPlainObject(copy[property]) && isPlainObject(properties[property])) {
         copy[property] = assign(
           copy[property],
-          properties[property] as TTarget[Extract<keyof TTarget, string>],
+          properties[property],
           recursive
         );
       } else {
@@ -123,7 +124,7 @@ export async function findAsyncSequential<T>(
  * @param {boolean} ignoreType - Skip type check and use any stringified value
  * @returns {boolean}
  */
-export function eqString(str1: string | unknown, str2: string | unknown, ignoreType: boolean = false) {
+export function eqString(str1: unknown, str2: unknown, ignoreType: boolean = false) {
   return (
     (ignoreType || (typeof str1 === "string" && typeof str2 === "string")) &&
     String(str1).toUpperCase() === String(str2).toUpperCase()
@@ -188,7 +189,7 @@ export function reversedProperties<T extends PlainObjectType<PropertyKey>>(obj: 
  * @returns {Object} - A new object with the original properties together with reversed properties.
  */
 export function includeReversedProperties<T extends PlainObjectType<PropertyKey>>(obj: T) {
-  return { ...obj, ...reversedProperties(obj) } as typeof obj & ReturnType<typeof reversedProperties<T>>;
+  return { ...obj, ...reversedProperties(obj) };
 }
 
 /**

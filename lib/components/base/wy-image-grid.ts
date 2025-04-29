@@ -13,6 +13,9 @@ import imageGridCss from "../../scss/components/image-grid.scss"
 import hostContentsCss from "../../scss/host-contents.scss"
 import { NamedEvent } from "../../types/generic.types";
 
+/**
+ * @fires {FileOpenEventType} file-open - When opening a file in preview is requested
+ */
 @customElement("wy-image-grid")
 export default class WyImageGrid extends LitElement {
   static override styles = [imageGridCss, hostContentsCss];

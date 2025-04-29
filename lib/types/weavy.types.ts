@@ -7,6 +7,14 @@ import { WeavyComponentSettingProps } from "../classes/weavy-component";
  */
 export type WeavyTokenFactory = (refresh: boolean) => Promise<string | null | undefined>;
 
+/**
+ * User access token data from a tokenUrl endpoint.
+ */
+export type WeavyAccessTokenResponseType = {
+  access_token: `wyu_${string}`;
+  expires_in?: number;
+}
+
 export interface StrictWeavyOptions {
   /**
    * The url to the cloud file picker.

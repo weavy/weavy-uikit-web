@@ -1,5 +1,6 @@
-export type SortOrderType = {
-  by: string;
+/** Sorting order */
+export type SortOrderType<TOrderBy extends string = string> = {
+  by: TOrderBy;
   descending: boolean;
 };
 
@@ -10,3 +11,6 @@ export type MetadataType = {
 
 /** Optional tags */
 export type TagsType = string[];
+
+/** View layout */
+export type ViewType = "grid" | "list"

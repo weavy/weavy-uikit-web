@@ -12,7 +12,7 @@ import { assign, eqObjects, isPlainObject } from "./objects";
 export function getBrowserStateProperty<T>(prefix: string, property: PropertyKey) {
   throwOnDomNotAvailable();
 
-  const historyState = assign({} as PlainObjectType, window.history.state, true);
+  const historyState = assign<PlainObjectType>({} as PlainObjectType, window.history.state as PlainObjectType, true);
   if (!historyState.weavy || !(historyState.weavy as PlainObjectType)[prefix] || !Object.hasOwn((historyState.weavy as PlainObjectType)[prefix] as PlainObjectType, property)) {
     //console.log("property not found", window.history.state)
     throw new Error("Property not found");
@@ -40,7 +40,7 @@ export function setBrowserState(prefix: string, state: unknown, action: "push" |
 
     // Always modify any existing state
 
-    const currentHistoryState = assign({} as PlainObjectType, window.history.state, true);
+    const currentHistoryState = assign<PlainObjectType>({} as PlainObjectType, window.history.state as PlainObjectType, true);
     currentHistoryState.weavy ??= {} as PlainObjectType;
 
     (currentHistoryState.weavy as PlainObjectType)[prefix] = state;
@@ -64,7 +64,7 @@ export function restoreHistoryProperties<T = PlainObjectType>(parent: T, key: st
   
   const prefix = `${typeof parent}:${key}`;
 
-  properties.forEach(async (property: keyof T) => {
+  properties.forEach((property: keyof T) => {
     // Try to initialize property from history
     try {
       const item = getBrowserStateProperty(prefix, property);
@@ -91,7 +91,7 @@ export function pushHistoryProperties<T = object>(
   const prefix = `${typeof parent}:${key}`;
   const state: PlainObjectType = {};
 
-  properties.forEach(async (property) => {
+  properties.forEach((property) => {
     // Push history
     state[property] = parent[property];
   });

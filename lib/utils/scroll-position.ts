@@ -10,7 +10,7 @@ export function getNextPositionedChild(el: Element | null) {
   while (el) {
     el = el.nextElementSibling;
     if (el instanceof HTMLElement && /absolute|sticky|fixed/.test(getComputedStyle(el).position) === false) {
-      return el as HTMLElement;
+      return el;
     }
   }
   return null;

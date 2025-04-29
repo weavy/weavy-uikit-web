@@ -1,4 +1,6 @@
 import { LitElement, ReactiveController, ReactiveControllerHost } from "lit";
+import { DropFilesEventType } from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
 export class DropZoneController implements ReactiveController {
   host: LitElement & ReactiveControllerHost;
@@ -71,7 +73,7 @@ export class DropZoneController implements ReactiveController {
   }
 
   private dispatchUploadFiles(files: FileList | File[] | null) {
-    const uploadEvent = new CustomEvent("drop-files", { detail: { files } });
+    const uploadEvent: DropFilesEventType = new (CustomEvent as NamedEvent)("drop-files", { detail: { files } });
     return this.host.dispatchEvent(uploadEvent);
   }
 

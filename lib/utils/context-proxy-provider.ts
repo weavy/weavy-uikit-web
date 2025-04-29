@@ -144,7 +144,7 @@ export class WyContextProvider<T extends Context<unknown, unknown>> extends Valu
         // emit an event to signal a provider is available for this context
         this.host.dispatchEvent(new ContextProviderEvent(this.context, this.host));
       } else {
-        requestAnimationFrame(this.dispatchWhenConnected);
+        requestAnimationFrame(()=> this.dispatchWhenConnected());
       }
     }
   }

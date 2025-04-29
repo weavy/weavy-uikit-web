@@ -53,7 +53,7 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
 
   hostUpdate() {
     if (this.prefixKey && this.properties && this.host.weavy) {
-      this.persistStorageCache.persistProperties<T>(this.host as T, this.prefixKey, this.properties, this.cachePrefix ? `${this.host.weavy.cachePrefix}:${this.cachePrefix}` : this.host.weavy.cachePrefix);
+      this.persistStorageCache.persistProperties<T>(this.host, this.prefixKey, this.properties, this.cachePrefix ? `${this.host.weavy.cachePrefix}:${this.cachePrefix}` : this.host.weavy.cachePrefix);
     }
   }
 }

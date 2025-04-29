@@ -8,7 +8,7 @@ export function checkImageLoad(element?: Element) {
         img.classList.add("wy-loading", "wy-loaded");
         img.part.add("wy-loading", "wy-loaded");
       } else {
-        img.decode().then(() => {
+        void img.decode().then(() => {
           //console.debug("image is loaded after delay")
           img.classList.add("wy-loaded");
           img.part.add("wy-loaded");

@@ -8,7 +8,10 @@ import type { MemberType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
-import { PollOptionType } from "../types/polls.types";
+import type { PollOptionType } from "../types/polls.types";
+import type { CommentEditEventType, CommentRestoreEventType, CommentTrashEventType } from "../types/comments.events";
+import type { PollVoteEventType } from "../types/polls.events";
+import type { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss"
 import hostContentsCss from "../scss/host-contents.scss";
@@ -17,6 +20,11 @@ import "./wy-comment-trashed";
 import "./wy-comment-view";
 import "./wy-comment-edit";
 
+/**
+ * @fires {PollVoteEventType} vote
+ * @fires {CommentTrashEventType} trash
+ * @fires {CommentRestoreEventType} restore
+ */
 @customElement("wy-comment")
 export default class WyComment extends LitElement {
   
@@ -75,24 +83,18 @@ export default class WyComment extends LitElement {
   @state()
   private editing: boolean = false;
 
-
-  private dispatchVote(id: number) {
-    const event = new CustomEvent("vote", { detail: { id: id, parentId: this.commentId, parentType: "comments" } });
-    return this.dispatchEvent(event);
-  }
-
-  private dispatchSubscribe(subscribe: boolean) {
-    const event = new CustomEvent("subscribe", { detail: { id: this.commentId, subscribe } });
+  private dispatchVote(optionId: number) {
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentId: this.commentId, parentType: "comments" } });
     return this.dispatchEvent(event);
   }
 
   private dispatchTrash() {
-    const event = new CustomEvent("trash", { detail: { id: this.commentId } });
+    const event: CommentTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.commentId } });
     return this.dispatchEvent(event);
   }
 
   private dispatchRestore() {
-    const event = new CustomEvent("restore", { detail: { id: this.commentId } });
+    const event: CommentRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { id: this.commentId } });
     return this.dispatchEvent(event);
   }
 
@@ -116,7 +118,7 @@ export default class WyComment extends LitElement {
             .pollOptions=${this.pollOptions}
             .attachments=${this.attachments}
             .embed=${this.embed}
-            @edit=${(e: CustomEvent) => {
+            @edit=${(e: CommentEditEventType) => {
               this.editing = e.detail.edit;
             }}></wy-comment-edit> `
         : nothing}
@@ -138,17 +140,14 @@ export default class WyComment extends LitElement {
             .meeting=${this.meeting}
             .pollOptions=${this.pollOptions}
             .reactions=${this.reactions}
-            @edit=${(e: CustomEvent) => {
+            @edit=${(e: CommentEditEventType) => {
               this.editing = e.detail.edit;
-            }}
-            @subscribe=${(e: CustomEvent) => {
-              this.dispatchSubscribe(e.detail.subscribe);
             }}
             @trash=${() => {
               this.dispatchTrash();
             }}
-            @vote=${(e: CustomEvent) => {
-              this.dispatchVote(e.detail.id);
+            @vote=${(e: PollVoteEventType) => {
+              this.dispatchVote(e.detail.optionId);
             }}></wy-comment-view> `
         : nothing}
     `;

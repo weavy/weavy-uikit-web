@@ -1,4 +1,4 @@
-import { html, type PropertyValues, PropertyValueMap } from "lit";
+import { html, type PropertyValues } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { PersistStateController } from "./controllers/persist-state-controller";
@@ -8,11 +8,11 @@ import { localized, msg } from "@lit/localize";
 import { type AppRef, type AppType, AppTypeGuid, AppTypeString } from "./types/app.types";
 import { QueryController } from "./controllers/query-controller";
 import type { BotType } from "./types/users.types";
-import { cache } from "lit/directives/cache.js";
 import { WeavyComponent } from "./classes/weavy-component";
 import { getConversationOptions, resolveAppWithType } from "./data/conversation";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
 import type { ComponentFeaturePolicyConfig } from "./types/features.types";
+import type { SelectedEventType } from "./types/app.events";
 
 import allStyles from "./scss/all.scss";
 import messengerStyles from "./scss/components/messenger.scss";
@@ -130,7 +130,7 @@ export class WyMessenger extends WeavyComponent {
   }
 
   @property({ type: Number })
-  conversationId: number | null = null;
+  conversationId?: number | null = null;
 
   protected conversationQuery = new QueryController<AppType>(this);
 
@@ -167,7 +167,7 @@ export class WyMessenger extends WeavyComponent {
    * @deprecated
    * @param id {number} - The id of the conversation to select.
    */
-  async selectConversation(id: number) {
+  selectConversation(id: number) {
     console.warn("selectConversation() is deprecated. Set .conversationId instead.");
     this.conversationId = id;
     return true;
@@ -182,8 +182,8 @@ export class WyMessenger extends WeavyComponent {
     this.conversationId = null;
   }
 
-  protected override async willUpdate(changedProperties: PropertyValues<this>) {
-    super.willUpdate(changedProperties);
+  protected override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+    await super.willUpdate(changedProperties);
 
     if (
       (changedProperties.has("weavy") || changedProperties.has("bot") || changedProperties.has("user")) &&
@@ -200,14 +200,10 @@ export class WyMessenger extends WeavyComponent {
     if (changedProperties.has("link") && this.link?.app) {
       this.conversationId = this.link.app.id;
     }
-  }
-
-  protected override update(changedProperties: PropertyValueMap<this>) {
-    super.update(changedProperties);
 
     if ((changedProperties.has("conversationId") || changedProperties.has("weavy")) && this.weavy) {
       if (this.conversationId) {
-        this.conversationQuery.trackQuery(getConversationOptions(this.weavy, this.conversationId, this.appTypes));
+        void this.conversationQuery.trackQuery(getConversationOptions(this.weavy, this.conversationId, this.appTypes));
       } else {
         this.conversationQuery.untrackQuery();
       }
@@ -216,7 +212,7 @@ export class WyMessenger extends WeavyComponent {
 
   override render() {
     const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
-    const { data: conversation, isPending } = this.conversationQuery.result ?? { isPending: networkIsPending };
+    const { data: conversation } = this.conversationQuery.result ?? { isPending: networkIsPending };
 
     return html`
       <div class="wy-messenger-layout">
@@ -227,7 +223,7 @@ export class WyMessenger extends WeavyComponent {
           .avatarUser=${this.botUser}
           .name=${this.name}
           conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
-          @conversation-selected=${(e: CustomEvent) => (this.conversationId = e.detail.id)}
+          @selected=${(e: SelectedEventType) => (this.conversationId = e.detail.id)}
         ></wy-conversation-list>
 
         <div
@@ -247,17 +243,13 @@ export class WyMessenger extends WeavyComponent {
             </span>
           </wy-conversation-appbar>
 
-          ${cache(
-            this.conversationId
-              ? !isPending
-                ? html`<wy-conversation
-                    .conversationId=${this.conversationId}
-                    .conversation=${conversation}
-                    .header=${!this.bot}
-                  ></wy-conversation>`
-                : html`<wy-empty><wy-spinner reveal></wy-spinner></wy-empty>`
-              : html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
-          )}
+          ${this.conversationId
+            ? html`<wy-conversation
+                .conversationId=${this.conversationId}
+                .conversation=${conversation}
+                .header=${!this.bot}
+              ></wy-conversation>`
+            : html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`}
         </div>
       </div>
     `;

@@ -38,7 +38,7 @@ export function getRenameFileMutationOptions(weavy: WeavyType, app: AppType) {
           throw new Error(serverError.detail || serverError.title, { cause: serverError });
         }
 
-        return response.json();
+        return await response.json() as FileType;
       } else {
         throw new Error(`Could not rename ${file.name}`);
       }
@@ -63,7 +63,7 @@ export function getRenameFileMutationOptions(weavy: WeavyType, app: AppType) {
         (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileNameVariables) {
+    onError: (error: Error, variables: MutateFileNameVariables) => {
       // Show/update in mutation list also?
       updateCacheItems(
         queryClient,

@@ -26,6 +26,13 @@ export type {
 // WeavyRealtime mixin/decorator
 export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavyRealtime extends Base implements WeavyRealtimeProps {
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      super(...args);
+    }
+
     _notificationEvents: boolean = WeavyClient.defaults.notificationEvents ?? false;
 
     get notificationEvents(): boolean {
@@ -34,7 +41,7 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
     set notificationEvents(enable: boolean | null | undefined) {
       this.realtimeUnsubscribe();
       this._notificationEvents = enable ?? false;
-      this.realtimeSubscribe();
+      void this.realtimeSubscribe();
     }
 
     dispatchRealtimeEvent = (realtimeEvent: RealtimeEventType) => {
@@ -56,15 +63,15 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
       }
     };
 
-    async realtimeSubscribe() {
+    realtimeSubscribe() {
       const weavy = this as this & WeavyType;
 
       // Notifications
       if (this.notificationEvents) {
-        weavy.subscribe(null, "notification_created", this.dispatchRealtimeEvent);
-        weavy.subscribe(null, "notification_updated", this.dispatchRealtimeEvent);
-        //weavy.subscribe(null, "notification_deleted", this.dispatchRealtimeEvent);
-        weavy.subscribe(null, "notifications_marked", this.dispatchRealtimeEvent);
+        void weavy.subscribe(null, "notification_created", this.dispatchRealtimeEvent);
+        void weavy.subscribe(null, "notification_updated", this.dispatchRealtimeEvent);
+        //void weavy.subscribe(null, "notification_deleted", this.dispatchRealtimeEvent);
+        void weavy.subscribe(null, "notifications_marked", this.dispatchRealtimeEvent);
       }
     }
 
@@ -72,16 +79,11 @@ export const WeavyRealtimeMixin = <TBase extends Constructor<WeavyClient>>(Base:
       const weavy = this as this & WeavyType;
 
       if (this.notificationEvents) {
-        weavy.unsubscribe(null, "notification_created", this.dispatchRealtimeEvent);
-        weavy.unsubscribe(null, "notification_updated", this.dispatchRealtimeEvent);
-        //weavy.unsubscribe(null, "notification_deleted", this.dispatchRealtimeEvent);
-        weavy.unsubscribe(null, "notifications_marked", this.dispatchRealtimeEvent);
+        void weavy.unsubscribe(null, "notification_created", this.dispatchRealtimeEvent);
+        void weavy.unsubscribe(null, "notification_updated", this.dispatchRealtimeEvent);
+        //void weavy.unsubscribe(null, "notification_deleted", this.dispatchRealtimeEvent);
+        void weavy.unsubscribe(null, "notifications_marked", this.dispatchRealtimeEvent);
       }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(...args: any[]) {
-      super(...args);
     }
 
     override destroy(this: this & WeavyType): void {

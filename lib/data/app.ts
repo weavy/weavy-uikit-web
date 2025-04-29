@@ -4,8 +4,6 @@ import {
   InfiniteQueryObserverOptions,
   MutationKey,
   MutationObserver,
-  QueryFunctionContext,
-  QueryKey,
   QueryObserverOptions,
 } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
@@ -123,7 +121,7 @@ export function getCreateAppMutationOptions(weavy: WeavyType) {
           uid,
         }),
       });
-      return await response.json();
+      return await response.json() as AppType;
     },
     onSettled: async () => {
       await weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
@@ -168,7 +166,7 @@ export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
         throw new Error(`Could not subscribe to app ${app.uid}.`);
       }
     },
-    onMutate: async (variables: MutateAppSubscribeProps) => {
+    onMutate: (variables: MutateAppSubscribeProps) => {
       let previousSubscribe: boolean | undefined;
       queryClient.setQueryData(mutationKey, (mApp: AppType) => {
         //console.log("mutate subscribe", mApp);
@@ -227,14 +225,14 @@ export function getAppListOptions(
     ...options,
     initialPageParam: 0,
     queryKey: ["apps", "list", types, member, orderBy, includeUid],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
+    queryFn: async (opt) => {
       const queryParams = new URLSearchParams();
 
       if (member) {
         queryParams.append("member", member);
       }
 
-      if (opt.pageParam) {
+      if (opt.pageParam && typeof opt.pageParam === "number") {
         queryParams.append("skip", opt.pageParam?.toString());
       }
 
@@ -256,7 +254,7 @@ export function getAppListOptions(
       const url = `/api/apps?${queryParams.toString()}`;
 
       const response = await weavy.fetch(url);
-      const result = await response.json();
+      const result = await response.json() as AppsResultType;
       result.data = result.data || [];
       return result;
     },

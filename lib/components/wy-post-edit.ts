@@ -14,6 +14,9 @@ import { getUpdatePostMutationOptions } from "../data/posts";
 import { WeavyProps } from "../types/weavy.types";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import type { PostEditEventType } from "../types/posts.events";
+import type { NamedEvent } from "../types/generic.types";
+import type { EditorSubmitEventType } from "../types/editor.events";
 
 import chatCss from "../scss/all.scss"
 
@@ -74,13 +77,13 @@ export default class WyPostEdit extends WeavyComponentConsumerMixin(LitElement) 
   private updatePostMutation = new MutationController<PostType, Error, MutatePostProps, unknown>(this);
 
   private dispatchEdit(edit: boolean) {
-    const event = new CustomEvent("edit", { detail: { edit: edit } });
+    const event: PostEditEventType = new (CustomEvent as NamedEvent)("edit", { detail: { edit: edit } });
     return this.dispatchEvent(event);
   }
 
-  private async handleSubmit(e: CustomEvent) {
+  private async handleSubmit(e: EditorSubmitEventType) {
     const app = await this.whenApp();
-    this.updatePostMutation.mutate({
+    void this.updatePostMutation.mutate({
       id: this.postId,
       appId: app.id,
       text: e.detail.text,
@@ -94,11 +97,11 @@ export default class WyPostEdit extends WeavyComponentConsumerMixin(LitElement) 
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
-      this.updatePostMutation.trackMutation(getUpdatePostMutationOptions(this.weavy, ["posts", this.app.id]));
+      await this.updatePostMutation.trackMutation(getUpdatePostMutationOptions(this.weavy, ["posts", this.app.id]));
     }
   }
 
@@ -124,7 +127,7 @@ export default class WyPostEdit extends WeavyComponentConsumerMixin(LitElement) 
         .draft=${false}
         placeholder=${msg("Edit post...")}
         buttonText=${msg("Update", { desc: "Button action to update" })}
-        @submit=${(e: CustomEvent) => this.handleSubmit(e)}></wy-editor>
+        @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}></wy-editor>
     `;
   }
 }

@@ -19,6 +19,7 @@ export const WeavyNetworkMixin = <TBase extends Constructor<WeavyClient>>(Base: 
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
       window.addEventListener("online", () => {

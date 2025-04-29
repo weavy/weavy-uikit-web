@@ -1,4 +1,11 @@
+import { MarkEventType } from "./app.events";
 import { MessageType } from "./messages.types";
+
+// Local ShadowDOM events (composed: false, bubbling: true)
+
+export type MessagesMarkEventType = MarkEventType<{ messageId?: number | null }>
+
+// Public component API events (composed: true, bubbling: false)
 
 /**
  * Message event detail data.

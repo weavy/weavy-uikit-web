@@ -67,14 +67,14 @@ export class WyPreviewMedia extends LitElement {
   override render() {
     return this.format === "video"
       ? html`
-          <video ${ref(this.registerLoading)} class="wy-content-video" controls crossorigin="use-credentials" autoplay>
+          <video ${ref((ref) => this.registerLoading(ref))} class="wy-content-video" controls crossorigin="use-credentials" autoplay>
             <source src=${this.src} type=${ifDefined(this.mediaType)} />
             <wy-preview-icon src=${this.src} icon="file-video"></wy-preview-icon>
           </video>
           <wy-spinner></wy-spinner>
         `
       : html`
-          <audio ${ref(this.registerLoading)} class="wy-content-audio" controls crossorigin="use-credentials" autoplay>
+          <audio ${ref((ref) => this.registerLoading(ref))} class="wy-content-audio" controls crossorigin="use-credentials" autoplay>
             <source src=${this.src} type=${ifDefined(this.mediaType)} />
           </audio>
         `;

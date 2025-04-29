@@ -43,7 +43,7 @@ export class WyContextProvider<
         // emit an event to signal a provider is available for this context
         this.host.dispatchEvent(new ContextProviderEvent(this._context, this.host));
       } else {
-        requestAnimationFrame(this.dispatchWhenConnected);
+        requestAnimationFrame(() => this.dispatchWhenConnected());
       }
     }
   }

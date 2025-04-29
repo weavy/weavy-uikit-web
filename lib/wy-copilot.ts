@@ -173,12 +173,12 @@ export class WyCopilot extends WeavyComponent {
    *
    * @param {string} text - The text suggestion to place in the editor.
    */
-  setSuggestion(text: string) {
-    this.conversationRef.value?.setEditorText(text);
+  async setSuggestion(text: string) {
+    await this.conversationRef.value?.setEditorText(text);
   }
 
-  protected override willUpdate(changedProperties: PropertyValues): void {
-    super.willUpdate(changedProperties);
+  protected override async willUpdate(changedProperties: PropertyValues): Promise<void> {
+    await super.willUpdate(changedProperties);
 
     if (changedProperties.has("weavy") && this.weavy) {
       this.addConversationMutation = getCreateAppMutation(this.weavy);
@@ -190,10 +190,10 @@ export class WyCopilot extends WeavyComponent {
       if (this.app) {
         const subscribeGroup = `a${this.app.id}`;
 
-        this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+        void this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
 
         this.unsubscribeToRealtime = () => {
-          this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+          void this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
           this.unsubscribeToRealtime = undefined;
         };
       }
@@ -243,7 +243,7 @@ export class WyCopilot extends WeavyComponent {
               @click=${async (e: MouseEvent) => {
                 if ((e.target as HTMLElement).matches(".suggestion")) {
                   e.stopPropagation();
-                  this.setSuggestion((e.target as HTMLElement).innerText);
+                  await this.setSuggestion((e.target as HTMLElement).innerText);
                   //await this.conversationRef.value?.selectAllInEditor();
                   await this.conversationRef.value?.setCursorLastInEditor();
                   this.conversationRef.value?.focusEditor();

@@ -1,7 +1,7 @@
 import { MutationObserver } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import { updateCacheItem } from "../utils/query-cache";
-import { ReactableType } from "../types/reactions.types";
+import { ReactableType, ReactionsResultType } from "../types/reactions.types";
 import { MemberType } from "../types/members.types";
 import { MsgType } from "../types/msg.types";
 
@@ -36,7 +36,7 @@ export function getReactionListOptions(weavy: WeavyType, entityType: string, ent
     enabled: false,
     queryFn: async () => {
       const response = await weavy.fetch("/api/" + entityType + "/" + entityId + "/reactions");
-      return await response.json();
+      return await response.json() as ReactionsResultType;
     },
   };
 }

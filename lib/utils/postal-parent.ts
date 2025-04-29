@@ -12,11 +12,12 @@ type WeavyPostalConfigType = {
 
 type WeavyIdType = string | true;
 
-type PostMessageType = object & { 
+type WeavyPostMessageType = object & { 
   name?: string,
   distributeName?: string,
   weavyId?: WeavyIdType,
-  weavyMessageId?: string
+  weavyMessageId?: string,
+  windowName?: string
 };
 
 function extractOrigin(url: string) {
@@ -57,7 +58,7 @@ export class WeavyPostalParent extends WeavyEvents {
       this.timeout = options.timeout;
     }
 
-    window.addEventListener("message", (e: MessageEvent) => {
+    window.addEventListener("message", (e: MessageEvent<WeavyPostMessageType>) => {
       if (e.data.name && e.data.weavyId !== undefined) {
         if (e.data.weavyMessageId && e.data.name !== "message-receipt" && e.data.name !== "unready") {
           //console.debug("sending message receipt", e.data.weavyMessageId, e.data.name)
@@ -138,7 +139,7 @@ export class WeavyPostalParent extends WeavyEvents {
     });
   }
 
-  private distributeMessage(e: MessageEvent, fromFrame: boolean = false) {
+  private distributeMessage(e: MessageEvent<WeavyPostMessageType>, fromFrame: boolean = false) {
     const fromSelf = e.source === window && e.origin === this.origin;
     fromFrame ||=
       (e.source && this.contentWindowOrigins.has(e.source) && e.origin === this.contentWindowOrigins.get(e.source)) ||
@@ -153,7 +154,9 @@ export class WeavyPostalParent extends WeavyEvents {
 
       //console.debug("message from", fromSelf && "self" || fromFrame && "frame " + e.data.windowName, e.data.name, e.data.weavyId);
 
-      this.triggerEvent(messageName, e.data, e);
+      if (messageName) {
+        this.triggerEvent(messageName, e.data, e);
+      }
       this.triggerEvent("message", e.data, e);
     }
   }
@@ -238,7 +241,7 @@ export class WeavyPostalParent extends WeavyEvents {
     }
   }
 
-  private async whenPostMessage(contentWindow: MessageEventSource, message: PostMessageType, transfer?: Transferable[]) {
+  private async whenPostMessage(contentWindow: MessageEventSource, message: WeavyPostMessageType, transfer?: Transferable[]) {
     throwOnDomNotAvailable();
     
     //var whenReceipt = new WeavyPromise();
@@ -280,7 +283,7 @@ export class WeavyPostalParent extends WeavyEvents {
     }
   }
 
-  postToChildren(message: PostMessageType, transfer?: Transferable[]) {
+  postToChildren(message: WeavyPostMessageType, transfer?: Transferable[]) {
     if (typeof message !== "object" || !message.name) {
       console.error("postToChildren() Invalid message format", message);
       return;
@@ -309,7 +312,7 @@ export class WeavyPostalParent extends WeavyEvents {
     });
   }
 
-  async postToFrame(windowName: string, weavyId: WeavyIdType, message: PostMessageType, transfer?: Transferable[]) {
+  async postToFrame(windowName: string, weavyId: WeavyIdType, message: WeavyPostMessageType, transfer?: Transferable[]) {
     if (typeof message !== "object" || !message.name) {
       console.error("postToFrame() Invalid message format", message);
       return;
@@ -326,7 +329,7 @@ export class WeavyPostalParent extends WeavyEvents {
     return await this.whenPostMessage(contentWindow, message, transfer);
   }
 
-  async postToSelf(message: PostMessageType, transfer?: Transferable[]) {
+  async postToSelf(message: WeavyPostMessageType, transfer?: Transferable[]) {
     if (typeof message !== "object" || !message.name) {
       console.error("postToSelf() Invalid message format", message);
       return;
@@ -337,7 +340,7 @@ export class WeavyPostalParent extends WeavyEvents {
     return await this.whenPostMessage(window.self, message, transfer);
   }
 
-  postToSource(e: MessageEvent, message: PostMessageType, transfer?: Transferable[]) {
+  postToSource(e: MessageEvent<WeavyPostMessageType>, message: WeavyPostMessageType, transfer?: Transferable[]) {
     if (e.source && e.data.weavyId !== undefined) {
       const fromSelf = e.source === window.self && e.origin === this.origin;
       const fromFrame = this.contentWindowOrigins.has(e.source) && e.origin === this.contentWindowOrigins.get(e.source);

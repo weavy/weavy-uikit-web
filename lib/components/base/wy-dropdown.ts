@@ -85,12 +85,14 @@ export default class WyDropdown extends LitElement {
     }
   }
 
-  private handleClickToggle(_e: Event) {
-    _e.stopPropagation();
+  private handleClickToggle(e: Event) {
+    e.stopPropagation();
     this.showMenu = !this.showMenu;
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("directionX") || changedProperties.has("directionY")) {
       this._placement =
         this.directionX === "right" && this.directionY === "down"
@@ -106,7 +108,7 @@ export default class WyDropdown extends LitElement {
       if (this.showMenu && !this.computePositionCleanup && this.buttonRef.value && this.menuRef.value) {
         this.computePositionCleanup = autoUpdate(this.buttonRef.value, this.menuRef.value, () => {
           if (this.buttonRef.value && this.menuRef.value) {
-            computePosition(this.buttonRef.value, this.menuRef.value, {
+            void computePosition(this.buttonRef.value, this.menuRef.value, {
               placement: this._placement,
               strategy: !this.menuRef.value.popover ? "fixed" : "absolute",
               middleware: [
@@ -162,7 +164,7 @@ export default class WyDropdown extends LitElement {
       <span>
         <span
           ${ref(this.buttonRef)}
-          @click=${this.handleClickToggle}
+          @click=${(e: MouseEvent) => this.handleClickToggle(e)}
           @keydown=${clickOnEnterAndConsumeOnSpace}
           @keyup=${clickOnSpace}
         >
@@ -181,7 +183,7 @@ export default class WyDropdown extends LitElement {
 
         <div
           ${ref(this.menuRef)}
-          @click=${this.handleClickToggle}
+          @click=${(e: MouseEvent) => this.handleClickToggle(e)}
           @keyup=${clickOnEnterAndSpace}
           class="wy-dropdown-menu"
           ?hidden=${isPopoverPolyfilled() && !this.showMenu}

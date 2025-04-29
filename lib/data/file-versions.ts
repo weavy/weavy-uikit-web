@@ -42,7 +42,7 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
         throw new Error(`Could not restore ${versionFile.name} to version ${versionFile.rev}.`);
       }
     },
-    onMutate: async (variables: MutateFileVersionVariables) => {
+    onMutate: (variables: MutateFileVersionVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -64,7 +64,7 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
         (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileVersionVariables, context: FileMutationContextType | undefined) {
+    onError: (error: Error, variables: MutateFileVersionVariables, context: FileMutationContextType | undefined) => {
       if (context?.file) {
         updateCacheItems(
           queryClient,
@@ -78,8 +78,8 @@ export function getFileVersionRestoreMutationOptions(weavy: WeavyType, app: AppT
         (context as FileMutationContextType).status.text = error.message;
       });
     },
-    onSettled() {
-      queryClient.invalidateQueries({ queryKey: fileVersionKey });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: fileVersionKey });
     },
   };
 
@@ -114,7 +114,7 @@ export function getFileVersionDeleteMutationOptions(weavy: WeavyType, app: AppTy
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
     },
-    onMutate: async (variables: MutateFileVersionVariables) => {
+    onMutate: (variables: MutateFileVersionVariables) => {
       const versionPredicate = (item: FileType) =>
         item.id === variables.versionFile.id && item.rev === variables.versionFile.rev;
       updateCacheItem(queryClient, fileVersionKey, versionPredicate, (existingFile: FileType) =>
@@ -126,7 +126,7 @@ export function getFileVersionDeleteMutationOptions(weavy: WeavyType, app: AppTy
         item.id === variables.versionFile.id && item.rev === variables.versionFile.rev;
       removeCacheItem(queryClient, fileVersionKey, versionPredicate);
     },
-    onError(error: Error, variables: MutateFileVersionVariables) {
+    onError: (error: Error, variables: MutateFileVersionVariables) => {
       // Show in error list instead?
       const versionPredicate = (item: FileType) =>
         item.id === variables.versionFile.id && item.rev === variables.versionFile.rev;

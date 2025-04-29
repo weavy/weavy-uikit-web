@@ -10,6 +10,13 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { NotificationType } from "../types/notifications.types";
 import { dispatchLinkEvent, getNotificationText } from "../utils/notifications";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import {
+  NotificationCloseEventType,
+  NotificationHideEventType,
+  NotificationMarkEventType,
+  NotificationSelectEventType,
+} from "../types/notifications.events";
+import { NamedEvent } from "../types/generic.types";
 
 import rebootCss from "../scss/components/base/reboot.scss";
 import itemCss from "../scss/components/item.scss";
@@ -39,7 +46,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
   notification!: NotificationType;
 
   private dispatchSelect(_e: Event) {
-    const event = new CustomEvent("select", {
+    const event: NotificationSelectEventType = new (CustomEvent as NamedEvent)("select", {
       detail: { notificationId: this.notificationId },
     });
     return this.dispatchEvent(event);
@@ -49,7 +56,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
     e.stopPropagation();
     // Note: comparing read with unread
     if (markAsRead === Boolean(this.notification.is_unread)) {
-      const event = new CustomEvent("mark", {
+      const event: NotificationMarkEventType = new (CustomEvent as NamedEvent)("mark", {
         detail: { notificationId: this.notificationId, markAsRead: markAsRead },
       });
       return this.dispatchEvent(event);
@@ -59,7 +66,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
 
   private dispatchHide() {
     if (this.standalone) {
-      const event = new CustomEvent("hide", {
+      const event: NotificationHideEventType = new (CustomEvent as NamedEvent)("hide", {
         bubbles: true,
       });
       return this.dispatchEvent(event);
@@ -69,7 +76,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
 
   private dispatchClose() {
     if (this.standalone) {
-      const event = new CustomEvent("close", {
+      const event: NotificationCloseEventType = new (CustomEvent as NamedEvent)("close", {
         bubbles: true,
       });
       return this.dispatchEvent(event);

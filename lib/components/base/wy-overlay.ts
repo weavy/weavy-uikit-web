@@ -52,7 +52,7 @@ export default class WyOverlay extends LitElement {
     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
   }
 
-  override willUpdate(changedProperties: PropertyValues<this>) {
+  override willUpdate(changedProperties: PropertyValues<this>): void {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("show")) {
@@ -99,7 +99,7 @@ export default class WyOverlay extends LitElement {
   }
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
-    this.viewportRef.value?.addEventListener("close", (e: Event) => this.handleClose(e as Event))
+    this.viewportRef.value?.addEventListener("close", (e: Event) => this.handleClose(e))
   }
 
   override disconnectedCallback(): void {

@@ -69,7 +69,7 @@ export class WyMessageEditor extends WyEditor {
               : nothing}
             ${this.componentFeatures?.allowsFeature(Feature.Polls)
               ? html`
-                  <wy-dropdown-item @click=${this.openPolls} title=${msg("Poll")}>
+                  <wy-dropdown-item @click=${() => this.openPolls()} title=${msg("Poll")}>
                     <wy-icon name="poll"></wy-icon>
                     <span>${msg("Poll")}</span>
                   </wy-dropdown-item>
@@ -113,7 +113,7 @@ export class WyMessageEditor extends WyEditor {
         kind="icon"
         color="primary-text"
         title=${msg("Send", { desc: "Button action to send" })}
-        @click="${this.submit}"
+        @click="${() => this.submit()}"
         ?disabled=${this.disabled}
       >
         <wy-icon name="send"></wy-icon>

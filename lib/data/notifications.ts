@@ -1,6 +1,4 @@
 import {
-  QueryFunctionContext,
-  QueryKey,
   InfiniteQueryObserverOptions,
   InfiniteData,
   MutationObserver,
@@ -33,7 +31,7 @@ export function getNotificationsOptions(
     ...options,
     initialPageParam: 0,
     queryKey: ["notifications", "list", appIdOrUid, type],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
+    queryFn: async (opt) => {
       const queryParams = new URLSearchParams({
         skip: opt.pageParam?.toString() || "0",
         type: type,
@@ -42,7 +40,7 @@ export function getNotificationsOptions(
       const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
       const response = await weavy.fetch(url);
-      const result = await response.json();
+      const result = await response.json() as NotificationsResultType;
       result.data = result.data || [];
       return result;
     },
@@ -80,7 +78,7 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
       }
       await weavy.fetch(url, { method: "PUT" });
     },
-    onMutate: async (_variables: MutateMarkNotificationsVariables) => {
+    onMutate: (_variables: MutateMarkNotificationsVariables) => {
       const changedNotifications: Partial<NotificationType>[] = [];
       updateCacheItems<NotificationType>(
         weavy.queryClient,
@@ -122,15 +120,15 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
 
       return { changedNotifications } as MutateMarkNotificationContext;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (appIdOrUid) {
-        weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
+        await weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
       }
     },
-    onSettled: () => {
-      weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "list"], exact: false });
-      weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
-      weavy.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
+    onSettled: async () => {
+      await weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "list"], exact: false });
+      await weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
+      await weavy.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
     },
     onError: (error: Error, _variables: MutateMarkNotificationsVariables, _context?: MutateMarkNotificationContext) => {
       console.error(error.message);
@@ -150,7 +148,7 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
       const url = `/api/notifications/${notificationId}/mark`;
       await weavy.fetch(url, { method: markAsRead ? "PUT" : "DELETE" });
     },
-    onMutate: async (variables: MutateMarkNotificationVariables) => {
+    onMutate: (variables: MutateMarkNotificationVariables) => {
       const itemsChanged: Map<number, NotificationType> = new Map();
       updateCacheItems<NotificationType>(
         weavy.queryClient,
@@ -187,7 +185,7 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
         });
       }
     },
-    onError: (error: Error, variables: MutateMarkNotificationVariables) => {
+    onError: async (error: Error, variables: MutateMarkNotificationVariables) => {
       updateCacheItems<NotificationType>(
         weavy.queryClient,
         { queryKey: ["notifications", "list"], exact: false },
@@ -197,8 +195,8 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
         }
       );
 
-      weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
-      weavy.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
+      await weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "badge"], exact: false });
+      await weavy.queryClient.invalidateQueries({ queryKey: ["apps", "notifications", "badge"], exact: false });
     },
   };
 

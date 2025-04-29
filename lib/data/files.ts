@@ -1,4 +1,4 @@
-import { QueryFunctionContext, QueryKey, InfiniteQueryObserverOptions, InfiniteData } from "@tanstack/query-core";
+import { InfiniteQueryObserverOptions, InfiniteData } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import { FileOrderType, FilesResultType } from "../types/files.types";
 //import { addToQueryData, findAnyExistingItem, updateQueryData } from "../utils/query-cache";
@@ -21,8 +21,8 @@ export function getInfiniteFileListOptions(
     ...options,
     queryKey: filesKey,
     initialPageParam: 0,
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
-      const skip = opt.pageParam;
+    queryFn: async (opt) => {
+      const skip = opt.pageParam as number;
       const trashed: boolean = !!filters?.trashed;
       const orderParam = filters.order ? filters.order.by + (filters.order.descending ? "+desc" : "") : "";
       let url = "/api/apps/" + appId + "/files?skip=" + skip + "&order_by=" + orderParam;
@@ -31,7 +31,7 @@ export function getInfiniteFileListOptions(
       }
 
       const response = await weavy.fetch(url);
-      return await response.json();
+      return await response.json() as FilesResultType;
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.end && lastPage.end < lastPage.count) {

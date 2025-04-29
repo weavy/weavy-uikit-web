@@ -16,6 +16,8 @@ import filesCss from "../scss/all.scss"
 import "./base/wy-icon";
 import "./wy-file-menu";
 import "./base/wy-spinner";
+import { FileDeleteForeverEventType, FileEditNameEventType, FileRenameEventType, FileRestoreEventType, FileSubscribeEventType, FileTrashEventType } from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-file-item")
 export class WyFileItem extends LitElement {
@@ -44,32 +46,32 @@ export class WyFileItem extends LitElement {
   isRenaming: boolean = false;
 
   dispatchEditName(file: FileType) {
-    const event = new CustomEvent("edit-name", { detail: { file } });
+    const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", { detail: { file } });
     return this.dispatchEvent(event);
   }
 
   dispatchRename(file: FileType, name: string) {
-    const event = new CustomEvent("rename", { detail: { file, name } });
+    const event: FileRenameEventType = new (CustomEvent as NamedEvent)("rename", { detail: { file, name } });
     return this.dispatchEvent(event);
   }
 
   dispatchTrash(file: FileType) {
-    const event = new CustomEvent("trash", { detail: { file } });
+    const event: FileTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { file } });
     return this.dispatchEvent(event);
   }
 
   dispatchRestore(file: FileType) {
-    const event = new CustomEvent("restore", { detail: { file } });
+    const event: FileRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { file } });
     return this.dispatchEvent(event);
   }
 
   dispatchDeleteForever(file: FileType) {
-    const event = new CustomEvent("delete-forever", { detail: { file } });
+    const event: FileDeleteForeverEventType = new (CustomEvent as NamedEvent)("delete-forever", { detail: { file } });
     return this.dispatchEvent(event);
   }
 
   dispatchSubscribe(file: FileType, subscribe: boolean) {
-    const event = new CustomEvent("subscribe", { detail: { file, subscribe } });
+    const event: FileSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", { detail: { file, subscribe } });
     return this.dispatchEvent(event);
   }
 
@@ -161,11 +163,11 @@ export class WyFileItem extends LitElement {
           <slot name="actions">
             <wy-file-menu
               .file=${file}
-              @edit-name=${(e: CustomEvent) => this.dispatchEditName(e.detail.file)}
-              @trash=${(e: CustomEvent) => this.dispatchTrash(e.detail.file)}
-              @restore=${(e: CustomEvent) => this.dispatchRestore(e.detail.file)}
-              @delete-forever=${(e: CustomEvent) => this.dispatchDeleteForever(e.detail.file)}
-              @subscribe=${(e: CustomEvent) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}>
+              @edit-name=${(e: FileEditNameEventType) => this.dispatchEditName(e.detail.file)}
+              @trash=${(e: FileTrashEventType) => this.dispatchTrash(e.detail.file)}
+              @restore=${(e: FileRestoreEventType) => this.dispatchRestore(e.detail.file)}
+              @delete-forever=${(e: FileDeleteForeverEventType) => this.dispatchDeleteForever(e.detail.file)}
+              @subscribe=${(e: FileSubscribeEventType) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}>
             </wy-file-menu>
           </slot>
         </div>

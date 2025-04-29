@@ -4,18 +4,18 @@ import { DataRefType } from "../types/refs.types";
 /**
  * Returns an URL if the object is an URL or a string that is an URL.
  *
- * @param item - string, URL or any object with .toString() function.
+ * @param item - string or URL.
  * @returns
  */
 export function asURL(item: unknown) {
   if (item instanceof URL) {
-    return item as URL;
+    return item;
   } else {
     try {
-      if (!item || typeof item.toString !== "function") {
+      if (!item || typeof item !== "string") {
         throw new Error("Unparsable string");
       }
-      return new URL(item.toString());
+      return new URL(item);
     } catch {
       return undefined;
     }

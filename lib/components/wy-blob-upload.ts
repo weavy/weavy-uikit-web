@@ -9,9 +9,14 @@ import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
+import { BlobUploadedEventType } from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
 import "./base/wy-button";
 
+/**
+ * @fires {BlobUploadedEventType} blob-uploaded
+ */
 @customElement("wy-blob-upload")
 @localized()
 export default class WyBlobUpload extends WeavyComponentConsumerMixin(LitElement) {
@@ -45,7 +50,7 @@ export default class WyBlobUpload extends WeavyComponentConsumerMixin(LitElement
       const file = files[0];
       const fileProps = { file: file };
 
-      this.uploadBlobMutation.trackMutation(getSimpleUploadBlobMutationOptions(this.weavy));
+      await this.uploadBlobMutation.trackMutation(getSimpleUploadBlobMutationOptions(this.weavy));
 
       const blob = await this.uploadBlobMutation.mutate(fileProps);
 
@@ -53,7 +58,7 @@ export default class WyBlobUpload extends WeavyComponentConsumerMixin(LitElement
         input.value = "";
       }
 
-      const event = new CustomEvent("blob-uploaded", { detail: { blob: blob } });
+      const event: BlobUploadedEventType = new (CustomEvent as NamedEvent)("blob-uploaded", { detail: { blob: blob } });
       this.dispatchEvent(event);
     }
   }

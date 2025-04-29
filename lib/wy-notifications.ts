@@ -46,8 +46,8 @@ export class WyNotifications extends WeavyComponent {
   /**
    * Mark all events as read.
    */
-  markAllAsRead() {
-    this.notificationsRef.value?.markAllAsRead();
+  async markAllAsRead() {
+    await this.notificationsRef.value?.markAllAsRead();
   }
 
   override render() {

@@ -13,11 +13,11 @@ export function getPostsOptions(
     initialPageParam: 0,
     queryKey: ["posts", appId],
     queryFn: async (opt) => {
-      const skip = opt.pageParam;
+      const skip = opt.pageParam as number;
       const url = "/api/apps/" + appId + "/posts?order_by=id+desc&skip=" + skip;
 
       const response = await weavy.fetch(url);
-      const result = await response.json();
+      const result = await response.json() as PostsResultType;
       result.data = result.data || [];
       return result;
     },
@@ -48,10 +48,10 @@ export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: Muta
           embed_id: variables.embed || null,
         }),
       });
-      return response.json();
+      return await response.json() as PostType;
     },
     mutationKey: mutationKey,
-    onMutate: async (variables: MutatePostProps) => {
+    onMutate: (variables: MutatePostProps) => {
       updateCacheItem(weavy.queryClient, ["posts", variables.appId], variables.id, (item: PostType) => {
         item.text = variables.text;
         item.html = variables.text;
@@ -95,7 +95,7 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
           embed_id: variables.embed,
         }),
       });
-      return response.json();
+      return await response.json() as PostType;
     },
     mutationKey: mutationKey,
     onMutate: async (variables: MutatePostProps) => {

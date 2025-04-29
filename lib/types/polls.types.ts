@@ -6,6 +6,8 @@ export type PollMutationContextType = object;
 
 export type PollType = MsgType & {}
 
+export type PollParentTypes = "posts" | "comments" | "messages";
+
 export type PollOptionType = {
   id: number | null;
   text: string;

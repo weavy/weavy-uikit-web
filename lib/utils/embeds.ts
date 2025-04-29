@@ -29,7 +29,7 @@ async function fetchEmbed(url: string, weavy: WeavyType) {
       throw new Error();
     }
 
-    embed = await response.json();
+    embed = await response.json() as EmbedType;
     delete candidates[url];
     embeds = [...embeds, url];
   } catch {
@@ -53,7 +53,7 @@ export const initEmbeds = (urls: string[]) => {
   embeds = urls;
 };
 
-export const getEmbeds = async (content: string, callback: (embed: EmbedType) => void, weavy: WeavyType) => {
+export const getEmbeds = (content: string, callback: (embed: EmbedType) => void, weavy: WeavyType) => {
   let matches = content.match(regexp)?.map((match) => match) || null;
 
   if (matches !== null) {

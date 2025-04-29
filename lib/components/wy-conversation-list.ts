@@ -31,6 +31,15 @@ import { RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyProps } from "../types/weavy.types";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import {
+  LeaveEventType,
+  PinEventType,
+  RemoveEventType,
+  SelectedEventType,
+  StarEventType,
+  TrashEventType,
+} from "../types/app.events";
+import { MessagesMarkEventType } from "../types/messages.events";
 
 import chatCss from "../scss/all.scss";
 import pagerStyles from "../scss/components/pager.scss";
@@ -41,6 +50,7 @@ import "./base/wy-presence";
 import "./base/wy-avatar";
 import "./wy-empty";
 import "./base/wy-spinner";
+import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-conversation-list")
 @localized()
@@ -52,7 +62,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
         position: relative;
       }
     `,
-    pagerStyles
+    pagerStyles,
   ];
   protected exportParts = new ShadowPartsController(this);
 
@@ -76,7 +86,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
 
   private dispatchSelected(id: number | undefined) {
     this.conversationId = id;
-    const event = new CustomEvent("conversation-selected", { detail: { id: id } });
+    const event: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: id } });
     return this.dispatchEvent(event);
   }
 
@@ -94,7 +104,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
   private pagerRef: Ref<HTMLElement> = createRef();
 
   private handleRefresh = () => {
-    this.conversationsQuery.result.refetch();
+    void this.conversationsQuery.result.refetch();
   };
 
   private handlePresenceChange = (data: RealtimePresenceEventType) => {
@@ -112,11 +122,10 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
     const updateMembersInApps = (item: AppType) => {
       const members = item.members.data ?? [];
       members.forEach((m) => {
-        m.presence = (data as number[]).indexOf(m.id) != -1 ? "active" : "away";
+        m.presence = data.indexOf(m.id) != -1 ? "active" : "away";
       });
       item.members.data = members;
     };
-
 
     updateCacheItems(
       this.weavy.queryClient,
@@ -126,7 +135,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
     );
   };
 
-  private async handleMark(appId: number, messageId: number) {
+  private async handleMark(appId: number, messageId?: number | null) {
     await this.markConversationMutation?.mutate({ appId, messageId, userId: this.user?.id });
   }
 
@@ -142,41 +151,49 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
     const user = await this.whenUser();
     await this.leaveConversationMutation?.mutate({ appId, members: [user.id] });
     this.dispatchSelected(undefined);
-    this.conversationsQuery.result.refetch();
+    void this.conversationsQuery.result.refetch();
   }
 
   private async handleRemoveConversation(appId: number) {
     await this.removeConversationMutation?.mutate({ appId });
     this.dispatchSelected(undefined);
-    this.conversationsQuery.result.refetch();
+    void this.conversationsQuery.result.refetch();
   }
 
   private async handleTrashConversation(appId: number) {
     await this.trashConversationMutation?.mutate({ appId });
     this.dispatchSelected(undefined);
-    this.conversationsQuery.result.refetch();
+    void this.conversationsQuery.result.refetch();
   }
 
   private throttledSearch = throttle(
-    async () => {
+    () => {
       this.searchText = this.inputRef.value?.value || "";
     },
     250,
     { leading: false, trailing: true }
   );
 
-  private async clear() {
+  private clear() {
     this.searchText = "";
   }
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("conversationTypes")) && this.weavy) {
-      this.conversationsQuery.trackInfiniteQuery(
-        getAppListOptions(this.weavy, {}, this.conversationTypes, this.bot, () => this.searchText, "pinned_at desc,rev desc", false)
+      await this.conversationsQuery.trackInfiniteQuery(
+        getAppListOptions(
+          this.weavy,
+          {},
+          this.conversationTypes,
+          this.bot,
+          () => this.searchText,
+          "pinned_at desc,rev desc",
+          false
+        )
       );
 
       this.markConversationMutation = getMarkConversationMutation(this.weavy);
@@ -189,16 +206,16 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
       this.#unsubscribeToRealtime?.();
 
       // realtime
-      this.weavy.subscribe(null, "app_created", this.handleRefresh);
-      this.weavy.subscribe(null, "message_created", this.handleRefresh);
-      this.weavy.subscribe(null, "member_added", this.handleRefresh);
-      this.weavy.subscribe(null, "online", this.handlePresenceChange);
+      void this.weavy.subscribe(null, "app_created", this.handleRefresh);
+      void this.weavy.subscribe(null, "message_created", this.handleRefresh);
+      void this.weavy.subscribe(null, "member_added", this.handleRefresh);
+      void this.weavy.subscribe(null, "online", this.handlePresenceChange);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(null, "app_created", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "message_created", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "member_added", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
+        void this.weavy?.unsubscribe(null, "app_created", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "message_created", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "member_added", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
         this.#unsubscribeToRealtime = undefined;
       };
     }
@@ -243,13 +260,13 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
               .pinned=${conversation.is_pinned}
               .type=${conversation.type}
               .selected=${this.conversationId == conversation.id}
-              @selected=${(e: CustomEvent) => this.dispatchSelected(e.detail.id)}
-              @mark=${(e: CustomEvent) => this.handleMark(e.detail.id, e.detail.messageId)}
-              @star=${(e: CustomEvent) => this.handleStar(e.detail.id, e.detail.star)}
-              @pin=${(e: CustomEvent) => this.handlePin(e.detail.id, e.detail.pin)}
-              @leave=${(e: CustomEvent) => this.handleLeaveConversation(e.detail.id)}
-              @remove=${(e: CustomEvent) => this.handleRemoveConversation(e.detail.id)}
-              @trash=${(e: CustomEvent) => this.handleTrashConversation(e.detail.id)}
+              @selected=${(e: SelectedEventType) => this.dispatchSelected(e.detail.id)}
+              @mark=${(e: MessagesMarkEventType) => this.handleMark(e.detail.id, e.detail.messageId)}
+              @star=${(e: StarEventType) => this.handleStar(e.detail.id, e.detail.star)}
+              @pin=${(e: PinEventType) => this.handlePin(e.detail.id, e.detail.pin)}
+              @leave=${(e: LeaveEventType) => this.handleLeaveConversation(e.detail.id)}
+              @remove=${(e: RemoveEventType) => this.handleRemoveConversation(e.detail.id)}
+              @trash=${(e: TrashEventType) => this.handleTrashConversation(e.detail.id)}
             ></wy-conversation-list-item>`,
           ];
         }
@@ -276,12 +293,10 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
                         .size=${24}
                       ></wy-avatar>
                     `}
-                <div class="wy-appbar-text"
-                  >${this.name ?? (this.bot ? this.avatarUser?.name : msg("Messenger"))}</div
-                >
+                <div class="wy-appbar-text">${this.name ?? (this.bot ? this.avatarUser?.name : msg("Messenger"))}</div>
                 <wy-conversation-new
                   .bot=${this.bot}
-                  @selected=${(e: CustomEvent) => this.dispatchSelected(e.detail.id)}
+                  @selected=${(e: SelectedEventType) => this.dispatchSelected(e.detail.id)}
                 ></wy-conversation-new>
               </nav>
             </header>
@@ -300,7 +315,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
                           @keyup=${inputConsume}
                           placeholder=${msg("Search for conversations...")}
                         />
-                        <wy-button type="reset" @click=${this.clear} kind="icon" class="wy-input-group-button-icon">
+                        <wy-button type="reset" @click=${() => this.clear()} kind="icon" class="wy-input-group-button-icon">
                           <wy-icon name="close-circle"></wy-icon>
                         </wy-button>
                         <wy-button kind="icon" class="wy-input-group-button-icon">

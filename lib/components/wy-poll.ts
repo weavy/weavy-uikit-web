@@ -3,6 +3,8 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { PollOptionType } from "../types/polls.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { PollVoteEventType } from "../types/polls.events";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss"
 
@@ -24,8 +26,8 @@ export default class WyPoll extends LitElement {
   @property({ type: Array, attribute: false })
   pollOptions: PollOptionType[] = [];
 
-  private dispatchVote(id: number) {
-    const event = new CustomEvent("vote", { detail: { id: id } });
+  private dispatchVote(optionId: number) {
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId } });
     return this.dispatchEvent(event);
   }
 
@@ -35,10 +37,10 @@ export default class WyPoll extends LitElement {
     return html`
       <div class="wy-poll">
         ${this.pollOptions.map(
-          (o: PollOptionType) =>
+          (option: PollOptionType) =>
             html`<wy-poll-option
-              @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}
-              .option=${o}
+              @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
+              .option=${option}
               .totalVotes=${totalVotes}></wy-poll-option>`
         )}
       </div>

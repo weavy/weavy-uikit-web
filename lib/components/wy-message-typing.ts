@@ -20,7 +20,7 @@ import "./base/wy-avatar";
 /**
  * Shows a typing message whenever a member is typing
  * 
- * @fires typing
+   * @fires {TypingEventType} typing - Count of typers when someone is typing
  */
 @customElement("wy-message-typing")
 export default class WyMessageTyping extends LitElement {
@@ -29,7 +29,7 @@ export default class WyMessageTyping extends LitElement {
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * @fires typing
+   * @fires {TypingEventType} typing - Count of typers when someone is typing
    */
   protected typing = new TypingController(this);
 
@@ -62,6 +62,8 @@ export default class WyMessageTyping extends LitElement {
   private typingTime?: Date;
 
   protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("conversationId")) {
       this.typing.appId = this.conversationId;
     }

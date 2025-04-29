@@ -42,7 +42,7 @@ export class WyComments extends WeavyComponent {
   static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
 
   override componentType = AppTypeGuid.Comments;
-  
+
   override componentFeatures = new ComponentFeatures({
     // All available features as enabled/disabled by default
     [Feature.Attachments]: true,
@@ -62,17 +62,11 @@ export class WyComments extends WeavyComponent {
   protected theme = new ThemeController(this, WyComments.styles);
 
   override render() {
-    return this.app
-      ? html`
-          <wy-buttons floating reverse>
-            <wy-notification-button-list></wy-notification-button-list>
-          </wy-buttons>
-          <wy-comment-list parentId=${this.app.id} .location=${"apps"}></wy-comment-list>
-        `
-      : html`
-          <wy-empty>
-            <wy-spinner padded reveal></wy-spinner>
-          </wy-empty>
-        `;
+    return html`
+      <wy-buttons floating reverse>
+        <wy-notification-button-list></wy-notification-button-list>
+      </wy-buttons>
+      <wy-comment-list parentId=${this.app?.id} .location=${"apps"}></wy-comment-list>
+    `;
   }
 }

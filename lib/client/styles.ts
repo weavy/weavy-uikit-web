@@ -13,6 +13,7 @@ export const WeavyStylesMixin = <TBase extends Constructor<WeavyClient>>(Base: T
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
       adoptGlobalStyles([definitionStyles, colorModes]);

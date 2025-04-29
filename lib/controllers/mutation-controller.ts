@@ -32,7 +32,7 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
     this.whenContext = new Promise((r) => this.resolveContext = r);
     this.whenObserver = new Promise((r) => this.resolveObserver = r);
 
-    this.setContext();
+    void this.setContext();
   }
 
   async setContext() {

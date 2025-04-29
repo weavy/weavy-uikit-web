@@ -1,6 +1,4 @@
 import type {
-  QueryFunctionContext,
-  QueryKey,
   InfiniteQueryObserverOptions,
   MutationKey,
   InfiniteData,
@@ -23,12 +21,12 @@ export function getCommentsOptions(
     ...options,
     initialPageParam: 0,
     queryKey: [type, parentId, "comments"],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
-      const skip = opt.pageParam;
+    queryFn: async (opt) => {
+      const skip = opt.pageParam as number;
       const url = "/api/" + type + "/" + parentId + "/comments?order_by=id&skip=" + skip;
 
       const response = await weavy.fetch(url);
-      const result = await response.json();
+      const result = await response.json() as CommentsResultType;
       result.data = result.data || [];
 
       return result;
@@ -60,7 +58,7 @@ export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: M
           embed_id: variables.embedId || null,
         }),
       });
-      return response.json();
+      return await response.json() as CommentType;
     },
     mutationKey: mutationKey,
     onSuccess: (data: CommentType, variables: MutateCommentProps) => {
@@ -102,7 +100,7 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
           embed_id: variables.embedId,
         }),
       });
-      return response.json();
+      return await response.json() as CommentType;
     },
     onMutate: async (variables: MutateCommentProps) => {
       

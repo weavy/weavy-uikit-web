@@ -37,7 +37,7 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
         throw new Error(`Could not ${subscribe ? "subscribe" : "unsubscribe"} to ${file.name}.`);
       }
     },
-    onMutate: async (variables: MutateFileSubscribeVariables) => {
+    onMutate: (variables: MutateFileSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
         Object.assign(existingFile, { is_subscribed: variables.subscribe, status: "pending" })
       );
@@ -55,7 +55,7 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
         (context as FileMutationContextType).status.state = "ok";
       });
     },
-    onError(error: Error, variables: MutateFileSubscribeVariables) {
+    onError: (error: Error, variables: MutateFileSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
         Object.assign(existingFile, { is_subscribed: variables.file.is_subscribed, status: "error" })
       );

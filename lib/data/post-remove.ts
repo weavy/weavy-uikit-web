@@ -24,7 +24,7 @@ export function getTrashPostMutationOptions(weavy: WeavyType, app: AppType) {
         throw new Error();
       }
     },
-    onMutate: async (variables: MutatePostVariables) => {
+    onMutate: (variables: MutatePostVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
@@ -62,7 +62,7 @@ export function getRestorePostMutationOptions(weavy: WeavyType, app: AppType) {
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
     },
-    onMutate: async (variables: MutatePostVariables) => {
+    onMutate: (variables: MutatePostVariables) => {
       updateCacheItems(
         queryClient,
         { queryKey: options.mutationKey, exact: false },

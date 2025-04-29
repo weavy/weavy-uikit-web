@@ -14,8 +14,10 @@ export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>
     // SHOULD BE APPLIED LAST TO ENSURE EVERYTHING IS SET BEFORE CONTEXT GETS PROVIDED
 
     #hostContextProvider?: ContextProvider<typeof WeavyContext>;
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
       // Context root

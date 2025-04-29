@@ -13,7 +13,7 @@ import { rules as litA11yRules, configs as litA11yConfigs } from "eslint-plugin-
 export default defineConfig([
   globalIgnores(["**/dist/"]),
   eslint.configs.recommended,
-  ...ts_eslint.configs.recommended,
+  ...ts_eslint.configs.recommendedTypeChecked,
   wc.configs["flat/recommended"],
   lit.configs["flat/recommended"],
   ...tanstackQuery.configs["flat/recommended"],
@@ -32,10 +32,15 @@ export default defineConfig([
       },
       ecmaVersion: "latest",
       sourceType: "module",
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
 
     rules: {
       ...litA11yConfigs.recommended.rules,
+      "@typescript-eslint/no-unsafe-argument": "warn",
       "no-prototype-builtins": "off",
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],
       "@typescript-eslint/no-this-alias": "off",
@@ -45,6 +50,8 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/unbound-method": "warn",
+      "@typescript-eslint/no-for-in-array": "warn",
 
       "@typescript-eslint/no-empty-object-type": [
         "error",
@@ -65,6 +72,15 @@ export default defineConfig([
         {
           argsIgnorePattern: "^_",
         },
+      ],
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        {
+          checksVoidReturn: {
+            arguments: false,
+            inheritedMethods: false
+          }
+        }
       ],
 
       "@tanstack/query/exhaustive-deps": "warn",

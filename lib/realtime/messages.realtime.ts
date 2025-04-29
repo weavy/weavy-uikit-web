@@ -10,7 +10,7 @@ import { RealtimeMessageEventType } from "../types/realtime.types";
  * @param {RealtimeMessageEventType} realtimeEvent 
  * @returns 
  */
-export async function handleRealtimeMessage (this: WeavyComponent, realtimeEvent: RealtimeMessageEventType) {
+export function handleRealtimeMessage (this: WeavyComponent, realtimeEvent: RealtimeMessageEventType) {
     if (!this.weavy || !this.app) {
       return;
     }

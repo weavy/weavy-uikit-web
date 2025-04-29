@@ -288,8 +288,7 @@ export const adoptGlobalStyles = (
   } else {
     for (const s of styles) {
       const style = document.createElement('style');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nonce = (global as any)['litNonce'];
+      const nonce = (global as unknown as { litNonce: string})['litNonce'];
       if (nonce !== undefined) {
         style.setAttribute('nonce', nonce);
       }

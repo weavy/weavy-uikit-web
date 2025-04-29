@@ -51,7 +51,9 @@ export class WyToasts extends LitElement {
     `;
   }
 
-  override willUpdate(changedProperties: PropertyValues<this>) {
+  override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("show")) {
       try {
         if (this.show) {
@@ -119,7 +121,9 @@ export class WyToast extends LitElement {
     this.dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
   }
 
-  override async willUpdate(changedProperties: PropertyValues<this>) {
+  override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("show")) {
       if (this.timeout) {
         window.clearTimeout(this.timeout);

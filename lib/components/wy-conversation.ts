@@ -49,6 +49,9 @@ import { MetadataType } from "../types/lists.types";
 import { ContextDataType, DataRefType } from "../types/refs.types";
 import { getContextDataRef } from "../utils/contextdata";
 import { getTitleFromText, truncateText } from "../utils/strings";
+import { TypingEventType } from "../types/typing.events";
+import { EditorSubmitEventType } from "../types/editor.events";
+import { PollVoteEventType } from "../types/polls.events";
 
 import chatCss from "../scss/all.scss";
 import footerbarCss from "../scss/components/footerbar.scss";
@@ -162,21 +165,21 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
       requestAnimationFrame(() => {
         keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
       });
-      scrollParentToBottom(this.bottomRef.value, smooth);
+      await scrollParentToBottom(this.bottomRef.value, smooth);
     }
   }
 
-  protected async handleTyping(e: CustomEvent) {
+  protected handleTyping(e: TypingEventType) {
     this.isTyping = Boolean(e.detail.count);
 
     if (this.isTyping && this.isAtBottom) {
       requestAnimationFrame(() => {
-        this.scrollToBottom(true);
+        void this.scrollToBottom(true);
       });
     }
   }
 
-  protected async handleSubmit(e: CustomEvent) {
+  protected async handleSubmit(e: EditorSubmitEventType) {
     // TODO: refactor outside of conv?
 
     if (!this.user) {
@@ -195,8 +198,8 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
 
     if (this.contextInstructions) {
       initialPayload.metadata = {
-        instructions: this.contextInstructions
-      }
+        instructions: this.contextInstructions,
+      };
     }
 
     if (!this.conversation && this.weavy && this.createConversation) {
@@ -218,7 +221,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     this.showNewMessages = false;
 
     requestAnimationFrame(() => {
-      this.scrollToBottom();
+      void this.scrollToBottom();
     });
 
     this.isCreatingConversation = false;
@@ -226,9 +229,11 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     return messageData;
   }
 
-  setEditorText(text: string) {
+  async setEditorText(text: string) {
     if (this.editorRef.value) {
       this.editorRef.value.text = text;
+      await this.editorRef.value.updateComplete;
+      await new Promise((r) => requestAnimationFrame(r));
     }
   }
 
@@ -319,9 +324,9 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     if (realtimeEvent.actor.id !== this.user.id) {
       if (this.isAtBottom) {
         // mark as read
-        this.markAsRead(realtimeEvent.message.id);
+        void this.markAsRead(realtimeEvent.message.id);
         requestAnimationFrame(() => {
-          this.scrollToBottom();
+          void this.scrollToBottom();
         });
       } else {
         // set is_unread in cache
@@ -412,7 +417,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     }
 
     if (this.conversation && this.conversation.last_message) {
-      this.markConversationMutation?.mutate({
+      await this.markConversationMutation?.mutate({
         appId: this.conversation.id,
         messageId: messageId ?? this.conversation.last_message.id,
         userId: this.user?.id,
@@ -422,13 +427,13 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
 
   protected markAsReadHandler = () => {
     if (!document.hidden && this.isAtBottom) {
-      this.markAsRead();
+      void this.markAsRead();
     }
   };
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     // if context updated
@@ -455,15 +460,15 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
       }
 
       if (this.conversationId && this.conversationId > 0) {
-        this.membersQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}));
-        this.botsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
-
         await this.messagesQuery.trackInfiniteQuery(getMessagesOptions(this.weavy, this.conversationId));
         await this.addMessageMutation.trackMutation(
           getAddMessageMutationOptions(this.weavy, ["messages", this.conversationId])
         );
 
-        this.pollMutation = getPollMutation(this.weavy, ["messages", this.conversationId]);
+        await this.membersQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}));
+        await this.botsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
+
+        this.pollMutation = getPollMutation(this.weavy, this.conversationId);
 
         // set initial value of unread messages banner
         this.lastReadMessageId = undefined;
@@ -471,22 +476,22 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
 
         const subscribeGroup = `a${this.conversationId}`;
 
-        this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+        void this.weavy.subscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
 
         if (this.componentFeatures?.allowsFeature(Feature.Reactions)) {
-          this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-          this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+          void this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+          void this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
         }
 
         if (this.componentFeatures?.allowsFeature(Feature.Receipts)) {
-          this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
+          void this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
         }
 
         this.#unsubscribeToRealtime = () => {
-          this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
-          this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-          this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
-          this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
+          void this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
+          void this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+          void this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+          void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
@@ -535,7 +540,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
             (oldConversation?.last_message.id !== this.conversation?.last_message.id &&
               (this.shouldBeAtBottom || this.isAtBottom))
           ) {
-            this.markAsRead();
+            void this.markAsRead();
           }
         } else if (oldConversation?.id !== this.conversation?.id) {
           // hide new messages
@@ -565,13 +570,12 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     }
 
     // Update title
-    if (!this.conversation?.name && !isInfiniteResultDataEmpty(this.messagesQuery.result.data)) {
+    if (this.conversation && !this.conversation?.name && !isInfiniteResultDataEmpty(this.messagesQuery.result.data)) {
       const messages = getFlatInfiniteResultData(this.messagesQuery.result.data);
       // special handing of bot chat?
       const lastPlainMessage = messages.find((message) => message.plain);
-
       if (lastPlainMessage) {
-        this.setEmptyConversationTitle(getTitleFromText(lastPlainMessage.plain));
+        void this.setEmptyConversationTitle(getTitleFromText(lastPlainMessage.plain));
       }
     }
   }
@@ -640,12 +644,14 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
               .unreadMarkerShow=${this.showNewMessages}
-              @vote=${(e: CustomEvent) => {
-                this.pollMutation?.mutate({
-                  optionId: e.detail.id,
-                  parentType: e.detail.parentType,
-                  parentId: e.detail.parentId,
-                });
+              @vote=${(e: PollVoteEventType) => {
+                if (e.detail.parentType && e.detail.parentId) {
+                  void this.pollMutation?.mutate({
+                    optionId: e.detail.optionId,
+                    parentType: e.detail.parentType,
+                    parentId: e.detail.parentId,
+                  });
+                }
               }}
             >
               ${hasNextPage
@@ -658,7 +664,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
                 .isPrivateChat=${this.isPrivateChat()}
                 .members=${membersData?.data}
                 .bots=${botsData?.data}
-                @typing=${(e: CustomEvent) => this.handleTyping(e)}
+                @typing=${(e: TypingEventType) => this.handleTyping(e)}
               ></wy-message-typing>
             </wy-messages>
           `
@@ -667,7 +673,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
               <wy-empty class="wy-pane">
                 ${(isPending && this.conversationId) || this.isCreatingConversation
                   ? html`<wy-spinner overlay></wy-spinner>`
-                  : html` <slot name="empty">${msg("Start the conversation!")}</slot> `}
+                  : html` <slot name="empty">${this.conversationId ? msg("Start the conversation!") : nothing}</slot> `}
               </wy-empty>
             </div>
           `}
@@ -679,7 +685,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
           .contextDataRefs=${Array.from(this.contextDataRefs.values())}
           placeholder=${msg("Type a message...")}
           ?disabled=${this.conversation && !hasPermission(PermissionType.Create, this.conversation?.permissions)}
-          @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+          @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
         ></wy-message-editor>
       </div>
     `;
@@ -688,7 +694,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
   override updated() {
     if (this.shouldBeAtBottom) {
       requestAnimationFrame(() => {
-        this.scrollToBottom();
+        void this.scrollToBottom();
       });
     }
 
@@ -697,7 +703,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             if (!this.isTyping && this.conversation?.is_unread) {
-              this.markAsRead();
+              void this.markAsRead();
             }
           }
         });

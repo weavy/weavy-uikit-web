@@ -25,6 +25,8 @@ export default class WyTyping extends LitElement {
   userId?: number;
 
   protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("appId")) {
       this.typing.appId = this.appId;
     }

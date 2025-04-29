@@ -10,6 +10,8 @@ import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { PollVoteEventType } from "../types/polls.events";
+import { NamedEvent } from "../types/generic.types";
 
 import "./base/wy-sheet";
 import "./base/wy-avatar";
@@ -33,25 +35,25 @@ export default class WyPollOption extends WeavyComponentConsumerMixin(LitElement
 
   getVotesQuery = new QueryController<PollOptionType>(this);
 
-  protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+  protected override async updated(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     if (changedProperties.has("weavy") && this.weavy && this.option && this.option.id) {
-      this.getVotesQuery.trackQuery(getVotesOptions(this.weavy, this.option.id));
+      await this.getVotesQuery.trackQuery(getVotesOptions(this.weavy, this.option.id));
     }
   }
 
-  private dispatchVote(id?: number | null) {
-    if (!id) {
+  private dispatchVote(optionId?: number | null) {
+    if (!optionId) {
       return;
     }
 
-    const event = new CustomEvent("vote", { detail: { id: id } });
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId } });
     return this.dispatchEvent(event);
   }
 
   private openSheet(e: Event) {
     e.preventDefault();
     e.stopPropagation();
-    this.getVotesQuery.observer?.refetch();
+    void this.getVotesQuery.observer?.refetch();
     this.showSheet = !this.showSheet;
   }
 

@@ -15,7 +15,7 @@ export function createScroller(observeElement: HTMLElement, whenNext: () => Prom
   throwOnDomNotAvailable();
   whenNext ??= () => Promise.reject(new Error("No scroll function defined"));
 
-  const parentElement = reverse ? getScrollParent(observeElement) as HTMLElement : document.documentElement;
+  const parentElement = reverse ? getScrollParent(observeElement) : document.documentElement;
 
   // // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
   // if (parent instanceof HTMLElement && getComputedStyle(parent).overflowAnchor !== "none") {
@@ -76,9 +76,9 @@ export function createScroller(observeElement: HTMLElement, whenNext: () => Prom
               });
             };
 
-            whenNext().then(afterNext);
+            void whenNext().then(afterNext);
           } else {
-            whenNext().then(() => {
+            void whenNext().then(() => {
               requestAnimationFrame(() => (wait = false));
             });
           }

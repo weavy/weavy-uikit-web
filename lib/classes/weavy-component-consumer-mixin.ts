@@ -7,7 +7,7 @@ import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 
 import type { BotType, UserType } from "../types/users.types";
 import { type AppType, AppContext } from "../contexts/app-context";
-import { type EntityType, LinkContext } from "../contexts/link-context";
+import { type LinkType, LinkContext } from "../contexts/link-context";
 import { UserContext } from "../contexts/user-context";
 import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/features-context";
 import { WeavyComponentContextProps } from "./weavy-component";
@@ -30,7 +30,7 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
 
     @consume({ context: LinkContext, subscribe: true })
     @state()
-    link: EntityType | undefined;
+    link: LinkType | undefined;
 
     @consume({ context: WeavyComponentSettingsContext, subscribe: true })
     @state()
@@ -71,8 +71,8 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
       return await this.#whenComponentFeatures;
     }
 
-    #resolveLink?: (link: EntityType) => void;
-    #whenLink = new Promise<EntityType>((r) => {
+    #resolveLink?: (link: LinkType) => void;
+    #whenLink = new Promise<LinkType>((r) => {
       this.#resolveLink = r;
     });
     async whenLink() {
@@ -105,6 +105,7 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
     }
 
@@ -112,30 +113,72 @@ export const WeavyComponentConsumerMixin = <T extends Constructor<LitElement>>(B
       super.willUpdate(changedProperties);
 
       if (changedProperties.has("app") && this.app) {
+        if (changedProperties.get("app")) {
+          // reset promise
+          this.#whenApp = new Promise<AppType>((r) => {
+            this.#resolveApp = r;
+          });
+        }
         this.#resolveApp?.(this.app);
       }
 
       if (changedProperties.has("botUser") && this.botUser) {
+        if (changedProperties.get("botUser")) {
+          // reset promise
+          this.#whenBotUser = new Promise<BotType>((r) => {
+            this.#resolveBotUser = r;
+          });
+        }
         this.#resolveBotUser?.(this.botUser);
       }
 
       if (changedProperties.has("componentFeatures") && this.componentFeatures) {
+        if (changedProperties.get("componentFeatures")) {
+          // reset promise
+          this.#whenComponentFeatures = new Promise<ComponentFeaturePolicy>((r) => {
+            this.#resolveComponentFeatures = r;
+          });
+        }
         this.#resolveComponentFeatures?.(this.componentFeatures);
       }
 
       if (changedProperties.has("link") && this.link) {
+        if (changedProperties.get("link")) {
+          // reset promise
+          this.#whenLink = new Promise<LinkType>((r) => {
+            this.#resolveLink = r;
+          });
+        }
         this.#resolveLink?.(this.link);
       }
 
       if (changedProperties.has("settings") && this.settings) {
+        if (changedProperties.get("settings")) {
+          // reset promise
+          this.#whenSettings = new Promise<WeavyComponentSettingsType>((r) => {
+            this.#resolveSettings = r;
+          });
+        }
         this.#resolveSettings?.(this.settings);
       }
 
       if (changedProperties.has("user") && this.user) {
+        if (changedProperties.get("user")) {
+          // reset promise
+          this.#whenUser = new Promise<UserType>((r) => {
+            this.#resolveUser = r;
+          });
+        }
         this.#resolveUser?.(this.user);
       }
 
       if (changedProperties.has("weavy") && this.weavy) {
+        if (changedProperties.get("weavy")) {
+          // reset promise
+          this.#whenWeavy = new Promise<WeavyType>((r) => {
+            this.#resolveWeavy = r;
+          });
+        }
         this.#resolveWeavy?.(this.weavy);
       }
     }

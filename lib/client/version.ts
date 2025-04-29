@@ -12,11 +12,12 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
-      this.whenUrl().then(() => {
+      void this.whenUrl().then(() => {
         if (!this.isDestroyed) {
-          (this as this & WeavyType).checkVersion();
+          void (this as this & WeavyType).checkVersion();
         }
       });
     }

@@ -1,6 +1,6 @@
 import { customElement } from "./utils/decorators/custom-element";
 import { ThemeController } from "./controllers/theme-controller";
-import { html, nothing } from "lit";
+import { html } from "lit";
 import { AppTypeGuid } from "./types/app.types";
 import { WeavyComponent } from "./classes/weavy-component";
 import { localized } from "@lit/localize";
@@ -64,13 +64,9 @@ export class WyChat extends WeavyComponent {
 
   override render() {
     return html`
-      ${this.app
-        ? html`
-            <wy-buttons floating reverse>
-              <wy-notification-button-list></wy-notification-button-list>
-            </wy-buttons>
-          `
-        : nothing}
+      <wy-buttons floating reverse>
+        <wy-notification-button-list></wy-notification-button-list>
+      </wy-buttons>
 
       <wy-conversation .conversation=${this.app} .conversationId=${this.app?.id}></wy-conversation>
     `;

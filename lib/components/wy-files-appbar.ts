@@ -19,6 +19,7 @@ import type {
   FileType,
   CreateFileProps,
   ExternalBlobType,
+  FileViewType,
 } from "../types/files.types";
 import { MutationStateController } from "../controllers/mutation-state-controller";
 import { openUrl } from "../utils/urls";
@@ -31,6 +32,10 @@ import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { hasPermission } from "../utils/permission";
 import { Feature } from "../types/features.types";
+import type { CreateFilesEventType, ExternalBlobsEventType, UploadFilesEventType } from "../types/files.events";
+import type { NamedEvent } from "../types/generic.types";
+import type { OrderEventType, ShowTrashedEventType, ViewEventType } from "../types/lists.events";
+import type { SubscribeEventType } from "../types/app.events";
 
 import filesCss from "../scss/all.scss";
 
@@ -43,6 +48,15 @@ import "./wy-file-item";
 import "./wy-cloud-files";
 import "./wy-notification-button-list";
 
+/**
+ * @fires {UploadFilesEventType} upload-files
+ * @fires {ExternalBlobsEventType} external-blobs
+ * @fires {CreateFilesEventType} create-files
+ * @fires {OrderEventType} order
+ * @fires {ViewEventType} view
+ * @fires {ShowTrashedEventType} show-trashed
+ * @fires {SubscribeEventType} subscribe
+ */
 @customElement("wy-files-appbar")
 @localized()
 export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
@@ -81,11 +95,14 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
   private async handleRemoveMutation(
     mutationState: MutationState<BlobType | FileType, Error, unknown, FileMutationContextType>
   ) {
-    const weavy = await this.whenWeavy()
+    const weavy = await this.whenWeavy();
     const app = await this.whenApp();
 
     // NOTE: failed uploads are persisted under a different mutation key
-    const removeKey = mutationState.status === "error" && !(mutationState.variables as CreateFileProps)?.blob ? ["apps", app.id, "blobs", undefined] : ["apps", app.id, "files"];
+    const removeKey =
+      mutationState.status === "error" && !(mutationState.variables as CreateFileProps)?.blob
+        ? ["apps", app.id, "blobs", undefined]
+        : ["apps", app.id, "files"];
 
     removeMutation(
       weavy.queryClient,
@@ -103,46 +120,54 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  private dispatchUploadFiles(files: FileList | null, input: HTMLInputElement) {
-    const uploadEvent = new CustomEvent("upload-files", { detail: { files, input } });
+  private dispatchUploadFiles(files: FileList | null) {
+    const uploadEvent: UploadFilesEventType = new (CustomEvent as NamedEvent)("upload-files", {
+      detail: { files },
+    });
     return this.dispatchEvent(uploadEvent);
   }
 
   private dispatchExternalBlobs(externalBlobs: ExternalBlobType[] | null) {
-    const externalBlobsEvent = new CustomEvent("external-blobs", { detail: { externalBlobs } });
+    const externalBlobsEvent: ExternalBlobsEventType = new (CustomEvent as NamedEvent)("external-blobs", {
+      detail: { externalBlobs },
+    });
     return this.dispatchEvent(externalBlobsEvent);
   }
 
   private dispatchCreateFiles(blobs: BlobType[] | null, replace: boolean = false) {
-    const createEvent = new CustomEvent("create-files", { detail: { blobs, replace } });
+    const createEvent: CreateFilesEventType = new (CustomEvent as NamedEvent)("create-files", {
+      detail: { blobs, replace },
+    });
     return this.dispatchEvent(createEvent);
   }
 
   private dispatchOrder(order: FileOrderType) {
-    const orderEvent = new CustomEvent("order", { detail: { order } });
+    const orderEvent: OrderEventType<FileOrderType> = new (CustomEvent as NamedEvent)("order", { detail: { order } });
     return this.dispatchEvent(orderEvent);
   }
 
   private dispatchView(view: typeof this.view) {
-    const viewEvent = new CustomEvent("view", { detail: { view } });
+    const viewEvent: ViewEventType<FileViewType> = new (CustomEvent as NamedEvent)("view", { detail: { view } });
     return this.dispatchEvent(viewEvent);
   }
 
   private dispatchShowTrashed(showTrashed: boolean) {
-    const showTrashedEvent = new CustomEvent("show-trashed", { detail: { showTrashed } });
+    const showTrashedEvent: ShowTrashedEventType = new (CustomEvent as NamedEvent)("show-trashed", {
+      detail: { showTrashed },
+    });
     return this.dispatchEvent(showTrashedEvent);
   }
 
   private dispatchSubscribe(subscribe: boolean) {
-    const subscribeEvent = new CustomEvent("subscribe", { detail: { subscribe } });
+    const subscribeEvent: SubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", { detail: { subscribe } });
     return this.dispatchEvent(subscribeEvent);
   }
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
-      this.mutatingFiles.trackMutationState(
+      await this.mutatingFiles.trackMutationState(
         { filters: { mutationKey: ["apps", this.app.id], exact: false } },
         this.weavy.queryClient
       );
@@ -226,8 +251,11 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
                     data-testid="uploadFile"
                     ${ref(this.fileInputRef)}
                     @click=${(e: Event) => e.stopPropagation()}
-                    @change=${(e: Event) =>
-                      this.dispatchUploadFiles((e.target as HTMLInputElement).files, e.target as HTMLInputElement)}
+                    @change=${(e: Event) => {
+                      if (this.dispatchUploadFiles((e.target as HTMLInputElement).files)) {
+                        (e.target as HTMLInputElement).value = "";
+                      }
+                    }}
                     multiple
                     hidden
                     tabindex="-1"
@@ -396,7 +424,7 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
 
       <wy-cloud-files
         ${ref(this.cloudFilesRef)}
-        @external-blobs=${(e: CustomEvent) => this.dispatchExternalBlobs(e.detail.externalBlobs)}
+        @external-blobs=${(e: ExternalBlobsEventType) => this.dispatchExternalBlobs(e.detail.externalBlobs)}
       ></wy-cloud-files>
     `;
   }

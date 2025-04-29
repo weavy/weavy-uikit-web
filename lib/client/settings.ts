@@ -7,6 +7,13 @@ export interface WeavySettingsProps extends WeavyComponentSettingProps {}
 // WeavyStyles mixin/decorator
 export const WeavySettingsMixin = <TBase extends Constructor<WeavyClient>>(Base: TBase) => {
   return class WeavySettings extends Base implements WeavySettingsProps {
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      super(...args);
+    }
+
     // notifications
     _notifications?: WeavySettingsProps["notifications"];
 
@@ -41,11 +48,6 @@ export const WeavySettingsMixin = <TBase extends Constructor<WeavyClient>>(Base:
 
     get reactions() {
       return this._reactions ?? WeavyClient.defaults.reactions;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(...args: any[]) {
-      super(...args);
     }
   };
 };

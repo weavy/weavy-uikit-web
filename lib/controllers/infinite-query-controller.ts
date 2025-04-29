@@ -27,7 +27,9 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
 
   get result() {
     return (
-      this._result && this.observer ? this.observer.trackResult(this._result) : this.observer?.getCurrentResult() ?? { isPending: true }
+      this._result && this.observer
+        ? this.observer.trackResult(this._result)
+        : this.observer?.getCurrentResult() ?? { isPending: true }
     ) as InfiniteQueryObserverResult<InfiniteData<TData>>;
   }
 
@@ -38,7 +40,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
     this.host = host;
     this.whenContext = new Promise((r) => (this.resolveContext = r));
     this.whenQueryClient = new Promise((r) => (this.resolveQueryClient = r));
-    this.setContext();
+    void this.setContext();
   }
 
   async setContext() {
@@ -60,13 +62,13 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
     infiniteQueryOptions: InfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>,
     optimistic: boolean = true
   ) {
+    this.observerUnsubscribe?.();
+
     const queryClient = await this.whenQueryClient;
 
     if (!queryClient) {
       throw new Error("No QueryClient provided");
     }
-
-    this.observerUnsubscribe?.();
 
     const observer = new InfiniteQueryObserver<TData>(queryClient, infiniteQueryOptions);
 

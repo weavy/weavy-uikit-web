@@ -12,12 +12,13 @@ describe("WeavyConnectionMixin", () => {
   });
 
   it('has a promise "whenConnectionRequested" that resolves', async () => {
-    weavy = new Weavy({url: "https://weavy.test/", tokenFactory: async () => "wyu_test" });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    weavy = new Weavy({ url: "https://weavy.test/", tokenFactory: async () => "wyu_test" });
 
     expect(weavy).to.respondTo("whenConnectionRequested");
 
     queueMicrotask(() => {
-      weavy.subscribe(null, "", () => null);
+      void weavy.subscribe(null, "", () => {});
     });
 
     await weavy.whenConnectionRequested()

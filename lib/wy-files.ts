@@ -15,7 +15,7 @@ import type {
   FileMutationContextType,
   FileViewType,
 } from "./types/files.types";
-import type { FileOpenEventType } from "./types/files.events";
+import type { CreateFilesEventType, DropFilesEventType, ExternalBlobsEventType, FileDeleteForeverEventType, FileOpenEventType, FileRenameEventType, FileRestoreEventType, FilesEventType, FileSubscribeEventType, FileTrashEventType, UploadFilesEventType } from "./types/files.events";
 import { InfiniteQueryController } from "./controllers/infinite-query-controller";
 import { InfiniteScrollController } from "./controllers/infinite-scroll-controller";
 import { MutationController } from "./controllers/mutation-controller";
@@ -59,6 +59,8 @@ import "./components/wy-preview";
 import "./components/base/wy-spinner";
 import "./components/wy-empty";
 import "./components/base/wy-icon";
+import { OrderEventType, ShowTrashedEventType, ViewEventType } from "./types/lists.events";
+import { SubscribeEventType } from "./types/app.events";
 
 export const WY_FILES_TAGNAME = "wy-files";
 
@@ -158,27 +160,23 @@ export class WyFiles extends WeavyComponent {
   private deleteForeverFileMutation?: DeleteForeverFileMutationType;
 
   // upload files
-  private handleBlobUpload(e: Event) {
-    const eventDetail = (e as CustomEvent).detail;
+  private handleBlobUpload(e: FilesEventType) {
+    const eventDetail = e.detail;
     if (eventDetail.files) {
       for (let i = 0; i < eventDetail.files.length; i++) {
         const file = eventDetail.files[i];
         const fileProps = { file: file };
-        this.uploadBlobMutation.mutate(fileProps).then((blob) => this.handleCreateFile(blob));
-      }
-
-      if (eventDetail.input) {
-        eventDetail.input.value = "";
+        void this.uploadBlobMutation.mutate(fileProps).then((blob) => this.handleCreateFile(blob));
       }
     }
   }
 
   // upload files
-  private handleExternalBlobs(e: CustomEvent) {
+  private handleExternalBlobs(e: ExternalBlobsEventType) {
     if (e.detail.externalBlobs) {
       for (let i = 0; i < e.detail.externalBlobs.length; i++) {
         const externalBlob = e.detail.externalBlobs[i];
-        this.externalBlobMutation?.mutate({ externalBlob }).then((blob) => this.handleCreateFile(blob));
+        void this.externalBlobMutation?.mutate({ externalBlob }).then((blob) => this.handleCreateFile(blob));
       }
     }
   }
@@ -190,7 +188,7 @@ export class WyFiles extends WeavyComponent {
 
   private handleSubscribe(subscribe: boolean) {
     if (this.app?.id) {
-      this.appSubscribeMutation.mutate({ subscribe });
+      void this.appSubscribeMutation.mutate({ subscribe });
     }
   }
 
@@ -205,7 +203,7 @@ export class WyFiles extends WeavyComponent {
 
     realtimeEvent.file.created_by = realtimeEvent.actor;
     //addCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    void this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileUpdated = (_realtimeEvent: RealtimeFileEventType) => {
@@ -214,7 +212,7 @@ export class WyFiles extends WeavyComponent {
     }
 
     //updatedCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    void this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileTrashed = (_realtimeEvent: RealtimeFileEventType) => {
@@ -223,7 +221,7 @@ export class WyFiles extends WeavyComponent {
     }
 
     //updatedCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    void this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileRestored = (_realtimeEvent: RealtimeFileEventType) => {
@@ -232,7 +230,7 @@ export class WyFiles extends WeavyComponent {
     }
 
     //updatedCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    void this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeFileDeleted = (_realtimeEvent: RealtimeFileEventType) => {
@@ -241,7 +239,7 @@ export class WyFiles extends WeavyComponent {
     }
 
     //removeCacheItem(this.weavy.queryClient, this.getFilesQueryKey(), realtimeEvent.file, undefined, this.order); // TODO: order must be saved somewhere in query instead?
-    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    void this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   protected handleRealtimeCommentCreated = () => {
@@ -249,18 +247,18 @@ export class WyFiles extends WeavyComponent {
       return;
     }
 
-    this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
+    void this.weavy.queryClient.invalidateQueries({ queryKey: this.getFilesQueryKey(this.app) });
   };
 
   #unsubscribeToRealtime?: () => void;
 
   constructor() {
     super();
-    this.addEventListener("drop-files", this.handleBlobUpload);
+    this.addEventListener("drop-files", (e) => this.handleBlobUpload(e as DropFilesEventType));
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>) {
-    super.willUpdate(changedProperties);
+  protected override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+    await super.willUpdate(changedProperties);
 
     //console.log("files willUpdate", Array.from(changedProperties.keys()), this.uid, this.weavy)
     if (
@@ -289,7 +287,7 @@ export class WyFiles extends WeavyComponent {
       this.weavy &&
       this.app
     ) {
-      this.filesQuery.trackInfiniteQuery(
+      await this.filesQuery.trackInfiniteQuery(
         getInfiniteFileListOptions(this.weavy, this.app.id, {
           order: this.order,
           trashed: this.showTrashed,
@@ -303,10 +301,10 @@ export class WyFiles extends WeavyComponent {
       this.app &&
       this.user
     ) {
-      this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
+      await this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
 
-      this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavy, this.user, this.app.id));
-      this.createFileMutation.trackMutation(getCreateFileMutationOptions(this.weavy, this.user, this.app));
+      await this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavy, this.user, this.app.id));
+      await this.createFileMutation.trackMutation(getCreateFileMutationOptions(this.weavy, this.user, this.app));
       this.externalBlobMutation = getExternalBlobMutation(this.weavy, this.user, this.app.id);
 
       this.renameFileMutation = getRenameFileMutation(this.weavy, this.app);
@@ -321,20 +319,20 @@ export class WyFiles extends WeavyComponent {
       // realtime
       const subscribeGroup = `a${this.app.id}`;
 
-      this.weavy.subscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
-      this.weavy.subscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
-      this.weavy.subscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
-      this.weavy.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
-      this.weavy.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
-      this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+      void this.weavy.subscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
+      void this.weavy.subscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
+      void this.weavy.subscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
+      void this.weavy.subscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
+      void this.weavy.subscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+      void this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
-        this.weavy?.unsubscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
-        this.weavy?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
-        this.weavy?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
-        this.weavy?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
-        this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+        void this.weavy?.unsubscribe(subscribeGroup, "file_created", this.handleRealtimeFileCreated);
+        void this.weavy?.unsubscribe(subscribeGroup, "file_updated", this.handleRealtimeFileUpdated);
+        void this.weavy?.unsubscribe(subscribeGroup, "file_trashed", this.handleRealtimeFileTrashed);
+        void this.weavy?.unsubscribe(subscribeGroup, "file_restored", this.handleRealtimeFileRestored);
+        void this.weavy?.unsubscribe(subscribeGroup, "file_deleted", this.handleRealtimeFileDeleted);
+        void this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
         this.#unsubscribeToRealtime = undefined;
       };
     }
@@ -356,20 +354,20 @@ export class WyFiles extends WeavyComponent {
           .order=${this.order}
           .showTrashed=${this.showTrashed}
           .view=${this.view}
-          @upload-files=${this.handleBlobUpload}
-          @external-blobs=${this.handleExternalBlobs}
-          @create-files=${(e: CustomEvent) =>
+          @upload-files=${(e: UploadFilesEventType) => this.handleBlobUpload(e)}
+          @external-blobs=${(e: ExternalBlobsEventType) => this.handleExternalBlobs(e)}
+          @create-files=${(e: CreateFilesEventType) =>
             (e.detail.blobs as BlobType[]).forEach((blob) => this.handleCreateFile(blob, e.detail.replace))}
-          @order=${(e: CustomEvent) => {
+          @order=${(e: OrderEventType<FileOrderType>) => {
             this.order = e.detail.order;
           }}
-          @show-trashed=${(e: CustomEvent) => {
+          @show-trashed=${(e: ShowTrashedEventType) => {
             this.showTrashed = e.detail.showTrashed;
           }}
-          @view=${(e: CustomEvent) => {
+          @view=${(e: ViewEventType<FileViewType>) => {
             this.view = e.detail.view;
           }}
-          @subscribe=${(e: CustomEvent) => this.handleSubscribe(e.detail.subscribe)}
+          @subscribe=${(e: SubscribeEventType) => this.handleSubscribe(e.detail.subscribe)}
         >
         </wy-files-appbar>
       `,
@@ -387,28 +385,28 @@ export class WyFiles extends WeavyComponent {
                       .dataUpdatedAt=${dataUpdatedAt}
                       .order=${this.order}
                       @file-open=${(e: FileOpenEventType) => {
-                        this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
+                        void this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
                       }}
-                      @order=${(e: CustomEvent) => {
+                      @order=${(e: OrderEventType<FileOrderType>) => {
                         this.order = e.detail.order;
                       }}
-                      @rename=${(e: CustomEvent) => {
-                        this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
+                      @rename=${(e: FileRenameEventType) => {
+                        void this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
                       }}
-                      @subscribe=${(e: CustomEvent) => {
-                        this.subscribeFileMutation?.mutate({
+                      @subscribe=${(e: FileSubscribeEventType) => {
+                        void this.subscribeFileMutation?.mutate({
                           file: e.detail.file,
                           subscribe: e.detail.subscribe,
                         });
                       }}
-                      @trash=${(e: CustomEvent) => {
-                        this.trashFileMutation?.mutate({ file: e.detail.file });
+                      @trash=${(e: FileTrashEventType) => {
+                        void this.trashFileMutation?.mutate({ file: e.detail.file });
                       }}
-                      @restore=${(e: CustomEvent) => {
-                        this.restoreFileMutation?.mutate({ file: e.detail.file });
+                      @restore=${(e: FileRestoreEventType) => {
+                        void this.restoreFileMutation?.mutate({ file: e.detail.file });
                       }}
-                      @delete-forever=${(e: CustomEvent) => {
-                        this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
+                      @delete-forever=${(e: FileDeleteForeverEventType) => {
+                        void this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
                       }}
                     >
                       ${hasNextPage

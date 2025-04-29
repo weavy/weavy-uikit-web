@@ -1,9 +1,50 @@
+import { SubscribeEventType } from "./app.events";
 import { AppType } from "./app.types";
-import { FileType } from "./files.types";
+import { BlobType, ExternalBlobType, FileType } from "./files.types";
 
 // Local ShadowDOM events (composed: false, bubbling: true)
 
+export type FileEventType<TAdditionalDetail extends object = object> = CustomEvent<{
+  file: FileType;
+} & TAdditionalDetail>
+
+export type FilesEventType = CustomEvent<{ files: File[] | FileList | null }>
+
 export type FileOpenEventType = CustomEvent<{ fileId: number; tab?: "comments" | "versions" }> & { type: "file-open" };
+
+export type ExternalBlobsEventType = CustomEvent<{ externalBlobs: ExternalBlobType[] | null }> & {
+  type: "external-blobs";
+};
+
+export type BlobUploadedEventType = CustomEvent<{
+  blob: BlobType;
+}> & { type: "blob-uploaded" }
+
+export type UploadFilesEventType = FilesEventType & { type: "upload-files" };
+
+export type DropFilesEventType = FilesEventType & { type: "drop-files" }
+
+export type CreateFilesEventType = CustomEvent<{
+  blobs: BlobType[] | null;
+  replace: boolean;
+}> & { type: "create-files" }
+
+export type FileEditNameEventType = FileEventType & { type: "edit-name" }
+
+export type FileRenameEventType = FileEventType<{ name: string }> & { type: "rename" }
+
+export type FileTrashEventType = FileEventType & { type: "trash" }
+
+export type FileRestoreEventType = FileEventType & { type: "restore" }
+
+export type FileDeleteForeverEventType = FileEventType & { type: "delete-forever" }
+
+export type FileSubscribeEventType = SubscribeEventType<{ file: FileType }>
+
+export type FileVersionSelectEventType = CustomEvent<{
+  versionFile: FileType;
+}> & { type: "file-version-select" }
+
 
 // Public component API events (composed: true, bubbling: false)
 
@@ -11,7 +52,7 @@ export type FileOpenEventType = CustomEvent<{ fileId: number; tab?: "comments" |
  * Preview open detail data.
  */
 export type WyPreviewOpenEventDetailType = {
-  /** Id of the file to show. */ 
+  /** Id of the file to show. */
   fileId: number;
   /** Optional tab to show when the preview opens. */
   tab?: "comments" | "versions";
@@ -37,10 +78,9 @@ export type WyPreviewOpenEventType = CustomEvent<WyPreviewOpenEventDetailType> &
 
 declare global {
   interface ElementEventMap {
-    "wy-preview-open": WyPreviewOpenEventType,
+    "wy-preview-open": WyPreviewOpenEventType;
   }
 }
-
 
 /**
  * Fired when a preview overlay is closed.
@@ -54,6 +94,6 @@ export type WyPreviewCloseEventType = CustomEvent<never> & {
 
 declare global {
   interface ElementEventMap {
-    "wy-preview-close": WyPreviewCloseEventType,
+    "wy-preview-close": WyPreviewCloseEventType;
   }
 }

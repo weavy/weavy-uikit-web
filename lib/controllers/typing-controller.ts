@@ -4,20 +4,22 @@ import type { TypingUserType, UserType } from "../types/users.types";
 import { ContextConsumer } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { whenParentsDefined } from "../utils/dom";
+import { TypingEventType } from "../types/typing.events";
+import { NamedEvent } from "../types/generic.types";
 
 export class TypingController implements ReactiveController {
   host: ReactiveControllerHost & LitElement;
   context?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
   whenContext?: Promise<WeavyType>;
   resolveContext?: (value: WeavyType | PromiseLike<WeavyType>) => void;
-  
+
   get weavy() {
     return this.context?.value;
   }
 
   private typingTimeout: number | null = null;
   private discardTime = 5 * 1000;
-  
+
   // Inputs
   private _appId?: number;
   private _userId?: number;
@@ -29,9 +31,9 @@ export class TypingController implements ReactiveController {
   set appId(appId: number | undefined) {
     if (appId !== this._appId) {
       this.typingMembers = [];
-      this.unregisterRealtime();
+      void this.unregisterRealtime();
       this._appId = appId;
-      this.registerRealtime();
+      void this.registerRealtime();
     }
   }
 
@@ -42,31 +44,31 @@ export class TypingController implements ReactiveController {
   set userId(userId: number | undefined) {
     if (userId !== this._userId) {
       this.typingMembers = [];
-      this.unregisterRealtime();
+      void this.unregisterRealtime();
       this._userId = userId;
-      this.registerRealtime();
+      void this.registerRealtime();
     }
   }
- 
+
   // Outputs
   typingMembers: Array<TypingUserType> = [];
   names: string[] = [];
   ellipsis: string = "";
-  
+
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
     this.host = host as ReactiveControllerHost & LitElement;
-    this.setContext();
+    void this.setContext();
   }
 
   async setContext() {
-    this.whenContext = new Promise((r) => this.resolveContext = r)
+    this.whenContext = new Promise((r) => (this.resolveContext = r));
     await whenParentsDefined(this.host as LitElement);
     this.context = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
   }
 
   hostUpdate(): void {
-    if(this.context?.value) {
+    if (this.context?.value) {
       this.resolveContext?.(this.context?.value);
     }
   }
@@ -75,17 +77,16 @@ export class TypingController implements ReactiveController {
     if (this.appId && this._userId) {
       await this.whenContext;
       //console.log("typing subscribe", this.appId)
-      this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
-      this.weavy?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
-
+      void this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+      void this.weavy?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
     }
   }
 
   async unregisterRealtime() {
     if (this.appId && this.userId) {
       await this.whenContext;
-      this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
-      this.weavy?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
+      void this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+      void this.weavy?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
     }
   }
 
@@ -139,12 +140,12 @@ export class TypingController implements ReactiveController {
         ) %
           3) +
         1;
-  
+
       this.ellipsis = ".".repeat(dots); //+ (".").repeat(3 - dots);
-  
+
       // merge names of people typing
       this.names = this.typingMembers.map((member) => member.name).sort();
-  
+
       // schedule another call to updateTyping in 1 second
       this.typingTimeout = window.setTimeout(() => this.updateTyping(), 1000);
     } else {
@@ -152,7 +153,13 @@ export class TypingController implements ReactiveController {
     }
 
     this.host.requestUpdate();
-    this.host.dispatchEvent(new CustomEvent("typing", { bubbles: true, composed: false, detail: { count: this.typingMembers.length } }))
+
+    const typingEvent: TypingEventType = new (CustomEvent as NamedEvent)("typing", {
+      bubbles: true,
+      composed: false,
+      detail: { count: this.typingMembers.length },
+    });
+    this.host.dispatchEvent(typingEvent);
   }
 
   private setTypers(actor: UserType) {
@@ -164,7 +171,7 @@ export class TypingController implements ReactiveController {
     });
 
     // track time when we received this event
-    const trackedActor = { ...actor, time: Date.now() }
+    const trackedActor = { ...actor, time: Date.now() };
     this.typingMembers.push(trackedActor);
   }
 }

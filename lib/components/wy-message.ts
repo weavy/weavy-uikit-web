@@ -20,6 +20,8 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { isEntityChainMatch } from "../utils/notifications";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { Feature } from "../types/features.types";
+import { PollVoteEventType } from "../types/polls.events";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss";
 
@@ -96,12 +98,14 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
   private previewRef: Ref<WeavyPreview> = createRef();
   private highlightRef: Ref<HTMLElement> = createRef();
 
-  private dispatchVote(id: number) {
-    const event = new CustomEvent("vote", { detail: { id: id, parentId: this.messageId } });
+  private dispatchVote(optionId: number) {
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentId: this.messageId } });
     return this.dispatchEvent(event);
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>) {
+  protected override willUpdate(changedProperties: PropertyValues<this>): void {
+    super.willUpdate(changedProperties);
+    
     if (changedProperties.has("link")) {
       this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Message, { id: this.messageId }));
     }
@@ -155,7 +159,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                         class="wy-message-area"
                         .images=${images}
                         @file-open=${(e: FileOpenEventType) => {
-                          this.previewRef.value?.open(e.detail.fileId);
+                          void this.previewRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-image-grid>`
                     : ``}
@@ -173,7 +177,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                     ? html`
                         <wy-poll
                           .pollOptions=${this.pollOptions}
-                          @vote=${(e: CustomEvent) => this.dispatchVote(e.detail.id)}
+                          @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
                         ></wy-poll>
                       `
                     : nothing}
@@ -187,7 +191,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                         class="wy-message-area"
                         .files=${files}
                         @file-open=${(e: FileOpenEventType) => {
-                          this.previewRef.value?.open(e.detail.fileId);
+                          void this.previewRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-attachments-list>`
                     : ``}

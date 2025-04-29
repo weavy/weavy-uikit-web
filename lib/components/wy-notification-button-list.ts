@@ -34,18 +34,20 @@ export default class WyNotificationButtonList extends WeavyComponentConsumerMixi
 
   private handleSubscribe(subscribe: boolean) {
     if (this.app?.id) {
-      this.appSubscribeMutation.mutate({ subscribe });
+      void this.appSubscribeMutation.mutate({ subscribe });
     }
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>) {
+  protected override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+    super.willUpdate(changedProperties);
+    
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
-      this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
+      await this.appSubscribeMutation.trackMutation(getAppSubscribeMutationOptions(this.weavy, this.app));
     }
   }
 
   override render() {
-    if (this.settings?.notifications === "none") {
+    if (this.settings?.notifications === "none" || !this.app) {
       return nothing;
     }
 

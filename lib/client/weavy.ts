@@ -149,7 +149,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
       } else if (url === undefined || url === null) {
         this.#url = undefined;
       } else {
-        throw -1;
+        throw new Error();
       }
     } catch {
       throw new TypeError("Invalid url");

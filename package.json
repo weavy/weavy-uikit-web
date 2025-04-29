@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "27.1.1",
+  "version": "27.1.2",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -48,9 +48,9 @@
     "localize-build": "lit-localize build --config=dev/lit-localize.json",
     "localize-extract": "lit-localize extract --config=dev/lit-localize.json",
     "docs": "wca analyze lib --format markdown --outDir dist/docs",
-    "lint": "eslint lib",
+    "lint": "eslint lib/",
     "types": "tsc",
-    "analyze": "lit-analyzer lib/**/*",
+    "analyze": "lit-analyzer lib/**/* --strict",
     "pretest": "run-p lint analyze types",
     "test": "run-s test:*",
     "test:unit": "web-test-runner --config dev/web-test-runner.config.mjs --playwright --browsers chromium firefox webkit --concurrency 1 --concurrent-browsers 1",
@@ -89,8 +89,9 @@
   "devDependencies": {
     "@eslint/compat": "^1.2.8",
     "@eslint/js": "^9.23.0",
-    "@jackolope/lit-analyzer": "^3.1.1",
-    "@jackolope/ts-lit-plugin": "^3.1.1",
+    "@jackolope/lit-analyzer": "^3.1.2",
+    "@jackolope/ts-lit-plugin": "^3.1.2",
+    "@jackolope/web-component-analyzer": "^4.0.1",
     "@lit/localize-tools": "^0.8.0",
     "@open-wc/testing": "^4.0.0",
     "@playwright/test": "^1.51.1",
@@ -118,8 +119,7 @@
     "vite-plugin-cem": "^0.8.2",
     "vite-plugin-dts": "^4.5.3",
     "vite-plugin-lit-css": "^2.1.0",
-    "vite-plugin-static-copy": "^2.3.0",
-    "web-component-analyzer": "^2.0.0"
+    "vite-plugin-static-copy": "^2.3.0"
   },
   "overrides": {
     "vite": "$vite"

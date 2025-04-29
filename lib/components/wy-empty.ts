@@ -32,7 +32,9 @@ export default class WyEmpty extends LitElement {
 
   protected handleUpdate = () => this.requestUpdate();
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+    super.willUpdate(changedProperties);
+
     if (changedProperties.has("weavy")) {
       const lastContext = changedProperties.get("weavy") as WeavyType | undefined;
       if (lastContext && lastContext !== this.weavy) {

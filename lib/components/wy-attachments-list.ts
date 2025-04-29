@@ -11,6 +11,9 @@ import chatCss from "../scss/all.scss";
 import "./base/wy-icon";
 import { NamedEvent } from "../types/generic.types";
 
+/**
+ * @fires {FileOpenEventType} file-open - When opening a file in preview is requested
+ */
 @customElement("wy-attachments-list")
 export default class WyAttachmentsList extends LitElement {
   static override styles = chatCss;

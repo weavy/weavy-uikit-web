@@ -3,7 +3,11 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import type { FilesResultType, FileType } from "../types/files.types";
-import type { WyPreviewCloseEventType, WyPreviewOpenEventType } from "../types/files.events";
+import type {
+  FileVersionSelectEventType,
+  WyPreviewCloseEventType,
+  WyPreviewOpenEventType,
+} from "../types/files.events";
 import type { InfiniteData, InfiniteQueryObserverResult, QueryObserverResult } from "@tanstack/query-core";
 import { localized, msg } from "@lit/localize";
 import type { UserType } from "../types/users.types";
@@ -128,7 +132,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  async dispatchClose() {
+  dispatchClose() {
     const event: WyPreviewCloseEventType = new (CustomEvent as NamedEvent)("wy-preview-close", {
       cancelable: false,
       bubbles: false,
@@ -169,7 +173,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  handleVersionFile(e: CustomEvent) {
+  handleVersionFile(e: FileVersionSelectEventType) {
     this.versionFile = e.detail.versionFile;
   }
 
@@ -224,13 +228,8 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  currentPreviewFileCallback(refElement: Element | undefined) {
-    refElement?.scrollIntoView();
-    requestAnimationFrame(() => refElement?.scrollIntoView());
-  }
-
-  override async willUpdate(changedProperties: PropertyValues<this>) {
-    await super.willUpdate(changedProperties);
+  override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+    super.willUpdate(changedProperties);
 
     if (
       (changedProperties.has("app") || changedProperties.has("user")) &&
@@ -290,13 +289,13 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
 
           if (this.infiniteQueryResult && index >= this.files.length - 2) {
             if (this.infiniteQueryResult.hasNextPage && !this.infiniteQueryResult.isFetchingNextPage) {
-              this.infiniteQueryResult.fetchNextPage();
+              void this.infiniteQueryResult.fetchNextPage();
             }
           }
 
           if (this.infiniteQueryResult && index <= 1) {
             if (this.infiniteQueryResult.hasPreviousPage && !this.infiniteQueryResult.isFetchingPreviousPage) {
-              this.infiniteQueryResult.fetchPreviousPage();
+              void this.infiniteQueryResult.fetchPreviousPage();
             }
           }
 
@@ -315,7 +314,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
       if (this.showOverlay) {
         await this.dispatchOpen();
       } else if (changedProperties.get("showOverlay")) {
-        await this.dispatchClose();
+        this.dispatchClose();
       }
     }
   }
@@ -478,7 +477,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
                                   <wy-file-versions
                                     .file=${this.currentFile}
                                     .activeVersion=${this.versionFile || this.currentFile}
-                                    @file-version-select=${(e: CustomEvent) => this.handleVersionFile(e)}
+                                    @file-version-select=${(e: FileVersionSelectEventType) => this.handleVersionFile(e)}
                                   ></wy-file-versions>
                                 `
                               : nothing}
@@ -492,9 +491,14 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
                       previewFiles,
                       (previewFile) => "preview-area-" + previewFile?.id,
                       (previewFile) => {
+                        const currentPreviewFileCallback = (refElement: Element | undefined) => {
+                          refElement?.scrollIntoView();
+                          requestAnimationFrame(() => refElement?.scrollIntoView());
+                        };
+
                         const previewFileRef =
                           previewFile === currentPreviewFile
-                            ? this.currentPreviewFileCallback
+                            ? currentPreviewFileCallback
                             : previewFile === this.nextFile
                             ? this.nextRef
                             : previewFile === this.previousFile
@@ -551,8 +555,8 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
         if (this.swipeScrollRef.value) {
-          this.swipeScroller.whenPrev ??= async () => this.setPrev();
-          this.swipeScroller.whenNext ??= async () => this.setNext();
+          this.swipeScroller.whenPrev ??= () => this.setPrev();
+          this.swipeScroller.whenNext ??= () => this.setNext();
           this.swipeScroller.createObserver(this.swipeScrollRef.value);
           this.swipeScroller.observe(this.prevRef.value, this.nextRef.value);
         } else {

@@ -1,6 +1,4 @@
 import type {
-  QueryFunctionContext,
-  QueryKey,
   InfiniteQueryObserverOptions,
   MutationKey,
   InfiniteData,
@@ -26,8 +24,8 @@ export function getMessagesOptions(
     ...options,
     initialPageParam: 0,
     queryKey: ["messages", appId],
-    queryFn: async (opt: QueryFunctionContext<QueryKey, number | unknown>) => {
-      const skip = opt.pageParam;
+    queryFn: async (opt) => {
+      const skip = opt.pageParam as number;
       const url = "/api/apps/" + appId + "/messages?order_by=id+desc&skip=" + skip;
       const response = await weavy.fetch(url);
       const result = (await response.json()) as MessagesResultType;
@@ -67,10 +65,10 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
           context_id: variables.context_id || null
         }),
       });
-      return response.json();
+      return await response.json() as MessageType;
     },
     mutationKey: mutationKey,
-    onMutate: async (variables: MutateMessageProps) => {
+    onMutate: (variables: MutateMessageProps) => {
       const queryKey = ["messages", variables.app_id];
 
       // TODO: wait for any queries to finish instead of cancelling

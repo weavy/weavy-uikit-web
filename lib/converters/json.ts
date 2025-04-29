@@ -4,10 +4,10 @@ export function fromJSON<T extends JsonType = JsonType>(value: string | null) {
   let parsed: JsonType = value
   if (value) {
     try {
-      parsed = JSON.parse(value);
+      parsed = JSON.parse(value) as T;
     } catch {
       parsed = value
     }
   }
-  return parsed as T;
+  return parsed;
 }

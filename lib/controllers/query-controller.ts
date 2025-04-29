@@ -37,7 +37,7 @@ export class QueryController<TData = unknown> implements ReactiveController {
     this.host = host;
     this.whenContext = new Promise((r) => (this.resolveContext = r));
     this.whenQueryClient = new Promise((r) => (this.resolveQueryClient = r));
-    this.setContext();
+    void this.setContext();
   }
 
   async setContext() {
@@ -56,14 +56,14 @@ export class QueryController<TData = unknown> implements ReactiveController {
   }
 
   async trackQuery(queryOptions: QueryObserverOptions<TData>, optimistic: boolean = true) {
+    this.observerUnsubscribe?.();
+    
     const queryClient = await this.whenQueryClient;
 
     if (!queryClient) {
       throw new Error("No QueryClient provided");
     }
     
-    this.observerUnsubscribe?.();
-
     const observer = new QueryObserver(queryClient, queryOptions);
     //console.log("trackQuery", queryOptions)
 

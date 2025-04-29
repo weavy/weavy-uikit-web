@@ -210,13 +210,13 @@ export class WeavyComponent
   user: UserType | undefined;
 
   reset() {
-    // Reset whenApp
-    this.#whenApp = new Promise<AppType>((r) => {
-      this.#resolveApp = r;
-    });
+    if (this.app) {
+      this.app = undefined;
+    }
 
-    this.app = undefined;
-    this._appName = this._initialAppName;
+    if (this._appName !== this._initialAppName) {
+      this._appName = this._initialAppName;
+    }
   }
 
   /**
@@ -260,7 +260,7 @@ export class WeavyComponent
 
     // If contextual app not configured yet
     if (!this.uid && this.componentType && this.componentType !== ComponentType.Unknown) {
-      this.whenApp().then(() => {
+      void this.whenApp().then(() => {
         this._link = this.matchesLink(link) ? link : undefined;
         this.requestUpdate("link", oldLink);
       });
@@ -546,10 +546,10 @@ export class WeavyComponent
 
   protected override async scheduleUpdate(): Promise<void> {
     await whenParentsDefined(this);
-    super.scheduleUpdate();
+    await super.scheduleUpdate();
   }
 
-  protected override willUpdate(changedProperties: PropertyValues) {
+  protected override async willUpdate(changedProperties: PropertyValues): Promise<void> {
     super.willUpdate(changedProperties);
 
     this.weavyContextConsumer ??= new ContextConsumer(this, { context: WeavyContext, subscribe: true });
@@ -564,13 +564,13 @@ export class WeavyComponent
     }
 
     if (changedProperties.has("weavy") && this.weavy) {
-      this.#userQuery.trackQuery(getApiOptions<UserType>(this.weavy, ["user"]));
+      await this.#userQuery.trackQuery(getApiOptions<UserType>(this.weavy, ["user"]));
     }
 
     if (!this.#userQuery.result?.isPending) {
       if (this.user && this.#userQuery.result.data && this.user.id !== this.#userQuery.result.data.id) {
         console.warn("User changed, invalidating cache");
-        this.weavy?.queryClient.invalidateQueries();
+        await this.weavy?.queryClient.invalidateQueries();
       }
     }
 
@@ -608,6 +608,9 @@ export class WeavyComponent
       this.uid = uidParts.join("-");
     }
 
+    // Remember old name before any changes
+    const oldName = this.name;
+
     if (
       changedProperties.has("componentType") ||
       changedProperties.has("uid") ||
@@ -615,12 +618,18 @@ export class WeavyComponent
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
-      this.reset();
-
+      // Reset app name
+      if (this._appName !== this._initialAppName) {
+        this._appName = this._initialAppName;
+        this.requestUpdate("name", oldName);
+      }
+      
       if (this.componentType && this.uid && this.weavy) {
         const appData = this.name ? { name: this.name } : undefined;
         const appMembers = this.bot ? [this.bot] : undefined;
-        this.#appQuery.trackQuery(getOrCreateAppOptions(this.weavy, this.uid, this.componentType, appMembers, appData));
+        await this.#appQuery.trackQuery(
+          getOrCreateAppOptions(this.weavy, this.uid, this.componentType, appMembers, appData)
+        );
       } else {
         this.#appQuery.untrackQuery();
       }
@@ -629,15 +638,14 @@ export class WeavyComponent
     if (!this.#appQuery.result?.isPending) {
       this.app = this.#appQuery.result?.data;
 
-      if (this.app?.name) {
-        const oldName = this.name;
+      if (this.app?.name && (this.app.name !== this.name || this._appName !== this.app.name)) {
         this._appName = this.app.name;
         this.requestUpdate("name", oldName);
       }
     }
 
     if ((changedProperties.has("weavy") || changedProperties.has("bot")) && this.weavy && this.bot) {
-      this.#botUserQuery.trackQuery(getApiOptions<BotType>(this.weavy, ["users", this.bot]));
+      await this.#botUserQuery.trackQuery(getApiOptions<BotType>(this.weavy, ["users", this.bot]));
     }
 
     if (!this.#botUserQuery.result?.isPending) {
@@ -689,30 +697,72 @@ export class WeavyComponent
     // Promises
 
     if (changedProperties.has("app") && this.app) {
+      if (changedProperties.get("app")) {
+        // reset promise
+        this.#whenApp = new Promise<AppType>((r) => {
+          this.#resolveApp = r;
+        });
+      }
       this.#resolveApp?.(this.app);
     }
 
     if (changedProperties.has("botUser") && this.botUser) {
+      if (changedProperties.get("botUser")) {
+        // reset promise
+        this.#whenBotUser = new Promise<BotType>((r) => {
+          this.#resolveBotUser = r;
+        });
+      }
       this.#resolveBotUser?.(this.botUser);
     }
 
     if (changedProperties.has("componentFeatures") && this.componentFeatures) {
+      if (changedProperties.get("componentFeatures")) {
+        // reset promise
+        this.#whenComponentFeatures = new Promise<ComponentFeaturePolicy>((r) => {
+          this.#resolveComponentFeatures = r;
+        });
+      }
       this.#resolveComponentFeatures?.(this.componentFeatures);
     }
 
     if (changedProperties.has("link") && this.link) {
+      if (changedProperties.get("link")) {
+        // reset promise
+        this.#whenLink = new Promise<LinkType>((r) => {
+          this.#resolveLink = r;
+        });
+      }
       this.#resolveLink?.(this.link);
     }
 
     if (changedProperties.has("settings") && this.settings) {
+      if (changedProperties.get("settings")) {
+        // reset promise
+        this.#whenSettings = new Promise<WeavyComponentSettingsType>((r) => {
+          this.#resolveSettings = r;
+        });
+      }
       this.#resolveSettings?.(this.settings);
     }
 
     if (changedProperties.has("user") && this.user) {
+      if (changedProperties.get("user")) {
+        // reset promise
+        this.#whenUser = new Promise<UserType>((r) => {
+          this.#resolveUser = r;
+        });
+      }
       this.#resolveUser?.(this.user);
     }
 
     if (changedProperties.has("weavy") && this.weavy) {
+      if (changedProperties.get("weavy")) {
+        // reset promise
+        this.#whenWeavy = new Promise<WeavyType>((r) => {
+          this.#resolveWeavy = r;
+        });
+      }
       this.weavy.host.addEventListener("wy-notification", this.notificationEventHandler, { capture: true });
       this.#resolveWeavy?.(this.weavy);
     }

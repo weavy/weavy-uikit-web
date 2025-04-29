@@ -12,6 +12,7 @@ import { msg, str } from "@lit/localize";
 
 import "./base/wy-icon";
 import "./wy-file-menu";
+import { FileDeleteForeverEventType, FileEditNameEventType, FileRestoreEventType, FileSubscribeEventType, FileTrashEventType } from "../types/files.events";
 
 export function renderFileCard(
   this: WyFilesList,
@@ -82,11 +83,11 @@ export function renderFileCard(
         <wy-file-menu
           small
           .file=${file}
-          @edit-name=${(e: CustomEvent) => this.dispatchEditName(e.detail.file)}
-          @trash=${(e: CustomEvent) => this.dispatchTrash(e.detail.file)}
-          @restore=${(e: CustomEvent) => this.dispatchRestore(e.detail.file)}
-          @delete-forever=${(e: CustomEvent) => this.dispatchDeleteForever(e.detail.file)}
-          @subscribe=${(e: CustomEvent) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}
+          @edit-name=${(e: FileEditNameEventType) => this.dispatchEditName(e.detail.file)}
+          @trash=${(e: FileTrashEventType) => this.dispatchTrash(e.detail.file)}
+          @restore=${(e: FileRestoreEventType) => this.dispatchRestore(e.detail.file)}
+          @delete-forever=${(e: FileDeleteForeverEventType) => this.dispatchDeleteForever(e.detail.file)}
+          @subscribe=${(e: FileSubscribeEventType) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}
         ></wy-file-menu>
       </div>
       ${!file.is_trashed && file.thumbnail_url

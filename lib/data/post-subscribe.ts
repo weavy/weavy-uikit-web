@@ -33,9 +33,9 @@ export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) 
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
-      return response.json();
+      return await response.json() as PostType;
     },
-    onMutate: async (variables: MutatePostSubscribeVariables) => {
+    onMutate: (variables: MutatePostSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) =>
         Object.assign(existingPost, { is_subscribed: variables.subscribe })
       );

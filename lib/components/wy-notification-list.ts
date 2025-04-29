@@ -9,17 +9,18 @@ import type { UserType } from "../types/users.types";
 import { InfiniteData } from "@tanstack/query-core";
 import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
-import { RealtimeNotificationEventType, RealtimePresenceEventType } from "../types/realtime.types";
+import type { RealtimeNotificationEventType, RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavyProps } from "../types/weavy.types";
 import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { NotificationType, NotificationTypes, NotificationsResultType } from "../types/notifications.types";
+import { type NotificationType, NotificationTypes, type NotificationsResultType } from "../types/notifications.types";
 import {
   getLastNotification,
   getMarkNotificationMutation,
   getMarkNotificationsMutation,
   getNotificationsOptions,
 } from "../data/notifications";
+import type { NotificationMarkEventType, NotificationSelectEventType } from "../types/notifications.events";
 
 import chatCss from "../scss/all.scss";
 import pagerStyles from "../scss/components/pager.scss";
@@ -75,7 +76,7 @@ export default class WyNotificationList extends WeavyComponentConsumerMixin(LitE
 
   private handleRefresh = (_e: RealtimeNotificationEventType) => {
     //console.log("realtime notification, refresh", e)
-    this.notificationsQuery.result.refetch();
+    void this.notificationsQuery.result.refetch();
   };
 
   private handlePresenceChange = (data: RealtimePresenceEventType) => {
@@ -90,21 +91,21 @@ export default class WyNotificationList extends WeavyComponentConsumerMixin(LitE
 
     updateCacheItem<NotificationType>(this.weavy.queryClient, ["notifications", "list"], undefined, (item) => {
       const member = item.actor;
-      member.presence = (data as number[]).indexOf(member.id) != -1 ? "active" : "away";
+      member.presence = data.indexOf(member.id) != -1 ? "active" : "away";
       item.actor = member;
     });
   };
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (
       (changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app")) &&
       this.weavy
     ) {
-      this.notificationsQuery.trackInfiniteQuery(getNotificationsOptions(this.weavy, this.typeFilter, this.app?.id));
+      await this.notificationsQuery.trackInfiniteQuery(getNotificationsOptions(this.weavy, this.typeFilter, this.app?.id));
     }
 
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy) {
@@ -117,18 +118,18 @@ export default class WyNotificationList extends WeavyComponentConsumerMixin(LitE
       this.#unsubscribeToRealtime?.();
 
       // realtime
-      this.weavy.subscribe(null, "online", this.handlePresenceChange);
-      this.weavy.subscribe(null, "notification_created", this.handleRefresh);
-      this.weavy.subscribe(null, "notification_updated", this.handleRefresh);
-      //this.weavy.subscribe(null, "notification_deleted", this.handleRefresh);
-      this.weavy.subscribe(null, "notifications_marked", this.handleRefresh);
+      void this.weavy.subscribe(null, "online", this.handlePresenceChange);
+      void this.weavy.subscribe(null, "notification_created", this.handleRefresh);
+      void this.weavy.subscribe(null, "notification_updated", this.handleRefresh);
+      //void this.weavy.subscribe(null, "notification_deleted", this.handleRefresh);
+      void this.weavy.subscribe(null, "notifications_marked", this.handleRefresh);
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
-        this.weavy?.unsubscribe(null, "notification_created", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "notification_updated", this.handleRefresh);
-        //this.weavy?.unsubscribe(null, "notification_deleted", this.handleRefresh);
-        this.weavy?.unsubscribe(null, "notifications_marked", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
+        void this.weavy?.unsubscribe(null, "notification_created", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "notification_updated", this.handleRefresh);
+        //void this.weavy?.unsubscribe(null, "notification_deleted", this.handleRefresh);
+        void this.weavy?.unsubscribe(null, "notifications_marked", this.handleRefresh);
         this.#unsubscribeToRealtime = undefined;
       };
     }
@@ -152,8 +153,8 @@ export default class WyNotificationList extends WeavyComponentConsumerMixin(LitE
               notificationId=${notification.id}
               .notification=${notification}
               .selected=${this.notificationId == notification.id}
-              @select=${(_e: CustomEvent) => this.handleSelect(notification)}
-              @mark=${(e: CustomEvent) => this.handleMark(e.detail.markAsRead, e.detail.notificationId)}
+              @select=${(_e: NotificationSelectEventType) => this.handleSelect(notification)}
+              @mark=${(e: NotificationMarkEventType) => this.handleMark(e.detail.markAsRead, e.detail.notificationId)}
             ></wy-notification-list-item>`,
           ];
         }

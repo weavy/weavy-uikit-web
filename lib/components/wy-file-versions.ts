@@ -29,7 +29,12 @@ import "./base/wy-dropdown";
 import "./wy-empty";
 import "./wy-file-menu";
 import "./base/wy-spinner";
+import { FileVersionSelectEventType } from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
+/**
+ * @fires {FileVersionSelectEventType} file-version-select
+ */
 @customElement("wy-file-versions")
 @localized()
 export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
@@ -54,17 +59,17 @@ export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
   }
 
   dispatchFileVersionSelect(versionFile: FileType) {
-    const event = new CustomEvent("file-version-select", { detail: { versionFile } });
+    const event: FileVersionSelectEventType = new (CustomEvent as NamedEvent)("file-version-select", { detail: { versionFile } });
     return this.dispatchEvent(event);
   }
 
   handleRevert(versionFile: FileType) {
-    this.fileVersionRestoreMutation?.mutate({ versionFile });
+    void this.fileVersionRestoreMutation?.mutate({ versionFile });
     this.selectVersion(versionFile);
   }
 
   handleRemove(versionFile: FileType) {
-    this.fileVersionDeleteMutation?.mutate({ versionFile });
+    void this.fileVersionDeleteMutation?.mutate({ versionFile });
 
     if (this.activeVersion === versionFile) {
       this.activeVersion = this.file;
@@ -75,7 +80,7 @@ export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
     openUrl(file.download_url, "_top", file.name, true);
   }
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (
@@ -84,7 +89,7 @@ export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
       this.file &&
       this.app
     ) {
-      this.fileVersionsQuery.trackQuery(
+      await this.fileVersionsQuery.trackQuery(
         getApiOptions<FilesResultType>(
           this.weavy,
           getFileVersionsKey(this.app, this.file),

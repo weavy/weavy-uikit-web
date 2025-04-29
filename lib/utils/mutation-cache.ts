@@ -8,7 +8,7 @@ export function updateMutationContext(
 ) {
   const mutationCache = queryClient.getMutationCache();
 
-  const mutation = mutationCache.find({
+  const mutation = mutationCache.find<unknown, Error, unknown>({
     mutationKey: mutationKey,
     predicate: (mutation) => {
       return mutation.state.variables === variables;

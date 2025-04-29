@@ -6,7 +6,7 @@ import { InfiniteScrollController } from "../controllers/infinite-scroll-control
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
 import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
-import { PermissionType } from "../types/app.types";
+import { EntityTypeString, PermissionType } from "../types/app.types";
 import { hasPermission } from "../utils/permission";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
@@ -22,6 +22,9 @@ import type { WeavyProps } from "../types/weavy.types";
 import type { MsgType } from "../types/msg.types";
 import { classMap } from "lit/directives/class-map.js";
 import { Feature } from "../types/features.types";
+import type { EditorSubmitEventType } from "../types/editor.events";
+import type { CommentRestoreEventType, CommentTrashEventType } from "../types/comments.events";
+import type { PollVoteEventType } from "../types/polls.events";
 
 import chatCss from "../scss/all.scss";
 import pagerStyles from "../scss/components/pager.scss";
@@ -39,10 +42,18 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
   protected exportParts = new ShadowPartsController(this);
 
   @property({ type: Number })
-  parentId!: number;
+  parentId?: number;
 
   @property({ attribute: false })
   location: "posts" | "files" | "apps" = "apps";
+
+  #resolveParentId?: (parentId: number) => void;
+  #whenParentId = new Promise<number>((r) => {
+    this.#resolveParentId = r;
+  });
+  async whenParentId() {
+    return await this.#whenParentId;
+  }
 
   commentsQuery = new InfiniteQueryController<CommentsResultType>(this);
 
@@ -56,35 +67,40 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
 
   #unsubscribeToRealtime?: () => void;
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
-    if ((changedProperties.has("parentId") || changedProperties.has("weavy") || changedProperties.has("componentFeatures")) && this.parentId && this.weavy) {
-      this.commentsQuery.trackInfiniteQuery(getCommentsOptions(this.weavy, this.location, this.parentId));
-      this.addCommentMutation.trackMutation(getAddCommentMutationOptions(this.weavy));
-      this.removeCommentMutation = getTrashCommentMutation(this.weavy, this.location, this.parentId);
-      this.restoreCommentMutation = getRestoreCommentMutation(this.weavy, this.location, this.parentId);
-      this.pollMutation = getPollMutation(this.weavy, [this.location, this.parentId, "comments"]);
+    if (changedProperties.has("parentId") && this.parentId) {
+      this.#resolveParentId?.(this.parentId)
     }
 
-    if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
+    if ((changedProperties.has("parentId") || changedProperties.has("weavy") || changedProperties.has("componentFeatures")) && this.parentId && this.weavy) {
+      await this.commentsQuery.trackInfiniteQuery(getCommentsOptions(this.weavy, this.location, this.parentId));
+      await this.addCommentMutation.trackMutation(getAddCommentMutationOptions(this.weavy));
+      this.removeCommentMutation = getTrashCommentMutation(this.weavy, this.location, this.parentId);
+      this.restoreCommentMutation = getRestoreCommentMutation(this.weavy, this.location, this.parentId);
+    }
+    
+    if ((changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("componentFeatures")) && this.weavy && this.app) {
+      this.pollMutation = getPollMutation(this.weavy, this.app.id);
+
       // realtime
 
       this.#unsubscribeToRealtime?.();
 
       const subscribeGroup = `a${this.app.id}`;
 
-      this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+      void this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
 
       if (this.componentFeatures?.allowsFeature(Feature.Reactions)) {
-        this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        void this.weavy.subscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        void this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
       }
 
       this.#unsubscribeToRealtime = () => {
-        this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
-        this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
-        this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        void this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
+        void this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
+        void this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
         this.#unsubscribeToRealtime = undefined;
       };
     }
@@ -96,11 +112,11 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
   }
 
   handleRealtimeCommentCreated = () => {
-    this.weavy?.queryClient.invalidateQueries({ queryKey: [this.location, this.parentId, "comments"] });
+    void this.weavy?.queryClient.invalidateQueries({ queryKey: [this.location, this.parentId, "comments"] });
   };
 
   handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavy || realtimeEvent.entity.type !== "comment") {
+    if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
       return;
     }
 
@@ -115,7 +131,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
   };
 
   handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavy || realtimeEvent.entity.type !== "comment") {
+    if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
       return;
     }
     updateCacheItem(
@@ -128,8 +144,8 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
     );
   };
 
-  private async handleSubmit(e: CustomEvent) {
-    if (this.app && this.user) {
+  private async handleSubmit(e: EditorSubmitEventType) {
+    if (this.app && this.parentId && this.user) {
       await this.addCommentMutation.mutate({
         appId: this.app.id,
         parentId: this.parentId,
@@ -150,8 +166,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
         flattenedPages,
         (comment) => comment.id,
         (comment) => {
-          return [
-            html`<wy-comment
+          return this.parentId ? html`<wy-comment
               id="comment-${comment.id}"
               .commentId=${comment.id}
               .parentId=${this.parentId}
@@ -167,33 +182,36 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
               .meeting=${comment.meeting}
               .pollOptions=${comment.options?.data}
               .reactions=${comment.reactions?.data}
-              @trash=${async (e: CustomEvent) => {
+              @trash=${async (e: CommentTrashEventType) => {
                 const app = await this.whenApp();
-                this.removeCommentMutation?.mutate({
+                const parentId = await this.whenParentId();
+                void this.removeCommentMutation?.mutate({
                   id: e.detail.id,
                   appId: app.id,
-                  parentId: this.parentId,
+                  parentId: parentId,
                   type: this.location,
                 });
               }}
-              @restore=${async (e: CustomEvent) => {
+              @restore=${async (e: CommentRestoreEventType) => {
                 const app = await this.whenApp();
-                this.restoreCommentMutation?.mutate({
+                const parentId = await this.whenParentId();
+                void this.restoreCommentMutation?.mutate({
                   id: e.detail.id,
                   appId: app.id,
-                  parentId: this.parentId,
+                  parentId: parentId,
                   type: this.location,
                 });
               }}
-              @vote=${(e: CustomEvent) => {
-                this.pollMutation?.mutate({
-                  optionId: e.detail.id,
-                  parentType: e.detail.parentType,
-                  parentId: e.detail.parentId,
-                });
+              @vote=${(e: PollVoteEventType) => {
+                if (e.detail.parentId && e.detail.parentType) {
+                  void this.pollMutation?.mutate({
+                    optionId: e.detail.optionId,
+                    parentType: e.detail.parentType,
+                    parentId: e.detail.parentId,
+                  });
+                }
               }}
-            ></wy-comment>`,
-          ];
+            ></wy-comment>` : nothing;
         }
       );
     }
@@ -229,7 +247,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
         ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
         placeholder=${msg("Create a comment...")}
         buttonText=${msg("Comment", { desc: "Button action to comment" })}
-        @submit=${(e: CustomEvent) => this.handleSubmit(e)}
+        @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
       ></wy-comment-editor>
     `;
   }

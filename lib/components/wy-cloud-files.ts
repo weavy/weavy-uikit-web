@@ -13,6 +13,8 @@ import cloudFilesCss from "../scss/all.scss";
 
 import WyOverlay from "./base/wy-overlay";
 import "./base/wy-spinner";
+import { ExternalBlobsEventType } from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-cloud-files")
 @localized()
@@ -78,7 +80,7 @@ export default class WyCloudFiles extends WeavyComponentConsumerMixin(LitElement
   private handleGoogleSelected?: (message: unknown, e: MessageEvent) => void;
 
   private dispatchExternalBlobs(externalBlobs: ExternalBlobType[] | null) {
-    const externalBlobsEvent = new CustomEvent("external-blobs", { detail: { externalBlobs } });
+    const externalBlobsEvent: ExternalBlobsEventType = new (CustomEvent as NamedEvent)("external-blobs", { detail: { externalBlobs } });
     return this.dispatchEvent(externalBlobsEvent);
   }
 

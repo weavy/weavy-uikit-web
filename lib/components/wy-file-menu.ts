@@ -11,14 +11,28 @@ import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/f
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { iconNamesType } from "../utils/icons";
 import { Feature } from "../types/features.types";
+import {
+  FileDeleteForeverEventType,
+  FileEditNameEventType,
+  FileRestoreEventType,
+  FileSubscribeEventType,
+  FileTrashEventType,
+} from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
 import "./base/wy-icon";
 import "./base/wy-dropdown";
 
+/**
+ * @fires {FileEditNameEventType} edit-name
+ * @fires {FileSubscribeEventType} subscribe
+ * @fires {FileTrashEventType} trash
+ * @fires {FileRestoreEventType} restore
+ * @fires {FileDeleteForeverEventType} delete-forever
+ */
 @customElement("wy-file-menu")
 @localized()
 export default class WyFileMenu extends LitElement {
-  
   protected exportParts = new ShadowPartsController(this);
 
   @consume({ context: FeaturePolicyContext, subscribe: true })
@@ -43,8 +57,8 @@ export default class WyFileMenu extends LitElement {
     "delete-forever": false,
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  override addEventListener(type: any, listener: any, options?: any): void {
+  
+  override addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
     // Check if any event is listened to
 
     if (this.hasEventListener) {
@@ -72,14 +86,14 @@ export default class WyFileMenu extends LitElement {
   }
 
   private dispatchEditName() {
-    const event = new CustomEvent("edit-name", {
+    const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", {
       detail: { file: this.file },
     });
     return this.dispatchEvent(event);
   }
 
   private dispatchSubscribe(subscribe: boolean) {
-    const event = new CustomEvent("subscribe", {
+    const event: FileSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", {
       detail: {
         file: this.file,
         subscribe,
@@ -89,21 +103,21 @@ export default class WyFileMenu extends LitElement {
   }
 
   private dispatchTrash() {
-    const event = new CustomEvent("trash", {
+    const event: FileTrashEventType = new (CustomEvent as NamedEvent)("trash", {
       detail: { file: this.file },
     });
     return this.dispatchEvent(event);
   }
 
   private dispatchRestore() {
-    const event = new CustomEvent("restore", {
+    const event: FileRestoreEventType = new (CustomEvent as NamedEvent)("restore", {
       detail: { file: this.file },
     });
     return this.dispatchEvent(event);
   }
 
   private dispatchDeleteForever() {
-    const event = new CustomEvent("delete-forever", {
+    const event: FileDeleteForeverEventType = new (CustomEvent as NamedEvent)("delete-forever", {
       detail: { file: this.file },
     });
     return this.dispatchEvent(event);
@@ -159,7 +173,9 @@ export default class WyFileMenu extends LitElement {
                     ${this.componentFeatures?.allowsFeature(Feature.WebDAV) && this.file.application_url
                       ? html`
                           <wy-dropdown-item @click=${() => this.triggerApplication()}>
-                            <wy-icon name=${this.file.provider ? toKebabCase<iconNamesType>(this.file.provider) : icon}></wy-icon>
+                            <wy-icon
+                              name=${this.file.provider ? toKebabCase<iconNamesType>(this.file.provider) : icon}
+                            ></wy-icon>
                             ${msg(str`Open in ${fileAppProvider}`)}
                           </wy-dropdown-item>
                         `

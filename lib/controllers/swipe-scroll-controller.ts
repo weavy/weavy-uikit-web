@@ -13,8 +13,8 @@ export class SwipeScrollController implements ReactiveController {
   prevElement?: Element;
   nextElement?: Element;
 
-  whenPrev?: () => Promise<void>;
-  whenNext?: () => Promise<void>;
+  whenPrev?: () => void | Promise<void>;
+  whenNext?: () => void | Promise<void>;
 
   constructor(host: ReactiveControllerHost) {
     host.addController(this);

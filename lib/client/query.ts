@@ -24,6 +24,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
       this._queryClient = new QueryClient({
@@ -35,7 +36,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
         },
       });
 
-      this.initQueryClient();
+      void this.initQueryClient();
     }
 
     _hostIsConnectedObserver?: ResizeObserver;
@@ -109,7 +110,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
       console.info(this.weavyId, "Query client disconnected");
       await this._queryClient.cancelQueries();
       this.queryClient.setQueriesData({}, undefined);
-      this.queryClient.resetQueries();
+      await this.queryClient.resetQueries();
       this._sessionStoragePersister?.removeClient();
       this._unsubscribeQueryClient?.();
       this._queryClient.unmount();
@@ -120,7 +121,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
       super.destroy();
 
       this._hostIsConnectedObserver?.disconnect();
-      this.disconnectQueryClient();
+      void this.disconnectQueryClient();
     }
   };
 };

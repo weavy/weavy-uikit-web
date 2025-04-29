@@ -24,6 +24,8 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { BlobType } from "../types/files.types";
 import { type AppType, AppTypeGuid, AccessType, PermissionType } from "../types/app.types";
 import { hasPermission } from "../utils/permission";
+import type { BlobUploadedEventType } from "../types/files.events";
+import type { MemberSearchSubmitEventType } from "../types/members.events";
 
 import chatCss from "../scss/all.scss";
 import hostContentsCss from "../scss/host-contents.scss";
@@ -187,7 +189,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
     const updateMembersInApps = (app: AppType) => {
       const members = app.members.data ?? [];
       members.forEach((m) => {
-        m.presence = (data as number[]).indexOf(m.id) != -1 ? "active" : "away";
+        m.presence = data.indexOf(m.id) != -1 ? "active" : "away";
       });
       app.members.data = members;
       return app;
@@ -198,7 +200,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override willUpdate(changedProperties: PropertyValues<this & WeavyProps>) {
+  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>): Promise<void> {
     super.willUpdate(changedProperties);
 
     // if context updated
@@ -219,7 +221,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
       this.#unsubscribeToRealtime?.();
 
       if (this.conversationId) {
-        this.membersQuery.trackQuery(
+        await this.membersQuery.trackQuery(
           getMemberOptions(this.weavy, this.conversationId, {
             initialData: () => {
               // Use any data from the conversation query as the initial data for the member query
@@ -232,12 +234,12 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
         );
 
         const subscribeGroup = `a${this.conversationId}`;
-        this.weavy.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
-        this.weavy.subscribe(null, "online", this.handlePresenceChange);
+        void this.weavy.subscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+        void this.weavy.subscribe(null, "online", this.handlePresenceChange);
 
         this.#unsubscribeToRealtime = () => {
-          this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
-          this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
+          void this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleRealtimeAppUpdated);
+          void this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
@@ -317,7 +319,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                         ${this.isChatRoom()
                           ? html`
                               <wy-blob-upload
-                                @blob-uploaded=${(e: CustomEvent) => this.handleAvatarUploaded(e.detail.blob)}
+                                @blob-uploaded=${(e: BlobUploadedEventType) => this.handleAvatarUploaded(e.detail.blob)}
                                 .accept=${"image/*"}
                                 .label=${msg("Select picture")}
                               >
@@ -484,7 +486,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                     <wy-users-search
                       .buttonTitle=${msg("Add members")}
                       .appId=${this.conversationId}
-                      @submit=${(e: CustomEvent) => this.addMembers(e.detail.members)}
+                      @submit=${(e: MemberSearchSubmitEventType) => this.addMembers(e.detail.members)}
                     ></wy-users-search>
                   `
                 : nothing}
