@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
@@ -26,6 +26,9 @@ export class WyPreviewMedia extends LitElement {
 
   @property()
   src!: string;
+
+  @property({ type: Boolean })
+  play: boolean = false;
 
   @property()
   name: string = "";
@@ -67,18 +70,30 @@ export class WyPreviewMedia extends LitElement {
   override render() {
     return this.format === "video"
       ? html`
-          <video ${ref((ref) => this.registerLoading(ref))} class="wy-content-video" controls crossorigin="use-credentials" autoplay>
+          <video ${ref((ref) => this.registerLoading(ref))} class="wy-content-video" controls crossorigin="use-credentials">
             <source src=${this.src} type=${ifDefined(this.mediaType)} />
             <wy-preview-icon src=${this.src} icon="file-video"></wy-preview-icon>
           </video>
           <wy-spinner></wy-spinner>
         `
       : html`
-          <audio ${ref((ref) => this.registerLoading(ref))} class="wy-content-audio" controls crossorigin="use-credentials" autoplay>
+          <audio ${ref((ref) => this.registerLoading(ref))} class="wy-content-audio" controls crossorigin="use-credentials">
             <source src=${this.src} type=${ifDefined(this.mediaType)} />
           </audio>
         `;
   }
+
+  protected override updated(changedProperties: PropertyValues<this>): void {
+    super.updated(changedProperties);
+
+    if (changedProperties.has("play") && this.mediaElement) {
+      if (this.play) {
+        void this.mediaElement.play();
+      } else {
+        this.mediaElement.pause();
+      }
+    }
+  } 
 
   override disconnectedCallback() {
     this.unregisterLoading();

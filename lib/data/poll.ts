@@ -1,4 +1,4 @@
-import { type MutationKey, MutationObserver } from "@tanstack/query-core";
+import { type MutationKey, MutationObserver, QueryKey } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import type { ServerErrorResponseType } from "../types/server.types";
 import { updateCacheItems } from "../utils/query-cache";
@@ -14,7 +14,7 @@ export type MutatePollVariables = {
 
 export type PollMutationType = MutationObserver<MsgType, Error, MutatePollVariables, PollMutationContextType>;
 
-export function getPollMutationOptions(weavy: WeavyType, appId: number) {
+export function getPollMutationOptions(weavy: WeavyType, appId: number, cacheKey: QueryKey) {
   const queryClient = weavy.queryClient;
   const key: MutationKey = ["apps", appId, "polls"];
 
@@ -28,8 +28,8 @@ export function getPollMutationOptions(weavy: WeavyType, appId: number) {
       }
       return await response.json() as MsgType;
     },
-    onMutate: (variables: MutatePollVariables) => {      
-      updateCacheItems(queryClient, { queryKey: key }, variables.parentId, (item: PostType) => {                
+    onMutate: (variables: MutatePollVariables) => {    
+      updateCacheItems(queryClient, { queryKey: cacheKey }, variables.parentId, (item: PostType) => {                
         if (item.options?.data) {
           item.options.data = item.options.data?.map((o: PollOptionType) => {            
             if (o.has_voted) {
@@ -61,8 +61,8 @@ export function getPollMutationOptions(weavy: WeavyType, appId: number) {
       const response = await weavy.fetch("/api/" + variables.parentType + "/" + variables.parentId);
       const fetchedMsg = await response.json() as MsgType;
 
-      updateCacheItems(queryClient, { queryKey: key, exact: false }, variables.parentId, (existingPost: MsgType) =>
-        Object.assign(existingPost, fetchedMsg)
+      updateCacheItems(queryClient, { queryKey: cacheKey, exact: false }, variables.parentId, (existingMsg: MsgType) =>
+        Object.assign(existingMsg, fetchedMsg)
       );
     },
     /*onError(error: Error, variables: MutatePollVariables) {
@@ -73,8 +73,8 @@ export function getPollMutationOptions(weavy: WeavyType, appId: number) {
   return options;
 }
 
-export function getPollMutation(weavy: WeavyType, appId: number): PollMutationType {
-  return new MutationObserver(weavy.queryClient, getPollMutationOptions(weavy, appId));
+export function getPollMutation(weavy: WeavyType, appId: number, cacheKey: QueryKey): PollMutationType {
+  return new MutationObserver(weavy.queryClient, getPollMutationOptions(weavy, appId, cacheKey));
 }
 
 export function getVotesOptions(weavy: WeavyType, id: number) {

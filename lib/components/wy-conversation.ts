@@ -468,7 +468,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
         await this.membersQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}));
         await this.botsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
 
-        this.pollMutation = getPollMutation(this.weavy, this.conversationId);
+        this.pollMutation = getPollMutation(this.weavy, this.conversationId, ["messages", this.conversationId]);
 
         // set initial value of unread messages banner
         this.lastReadMessageId = undefined;

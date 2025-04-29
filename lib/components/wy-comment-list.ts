@@ -82,7 +82,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
     }
     
     if ((changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("componentFeatures")) && this.weavy && this.app) {
-      this.pollMutation = getPollMutation(this.weavy, this.app.id);
+      this.pollMutation = getPollMutation(this.weavy, this.app.id, [this.location, this.parentId, "comments"]);
 
       // realtime
 

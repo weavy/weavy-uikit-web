@@ -153,7 +153,7 @@ export class WyPostList extends WeavyComponentConsumerMixin(LitElement) {
       this.subscribePostMutation = getSubscribePostMutation(this.weavy, this.app);
       this.removePostMutation = getTrashPostMutation(this.weavy, this.app);
       this.restorePostMutation = getRestorePostMutation(this.weavy, this.app);
-      this.pollMutation = getPollMutation(this.weavy, this.app.id);
+      this.pollMutation = getPollMutation(this.weavy, this.app.id, ["posts", this.app.id]);
 
       this.#unsubscribeToRealtime?.();
 

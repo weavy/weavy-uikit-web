@@ -513,7 +513,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
                                 class="wy-preview-area wy-scroll-y wy-scroll-x"
                               >
                                 ${!isPending
-                                  ? html` <wy-preview-item .file=${previewFile}></wy-preview-item> `
+                                  ? html` <wy-preview-item .file=${previewFile} ?current=${previewFile === currentPreviewFile}></wy-preview-item> `
                                   : html` <wy-spinner overlay></wy-spinner> `}
                               </div>
                             `

@@ -28,6 +28,9 @@ export class WyPreviewItem extends LitElement {
   @property({ type: Object })
   file?: FileType;
 
+  @property({ type: Boolean })
+  current: boolean = false
+
   override render() {
     const file = this.file;
     if (!file) return nothing;
@@ -66,6 +69,7 @@ export class WyPreviewItem extends LitElement {
         src=${src}
         name=${name}
         mediaType=${mediaType}
+        ?play=${this.current}
       ></wy-preview-media>`;
     } else if (format === "text") {
       return html`<wy-preview-text src=${src}></wy-preview-text>`;
