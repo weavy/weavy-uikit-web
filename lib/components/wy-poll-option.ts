@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValueMap } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import chatCss from "../scss/all.scss";
@@ -6,9 +6,8 @@ import type { PollOptionType } from "../types/polls.types";
 import { QueryController } from "../controllers/query-controller";
 import { getVotesOptions } from "../data/poll";
 import { localized, msg, str } from "@lit/localize";
-import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { PollVoteEventType } from "../types/polls.events";
 import { NamedEvent } from "../types/generic.types";
@@ -19,7 +18,7 @@ import "./base/wy-icon";
 
 @customElement("wy-poll-option")
 @localized()
-export default class WyPollOption extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyPollOption extends WeavySubComponent {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -35,7 +34,7 @@ export default class WyPollOption extends WeavyComponentConsumerMixin(LitElement
 
   getVotesQuery = new QueryController<PollOptionType>(this);
 
-  protected override async updated(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async updated(changedProperties: PropertyValueMap<this>): Promise<void> {
     if (changedProperties.has("weavy") && this.weavy && this.option && this.option.id) {
       await this.getVotesQuery.trackQuery(getVotesOptions(this.weavy, this.option.id));
     }

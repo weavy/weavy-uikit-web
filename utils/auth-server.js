@@ -27,7 +27,7 @@ export function getServerConfig() {
 }
 
 export function getUsers() {
-  /// USERS AND BOTS
+  /// USERS AND AGENTS
   const users = [
     {
       name: "Marvin Acme",
@@ -105,13 +105,13 @@ export function getAuthServer(serverConfig, users) {
     );
   });
 
-  // list bots
-  app.get("/api/bots", async (req, res) => {
+  // list agents
+  app.get("/api/agents", async (req, res) => {
     res.json(
       users
         .filter((user) => user.provider)
-        .map((bot) => {
-          return { username: bot.username, name: bot.name, avatar: bot.picture };
+        .map((agent) => {
+          return { username: agent.username, name: agent.name, avatar: agent.picture };
         })
     );
   });
@@ -219,7 +219,7 @@ export async function syncUsers(serverConfig, users) {
     forEach((u) => {
     console.info("Updating", u.username);
     whenUsers.push(
-      fetch(new URL("/api/bots/" + u.username, serverConfig.weavyUrl), {
+      fetch(new URL("/api/agents/" + u.username, serverConfig.weavyUrl), {
         agent: serverConfig.agent,
         method: "PATCH",
         headers: {

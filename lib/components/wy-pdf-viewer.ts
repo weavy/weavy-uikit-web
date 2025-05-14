@@ -6,7 +6,6 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { environmentUrl } from "../utils/urls";
 
@@ -43,7 +42,7 @@ export default class WyPdfViewer extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  protected weavy?: WeavyType;
+  weavy?: WeavyType;
 
   whenPdfjsResolve?: (value: { pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }) => void
   whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
@@ -327,7 +326,7 @@ export default class WyPdfViewer extends LitElement {
   //   }
   // }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("weavy") && this.weavy) {
@@ -359,7 +358,7 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
-  override update(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override update(changedProperties: PropertyValueMap<this>) {
     super.update(changedProperties);
 
     if (

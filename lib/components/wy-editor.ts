@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type TemplateResult, type PropertyValues } from "lit";
+import { html, nothing, type TemplateResult, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -34,19 +34,14 @@ import type { EmbedType } from "../types/embeds.types";
 import { DropZoneController } from "../controllers/dropzone-controller";
 import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyProps } from "../types/weavy.types";
 import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
 import type { Compartment, EditorState, Extension } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { desktop } from "../utils/browser";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { Feature } from "../types/features.types";
 import type { MetadataType } from "../types/lists.types";
-import { DataRefType } from "../types/refs.types";
-import { getHash } from "../utils/files";
-import { getFileMutationsTotalProgress, getFileMutationsTotalStatus } from "../data/file-create";
-import { findAsyncSequential } from "../utils/objects";
 import { EditorDraftType } from "../types/editor.types";
 import { DropFilesEventType, ExternalBlobsEventType } from "../types/files.events";
 import type { EditorSubmitEventType } from "../types/editor.events";
@@ -63,7 +58,7 @@ import "./base/wy-progress-linear";
 
 @customElement("wy-editor")
 @localized()
-export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyEditor extends WeavySubComponent {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -118,9 +113,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   @property()
   editorLocation: "messages" | "posts" | "apps" | "files" = "apps";
 
-  @property({ attribute: false, type: Array })
-  contextDataRefs?: DataRefType[] | null;
-
   selectAllContent() {
     this.editor?.dispatch({
       selection: {
@@ -162,7 +154,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   protected draftKey: string = "";
 
   @state()
-  protected mutationAppId: number = -1;
+  protected mutationAppId?: number;
 
   protected uploadBlobMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(
     this
@@ -179,16 +171,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   protected cloudFilesRef: Ref<WeavyCloudFiles> = createRef();
   protected dropZone: DropZoneController = new DropZoneController(this);
 
-  protected uploadDataMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(
-    this
-  );
-  protected mutatingContextData = new MutationStateController<
-    BlobType | FileType | EmbedType,
-    Error,
-    MutateFileProps,
-    FileMutationContextType
-  >(this);
-
   @state()
   protected keyMap: KeyBinding[] = [];
 
@@ -197,6 +179,11 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
   // For modifying readonly state
   protected editorEditable?: Compartment;
+
+  // For modifying placeholder
+  protected editorPlaceholder?: Compartment;
+  protected placeholderExtension?: (content: string | HTMLElement | ((view: EditorView) => HTMLElement)) => Extension;
+
   protected EditorView?: typeof EditorView;
 
   @state()
@@ -231,30 +218,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     { leading: true, trailing: true }
   );
 
-  async updateContextDataMutations() {
-    if (this.componentFeatures?.allowsFeature(Feature.ContextData) && this.contextDataRefs) {
-      for (const dataRef of this.contextDataRefs) {
-        if (dataRef.type === "file") {
-          const sha256 = await getHash(dataRef.item);
-
-          const existingUpload = await findAsyncSequential(
-            this.mutatingContextData.result ?? [],
-            async (fileUpload) => {
-              const existingSha256 = fileUpload.context?.sha256 ?? (await getHash(fileUpload.variables?.file));
-              return existingSha256 === sha256;
-            }
-          );
-
-          if (!existingUpload) {
-            void this.uploadDataMutation.mutate({ file: dataRef.item });
-          }
-
-          // TODO: remove old mutations
-        }
-      }
-    }
-  }
-
   constructor() {
     super();
 
@@ -263,7 +226,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     this.addEventListener("keyup", inputConsume);
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyProps>): void {
+  override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
     if (
@@ -274,7 +237,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
       this.weavy &&
       this.user
     ) {
-      this.mutationAppId = this.app?.id ?? Date.now() * -1;
+      this.mutationAppId = this.mutationAppId ?? this.app?.id ?? Date.now() * -1;
 
       this.draftKey = `draft-${this.editorType}-${this.parentId || this.mutationAppId}`;
       void this.uploadBlobMutation.trackMutation(
@@ -305,31 +268,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
         this.user,
         this.mutationAppId,
         `${this.editorLocation}-${this.parentId || this.mutationAppId}`
-      );
-
-      void this.uploadDataMutation.trackMutation(
-        getUploadBlobMutationOptions(
-          this.weavy,
-          this.user,
-          this.mutationAppId,
-          `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
-          "data"
-        )
-      );
-
-      void this.mutatingContextData.trackMutationState(
-        {
-          filters: {
-            mutationKey: [
-              "apps",
-              this.mutationAppId,
-              "data",
-              `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
-            ],
-            exact: true,
-          },
-        },
-        this.weavy.queryClient
       );
 
       if (this.draft) {
@@ -368,13 +306,9 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     if (changedProperties.has("text") && this.editor && this.editor.state.doc.toString() !== this.text) {
       this.editor.dispatch({ changes: { from: 0, to: this.editor.state.doc.length, insert: this.text } });
     }
-
-    if (changedProperties.has("contextDataRefs")) {
-      void this.updateContextDataMutations();
-    }
   }
 
-  protected override updated(changedProperties: PropertyValues<this & WeavyProps>): void {
+  protected override updated(changedProperties: PropertyValueMap<this>): void {
     if (
       (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
@@ -413,7 +347,9 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
             }
 
             this.editorEditable = new Compartment();
+            this.editorPlaceholder = new Compartment();
             this.EditorView = EditorView;
+            this.placeholderExtension = placeholder;
 
             const extraKeyMap =
               this.editorType === "messages" && desktop && weavyDesktopMessageKeymap
@@ -432,7 +368,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
               autocompletion({
                 override: this.componentFeatures?.allowsFeature(Feature.Mentions)
                   ? [(context: CompletionContext) => this.autocomplete(context)]
-                  : null, //showMention
+                  : [], //showMention
                 closeOnBlur: false,
                 aboveCursor: this.editorType !== "posts",
                 icons: false,
@@ -464,7 +400,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                   },
                 ],
               }),
-              placeholder(this.placeholder),
               syntaxHighlighting(weavyHighlighter, { fallback: true }),
               EditorView.lineWrapping,
               keymap.of([...extraKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap]),
@@ -510,8 +445,12 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                   }
                 },
               }),
-              EditorView.updateListener.of((_v: ViewUpdate) => {}),
+              EditorView.updateListener.of((_v: ViewUpdate) => {
+                // HACK because placeholder extension doesn't allow change
+                this.setPlaceHolderText();
+              }),
               this.editorEditable.of(EditorView.editable.of(!this.disabled)),
+              this.editorPlaceholder.of(this.placeholderExtension(this.placeholder)),
             ];
 
             if (this.editor) {
@@ -519,6 +458,14 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
                 // Update readonly state
                 effects: this.editorEditable.reconfigure(EditorView.editable.of(!this.disabled)),
               });
+
+              this.editor.dispatch({
+                // Update placeholder state
+                effects: this.editorPlaceholder.reconfigure(this.placeholderExtension(this.placeholder)),
+              });
+
+              // HACK because the placeholder update above might not work
+              this.setPlaceHolderText();
             } else {
               this.editor = new EditorView({
                 state: EditorState.create({
@@ -545,14 +492,25 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
       });
     }
 
-    if (changedProperties.has("placeholder")) {
-      const cmPlaceholder = this.renderRoot.querySelector<HTMLElement>(".cm-placeholder");
+    if (changedProperties.has("placeholder") && this.editor && this.editorPlaceholder && this.placeholderExtension) {
+      const placeholder = this.placeholderExtension(this.placeholder)
+      this.editor.dispatch({
+        // Update placeholder state
+        effects: this.editorPlaceholder.reconfigure(placeholder),
+      });
+
+      // HACK because the update above might not work
+      this.setPlaceHolderText();
+    }
+  }
+
+  setPlaceHolderText() {
+    const cmPlaceholder = this.renderRoot.querySelector<HTMLElement>(".cm-placeholder");
 
       if (cmPlaceholder && this.editor) {
         cmPlaceholder.setAttribute("aria-label", `placeholder ${this.placeholder}`);
         cmPlaceholder.innerText = this.placeholder;
       }
-    }
   }
 
   override connectedCallback() {
@@ -715,25 +673,19 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
 
   protected submit() {
     const fileMutationResults = this.mutatingFiles.result;
-    const contextDataMutationResults = this.mutatingContextData.result;
 
     const currentlyUploadingFiles = fileMutationResults?.some((upload) => upload.status === "pending");
-    const currentlyUploadingContextData = contextDataMutationResults?.some((upload) => upload.status === "pending");
 
     const text = this.editor?.state.doc.toString().trim() ?? "";
     const meetingId = this.meeting?.id;
     const blobs = fileMutationResults?.map((mutation) => mutation.data?.id).filter((x) => x) as number[] | undefined;
-    const contextData = contextDataMutationResults
-      ?.map((mutation) => mutation.data?.id)
-      .filter((x) => x)
-      .reverse() as number[] | undefined;
     const attachments = this.attachments?.map((attachment) => attachment.id) || [];
     const pollOptions = this.pollOptions.filter((p) => p.text.trim() !== "");
 
     if (
       isFetchingEmbeds() ||
       currentlyUploadingFiles ||
-      currentlyUploadingContextData ||
+      !this.contextDataBlobs ||
       (!text &&
         !meetingId &&
         blobs?.length == 0 &&
@@ -743,6 +695,8 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
     ) {
       return;
     }
+
+    const contextData = this.contextDataBlobs.length ? this.contextDataBlobs : undefined;
 
     const submitEvent: EditorSubmitEventType = new (CustomEvent as NamedEvent)("submit", {
       detail: { text, meetingId, blobs, attachments, pollOptions, embed: this.embeds[0]?.id, contextData },
@@ -980,7 +934,12 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
               `
             : nothing}
           ${this.componentFeatures?.allowsFeature(Feature.Polls)
-            ? html`<wy-button kind="icon" @click=${() => this.openPolls()} title=${msg("Poll")} ?disabled=${this.disabled}>
+            ? html`<wy-button
+                kind="icon"
+                @click=${() => this.openPolls()}
+                title=${msg("Poll")}
+                ?disabled=${this.disabled}
+              >
                 <wy-icon name="poll"></wy-icon>
               </wy-button>`
             : nothing}
@@ -995,7 +954,7 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
   }
 
   protected renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
-    return [this.renderContextData(), this.renderLists()];
+    return [this.renderLists()];
   }
 
   protected renderLists(): TemplateResult | typeof nothing {
@@ -1115,76 +1074,6 @@ export default class WyEditor extends WeavyComponentConsumerMixin(LitElement) {
           </div> `
         : nothing}
     `;
-  }
-
-  protected renderContextData(): TemplateResult | typeof nothing {
-    const { result: contextDataMutationResults, isMutating } = this.mutatingContextData;
-
-    const contextDataUploadMutations = contextDataMutationResults?.filter((mutation) => mutation.variables?.file) as
-      | MutationState<BlobType | FileType, Error, MutateFileProps, FileMutationContextType>[]
-      | undefined;
-
-    const fileProgress = getFileMutationsTotalProgress(contextDataUploadMutations);
-    const fileStatus = getFileMutationsTotalStatus(contextDataUploadMutations);
-
-    return this.componentFeatures?.allowsFeature(Feature.ContextData) &&
-      contextDataMutationResults &&
-      contextDataMutationResults.length
-      ? html`
-          ${isMutating || (fileProgress.percent !== null && fileProgress.percent < 100)
-            ? html`
-                <wy-progress-linear
-                  ?indeterminate=${!fileProgress.percent}
-                  overlay
-                  reveal
-                  value=${fileProgress.percent ?? 0}
-                  max=${100}
-                ></wy-progress-linear>
-              `
-            : nothing}
-          ${fileStatus === "error"
-            ? html`
-                <div class="wy-item wy-item-sm">
-                  <wy-icon name="alert" color="yellow"></wy-icon>
-                  <div class="wy-item-body">${msg("Error uploading context data.")}</div>
-                </div>
-              `
-            : nothing}
-
-          <!-- context data -->
-          ${
-            /*repeat(
-            contextDataMutationResults,
-            (mutation) => "mutation" + mutation.submittedAt,
-            (mutation) => {
-              if (mutation.context?.file) {
-                const file = mutation.context.file;
-                const fileStatus: FileStatusType = {
-                  ...mutation.context.status,
-                };
-                return html`
-                  <wy-file-item
-                    .hasHover=${false}
-                    .file=${mutation.context.file}
-                    .status=${fileStatus}
-                    title="${toUpperCaseFirst(mutation.context.type)}: ${file.name +
-                    (fileStatus.text ? `: ${fileStatus.text}` : "")}"
-                  >
-                    <span slot="title"
-                      ><strong></strong> ${file.name}
-                      ${fileStatus.text ? html`: <em>${fileStatus.text}</em>` : nothing}</span
-                    >
-                    <span slot="actions"></span>
-                  </wy-file-item>
-                `;
-              }
-
-              return nothing;
-            }
-          )*/ nothing
-          }
-        `
-      : nothing;
   }
 
   protected renderCloudFiles(): TemplateResult | typeof nothing {

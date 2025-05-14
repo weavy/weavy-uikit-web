@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from "lit";
+import { css, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
@@ -9,7 +9,7 @@ import { type AppType, AppTypeGuid } from "../types/app.types";
 import { localized, msg } from "@lit/localize";
 import type { MembersResultType } from "../types/members.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
 import { PollVoteEventType } from "../types/polls.events";
@@ -22,7 +22,7 @@ import "./wy-message";
 
 @customElement("wy-messages")
 @localized()
-export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyMessages extends WeavySubComponent {
   static override styles = [
     chatCss,
     hostContentsCss,
@@ -120,9 +120,9 @@ export default class WyMessages extends WeavyComponentConsumerMixin(LitElement) 
                       .conversation=${this.conversation}
                       .messageId=${message.id}
                       .me=${message.created_by.id === this.user?.id}
-                      .isBot=${message.created_by.is_bot || false}
+                      .isAgent=${message.created_by.is_agent || false}
                       .isPrivateChat=${this.conversation?.type === AppTypeGuid.PrivateChat ||
-                      this.conversation?.type === AppTypeGuid.BotChat}
+                      this.conversation?.type === AppTypeGuid.AgentChat}
                       .name=${message.created_by.name}
                       .avatar=${message.created_by.avatar_url}
                       .createdAt=${message.created_at}

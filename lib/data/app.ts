@@ -19,29 +19,29 @@ import { getApi, getApiMutation, getApiOptions } from "./api";
 
 export function getAppOptions<T extends AppType = AppType>(
   weavy: WeavyType,
-  uid: string,
+  uid: string | number,
   type: AppTypeString | ComponentType = ComponentType.Unknown,
   appData?: AppUpProperties
 ) {
-  return type === ComponentType.Unknown
+  return type === ComponentType.Unknown || typeof uid === "number"
     ? getApiOptions<T>(weavy, ["apps", uid])
     : getApiOptions<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
 
 export function getApp<T extends AppType = AppType>(
   weavy: WeavyType,
-  uid: string,
+  uid: string | number,
   type: AppTypeString | ComponentType = ComponentType.Unknown,
   appData?: AppUpProperties
 ) {
-  return type === ComponentType.Unknown
+  return type === ComponentType.Unknown || typeof uid === "number"
     ? getApi<T>(weavy, ["apps", uid])
     : getApi<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
 
 export function getOrCreateAppOptions<T extends AppType = AppType>(
   weavy: WeavyType,
-  uid: string,
+  uid: string | number,
   type: AppTypeGuid | ComponentType = ComponentType.Unknown,
   members?: (number | string)[],
   appData?: AppUpProperties
@@ -52,23 +52,17 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
     queryFn: async () => {
       //console.log("API", method, apiPath ? apiPath : "/api/" + apiKey.join("/"));
 
-      const appsRequests = [weavy.fetch(`/api/apps/${uid}`)];
+      const appsRequests = [];
 
-      if (type !== ComponentType.Unknown) {
-        if (appData?.name) {
-          // Update app with name
-          appsRequests.push(
-            weavy.fetch(`/api/apps/${uid}`, {
-              method: "PATCH",
-              body: JSON.stringify({
-                name: appData.name,
-              }),
-            })
-          );
-        }
-
+      if (type === ComponentType.Unknown || typeof uid === "number") {
         appsRequests.push(
-          weavy.fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ uid: uid, type, members, ...appData }) })
+          // Get existing app
+          weavy.fetch(`/api/apps/${uid}`)
+        );
+      } else {
+        appsRequests.push(
+          // Get, update or create app using app uid
+          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ uid, type, members, ...appData }) })
         );
       }
 
@@ -89,7 +83,7 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
 
 export async function getOrCreateApp<T extends AppType = AppType>(
   weavy: WeavyType,
-  uid: string,
+  uid: string | number,
   type: AppTypeGuid | ComponentType = ComponentType.Unknown,
   members?: (number | string)[],
   appData?: AppUpProperties
@@ -121,7 +115,7 @@ export function getCreateAppMutationOptions(weavy: WeavyType) {
           uid,
         }),
       });
-      return await response.json() as AppType;
+      return (await response.json()) as AppType;
     },
     onSettled: async () => {
       await weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });
@@ -151,7 +145,7 @@ export type MutateAppSubscribeContextType = { previousSubscribe: boolean | undef
 export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
   const queryClient = weavy.queryClient;
 
-  const mutationKey: MutationKey = ["apps", app.uid];
+  const mutationKey: MutationKey = ["apps", app.uid || app.id];
 
   const options = {
     mutationFn: async ({ subscribe }: MutateAppSubscribeProps) => {
@@ -163,7 +157,7 @@ export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
           throw await response.json();
         }
       } else {
-        throw new Error(`Could not subscribe to app ${app.uid}.`);
+        throw new Error(`Could not subscribe to app ${app.uid || app.id}.`);
       }
     },
     onMutate: (variables: MutateAppSubscribeProps) => {
@@ -254,7 +248,7 @@ export function getAppListOptions(
       const url = `/api/apps?${queryParams.toString()}`;
 
       const response = await weavy.fetch(url);
-      const result = await response.json() as AppsResultType;
+      const result = (await response.json()) as AppsResultType;
       result.data = result.data || [];
       return result;
     },

@@ -50,7 +50,7 @@ export default class WySheet extends LitElement {
 
   override render() {
     return html`
-      <dialog class="wy-dialog" tabindex="0" ${ref(this.viewportRef)} popover>
+      <dialog class="wy-dialog" tabindex="0" ${ref(this.viewportRef)} popover="auto">
         <div class="wy-sheet ${this.show ? "wy-show" : ""}">
           <slot name="header">
             <header class="wy-appbars">

@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -15,7 +15,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { SwipeScrollController } from "../controllers/swipe-scroll-controller";
 import { repeat } from "lit/directives/repeat.js";
 import { PersistStateController } from "../controllers/persist-state-controller";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
 import { NamedEvent } from "../types/generic.types";
@@ -42,7 +42,7 @@ import { Feature } from "../types/features.types";
  */
 @customElement("wy-preview")
 @localized()
-export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyPreview extends WeavySubComponent {
   static override styles = [allCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -116,9 +116,10 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
     const tab = this.commentsOpen ? "comments" : this.versionsOpen ? "versions" : undefined;
     const files = this.currentFile ? [this.currentFile] : [];
     const isAttachment = this.isAttachment;
+    const contextDataBlobs = this.contextDataBlobs;
 
     const event: WyPreviewOpenEventType = new (CustomEvent as NamedEvent)("wy-preview-open", {
-      detail: { fileId, tab, files, app, features: componentFeatures.allowedFeatures().join(" "), isAttachment },
+      detail: { fileId, tab, files, app, features: componentFeatures.allowedFeatures().join(" "), isAttachment, contextDataBlobs },
       cancelable: true,
       bubbles: false,
       composed: true,
@@ -228,7 +229,7 @@ export default class WyPreview extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (

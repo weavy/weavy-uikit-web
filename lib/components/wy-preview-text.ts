@@ -5,7 +5,6 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { getTextStreamFromResponse } from "../utils/data";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
-import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import "./wy-empty";
@@ -23,7 +22,7 @@ export class WyPreviewText extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavy?: WeavyType;
+  weavy?: WeavyType;
 
   @property()
   src!: string;
@@ -40,7 +39,9 @@ export class WyPreviewText extends LitElement {
   @state()
   loading = true;
 
-  override updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  override updated(changedProperties: PropertyValueMap<this>) {
+    super.updated(changedProperties);
+    
     if ((changedProperties.has("weavy") || changedProperties.has("src")) && this.weavy) {
       this.loading = true;
       void this.weavy

@@ -20,8 +20,7 @@ export class WyMessageEditor extends WyEditor {
 
   protected override renderTopSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return [
-      this.renderLists(),
-      this.renderContextData()
+      this.renderLists()
     ];
   }
 

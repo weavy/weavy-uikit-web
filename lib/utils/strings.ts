@@ -21,7 +21,7 @@ export const selectByWordBoundaryWithHyphensRegExp = new RegExp(
   "g"
 );
 export const sentenceBoundary = ".!?";
-export const separateBySentenceBoundaryRegExp = new RegExp(`^|[${sentenceBoundary}]|$`);
+export const separateBySentenceBoundaryRegExp = new RegExp(`^|(?<=[${sentenceBoundary}])|$`);
 
 /**
  *  Converts Initial Letters To Uppercase.

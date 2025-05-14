@@ -1,12 +1,11 @@
-import { LitElement, html, type PropertyValueMap, nothing } from "lit";
+import { html, type PropertyValueMap, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { MemberType } from "../types/members.types";
 import { CreateAppMutationType, getCreateAppMutation } from "../data/app";
 import { localized, msg } from "@lit/localize";
-import { WeavyProps } from "../types/weavy.types";
 import { AppTypeString } from "../types/app.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { MemberSearchSubmitEventType } from "../types/members.events";
 import { SelectedEventType } from "../types/app.events";
@@ -21,13 +20,13 @@ import "./base/wy-icon";
 
 @customElement("wy-conversation-new")
 @localized()
-export default class WyConversationNew extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyConversationNew extends WeavySubComponent {
   static override styles = [allStyles];
 
   protected exportParts = new ShadowPartsController(this);
 
   @property()
-  bot?: string;
+  agent?: string;
 
   @state()
   private show = false;
@@ -43,8 +42,8 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
   }
 
   private async submit(members: MemberType[] = []) {
-    const memberOptions = this.bot
-      ? { members: [this.bot], type: AppTypeString.BotChat }
+    const memberOptions = this.agent
+      ? { members: [this.agent], type: AppTypeString.AgentChat }
       : { members: members?.map((m) => m.id), type: members.length === 1 ? AppTypeString.PrivateChat : AppTypeString.ChatRoom };
 
     // create conversation
@@ -57,7 +56,7 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
     return this.dispatchEvent(eventSelect);
   }
 
-  protected override updated(changedProperties: PropertyValueMap<this & WeavyProps>) {
+  protected override updated(changedProperties: PropertyValueMap<this>) {
     if (changedProperties.has("weavy") && this.weavy) {
       this.addConversationMutation = getCreateAppMutation(this.weavy);
     }
@@ -65,11 +64,11 @@ export default class WyConversationNew extends WeavyComponentConsumerMixin(LitEl
 
   override render() {
     return html`
-      <wy-button kind="icon" @click=${() => (this.bot ? this.submit() : this.open())}>
+      <wy-button kind="icon" @click=${() => (this.agent ? this.submit() : this.open())}>
         <wy-icon name="plus"></wy-icon>
       </wy-button>
 
-      ${!this.bot && this.weavy
+      ${!this.agent && this.weavy
         ? html`<wy-overlay
             .show=${this.show}
             @close=${() => {

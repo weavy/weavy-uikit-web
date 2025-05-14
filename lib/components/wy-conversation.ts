@@ -1,4 +1,4 @@
-import { LitElement, html, type PropertyValues, nothing, css } from "lit";
+import { html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { AppTypeGuid, type AppType, PermissionType } from "../types/app.types";
@@ -35,8 +35,7 @@ import {
   getMarkConversationMutation,
   getUpdateConversationMutation,
 } from "../data/conversation";
-import { WeavyProps } from "../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { AppContext } from "../contexts/app-context";
 import { provide } from "@lit/context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -46,8 +45,6 @@ import { getMemberOptions } from "../data/members";
 import { Feature } from "../types/features.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { MetadataType } from "../types/lists.types";
-import { ContextDataType, DataRefType } from "../types/refs.types";
-import { getContextDataRef } from "../utils/contextdata";
 import { getTitleFromText, truncateText } from "../utils/strings";
 import { TypingEventType } from "../types/typing.events";
 import { EditorSubmitEventType } from "../types/editor.events";
@@ -66,7 +63,7 @@ import "./base/wy-spinner";
 
 @customElement("wy-conversation")
 @localized()
-export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
+export class WyConversation extends WeavySubComponent {
   static override styles = [
     chatCss,
     pagerCss,
@@ -95,13 +92,10 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
   header: boolean = false;
 
   @property()
-  contextInstructions?: string;
+  agentInstructions?: string;
 
-  @property({ type: Array })
-  contextData?: ContextDataType[];
-
-  @state()
-  contextDataRefs: Map<ContextDataType, DataRefType> = new Map();
+  @property()
+  placeholder?: string;
 
   @state()
   lastReadMessagePosition: "above" | "below" = "below";
@@ -137,7 +131,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
 
   protected messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
   protected membersQuery = new QueryController<MembersResultType>(this);
-  protected botsQuery = new QueryController<MembersResultType>(this);
+  protected agentsQuery = new QueryController<MembersResultType>(this);
 
   protected markConversationMutation?: MarkConversationMutationType;
   protected updateConversationMutation?: UpdateConversationMutationType;
@@ -196,15 +190,15 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
       context_id: e.detail.contextData?.[0],
     };
 
-    if (this.contextInstructions) {
+    if (this.agentInstructions) {
       initialPayload.metadata = {
-        instructions: this.contextInstructions,
+        instructions: this.agentInstructions,
       };
     }
 
     if (!this.conversation && this.weavy && this.createConversation) {
       this.isCreatingConversation = true;
-      // Create new bot conversation
+      // Create new agent conversation
       await this.createConversation(initialPayload);
       await this.updateComplete;
     }
@@ -433,7 +427,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     // if context updated
@@ -466,7 +460,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
         );
 
         await this.membersQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}));
-        await this.botsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
+        await this.agentsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
 
         this.pollMutation = getPollMutation(this.weavy, this.conversationId, ["messages", this.conversationId]);
 
@@ -498,7 +492,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
         this.messagesQuery.untrackInfiniteQuery();
         this.addMessageMutation.untrackMutation();
         this.membersQuery.untrackQuery();
-        this.botsQuery.untrackQuery();
+        this.agentsQuery.untrackQuery();
       }
     }
 
@@ -549,30 +543,10 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
       }
     }
 
-    // Update context data refs
-    if (changedProperties.has("contextData") && this.contextData) {
-      const prevContextDataRefs = this.contextDataRefs;
-      this.contextDataRefs = new Map();
-
-      // Add items
-      this.contextData.forEach((dataItem) => {
-        const prevItem = prevContextDataRefs.get(dataItem);
-        if (prevItem) {
-          this.contextDataRefs.set(dataItem, prevItem);
-        } else {
-          const dataRef = getContextDataRef(dataItem);
-          if (dataRef) {
-            //console.log("context data item", dataRef);
-            this.contextDataRefs.set(dataItem, dataRef);
-          }
-        }
-      });
-    }
-
     // Update title
     if (this.conversation && !this.conversation?.name && !isInfiniteResultDataEmpty(this.messagesQuery.result.data)) {
       const messages = getFlatInfiniteResultData(this.messagesQuery.result.data);
-      // special handing of bot chat?
+      // REVIEW: special handing of agent chat?
       const lastPlainMessage = messages.find((message) => message.plain);
       if (lastPlainMessage) {
         void this.setEmptyConversationTitle(getTitleFromText(lastPlainMessage.plain));
@@ -580,7 +554,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  protected override update(changedProperties: PropertyValues<this>): void {
+  protected override update(changedProperties: PropertyValueMap<this>): void {
     super.update(changedProperties);
     this.infiniteScroll.observe(this.messagesQuery.result, this.pagerRef.value);
   }
@@ -618,7 +592,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
               <wy-avatar
                 src=${ifDefined(otherMember?.avatar_url)}
                 name=${this.conversation.name}
-                ?isBot=${otherMember?.is_bot}
+                ?isAgent=${otherMember?.is_agent}
                 size=${96}
               ></wy-avatar>
             `
@@ -631,7 +605,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
     const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
     const { data: membersData } = this.membersQuery.result ?? {};
-    const { data: botsData } = this.botsQuery.result ?? {};
+    const { data: agentsData } = this.agentsQuery.result ?? {};
 
     return html`
       ${this.renderConversationHeader()}
@@ -663,7 +637,7 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
                 .userId=${this.user?.id}
                 .isPrivateChat=${this.isPrivateChat()}
                 .members=${membersData?.data}
-                .bots=${botsData?.data}
+                .agents=${agentsData?.data}
                 @typing=${(e: TypingEventType) => this.handleTyping(e)}
               ></wy-message-typing>
             </wy-messages>
@@ -679,11 +653,11 @@ export class WyConversation extends WeavyComponentConsumerMixin(LitElement) {
           `}
       <div ${ref(this.bottomRef)}></div>
       <div part="wy-footerbar wy-footerbar-sticky">
+        <slot name="footerbar"></slot>
         <wy-message-editor
           ${ref(this.editorRef)}
           .draft=${true}
-          .contextDataRefs=${Array.from(this.contextDataRefs.values())}
-          placeholder=${msg("Type a message...")}
+          placeholder=${this.placeholder ?? msg("Type a message...")}
           ?disabled=${this.conversation && !hasPermission(PermissionType.Create, this.conversation?.permissions)}
           @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
         ></wy-message-editor>

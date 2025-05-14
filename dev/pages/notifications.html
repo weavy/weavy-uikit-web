@@ -40,7 +40,7 @@
   </wy-context>
     <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
     <script type="module">
-      import { MessengerTypes, MessengerBotTypes } from "/lib/index.ts";
+      import { MessengerTypes, MessengerAgentTypes } from "/lib/index.ts";
       const wyContext = document.querySelector("wy-context");
       let linkWindow;
 
@@ -56,8 +56,8 @@
         
         if (MessengerTypes.has(appType)) {
           linkUrl = new URL("./messenger.html", window.location);
-        } else if(MessengerBotTypes.has(appType)) {
-          linkUrl = new URL(`./botchat.html${`#${e.detail.link.bot}` || ''}`, window.location);
+        } else if(MessengerAgentTypes.has(appType)) {
+          linkUrl = new URL(`./agentchat.html${`#${e.detail.link.agent}` || ''}`, window.location);
         } else if (appUid && appUid.startsWith("acme-")) {
           const pageName = appUid.substring("acme-".length);
           linkUrl = new URL(`./${pageName}.html`, window.location);

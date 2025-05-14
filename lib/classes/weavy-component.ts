@@ -8,13 +8,13 @@ import {
 } from "../contexts/settings-context";
 import { defaultVisibilityCheckOptions, whenParentsDefined } from "../utils/dom";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
-import type { BotType, UserType } from "../types/users.types";
+import type { AgentType, UserType } from "../types/users.types";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { getOrCreateAppOptions } from "../data/app";
 import { type AppType, AppContext } from "../contexts/app-context";
 import { UserContext } from "../contexts/user-context";
-import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/features-context";
+import { type ComponentFeaturePolicy, Feature, FeaturePolicyContext } from "../contexts/features-context";
 import {
   AppTypeString,
   AppTypeGuid,
@@ -22,19 +22,32 @@ import {
   AppTypeGuidMapping,
   AppTypeStringMapping,
   LinkType,
-  BotAppTypeGuidMapping,
-  BotAppTypeStringMapping,
+  AgentAppTypeGuidMapping,
+  AgentAppTypeStringMapping,
 } from "../types/app.types";
 import { LinkContext } from "../contexts/link-context";
 import { getStorage } from "../utils/data";
 import type { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
 import type { WyLinkEventType, WyNotificationEventType } from "../types/notifications.events";
-import { objectAsIterable } from "../utils/objects";
-import { BotContext } from "../contexts/bot-context";
+import { asArray, findAsyncSequential, objectAsIterable } from "../utils/objects";
+import { AgentContext } from "../contexts/agent-context";
 import { ComponentFeatures } from "../contexts/features-context";
 import { WeavyClient } from "../client/weavy";
 import { WyAppEventType } from "../types/app.events";
 import { NamedEvent } from "../types/generic.types";
+import { ContextDataBlobsType, ContextDataType } from "../types/context.types";
+import { DataRefType } from "../types/refs.types";
+import { getContextDataRef } from "../utils/contextdata";
+import { getHash } from "../utils/files";
+import { MutationStateController } from "../controllers/mutation-state-controller";
+import { MutationController } from "../controllers/mutation-controller";
+import { BlobType, FileMutationContextType, FileType, MutateFileProps } from "../types/files.types";
+import { EmbedType } from "../types/embeds.types";
+import { getUploadBlobMutationOptions } from "../data/blob-upload";
+import { DataBlobsContext } from "../contexts/data-context";
+import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
+import { v4 as uuid_v4 } from "uuid";
+import { toIntOrString } from "../converters/string";
 
 export interface WeavyComponentProps {
   /**
@@ -48,10 +61,10 @@ export interface WeavyComponentProps {
   appTypes?: AppTypeGuid[];
 
   /**
-   * Unique identifier for the weavy component.
-   * The uid should correspond to the uid of the app created using the server-to-server Web API.
+   * Unique identifier or app id for the weavy component.
+   * The unique identifier should correspond to the uid of the app created using the server-to-server Web API.
    */
-  uid?: string | null;
+  uid?: string | number | null;
 
   /**
    * Optional display name for the weavy component.
@@ -60,12 +73,19 @@ export interface WeavyComponentProps {
   name?: string | null;
 
   /**
-   * The configured uid of the bot for the weavy component.
+   * The configured uid of the agent for the weavy component.
    */
-  bot?: string | null;
+  agent?: string | null;
 
   /**
-   * Sets the uid property with automatically appended user and bot name (where applicable).
+   * Array with any contextual data. The data is uploaded upon change.
+   *
+   * *Note: Only the first item in the array is currently used.*
+   */
+  data?: ContextDataType[];
+
+  /**
+   * Sets the uid property with automatically appended user and agent name (where applicable).
    */
   autoUid?: string | null;
 
@@ -111,14 +131,34 @@ export interface WeavyComponentContextProps {
   whenApp: () => Promise<AppType>;
 
   /**
-   * The current bot.
+   * The current agent.
    */
-  botUser: BotType | undefined;
+  agentUser: AgentType | undefined;
 
   /**
-   * Resolves when current bot user data is available.
+   * Resolves when current agent user data is available.
    */
-  whenBotUser: () => Promise<BotType>;
+  whenAgentUser: () => Promise<AgentType>;
+
+  /**
+   * Uploaded context data blob ids.
+   */
+  contextDataBlobs: ContextDataBlobsType | undefined;
+
+  /**
+   * Resolves when context data blob uploads has finished.
+   */
+  whenContextDataBlobs: () => Promise<ContextDataBlobsType>;
+
+  /**
+   * Contextual guid that is unique for the client context.
+   */
+  contextId: ContextIdType | undefined;
+
+  /**
+   * Resolves when a contextual id is available.
+   */
+  whenContextId: () => Promise<ContextIdType>;
 
   /**
    * Policy for checking which features are available.
@@ -193,9 +233,17 @@ export class WeavyComponent
   @state()
   app: AppType | undefined;
 
-  @provide({ context: BotContext })
+  @provide({ context: AgentContext })
   @state()
-  botUser: BotType | undefined;
+  agentUser: AgentType | undefined;
+
+  @provide({ context: DataBlobsContext })
+  @state()
+  contextDataBlobs: ContextDataBlobsType | undefined;
+
+  @provide({ context: ContextIdContext })
+  @state()
+  contextId: ContextIdType = uuid_v4();
 
   @provide({ context: FeaturePolicyContext })
   @state()
@@ -232,14 +280,15 @@ export class WeavyComponent
       !this.componentType &&
       this.appTypes?.includes(link.app.type)
     ) {
-      return link.bot ? link.bot === this.bot : true;
+      return link.agent ? link.agent === this.agent : true;
     } else if (
       // Normal contextual app
       link &&
       link.app &&
       this.componentType !== ComponentType.Unknown &&
-      ((this.uid && link.app?.uid === this.uid) || // Normal app
-        (this.bot && link.app.type === this.componentType && link.bot === this.bot)) // Bot app
+      ((typeof this.uid === "string" && link.app?.uid === this.uid) || // Normal app with app uid
+        (typeof this.uid === "number" && link.app?.id === this.uid) || // Normal app with app id
+        (this.agent && link.app.type === this.componentType && link.agent === this.agent)) // Agent app
     ) {
       return true;
     } else {
@@ -364,21 +413,32 @@ export class WeavyComponent
   @property()
   features?: string;
 
-  protected _bot?: string;
+  protected _agentUid?: string;
 
   @property({ type: String })
-  get bot(): string | undefined {
-    return this._bot;
+  get agent(): string | undefined {
+    return this._agentUid;
   }
-  set bot(bot: string | undefined) {
-    this._bot = bot || undefined;
+  set agent(agent: string | undefined) {
+    this._agentUid = agent || undefined;
   }
+
+  @property({
+    attribute: true,
+    type: String,
+    converter: {
+      fromAttribute(value) {
+        return asArray(value);
+      },
+    },
+  })
+  data?: ContextDataType[];
 
   @property()
   autoUid?: string | null;
 
-  @property({ type: String })
-  uid?: string | null;
+  @property({ converter: toIntOrString })
+  uid?: string | number | null;
 
   private _initialAppName?: string;
   private _appName?: string;
@@ -434,6 +494,14 @@ export class WeavyComponent
   // TODO: Switch to Promise.withResolvers() when allowed by typescript
   // Promise.withResolvers() is available in ES2024, that needs to be set in TSConfig
 
+  #resolveAgentUser?: (agent: AgentType) => void;
+  #whenAgentUser = new Promise<AgentType>((r) => {
+    this.#resolveAgentUser = r;
+  });
+  async whenAgentUser() {
+    return await this.#whenAgentUser;
+  }
+
   #resolveApp?: (app: AppType) => void;
   #whenApp = new Promise<AppType>((r) => {
     this.#resolveApp = r;
@@ -442,12 +510,20 @@ export class WeavyComponent
     return await this.#whenApp;
   }
 
-  #resolveBotUser?: (bot: BotType) => void;
-  #whenBotUser = new Promise<BotType>((r) => {
-    this.#resolveBotUser = r;
+  #resolveContextDataBlobs?: (blobs: ContextDataBlobsType) => void;
+  #whenContextDataBlobs = new Promise<ContextDataBlobsType>((r) => {
+    this.#resolveContextDataBlobs = r;
   });
-  async whenBotUser() {
-    return await this.#whenBotUser;
+  async whenContextDataBlobs() {
+    return await this.#whenContextDataBlobs;
+  }
+
+  #resolveContextId?: (contextId: ContextIdType) => void;
+  #whenContextId = new Promise<ContextIdType>((r) => {
+    this.#resolveContextId = r;
+  });
+  async whenContextId() {
+    return await this.#whenContextId;
   }
 
   #resolveComponentFeatures?: (componentFeatures: ComponentFeaturePolicy) => void;
@@ -493,8 +569,27 @@ export class WeavyComponent
   // INTERNAL PROPERTIES
 
   #appQuery = new QueryController<AppType>(this);
-  #botUserQuery = new QueryController<BotType>(this);
+  #agentUserQuery = new QueryController<AgentType>(this);
   #userQuery = new QueryController<UserType>(this);
+
+  #contextDataRefs: Map<ContextDataType, DataRefType> = new Map();
+
+  #uploadContextDataMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(this);
+
+  #mutatingContextData = new MutationStateController<
+    BlobType | FileType | EmbedType,
+    Error,
+    MutateFileProps,
+    FileMutationContextType
+  >(this);
+
+  // DEPRECATED
+
+  /**
+   * @deprecated Use agent property instead.
+   */
+  @property()
+  bot?: string;
 
   // PROPERTY INIT
   constructor() {
@@ -512,12 +607,20 @@ export class WeavyComponent
       this.requestUpdate("app");
     }
 
-    if (this.botUser) {
-      this.requestUpdate("botUser");
+    if (this.agentUser) {
+      this.requestUpdate("agentUser");
     }
 
     if (this.componentFeatures) {
       this.requestUpdate("componentFeatures");
+    }
+
+    if (this.contextDataBlobs) {
+      this.requestUpdate("contextDataBlobs");
+    }
+
+    if (this.contextId) {
+      this.requestUpdate("contextId");
     }
 
     if (this.link) {
@@ -589,16 +692,16 @@ export class WeavyComponent
 
     // Generate UID using autoUid?
     if (
-      (changedProperties.has("autoUid") || changedProperties.has("user") || changedProperties.has("bot")) &&
+      (changedProperties.has("autoUid") || changedProperties.has("user") || changedProperties.has("agent")) &&
       this.autoUid &&
       this.user &&
-      ((this.componentType && BotAppTypeGuids.has(this.componentType) && this.bot) ||
-        (this.componentType && !BotAppTypeGuids.has(this.componentType)))
+      ((this.componentType && AgentAppTypeGuids.has(this.componentType) && this.agent) ||
+        (this.componentType && !AgentAppTypeGuids.has(this.componentType)))
     ) {
       const uidParts: (string | number)[] = [this.autoUid];
 
-      if (this.bot) {
-        uidParts.push(this.bot);
+      if (this.agent) {
+        uidParts.push(this.agent);
       }
 
       if (this.user) {
@@ -614,7 +717,7 @@ export class WeavyComponent
     if (
       changedProperties.has("componentType") ||
       changedProperties.has("uid") ||
-      changedProperties.has("bot") ||
+      changedProperties.has("agent") ||
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
@@ -623,10 +726,10 @@ export class WeavyComponent
         this._appName = this._initialAppName;
         this.requestUpdate("name", oldName);
       }
-      
+
       if (this.componentType && this.uid && this.weavy) {
         const appData = this.name ? { name: this.name } : undefined;
-        const appMembers = this.bot ? [this.bot] : undefined;
+        const appMembers = this.agent ? [this.agent] : undefined;
         await this.#appQuery.trackQuery(
           getOrCreateAppOptions(this.weavy, this.uid, this.componentType, appMembers, appData)
         );
@@ -644,12 +747,98 @@ export class WeavyComponent
       }
     }
 
-    if ((changedProperties.has("weavy") || changedProperties.has("bot")) && this.weavy && this.bot) {
-      await this.#botUserQuery.trackQuery(getApiOptions<BotType>(this.weavy, ["users", this.bot]));
+    // Agent
+
+    if ((changedProperties.has("weavy") || changedProperties.has("agent")) && this.weavy && this.agent) {
+      await this.#agentUserQuery.trackQuery(getApiOptions<AgentType>(this.weavy, ["users", this.agent]));
     }
 
-    if (!this.#botUserQuery.result?.isPending) {
-      this.botUser = this.#botUserQuery.result?.data;
+    if (!this.#agentUserQuery.result?.isPending) {
+      this.agentUser = this.#agentUserQuery.result?.data;
+    }
+
+    // contextData
+    if (
+      (changedProperties.has("weavy") ||
+        changedProperties.has("contextId") ||
+        changedProperties.has("user") ||
+        changedProperties.has("componentFeatures")) &&
+      this.weavy &&
+      this.contextId &&
+      this.user &&
+      this.componentFeatures?.allowsFeature(Feature.ContextData)
+    ) {
+      await this.#uploadContextDataMutation.trackMutation(
+        getUploadBlobMutationOptions(this.weavy, this.user, this.contextId, undefined, "data")
+      );
+
+      await this.#mutatingContextData.trackMutationState(
+        {
+          filters: {
+            mutationKey: ["apps", this.contextId, "data"],
+            exact: true,
+          },
+        },
+        this.weavy.queryClient
+      );
+    }
+
+    // Update context data refs
+    if (changedProperties.has("data") || changedProperties.has("componentFeatures")) {
+      const prevContextDataRefs = this.#contextDataRefs;
+      this.#contextDataRefs = new Map();
+
+      // Add items
+      this.data?.forEach((dataItem) => {
+        const prevItem = prevContextDataRefs.get(dataItem);
+        if (prevItem) {
+          this.#contextDataRefs.set(dataItem, prevItem);
+        } else {
+          const dataRef = getContextDataRef(dataItem);
+          if (dataRef) {
+            //console.log("context data item", dataRef);
+            this.#contextDataRefs.set(dataItem, dataRef);
+          }
+        }
+      });
+
+      if (this.#contextDataRefs && this.componentFeatures?.allowsFeature(Feature.ContextData)) {
+        for (const dataRef of Array.from(this.#contextDataRefs.values())) {
+          if (dataRef.type === "file") {
+            const sha256 = await getHash(dataRef.item);
+
+            const existingUpload = await findAsyncSequential(
+              this.#mutatingContextData.result ?? [],
+              async (fileUpload) => {
+                const existingSha256 = fileUpload.context?.sha256 ?? (await getHash(fileUpload.variables?.file));
+                return existingSha256 === sha256;
+              }
+            );
+
+            if (!existingUpload) {
+              await this.#uploadContextDataMutation.mutate({ file: dataRef.item });
+            }
+          }
+        }
+
+        // TODO: remove old mutations or remove all when Feature.ContextData is changed
+
+        const contextDataMutationResults = this.#mutatingContextData.result;
+
+        const currentlyUploadingContextData = contextDataMutationResults?.some((upload) => upload.status === "pending");
+        const contextDataBlobs =
+          (contextDataMutationResults
+            ?.map((mutation) => mutation.data?.id)
+            .filter((x) => x)
+            .reverse() as number[] | undefined) ?? [];
+
+        if (!currentlyUploadingContextData) {
+          this.contextDataBlobs = contextDataBlobs;
+        }
+      } else {
+        // Let context consumers know that no blobs exist
+        this.contextDataBlobs = [];
+      }
     }
 
     // Links
@@ -666,9 +855,9 @@ export class WeavyComponent
         ((changedProperties.has("uid") && this.uid) || (changedProperties.has("app") && this.app)) &&
         this.componentType &&
         this.componentType !== ComponentType.Unknown) ||
-      ((changedProperties.has("appTypes") || changedProperties.has("bot")) && this.appTypes)
+      ((changedProperties.has("appTypes") || changedProperties.has("agent")) && this.appTypes)
     ) {
-      //console.log("Checking for storage link", this.appTypes, this.bot);
+      //console.log("Checking for storage link", this.appTypes, this.agent);
       this.readStorageLink();
     }
 
@@ -706,14 +895,34 @@ export class WeavyComponent
       this.#resolveApp?.(this.app);
     }
 
-    if (changedProperties.has("botUser") && this.botUser) {
-      if (changedProperties.get("botUser")) {
+    if (changedProperties.has("agentUser") && this.agentUser) {
+      if (changedProperties.get("agentUser")) {
         // reset promise
-        this.#whenBotUser = new Promise<BotType>((r) => {
-          this.#resolveBotUser = r;
+        this.#whenAgentUser = new Promise<AgentType>((r) => {
+          this.#resolveAgentUser = r;
         });
       }
-      this.#resolveBotUser?.(this.botUser);
+      this.#resolveAgentUser?.(this.agentUser);
+    }
+
+    if (changedProperties.has("contextDataBlobs") && this.contextDataBlobs) {
+      if (changedProperties.get("contextDataBlobs")) {
+        // reset promise
+        this.#whenContextDataBlobs = new Promise<ContextDataBlobsType>((r) => {
+          this.#resolveContextDataBlobs = r;
+        });
+      }
+      this.#resolveContextDataBlobs?.(this.contextDataBlobs);
+    }
+
+    if (changedProperties.has("contextId") && this.contextId) {
+      if (changedProperties.get("contextId")) {
+        // reset promise
+        this.#whenContextId = new Promise<ContextIdType>((r) => {
+          this.#resolveContextId = r;
+        });
+      }
+      this.#resolveContextId?.(this.contextId);
     }
 
     if (changedProperties.has("componentFeatures") && this.componentFeatures) {
@@ -766,6 +975,11 @@ export class WeavyComponent
       this.weavy.host.addEventListener("wy-notification", this.notificationEventHandler, { capture: true });
       this.#resolveWeavy?.(this.weavy);
     }
+
+    // DEPRECATED
+    if (changedProperties.has("bot") && typeof this.bot === "string") {
+      console.error(`Using .bot property is deprecated. Use .agent = "${this.bot}"; instead`);
+    }
   }
 }
 
@@ -777,10 +991,10 @@ export const AppTypeGuids = new Map(objectAsIterable<typeof AppTypeGuidMapping, 
 /** Map for all app type strings. Returns app type guid. */
 export const AppTypeStrings = new Map(objectAsIterable<typeof AppTypeStringMapping, AppTypeGuid>(AppTypeStringMapping));
 
-// Maps for bot types. Generic string typing, since not all app types are included.
+// Maps for agent types. Generic string typing, since not all app types are included.
 
-/** Map for all bot app type guids. Returns app type string. */
-export const BotAppTypeGuids = new Map(Object.entries(BotAppTypeGuidMapping));
+/** Map for all agent app type guids. Returns app type string. */
+export const AgentAppTypeGuids = new Map(Object.entries(AgentAppTypeGuidMapping));
 
-/** Map for all bot app type strings. Returns app type guid. */
-export const BotAppTypeStrings = new Map(Object.entries(BotAppTypeStringMapping));
+/** Map for all agent app type strings. Returns app type guid. */
+export const AgentAppTypeStrings = new Map(Object.entries(AgentAppTypeStringMapping));

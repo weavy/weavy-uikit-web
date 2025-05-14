@@ -16,6 +16,8 @@ $_indeterminate-duration: 2s;
   --_track-shape: 2px;
   --_active-indicator-height: 2px;
   --_active-indicator-color: #{color.token(--wy-primary)};
+  --_warning-color: #{color.token(--wy-warning)};
+  --_error-color: #{color.token(--wy-error)};
   --_track-color: #{color.token(--wy-surface-variant)};
   display: contents;
   position: relative;
@@ -43,7 +45,7 @@ $_indeterminate-duration: 2s;
   align-items: center;
 }
 
-[part~="wy-progress"][part~="wy-overlay"],
+[part~="wy-progress"][part~="wy-progress-overlay"],
 [part~="wy-inactive-track"],
 [part~="wy-bar"],
 [part~="wy-bar-inner"] {
@@ -207,4 +209,28 @@ $_indeterminate-duration: 2s;
   100% {
     transform: translateX(160.278%);
   }
+}
+
+// Warning, Error
+
+[part~="wy-progress-warning"], [part~="wy-progress-error"] {
+  [part~="wy-primary-bar"], [part~="wy-secondary-bar"], [part~="wy-bar-inner"] {
+    animation: none !important;
+  }
+
+  [part~="wy-secondary-bar"] {
+    display: none !important;
+  }
+
+  [part~="wy-primary-bar"] {
+    transform: scaleX(1) !important;
+  }
+}
+
+[part~="wy-progress-warning"] [part~="wy-bar-inner"] {
+  background: var(--_warning-color);
+}
+
+[part~="wy-progress-error"] [part~="wy-bar-inner"] {
+  background: var(--_error-color);
 }

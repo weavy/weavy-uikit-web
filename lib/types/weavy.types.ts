@@ -1,5 +1,4 @@
 import { LocaleModule } from "@lit/localize";
-import { WeavyType } from "../client/weavy";
 import { Nullable } from "./generic.types";
 import { WeavyComponentSettingProps } from "../classes/weavy-component";
 /**
@@ -89,8 +88,6 @@ export interface StrictWeavyOptions {
 }
 
 export type WeavyOptions = Nullable<Partial<StrictWeavyOptions & WeavyComponentSettingProps>>
-
-export type WeavyProps = { weavy: WeavyType };
 
 export type WeavyClientOptionsType =
   | (WeavyOptions & {

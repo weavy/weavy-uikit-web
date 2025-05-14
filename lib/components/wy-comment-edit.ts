@@ -11,7 +11,6 @@ import type { FileType } from "../types/files.types";
 import type { EmbedType } from "../types/embeds.types";
 import type { PollOptionType } from "../types/polls.types";
 import type { CommentType, MutateCommentProps } from "../types/comments.types";
-import type { WeavyProps } from "../types/weavy.types";
 import type { EditorSubmitEventType } from "../types/editor.events";
 import type { CommentEditEventType } from "../types/comments.events";
 import type { NamedEvent } from "../types/generic.types";
@@ -35,7 +34,7 @@ export default class WyCommentEdit extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavy?: WeavyType;
+  weavy?: WeavyType;
 
   @property({ type: Number })
   parentId!: number;
@@ -87,7 +86,7 @@ export default class WyCommentEdit extends LitElement {
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("parentId") || changedProperties.has("weavy")) && this.parentId && this.weavy) {

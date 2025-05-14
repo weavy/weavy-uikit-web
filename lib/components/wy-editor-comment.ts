@@ -1,9 +1,8 @@
-import { html, nothing, PropertyValues, TemplateResult } from "lit";
+import { html, nothing, type PropertyValueMap, type TemplateResult } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
-import { WeavyProps } from "../types/weavy.types";
 
 import WyEditor from "./wy-editor";
 import "./base/wy-dropdown";
@@ -20,7 +19,7 @@ export default class WyCommentEditor extends WyEditor {
     this.editorClass = "wy-comment-editor";
   }
 
-  override willUpdate(changedProperties: PropertyValues<this & WeavyProps>): void {
+  override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("editorLocation") && this.editorLocation === "files") {
@@ -123,7 +122,6 @@ export default class WyCommentEditor extends WyEditor {
 
   protected override renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return [
-      this.renderContextData(),
       this.renderLists()
     ];
   }

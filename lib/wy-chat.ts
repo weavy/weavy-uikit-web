@@ -14,9 +14,9 @@ import colorModesStyles from "./scss/color-modes.scss";
 
 import "./components/wy-conversation";
 import "./components/wy-notification-button-list";
-import "./components/wy-empty";
 import "./components/base/wy-button";
-import "./components/base/wy-spinner";
+import "./components/wy-context-data";
+import { property } from "lit/decorators.js";
 
 export const WY_CHAT_TAGNAME = "wy-chat";
 
@@ -46,6 +46,7 @@ export class WyChat extends WeavyComponent {
   override componentFeatures = new ComponentFeatures({
     // All available features as enabled/disabled by default
     [Feature.Attachments]: true,
+    [Feature.ContextData]: true,
     [Feature.CloudFiles]: true,
     [Feature.Embeds]: true,
     [Feature.GoogleMeet]: true,
@@ -62,13 +63,22 @@ export class WyChat extends WeavyComponent {
 
   protected theme = new ThemeController(this, WyChat.styles);
 
+  /**
+   * Placeholder text for the message editor. Overrides default text.
+   */
+  @property()
+  placeholder?: string;
+
   override render() {
     return html`
+      <wy-context-data-progress></wy-context-data-progress>
       <wy-buttons floating reverse>
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
 
-      <wy-conversation .conversation=${this.app} .conversationId=${this.app?.id}></wy-conversation>
+      <wy-conversation .conversation=${this.app} .conversationId=${this.app?.id} .placeholder=${this.placeholder}>
+        <wy-context-data-progress slot="footerbar"></wy-context-data-progress>
+      </wy-conversation>
     `;
   }
 }

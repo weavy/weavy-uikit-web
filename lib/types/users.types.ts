@@ -13,17 +13,18 @@ export type UserType = {
   tags?: string[];
   created_at?: string;
   updated_at?: string;
-  is_bot?: boolean;
-  is_trashed?: boolean;  
+  is_trashed?: boolean;
 };
 
 export type UsersResultType = QueryResultType<UserType>;
 
-export type BotType = UserType & {
+export type AgentType = UserType & {
   provider: string;
   model: string;
   instructions: string;
-  is_bot: true;
+  is_agent: true;
 };
+
+export type UserOrAgentType = UserType & Partial<AgentType>
 
 export type TypingUserType = UserType & { time: number };

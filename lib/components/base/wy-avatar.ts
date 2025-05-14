@@ -36,7 +36,7 @@ export default class WyAvatar extends LitElement {
   name?: string = "";
 
   @property({ type: Boolean, reflect: true })
-  isBot?: boolean = false;
+  isAgent?: boolean = false;
 
   @property()
   presence?: PresenceType;
@@ -81,10 +81,10 @@ export default class WyAvatar extends LitElement {
               <span part="wy-avatar-initials-text">${initials}</span>
             </div>
           `}
-      ${this.isBot
-        ? html`<wy-icon part="wy-avatar-type" name="bot" size="${(this.size / 3) * 1.25}"></wy-icon>`
+      ${this.isAgent
+        ? html`<wy-icon part="wy-avatar-type" name="agent" size="${(this.size / 3) * 1.25}"></wy-icon>`
         : nothing}
-      ${this.presence && !this.isBot
+      ${this.presence && !this.isAgent
         ? html`<wy-presence .status=${this.presence} id=${this.id}></wy-presence>`
         : nothing}
     `;
@@ -127,8 +127,8 @@ export class WyAvatarGroup extends LitElement {
       .slice(0, 2)
       .reverse();
 
-    const frontMember: UserType | undefined = otherMembers?.shift() || this.user;
-    const backMember: UserType | undefined =
+    const frontMember: MemberType | undefined = otherMembers?.shift() || this.user;
+    const backMember: MemberType | undefined =
       otherMembers?.shift() || (frontMember !== this.user ? this.user : undefined);
 
     return [
@@ -178,7 +178,7 @@ export class WyAvatarGroup extends LitElement {
           part="wy-avatar-front"
           .src=${frontMember.avatar_url}
           .name=${frontMember.name}
-          .isBot=${frontMember.is_bot}
+          .isAgent=${frontMember.is_agent}
           size=${(this.size * 2) / 3}
         ></wy-avatar>
       `,

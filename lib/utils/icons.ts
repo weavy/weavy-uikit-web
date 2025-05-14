@@ -54,7 +54,7 @@ export const iconMapping = {
   "backup-restore": mdi.mdiBackupRestore,
   "bell": mdi.mdiBell,
   "bell-off": mdi.mdiBellOff,
-  "bot": mdi.mdiStarFourPoints,
+  "agent": mdi.mdiStarFourPoints,
   "check": mdi.mdiCheck,
   "check-all": mdi.mdiCheckAll,
   "check-circle-outline": mdi.mdiCheckCircleOutline,

@@ -1,4 +1,4 @@
-import { LitElement, html, type PropertyValueMap } from "lit";
+import { html, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
@@ -11,8 +11,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdatePostMutationOptions } from "../data/posts";
-import { WeavyProps } from "../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { PostEditEventType } from "../types/posts.events";
 import type { NamedEvent } from "../types/generic.types";
@@ -26,7 +25,7 @@ import "./base/wy-icon";
 
 @customElement("wy-post-edit")
 @localized()
-export default class WyPostEdit extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyPostEdit extends WeavySubComponent {
   
   static override styles = chatCss;
 
@@ -97,7 +96,7 @@ export default class WyPostEdit extends WeavyComponentConsumerMixin(LitElement) 
     this.dispatchEdit(false);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {

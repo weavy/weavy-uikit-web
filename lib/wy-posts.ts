@@ -18,6 +18,8 @@ import "./components/wy-empty";
 import "./components/wy-notification-button-list";
 import "./components/base/wy-spinner";
 import "./components/wy-post-list";
+import "./components/wy-context-data";
+import { property } from "lit/decorators.js";
 
 export const WY_POSTS_TAGNAME = "wy-posts";
 
@@ -56,6 +58,7 @@ export class WyPosts extends WeavyComponent {
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
     [Feature.Comments]: true,
+    [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
@@ -70,13 +73,21 @@ export class WyPosts extends WeavyComponent {
 
   protected theme = new ThemeController(this, WyPosts.styles);
 
+  /**
+   * Placeholder text for the post editor. Overrides default text.
+   */
+  @property()
+  placeholder?: string;
+
   override render() {
     return html`
       <wy-buttons floating reverse>
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
 
-      <wy-post-list></wy-post-list>
+      <wy-post-list .placeholder=${this.placeholder}></wy-post-list>
+
+      <wy-context-data-progress></wy-context-data-progress>
     `;
   }
 }

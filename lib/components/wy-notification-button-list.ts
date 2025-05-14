@@ -1,10 +1,10 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { localized, msg } from "@lit/localize";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { MutateAppSubscribeContextType, MutateAppSubscribeProps, getAppSubscribeMutationOptions } from "../data/app";
 import { MutationController } from "../controllers/mutation-controller";
 
@@ -17,7 +17,7 @@ import "./base/wy-dropdown";
 
 @customElement("wy-notification-button-list")
 @localized()
-export default class WyNotificationButtonList extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyNotificationButtonList extends WeavySubComponent {
   protected exportParts = new ShadowPartsController(this);
 
   @state()
@@ -38,7 +38,7 @@ export default class WyNotificationButtonList extends WeavyComponentConsumerMixi
     }
   }
 
-  protected override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
     
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {

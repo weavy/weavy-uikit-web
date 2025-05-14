@@ -4,7 +4,6 @@ import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../../contexts/weavy-context";
 import { localized, msg, str } from "@lit/localize";
-import { WeavyProps } from "../../types/weavy.types";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 import { TypingController } from "../../controllers/typing-controller";
 
@@ -24,7 +23,7 @@ export default class WyTyping extends LitElement {
   @property({ attribute: true, type: Number })
   userId?: number;
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("appId")) {

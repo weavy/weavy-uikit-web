@@ -1,80 +1,88 @@
 <!DOCTYPE html>
 <html style="--wy-theme-color: #61afef">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <script>
-      //fetch("/api/contextual/acme-chat?type=chat")
-    </script>
-    <link rel="modulepreload" href="/locales/sv-SE.ts" />
-    <script type="module" src="/lib/index.ts"></script>
-    <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
-    <style>
-      :root {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-          "Open Sans", "Helvetica Neue", sans-serif;
-      }
 
-      * {
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <script>
+    //fetch("/api/contextual/acme-chat?type=chat")
+  </script>
+  <link rel="modulepreload" href="/locales/sv-SE.ts" />
+  <script type="module" src="/lib/index.ts"></script>
+  <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+        "Open Sans", "Helvetica Neue", sans-serif;
+    }
 
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-      }
+    * {
+      box-sizing: border-box;
+    }
 
-      .toolbar {
-        height: 3rem;
-        padding: 0.5rem;
-        display: flex;
-        justify-content: center;
-      }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
 
-      wy-chat {
-        height: calc(100vh - 3rem);
+    .toolbar {
+      height: 3rem;
+      padding: 0.5rem;
+      display: flex;
+      justify-content: center;
+    }
 
-        /* iPhone compatible height */
-        @supports (height: 100dvh) {
-          height: calc(100dvh - 3rem);
-        }
+    wy-chat {
+      height: calc(100vh - 3rem);
+
+      /* iPhone compatible height */
+      @supports (height: 100dvh) {
+        height: calc(100dvh - 3rem);
       }
-    </style>
-    <script>
-      function toggle() {
-        const chat = document.querySelector("wy-chat");
-        chat.hidden = !chat.hidden;
-      }
-    </script>
-  </head>
-  <body>
-    <wy-context url="%WEAVY_URL%" reactions="👍 ❤️ 😂 😒 😁" tokenUrl="/api/token"></wy-context>
-    <div class="toolbar"><button onclick="toggle()">Toggle</button></div>
-    <wy-chat uid="acme-chat" name="Acme Chit Chat"></wy-chat>
-    <wy-notification-toasts></wy-notification-toasts>
-    <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
-    <script>
+    }
+  </style>
+  <script>
+    function toggle() {
       const chat = document.querySelector("wy-chat");
-      chat.addEventListener("wy-preview-open", (e) => {
-        if (window.top !== window.self) {
-          console.log("requesting external preview", e.detail.fileId, e.detail.tab);
-          window.top.postMessage({
-            name: "wy-preview-open",
-            ...e.detail,
-          });
-          e.preventDefault();
-        }
-      });
-      document.addEventListener("wy-link", (e) => {
-        console.log("wy-link", e);
-      });
-      
-      chat.addEventListener("wy-app", (e) => {
-        console.log("wy-app", e.detail);
-      });
+      chat.hidden = !chat.hidden;
+    }
+  </script>
+</head>
 
-    </script>
-  </body>
+<body>
+  <wy-context url="%WEAVY_URL%" reactions="👍 ❤️ 😂 😒 😁" tokenUrl="/api/token"></wy-context>
+  <div class="toolbar"><button onclick="toggle()">Toggle</button></div>
+  <wy-chat uid="acme-chat" name="Acme Chit Chat"></wy-chat>
+  <wy-notification-toasts></wy-notification-toasts>
+  <tanstack-dev-tools buttonposition="top-left" position="top"></tanstack-dev-tools>
+  <script>
+    
+    const chat = document.querySelector("wy-chat");
+
+    const data = ["Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."]
+    //chat.data = data;
+
+    chat.addEventListener("wy-preview-open", (e) => {
+      if (window.top !== window.self) {
+        console.log("requesting external preview", e.detail.fileId, e.detail.tab);
+        window.top.postMessage({
+          name: "wy-preview-open",
+          ...e.detail,
+        });
+        e.preventDefault();
+      }
+    });
+    document.addEventListener("wy-link", (e) => {
+      console.log("wy-link", e);
+    });
+
+    chat.addEventListener("wy-app", (e) => {
+      console.log("wy-app", e.detail);
+    });
+
+  </script>
+</body>
+
 </html>

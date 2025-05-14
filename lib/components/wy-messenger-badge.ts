@@ -5,7 +5,6 @@ import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import chatCss from "../scss/all.scss";
 import { QueryController } from "../controllers/query-controller";
-import { WeavyProps } from "../types/weavy.types";
 import { RealtimeAppMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
 import { getBadgeOptions } from "../data/app";
 import { AppsResultType, AppTypeGuid } from "../types/app.types";
@@ -16,7 +15,7 @@ export default class WyMessengerBadge extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavy?: WeavyType;
+  weavy?: WeavyType;
 
   @property({ attribute: false, type: Boolean })
   private: boolean = true;
@@ -25,7 +24,7 @@ export default class WyMessengerBadge extends LitElement {
   rooms: boolean = true;
 
   @property()
-  bot?: string;
+  agent?: string;
 
   badgeQuery = new QueryController<AppsResultType>(this);
 
@@ -45,7 +44,7 @@ export default class WyMessengerBadge extends LitElement {
 
   #unsubscribeToRealtime?: () => void;
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("weavy") && this.weavy) {
@@ -59,11 +58,11 @@ export default class WyMessengerBadge extends LitElement {
         typeFilter.push(AppTypeGuid.PrivateChat);
       }
 
-      if (this.bot) {
-        typeFilter.push(AppTypeGuid.BotChat);
+      if (this.agent) {
+        typeFilter.push(AppTypeGuid.AgentChat);
       }
 
-      await this.badgeQuery.trackQuery(getBadgeOptions(this.weavy, typeFilter, this.bot), true);
+      await this.badgeQuery.trackQuery(getBadgeOptions(this.weavy, typeFilter, this.agent), true);
 
       this.#unsubscribeToRealtime?.();
 

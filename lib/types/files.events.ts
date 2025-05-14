@@ -1,5 +1,6 @@
 import { SubscribeEventType } from "./app.events";
 import { AppType } from "./app.types";
+import { ContextDataBlobsType } from "./context.types";
 import { BlobType, ExternalBlobType, FileType } from "./files.types";
 
 // Local ShadowDOM events (composed: false, bubbling: true)
@@ -64,6 +65,8 @@ export type WyPreviewOpenEventDetailType = {
   features: string;
   /** Whether the file is an attachment. */
   isAttachment: boolean;
+  /** Any uploaded context data */
+  contextDataBlobs: ContextDataBlobsType;
 };
 
 /**

@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -14,7 +14,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { type AppType, EntityTypeString} from "../types/app.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { isEntityChainMatch } from "../utils/notifications";
@@ -39,7 +39,7 @@ import "./wy-poll";
 
 @customElement("wy-message")
 @localized()
-export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyMessage extends WeavySubComponent {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -54,7 +54,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
   me: boolean = false;
 
   @property({ type: Boolean })
-  isBot: boolean = false;
+  isAgent: boolean = false;
 
   @property({ type: Boolean })
   isPrivateChat: boolean = false;
@@ -103,7 +103,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
     return this.dispatchEvent(event);
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("link")) {
@@ -126,7 +126,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
 
     return html`
       <div
-        class=${classMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-bot": this.isBot })}
+        class=${classMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-agent": this.isAgent })}
         part=${partMap({ "wy-highlight": this.highlight })}
         ${ref(this.highlightRef)}
       >
@@ -137,7 +137,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
                   .src="${this.avatar}"
                   .size=${32}
                   .name="${this.name}"
-                  .isBot=${this.isBot}
+                  .isAgent=${this.isAgent}
                 ></wy-avatar>
               </div>
             `
@@ -258,7 +258,7 @@ export default class WyMessage extends WeavyComponentConsumerMixin(LitElement) {
     `;
   }
 
-  protected override updated(changedProperties: PropertyValues<this>) {
+  protected override updated(changedProperties: PropertyValueMap<this>) {
       if (changedProperties.has("highlight") && this.highlight) {
         this.highlightRef.value?.scrollIntoView({ block: "nearest" })
       } 

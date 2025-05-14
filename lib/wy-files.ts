@@ -46,6 +46,8 @@ import { RealtimeFileEventType } from "./types/realtime.types";
 import { WeavyComponent } from "./classes/weavy-component";
 import { getFlatInfiniteResultData } from "./utils/query-cache";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
+import { OrderEventType, ShowTrashedEventType, ViewEventType } from "./types/lists.events";
+import { SubscribeEventType } from "./types/app.events";
 
 import allStyles from "./scss/all.scss";
 import hostBlockStyles from "./scss/host-block.scss";
@@ -59,8 +61,6 @@ import "./components/wy-preview";
 import "./components/base/wy-spinner";
 import "./components/wy-empty";
 import "./components/base/wy-icon";
-import { OrderEventType, ShowTrashedEventType, ViewEventType } from "./types/lists.events";
-import { SubscribeEventType } from "./types/app.events";
 
 export const WY_FILES_TAGNAME = "wy-files";
 
@@ -92,6 +92,7 @@ export class WyFiles extends WeavyComponent {
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
     [Feature.Comments]: true,
+    [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
@@ -273,10 +274,10 @@ export class WyFiles extends WeavyComponent {
           { name: "order", override: true },
           { name: "showTrashed", override: true },
         ],
-        this.uid,
+        this.uid.toString(),
         `u${this.user.id}`
       );
-      //this.history.observe(['view'], this.uid)
+      //this.history.observe(['view'], this.uid.toString())
     }
 
     if (

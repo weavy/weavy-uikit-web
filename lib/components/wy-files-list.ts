@@ -1,11 +1,11 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 import type { FileOrderType, FileType, FileViewType } from "../types/files.types";
 import type { FileDeleteForeverEventType, FileEditNameEventType, FileOpenEventType, FileRenameEventType, FileRestoreEventType, FileSubscribeEventType, FileTrashEventType } from "../types/files.events";
 import { repeat } from "lit/directives/repeat.js";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { createRef, Ref } from "lit/directives/ref.js";
 import { EntityTypeString } from "../types/app.types";
@@ -38,7 +38,7 @@ import "./wy-file-menu";
  */
 @customElement("wy-files-list")
 @localized()
-export class WyFilesList extends WeavyComponentConsumerMixin(LitElement) {
+export class WyFilesList extends WeavySubComponent {
   static override styles = [allCss, hostScrollYStyles, gridCss, cardCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -116,7 +116,7 @@ export class WyFilesList extends WeavyComponentConsumerMixin(LitElement) {
     });
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("link")) {
@@ -152,7 +152,7 @@ export class WyFilesList extends WeavyComponentConsumerMixin(LitElement) {
     return nothing;
   }
 
-  protected override updated(changedProperties: PropertyValues<this>) {
+  protected override updated(changedProperties: PropertyValueMap<this>) {
     if (changedProperties.has("highlightId") && this.highlightId) {
       this.highlightRef.value?.scrollIntoView({ block: "nearest" });
     }

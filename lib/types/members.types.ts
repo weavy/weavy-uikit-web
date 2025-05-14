@@ -1,9 +1,9 @@
 import { AccessType } from "./app.types";
 import { PresenceType } from "./presence.types";
 import { QueryResultType } from "./query.types";
-import { UserType } from "./users.types";
+import { UserOrAgentType } from "./users.types";
 
-export type MemberType = UserType & {
+export type MemberType = UserOrAgentType & {
   access?: AccessType;
   delivered_at?: string;
   read_at?: string;

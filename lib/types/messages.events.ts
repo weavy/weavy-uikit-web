@@ -15,8 +15,8 @@ export type WyMessageEventDetailType = {
   message: MessageType;
   /** The direction of the message. */
   direction: "inbound" | "outbound",
-  /** Bot name when the message is from a bot. */
-  bot?: string
+  /** Agent name when the message is from an AI agent. */
+  agent?: string
 }
 
 /**

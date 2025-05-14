@@ -1,7 +1,7 @@
-import { LitElement, html, type PropertyValues, nothing } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import type { MemberType, MembersResultType } from "../types/members.types";
 import { getMemberOptions } from "../data/members";
 import { QueryController } from "../controllers/query-controller";
@@ -19,7 +19,6 @@ import {
 import { ifDefined } from "lit/directives/if-defined.js";
 import { inputBlurOnEnter } from "../utils/keyboard";
 import type { RealtimeAppEventType, RealtimePresenceEventType } from "../types/realtime.types";
-import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { BlobType } from "../types/files.types";
 import { type AppType, AppTypeGuid, AccessType, PermissionType } from "../types/app.types";
@@ -38,7 +37,7 @@ import "./base/wy-overlay";
 
 @customElement("wy-conversation-appbar")
 @localized()
-export default class WyConversationAppbar extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyConversationAppbar extends WeavySubComponent {
   static override styles = [
     chatCss,
     hostContentsCss,
@@ -70,8 +69,8 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
    */
   private releaseFocusEvent = () => new CustomEvent<undefined>("release-focus", { bubbles: true, composed: true });
 
-  protected isBotChat(conversation?: AppType) {
-    return (conversation ?? this.conversation)?.type === AppTypeGuid.BotChat;
+  protected isAgentChat(conversation?: AppType) {
+    return (conversation ?? this.conversation)?.type === AppTypeGuid.AgentChat;
   }
 
   protected isChatRoom(conversation?: AppType) {
@@ -200,7 +199,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     // if context updated
@@ -346,7 +345,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                                 src=${ifDefined(otherMember?.avatar_url)}
                                 name=${ifDefined(otherMember?.name)}
                                 presence=${otherMember?.presence || "away"}
-                                ?isBot=${otherMember?.is_bot}
+                                ?isAgent=${otherMember?.is_agent}
                                 id=${ifDefined(otherMember?.id)}
                                 size=${96}
                               ></wy-avatar>
@@ -382,7 +381,7 @@ export default class WyConversationAppbar extends WeavyComponentConsumerMixin(Li
                                             <wy-avatar
                                               .src=${member.avatar_url}
                                               .name=${member.name}
-                                              .isBot=${member.is_bot}
+                                              .isAgent=${member.is_agent}
                                               size=${32}
                                             ></wy-avatar>
                                             <div class="wy-item-body">

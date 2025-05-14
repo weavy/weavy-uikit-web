@@ -5,7 +5,7 @@ import { MetadataType } from "./lists.types";
 import { MeetingType } from "./meetings.types";
 import { PollOptionsResultType } from "./polls.types";
 import { ReactionsResultType } from "./reactions.types";
-import { UserType } from "./users.types";
+import { UserOrAgentType } from "./users.types";
 
 /* Base type for Comment, Message, Post etc */
 export type MsgType = {
@@ -44,9 +44,9 @@ export type MsgType = {
   /** Date and time (UTC) the entity was created. */
   created_at: string;
   /** The user that created the entity. */
-  created_by: UserType;
+  created_by: UserOrAgentType;
   /** Date and time (UTC) the notification was last modified. */
   updated_at?: string;
   /** The user that modified the entity. */
-  updated_by?: UserType;
+  updated_by?: UserOrAgentType;
 };

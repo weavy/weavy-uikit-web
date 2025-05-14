@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
+import { html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -28,8 +28,7 @@ import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
 import { inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { RealtimePresenceEventType } from "../types/realtime.types";
-import { WeavyProps } from "../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import {
   LeaveEventType,
@@ -54,7 +53,7 @@ import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-conversation-list")
 @localized()
-export default class WeavyConversationList extends WeavyComponentConsumerMixin(LitElement) {
+export default class WeavyConversationList extends WeavySubComponent {
   static override styles = [
     chatCss,
     css`
@@ -79,7 +78,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
   conversationTypes?: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
 
   @property()
-  bot?: string;
+  agent?: string;
 
   @state()
   private searchText?: string = "";
@@ -180,7 +179,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("conversationTypes")) && this.weavy) {
@@ -189,7 +188,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
           this.weavy,
           {},
           this.conversationTypes,
-          this.bot,
+          this.agent,
           () => this.searchText,
           "pinned_at desc,rev desc",
           false
@@ -221,7 +220,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
     }
 
     if (changedProperties.has("user") && this.user) {
-      if (!this.bot) {
+      if (!this.agent) {
         this.avatarUser ??= this.user;
       }
     }
@@ -251,7 +250,7 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
             html`<wy-conversation-list-item
               .conversationId=${conversation?.id}
               .avatarUrl=${conversation?.avatar_url}
-              .hideAvatar=${Boolean(this.bot)}
+              .hideAvatar=${Boolean(this.agent)}
               .name=${conversation.name}
               .lastMessage=${conversation.last_message}
               .members=${conversation.members}
@@ -293,14 +292,14 @@ export default class WeavyConversationList extends WeavyComponentConsumerMixin(L
                         .size=${24}
                       ></wy-avatar>
                     `}
-                <div class="wy-appbar-text">${this.name ?? (this.bot ? this.avatarUser?.name : msg("Messenger"))}</div>
+                <div class="wy-appbar-text">${this.name ?? (this.agent ? this.avatarUser?.name : msg("Messenger"))}</div>
                 <wy-conversation-new
-                  .bot=${this.bot}
+                  .agent=${this.agent}
                   @selected=${(e: SelectedEventType) => this.dispatchSelected(e.detail.id)}
                 ></wy-conversation-new>
               </nav>
             </header>
-            ${!this.bot
+            ${!this.agent
               ? html`
                   <div class="wy-pane-body">
                     <div class="wy-pane-group">

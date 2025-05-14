@@ -12,7 +12,6 @@ import { localized, msg } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { RealtimeAppMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
-import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { UserContext } from "../contexts/user-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -52,10 +51,10 @@ export default class WyConversationListItem extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavy?: WeavyType;
+  weavy?: WeavyType;
 
   @property({ attribute: true, type: Number })
-  conversationId!: number;
+  conversationId?: number;
 
   @property({ attribute: true, type: Boolean })
   unread: boolean = false;
@@ -126,13 +125,19 @@ export default class WyConversationListItem extends LitElement {
     }
   };
 
-  private dispatchSelected(e: Event, id: number) {
+  private dispatchSelected(e: Event) {
     e.preventDefault();
-    const event: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: id } });
+    if (!this.conversationId) {
+      return
+    }
+    const event: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: this.conversationId } });
     return this.dispatchEvent(event);
   }
 
   private handleStar(e: Event, star: boolean) {
+    if (!this.conversationId) {
+      return
+    }
     const event: StarEventType = new (CustomEvent as NamedEvent)("star", {
       detail: { id: this.conversationId, star: star },
     });
@@ -140,6 +145,10 @@ export default class WyConversationListItem extends LitElement {
   }
 
   private handlePin(e: Event, pin: boolean) {
+    if (!this.conversationId) {
+      return
+    }
+
     const event: PinEventType = new (CustomEvent as NamedEvent)("pin", {
       detail: { id: this.conversationId, pin: pin },
     });
@@ -147,6 +156,10 @@ export default class WyConversationListItem extends LitElement {
   }
 
   private dispatchMarked(mark: boolean) {
+    if (!this.conversationId) {
+      return
+    }
+
     const event: MessagesMarkEventType = new (CustomEvent as NamedEvent)("mark", {
       detail: { id: this.conversationId, messageId: mark ? this.lastMessage?.id : null },
     });
@@ -154,6 +167,10 @@ export default class WyConversationListItem extends LitElement {
   }
 
   private handleLeaveConversation() {
+    if (!this.conversationId) {
+      return
+    }
+
     const event: LeaveEventType = new (CustomEvent as NamedEvent)("leave", {
       detail: { id: this.conversationId },
     });
@@ -161,6 +178,10 @@ export default class WyConversationListItem extends LitElement {
   }
 
   private handleRemoveConversation() {
+    if (!this.conversationId) {
+      return
+    }
+
     const event: RemoveEventType = new (CustomEvent as NamedEvent)("remove", {
       detail: { id: this.conversationId },
     });
@@ -168,6 +189,10 @@ export default class WyConversationListItem extends LitElement {
   }
 
   private handleTrashConversation() {
+    if (!this.conversationId) {
+      return
+    }
+
     const event: TrashEventType = new (CustomEvent as NamedEvent)("trash", {
       detail: { id: this.conversationId },
     });
@@ -176,10 +201,10 @@ export default class WyConversationListItem extends LitElement {
 
   #unsubscribeToRealtime?: () => void;
 
-  override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+  override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
-    if (changedProperties.has("weavy") && this.weavy) {
+    if ((changedProperties.has("weavy") || changedProperties.has("conversationId")) && this.weavy && this.conversationId) {
       this.#unsubscribeToRealtime?.();
 
       // realtime
@@ -223,11 +248,11 @@ export default class WyConversationListItem extends LitElement {
           "wy-active": this.selected,
         })}
         tabindex="0"
-        @click=${(e: Event) => this.dispatchSelected(e, this.conversationId)}
+        @click=${(e: MouseEvent) => this.dispatchSelected(e)}
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
-        ${this.type !== AppTypeGuid.BotChat
+        ${this.type !== AppTypeGuid.AgentChat
           ? this.avatarUrl
             ? html`<wy-avatar .size=${48} src=${this.avatarUrl}></wy-avatar>`
             : this.type == AppTypeGuid.ChatRoom
@@ -237,7 +262,7 @@ export default class WyConversationListItem extends LitElement {
                   src=${ifDefined(otherMember?.avatar_url)}
                   name=${ifDefined(otherMember?.name)}
                   presence=${otherMember?.presence || "away"}
-                  ?isBot=${otherMember?.is_bot}
+                  ?isAgent=${otherMember?.is_agent}
                   id=${ifDefined(otherMember?.id)}
                   size=${48}
                 ></wy-avatar>
@@ -328,7 +353,7 @@ export default class WyConversationListItem extends LitElement {
                       ${msg("Leave")}
                     </wy-dropdown-item>`
                   : nothing}
-                ${this.type === AppTypeGuid.BotChat
+                ${this.type === AppTypeGuid.AgentChat
                   ? html`
                       <wy-dropdown-item @click=${() => this.handleTrashConversation()}>
                         <wy-icon name="trashcan"></wy-icon>

@@ -20,8 +20,8 @@ export function handleRealtimeMessage (this: WeavyComponent, realtimeEvent: Real
       direction: realtimeEvent.message.created_by.id === this.user?.id ? "outbound" : "inbound",
     };
 
-    if (realtimeEvent.message.created_by.is_bot) {
-      messageDetail.bot = realtimeEvent.message.created_by.uid;
+    if (realtimeEvent.message.created_by.is_agent) {
+      messageDetail.agent = realtimeEvent.message.created_by.uid;
     }
 
     const messageEvent: WyMessageEventType = new (CustomEvent as NamedEvent)("wy-message", {

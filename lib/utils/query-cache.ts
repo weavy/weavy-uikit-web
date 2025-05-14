@@ -345,10 +345,11 @@ export const addCacheItems = <
   T extends PlainObjectType,
   TQueryFnData extends InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T> =
     | InfiniteData<InfiniteQueryResultType<T>, unknown>
-    | QueryResultType<T>
+    | QueryResultType<T>,
+  TQueryKey extends QueryKey = readonly unknown[]
 >(
   queryClient: QueryClient,
-  filters: QueryFilters<TQueryFnData>,
+  filters: QueryFilters<TQueryKey>,
   item: T,
   sorting?: { by?: string; descending?: boolean }
 ): T | void => {
@@ -477,7 +478,7 @@ export function getPendingCacheItem<T extends MsgType>(queryClient: QueryClient,
     const pendingItems = query.state.data.pages
       .flatMap((pages) => pages.data)
       .filter((item) => item && item.id < 0)
-      .sort((a, b) => a && b ? a.id - b.id : 0);
+      .sort((a, b) => (a && b ? a.id - b.id : 0));
 
     return pendingItems.length ? (oldest ? pendingItems[pendingItems.length - 1] : pendingItems[0]) : null;
   }

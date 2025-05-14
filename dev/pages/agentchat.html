@@ -33,7 +33,7 @@
 </head>
 <body>
   <header>
-    <select id="bots"></select>
+    <select id="agents"></select>
   </header>
   <wy-context
     url="%WEAVY_URL%"
@@ -51,42 +51,44 @@
       }"
   >
     <tanstack-dev-tools buttonposition="top-right" position="top"></tanstack-dev-tools>
-    <wy-messenger bot="?"></wy-messenger>
+    <wy-messenger agent="?"></wy-messenger>
     <wy-notification-toasts></wy-notification-toasts>
   </wy-context>
   <script>
     const messenger = document.querySelector("wy-messenger");
-    const botSelector = document.getElementById("bots");
+    const agentSelector = document.getElementById("agents");
 
-    const bots = fetch("/api/bots")
+    const agents = fetch("/api/agents")
       .then((res) => res.json())
-      .then((bots) => {
-        bots.forEach((bot) => {
+      .then((agents) => {
+        agents.forEach((agent) => {
           const option = document.createElement("option");
-          option.value = bot.username;
-          option.text = bot.name;
-          if (bot.username === document.location.hash.substr(1)) {
+          option.value = agent.username;
+          option.text = agent.name;
+          if (agent.username === document.location.hash.substr(1)) {
             option.selected = true;
-            messenger.setAttribute("bot", bot.username);
+            messenger.setAttribute("agent", agent.username);
           }
-          botSelector.add(option);
+          agentSelector.add(option);
         });
 
         // Set default
-        botSelector.value = messenger.getAttribute("bot");
+        agentSelector.value = messenger.getAttribute("agent");
       });
 
-    botSelector.addEventListener("change", () => {
-      console.log("bot ->", botSelector.value);
-      messenger.setAttribute("bot", botSelector.value);
-      document.location.hash = botSelector.value;
+      agentSelector.addEventListener("change", () => {
+      console.log("agent ->", agentSelector.value);
+      messenger.setAttribute("agent", agentSelector.value);
+
+      //document.location.hash = agentSelector.value;
+      history.replaceState(history.state, "", `#${agentSelector.value}`);
     });
 
     window.addEventListener("hashchange", (e) => {
-      const botHash = document.location.hash.substr(1);
-      if (botSelector.value !== botHash) {
-        console.log("bot changed by url hash", botHash);
-        botSelector.value = botHash;
+      const agentHash = document.location.hash.substr(1);
+      if (agentSelector.value !== agentHash) {
+        console.log("agent changed by url hash", agentHash);
+        agentSelector.value = agentHash;
       }
     })
 

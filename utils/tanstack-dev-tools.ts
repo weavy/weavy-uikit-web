@@ -70,11 +70,9 @@ export default class TanstackDevTools extends LitElement {
   override updated() {
     if (!this.devtools && this.containerRef.value && this.weavy) {
       this.devtools = new TanstackQueryDevtools.TanstackQueryDevtools({
-        // @ts-expect-error TanstackQueryDevtoolsConfig: Property '#private' in type 'QueryClient' refers to a different member that cannot be accessed from within type 'QueryClient'.
         client: this.weavy.queryClient,
         queryFlavor: "Lit Query",
         version: "5",
-        // @ts-expect-error TanstackQueryDevtoolsConfig: Property '#private' in type 'OnlineManager' refers to a different member that cannot be accessed from within type 'OnlineManager'
         onlineManager,
         buttonPosition: this.buttonPosition,
         position: this.position,

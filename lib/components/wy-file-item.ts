@@ -10,14 +10,14 @@ import { getFileActionIconMapping } from "../utils/icons";
 import { ref } from "lit/directives/ref.js";
 import { autofocusRef } from "../utils/dom";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { FileDeleteForeverEventType, FileEditNameEventType, FileRenameEventType, FileRestoreEventType, FileSubscribeEventType, FileTrashEventType } from "../types/files.events";
+import { NamedEvent } from "../types/generic.types";
 
 import filesCss from "../scss/all.scss"
 
 import "./base/wy-icon";
 import "./wy-file-menu";
 import "./base/wy-spinner";
-import { FileDeleteForeverEventType, FileEditNameEventType, FileRenameEventType, FileRestoreEventType, FileSubscribeEventType, FileTrashEventType } from "../types/files.events";
-import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-file-item")
 export class WyFileItem extends LitElement {

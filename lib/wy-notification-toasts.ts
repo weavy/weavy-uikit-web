@@ -1,4 +1,4 @@
-import { PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { localized } from "@lit/localize";
@@ -10,8 +10,7 @@ import { WyNotificationEventType } from "./types/notifications.events";
 import { repeat } from "lit/directives/repeat.js";
 import { getMarkNotificationMutation } from "./data/notifications";
 import { RealtimeNotificationEventType } from "./types/realtime.types";
-import { WeavyProps } from "./types/weavy.types";
-import { dispatchLinkEvent, getBotName, getNotificationText } from "./utils/notifications";
+import { dispatchLinkEvent, getAgentName, getNotificationText } from "./utils/notifications";
 import { NamedEvent } from "./types/generic.types";
 
 import colorModesStyles from "./scss/color-modes.scss";
@@ -102,8 +101,8 @@ export class WyNotificationToasts extends WeavyComponent {
           lang: this.weavy?.locale,
         };
 
-        // Populate bot
-        formattedNotification.link.bot = getBotName(formattedNotification);
+        // Populate agent
+        formattedNotification.link.agent = getAgentName(formattedNotification);
 
         const notificationEvent: WyNotificationEventType = new (CustomEvent as NamedEvent)("wy-notification", {
           bubbles: true,
@@ -249,7 +248,7 @@ export class WyNotificationToasts extends WeavyComponent {
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValues<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     await super.willUpdate(changedProperties);
 
     if (changedProperties.has("weavy") && this.weavy) {

@@ -1,5 +1,5 @@
 import { localized, msg } from "@lit/localize";
-import { LitElement, type PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
@@ -18,8 +18,11 @@ import { addCacheItem, getFlatInfiniteResultData, updateCacheItem } from "../uti
 import { MsgType } from "../types/msg.types";
 import { updateReaction } from "../data/reactions";
 import { Feature } from "../contexts/features-context";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
+import type { PollVoteEventType } from "../types/polls.events";
+import type { PostRestoreEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
+import type { EditorSubmitEventType } from "../types/editor.events";
 
 import allStyles from "../scss/all.scss";
 import pagerStyles from "../scss/components/pager.scss";
@@ -28,14 +31,15 @@ import "./wy-editor";
 import "./wy-empty";
 import "./wy-post";
 import "./base/wy-spinner";
-import { PollVoteEventType } from "../types/polls.events";
-import { PostRestoreEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
-import { EditorSubmitEventType } from "../types/editor.events";
+import { property } from "lit/decorators.js";
 
 @customElement("wy-post-list")
 @localized()
-export class WyPostList extends WeavyComponentConsumerMixin(LitElement) {
+export class WyPostList extends WeavySubComponent {
   static override styles = [allStyles, pagerStyles];
+
+  @property()
+  placeholder?: string;
 
   protected exportParts = new ShadowPartsController(this);
 
@@ -131,7 +135,7 @@ export class WyPostList extends WeavyComponentConsumerMixin(LitElement) {
 
   #unsubscribeToRealtime?: () => void;
 
-  override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (
@@ -178,7 +182,7 @@ export class WyPostList extends WeavyComponentConsumerMixin(LitElement) {
     }
   }
 
-  protected override update(changedProperties: PropertyValues<this>): void {
+  protected override update(changedProperties: PropertyValueMap<this>): void {
     super.update(changedProperties);
     this.infiniteScroll.observe(this.postsQuery.result, this.pagerRef.value);
   }
@@ -195,7 +199,7 @@ export class WyPostList extends WeavyComponentConsumerMixin(LitElement) {
             ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
             .typing=${false}
             .draft=${true}
-            placeholder=${msg("Create a post...")}
+            placeholder=${this.placeholder ?? msg("Create a post...")}
             buttonText=${msg("Post")}
             @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
           ></wy-editor>

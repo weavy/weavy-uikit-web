@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValueMap } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
@@ -17,9 +17,8 @@ import {
 } from "../data/file-versions";
 import { openUrl } from "../utils/urls";
 import { relativeTime } from "../utils/datetime";
-import { WeavyProps } from "../types/weavy.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import filesCss from "../scss/all.scss";
@@ -37,7 +36,7 @@ import { NamedEvent } from "../types/generic.types";
  */
 @customElement("wy-file-versions")
 @localized()
-export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
+export class WyFileVersions extends WeavySubComponent {
   static override styles = filesCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -80,7 +79,7 @@ export class WyFileVersions extends WeavyComponentConsumerMixin(LitElement) {
     openUrl(file.download_url, "_top", file.name, true);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (

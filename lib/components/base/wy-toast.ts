@@ -45,7 +45,7 @@ export class WyToasts extends LitElement {
 
   override render() {
     return html`
-      <div class="wy-toasts" tabindex="0" ${ref(this.viewportRef)} ?hidden=${!this.show} popover>
+      <div class="wy-toasts" tabindex="0" ${ref(this.viewportRef)} ?hidden=${!this.show} popover="auto">
         <slot></slot>
       </div>
     `;

@@ -5,7 +5,6 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { TypingController } from "../controllers/typing-controller";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
-import { type WeavyProps } from "../types/weavy.types";
 import { classMap } from "lit/directives/class-map.js";
 import { MemberType } from "../types/members.types";
 import { TypingUserType } from "../types/users.types";
@@ -50,7 +49,7 @@ export default class WyMessageTyping extends LitElement {
   members?: MemberType[];
 
   @property({ attribute: false })
-  bots?: MemberType[];
+  agents?: MemberType[];
 
   @state()
   private typingMembers: TypingUserType[] = [];
@@ -61,7 +60,7 @@ export default class WyMessageTyping extends LitElement {
   @state()
   private typingTime?: Date;
 
-  protected override willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("conversationId")) {
@@ -85,7 +84,7 @@ export default class WyMessageTyping extends LitElement {
 
   override render() {
     const members = this.typingMembers.map((typingMember) =>
-      [...(this.members ?? []), ...(this.bots ?? [])].find((member) => member.id === typingMember.id)
+      [...(this.members ?? []), ...(this.agents ?? [])].find((member) => member.id === typingMember.id)
     ).filter((x) => x);
 
     // Make a readable list
@@ -110,7 +109,7 @@ export default class WyMessageTyping extends LitElement {
 
     return members.length
       ? html`
-          <div class=${classMap({ "wy-message": true, "wy-message-bot": Boolean(members[0]?.is_bot) })}>
+          <div class=${classMap({ "wy-message": true, "wy-message-agent": Boolean(members[0]?.is_agent) })}>
             <div class="wy-message-author">
               ${members.length > 1
                 ? html`
@@ -125,7 +124,7 @@ export default class WyMessageTyping extends LitElement {
                       .size=${32}
                       .src=${members[0]?.avatar_url}
                       .name=${typingNames}
-                      .isBot=${members[0]?.is_bot}
+                      .isAgent=${members[0]?.is_agent}
                     ></wy-avatar>
                   `}
             </div>

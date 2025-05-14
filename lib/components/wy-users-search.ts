@@ -11,7 +11,6 @@ import { localized, msg } from "@lit/localize";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { clickOnEnterAndConsumeOnSpace, inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
-import { WeavyProps } from "../types/weavy.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { InfiniteQueryResultType } from "../types/query.types";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
@@ -42,7 +41,7 @@ export default class WyUsersSearch extends LitElement {
 
   @consume({ context: WeavyContext, subscribe: true })
   @state()
-  private weavy?: WeavyType;
+  weavy?: WeavyType;
 
   @property({ attribute: false })
   appId?: number;
@@ -51,7 +50,7 @@ export default class WyUsersSearch extends LitElement {
   buttonTitle?: string;
 
   @state()
-  botFilter?: boolean = undefined;
+  agentFilter?: boolean = undefined;
 
   @state()
   private selected: MemberType[] = [];
@@ -123,7 +122,7 @@ export default class WyUsersSearch extends LitElement {
                 .src=${member.avatar_url}
                 .name=${member.name}
                 .presence=${member.presence}
-                .isBot=${member.is_bot}
+                .isAgent=${member.is_agent}
                 size=${32}
               ></wy-avatar>
               <div class="wy-item-body"> ${member.name} </div>
@@ -169,7 +168,7 @@ export default class WyUsersSearch extends LitElement {
                 .src=${member.avatar_url}
                 .name=${member.name}
                 .presence=${member.presence}
-                .isBot=${member.is_bot}
+                .isAgent=${member.is_agent}
                 size=${32}
               ></wy-avatar>
               <div class="wy-item-body"> ${member.name} </div>
@@ -210,17 +209,17 @@ export default class WyUsersSearch extends LitElement {
         <div>
           <wy-buttons tabs>
             <wy-button
-              ?active=${this.botFilter === undefined}
-              @click=${() => (this.botFilter = undefined)}
+              ?active=${this.agentFilter === undefined}
+              @click=${() => (this.agentFilter = undefined)}
               kind="tab"
               small
               >${msg("All")}</wy-button
             >
-            <wy-button ?active=${this.botFilter === false} @click=${() => (this.botFilter = false)} kind="tab" small
+            <wy-button ?active=${this.agentFilter === false} @click=${() => (this.agentFilter = false)} kind="tab" small
               >${msg("People")}</wy-button
             >
-            <wy-button ?active=${this.botFilter === true} @click=${() => (this.botFilter = true)} kind="tab" small
-              >${msg("Bots")}</wy-button
+            <wy-button ?active=${this.agentFilter === true} @click=${() => (this.agentFilter = true)} kind="tab" small
+              >${msg("Agents")}</wy-button
             >
           </wy-buttons>
         </div>
@@ -243,7 +242,7 @@ export default class WyUsersSearch extends LitElement {
     </div>`;
   }
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("weavy") && this.weavy) {
@@ -252,16 +251,16 @@ export default class WyUsersSearch extends LitElement {
           this.weavy,
           () => this.text,
           this.appId,
-          () => this.botFilter
+          () => this.agentFilter
         )
       );
     }
   }
 
-  protected override async updated(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async updated(changedProperties: PropertyValueMap<this>): Promise<void> {
     this.infiniteScroll.observe(this.peopleQuery.result, this.pagerRef.value);
 
-    if (changedProperties.has("text") || changedProperties.has("botFilter")) {
+    if (changedProperties.has("text") || changedProperties.has("agentFilter")) {
       if (this.select.length > 0) {
         this.selected = [...this.selected, ...this.select];
         this.select = [];

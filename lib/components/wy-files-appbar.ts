@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValueMap } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { PermissionType } from "../types/app.types";
@@ -27,8 +27,7 @@ import { MutationState } from "@tanstack/query-core";
 import { toUpperCaseFirst } from "../utils/strings";
 import type { default as WeavyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
-import { WeavyProps } from "../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { hasPermission } from "../utils/permission";
 import { Feature } from "../types/features.types";
@@ -47,6 +46,7 @@ import "./base/wy-sheet";
 import "./wy-file-item";
 import "./wy-cloud-files";
 import "./wy-notification-button-list";
+import "./wy-context-data";
 
 /**
  * @fires {UploadFilesEventType} upload-files
@@ -59,7 +59,7 @@ import "./wy-notification-button-list";
  */
 @customElement("wy-files-appbar")
 @localized()
-export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
+export class WyFilesAppbar extends WeavySubComponent {
   static override styles = [filesCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -163,7 +163,7 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
     return this.dispatchEvent(subscribeEvent);
   }
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("app")) && this.weavy && this.app) {
@@ -370,7 +370,7 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
                 </wy-dropdown-item>`}
             ${this.app?.archive_url
               ? html`<wy-dropdown-item
-                  @click=${() => openUrl(this.app?.archive_url, "_top", `${this.app?.uid}.zip`, true)}
+                  @click=${() => openUrl(this.app?.archive_url, "_top", `${ this.app?.uid ? this.app.uid : `${this.app?.type}-${this.app?.id}` }.zip`, true)}
                 >
                   <wy-icon name="download"></wy-icon>
                   ${msg("Download files")}
@@ -379,6 +379,8 @@ export class WyFilesAppbar extends WeavyComponentConsumerMixin(LitElement) {
           </wy-dropdown>
         </div>
       </nav>
+
+      <wy-context-data-progress></wy-context-data-progress>
 
       ${this.weavy
         ? html`

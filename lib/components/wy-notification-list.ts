@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, css, type PropertyValueMap } from "lit";
+import { html, nothing, css, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -10,8 +10,7 @@ import { InfiniteData } from "@tanstack/query-core";
 import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
 import type { RealtimeNotificationEventType, RealtimePresenceEventType } from "../types/realtime.types";
-import { WeavyProps } from "../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { type NotificationType, NotificationTypes, type NotificationsResultType } from "../types/notifications.types";
 import {
@@ -35,7 +34,7 @@ import "./base/wy-button";
 
 @customElement("wy-notification-list")
 @localized()
-export default class WyNotificationList extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyNotificationList extends WeavySubComponent {
   static override styles = [
     chatCss,
     pagerStyles,
@@ -98,7 +97,7 @@ export default class WyNotificationList extends WeavyComponentConsumerMixin(LitE
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (

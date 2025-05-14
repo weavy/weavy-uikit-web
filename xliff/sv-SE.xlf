@@ -436,10 +436,6 @@
         <source>All</source>
         <target>Alla</target>
       </trans-unit>
-      <trans-unit id="sf7a5eea7c80c2137">
-        <source>Bots</source>
-        <target>Bottar</target>
-      </trans-unit>
       <trans-unit id="s08313776ae04f67f">
         <source>Remove picture</source>
         <target>Ta bort bild</target>
@@ -700,9 +696,13 @@
         <source>Leave</source>
         <target>Lämna</target>
       </trans-unit>
-      <trans-unit id="sa6b88405214f8c17">
-        <source>Error uploading context data.</source>
-        <target>Fel vid uppladdning av kontext-data.</target>
+      <trans-unit id="sefc8e08d71b8530f">
+        <source>Agents</source>
+        <target>Agenter</target>
+      </trans-unit>
+      <trans-unit id="s56ab6bbd1efee1da">
+        <source>Ask anything...</source>
+        <target>Fråga något...</target>
       </trans-unit>
     </body>
   </file>

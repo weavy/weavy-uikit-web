@@ -26,18 +26,27 @@ export default class WyProgressLinear extends LitElement {
   /**
    * Progress to display, a fraction between 0 and `max`.
    */
-  @property({ type: Number }) value = 0;
+  @property({ type: Number }) 
+  value = 0;
 
   /**
    * Maximum progress to display, defaults to 1.
    */
-  @property({ type: Number }) max = 1;
+  @property({ type: Number }) 
+  max = 1;
 
   /**
    * Whether or not to display indeterminate progress, which gives no indication
    * to how long an activity will take.
    */
-  @property({ type: Boolean }) indeterminate = false;
+  @property({ type: Boolean }) 
+  indeterminate = false;
+
+  @property({ type: Boolean }) 
+  warning = false;
+
+  @property({ type: Boolean }) 
+  error = false;
 
   override render() {
     const progressStyles = {
@@ -46,8 +55,10 @@ export default class WyProgressLinear extends LitElement {
 
     const renderParts = {
       "wy-indeterminate": this.indeterminate,
-      "wy-overlay": this.overlay,
+      "wy-progress-overlay": this.overlay,
       "wy-progress-reveal": this.reveal,
+      "wy-progress-warning": this.warning,
+      "wy-progress-error": this.error
     };
 
     return html`

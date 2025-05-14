@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, html, nothing } from "lit";
+import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -13,7 +13,7 @@ import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { localized, msg, str } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypeString } from "../types/app.types";
 import { hasEntityChildType, isEntityChainMatch } from "../utils/notifications";
@@ -39,7 +39,7 @@ import { PollVoteEventType } from "../types/polls.events";
 
 @customElement("wy-post-view")
 @localized()
-export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyPostView extends WeavySubComponent {
   static override styles = [
     chatCss,
     hostContentsCss,
@@ -133,7 +133,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
     this.loadComments = true;
   }
 
-  protected override willUpdate(changedProperties: PropertyValues<this>): void {
+  protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
     
     if (changedProperties.has("link")) {
@@ -171,7 +171,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
           <div class="wy-item">
             <wy-avatar
               .src="${this.createdBy.avatar_url}"
-              .isBot=${this.createdBy.is_bot}
+              .isAgent=${this.createdBy.is_agent}
               .size=${48}
               .name=${this.createdBy.name}
             ></wy-avatar>
@@ -195,7 +195,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
           this.highlightRef
         )}>
             <div class="wy-item">
-              <wy-avatar .src="${this.createdBy.avatar_url}" .isBot=${this.createdBy.is_bot} .size=${48} .name=${
+              <wy-avatar .src="${this.createdBy.avatar_url}" .isAgent=${this.createdBy.is_agent} .size=${48} .name=${
           this.createdBy.name
         }></wy-avatar>
               <div class="wy-item-rows">
@@ -358,7 +358,7 @@ export default class WyPostView extends WeavyComponentConsumerMixin(LitElement) 
         `;
   }
 
-  protected override updated(changedProperties: PropertyValues<this>) {
+  protected override updated(changedProperties: PropertyValueMap<this>) {
     if (changedProperties.has("highlight") && this.highlight) {
       this.highlightRef.value?.scrollIntoView({ block: "nearest" });
     }

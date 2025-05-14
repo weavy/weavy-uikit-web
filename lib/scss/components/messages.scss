@@ -96,8 +96,8 @@
   max-width: 100%;
 }
 
-// override some styles for message by chat bot
-.wy-message-bot{
+// override some styles for message by chat agents
+.wy-message-agent {
   --wy-component-background-color: #{color.token(--wy-tertiary-container)};
   --wy-component-color: #{color.token(--wy-on-tertiary-container)};
 }

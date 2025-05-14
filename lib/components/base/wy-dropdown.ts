@@ -16,6 +16,7 @@ import hostContentsCss from "../../scss/host-contents.scss";
 
 import WeavyIcon from "./wy-icon";
 import "./wy-button";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 @customElement("wy-dropdown")
 export default class WyDropdown extends LitElement {
@@ -187,7 +188,7 @@ export default class WyDropdown extends LitElement {
           @keyup=${clickOnEnterAndSpace}
           class="wy-dropdown-menu"
           ?hidden=${isPopoverPolyfilled() && !this.showMenu}
-          ?popover=${!isPopoverPolyfilled()}
+          popover=${ifDefined(isPopoverPolyfilled() ? undefined : "auto")}
         >
           <slot></slot>
         </div>

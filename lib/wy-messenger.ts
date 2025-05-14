@@ -7,7 +7,6 @@ import { ThemeController } from "./controllers/theme-controller";
 import { localized, msg } from "@lit/localize";
 import { type AppRef, type AppType, AppTypeGuid, AppTypeString } from "./types/app.types";
 import { QueryController } from "./controllers/query-controller";
-import type { BotType } from "./types/users.types";
 import { WeavyComponent } from "./classes/weavy-component";
 import { getConversationOptions, resolveAppWithType } from "./data/conversation";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
@@ -28,6 +27,7 @@ import "./components/base/wy-button";
 import "./components/base/wy-icon";
 import "./components/wy-messenger-badge";
 import "./components/base/wy-spinner";
+import "./components/wy-context-data";
 
 /**
  * The conversation app type strings and app type guids associated with the Messenger.
@@ -42,12 +42,12 @@ export const MessengerTypes = new Map(
 );
 
 /**
- * The conversation app type strings and app type guids specific for bots in Messenger.
+ * The conversation app type strings and app type guids specific for agents in Messenger.
  */
-export const MessengerBotTypes = new Map(
+export const MessengerAgentTypes = new Map(
   Object.entries({
-    [AppTypeString.BotChat]: AppTypeGuid.BotChat,
-    [AppTypeGuid.BotChat]: AppTypeString.BotChat,
+    [AppTypeString.AgentChat]: AppTypeGuid.AgentChat,
+    [AppTypeGuid.AgentChat]: AppTypeString.AgentChat,
   })
 );
 
@@ -63,6 +63,7 @@ const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
   // All available features as enabled/disabled by default
   [Feature.Attachments]: true,
   [Feature.CloudFiles]: true,
+  [Feature.ContextData]: true,
   [Feature.Embeds]: true,
   [Feature.GoogleMeet]: true,
   [Feature.Meetings]: true,
@@ -76,9 +77,10 @@ const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
   [Feature.ZoomMeetings]: true,
 };
 
-const DefaultMessengerBotFeatures: ComponentFeaturePolicyConfig = {
+const DefaultMessengerAgentFeatures: ComponentFeaturePolicyConfig = {
   // All available features as enabled/disabled by default
   [Feature.Attachments]: true,
+  [Feature.ContextData]: true,
   [Feature.Embeds]: true,
   [Feature.Previews]: true,
   [Feature.Reactions]: false,
@@ -87,7 +89,7 @@ const DefaultMessengerBotFeatures: ComponentFeaturePolicyConfig = {
 };
 
 /**
- * Weavy messenger component to render multiple one-to-one conversations, group chats or bot conversations.
+ * Weavy messenger component to render multiple one-to-one conversations, group chats or agent conversations.
  *
  * @element wy-messenger
  * @class WyMessenger
@@ -108,15 +110,15 @@ export class WyMessenger extends WeavyComponent {
   override appTypes: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
 
   @property({ type: String })
-  override get bot() {
-    return super.bot;
+  override get agent() {
+    return super.agent;
   }
-  override set bot(bot: string | undefined) {
-    super.bot = bot;
-    if (this._bot) {
-      this.appTypes = [AppTypeGuid.BotChat];
+  override set agent(agent: string | undefined) {
+    super.agent = agent;
+    if (this._agentUid) {
+      this.appTypes = [AppTypeGuid.AgentChat];
       this.componentFeatures = new ComponentFeatures(
-        DefaultMessengerBotFeatures,
+        DefaultMessengerAgentFeatures,
         this.componentFeatures.allowedFeatures()
       );
     } else {
@@ -129,13 +131,16 @@ export class WyMessenger extends WeavyComponent {
     this.conversationId = null;
   }
 
+  /**
+   * Placeholder text for the message editor. Overrides default text.
+   */
+  @property()
+  placeholder?: string;
+
   @property({ type: Number })
   conversationId?: number | null = null;
 
   protected conversationQuery = new QueryController<AppType>(this);
-
-  protected botQuery = new QueryController<BotType>(this);
-
   protected persistState = new PersistStateController(this);
 
   /**
@@ -158,7 +163,7 @@ export class WyMessenger extends WeavyComponent {
       return false;
     }
 
-    return Boolean(await resolveAppWithType(this.weavy, conversation, this.appTypes, this.bot));
+    return Boolean(await resolveAppWithType(this.weavy, conversation, this.appTypes, this.agent));
   }
 
   /**
@@ -186,13 +191,13 @@ export class WyMessenger extends WeavyComponent {
     await super.willUpdate(changedProperties);
 
     if (
-      (changedProperties.has("weavy") || changedProperties.has("bot") || changedProperties.has("user")) &&
+      (changedProperties.has("weavy") || changedProperties.has("agent") || changedProperties.has("user")) &&
       this.weavy &&
       this.user
     ) {
       this.persistState.observe(
         [{ name: "conversationId", override: false }],
-        this.bot || "messenger",
+        this.agent || "messenger",
         `u${this.user?.id}`
       );
     }
@@ -219,8 +224,8 @@ export class WyMessenger extends WeavyComponent {
         <wy-conversation-list
           class="wy-scroll-y"
           .conversationTypes=${this.appTypes}
-          .bot=${this.bot}
-          .avatarUser=${this.botUser}
+          .agent=${this.agent}
+          .avatarUser=${this.agentUser}
           .name=${this.name}
           conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
           @selected=${(e: SelectedEventType) => (this.conversationId = e.detail.id)}
@@ -239,7 +244,7 @@ export class WyMessenger extends WeavyComponent {
               <wy-button kind="icon" @click=${() => (this.conversationId = null)}>
                 <wy-icon name="back"></wy-icon>
               </wy-button>
-              <wy-messenger-badge slot="badge" .bot=${this.bot}></wy-messenger-badge>
+              <wy-messenger-badge slot="badge" .agent=${this.agent}></wy-messenger-badge>
             </span>
           </wy-conversation-appbar>
 
@@ -247,10 +252,13 @@ export class WyMessenger extends WeavyComponent {
             ? html`<wy-conversation
                 .conversationId=${this.conversationId}
                 .conversation=${conversation}
-                .header=${!this.bot}
+                .placeholder=${this.placeholder ?? (this.agent ? msg("Ask anything...") : undefined)}
+                .header=${!this.agent}
               ></wy-conversation>`
             : html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`}
         </div>
+        
+        <wy-context-data-progress></wy-context-data-progress>
       </div>
     `;
   }

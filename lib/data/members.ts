@@ -7,11 +7,11 @@ import type {
   QueryOptions,
 } from "@tanstack/query-core";
 
-export function getMemberOptions(weavy: WeavyType, appId: number, options: QueryOptions<MembersResultType>, bots?: boolean) {
+export function getMemberOptions(weavy: WeavyType, appId: number, options: QueryOptions<MembersResultType>, agents?: boolean) {
   return <QueryObserverOptions<MembersResultType>> {
-    queryKey: ["members", appId, bots],
+    queryKey: ["members", appId, agents],
     queryFn: async () => {
-      const response = await weavy.fetch(`/api/apps/${appId}/members${bots !== undefined ? `?member=false&bot=${Boolean(bots)}` : ""}`);
+      const response = await weavy.fetch(`/api/apps/${appId}/members${agents !== undefined ? `?member=false&agent=${Boolean(agents)}` : ""}`);
       const result = await response.json() as MembersResultType;
       return result;
     },
@@ -23,10 +23,10 @@ export function getInfiniteSearchMemberOptions(
   weavy: WeavyType,
   text: () => string,
   appId: number | undefined,
-  bot: () => boolean | undefined  
+  getAgent: () => boolean | undefined  
 ): InfiniteQueryObserverOptions<MembersResultType, Error, InfiniteData<MembersResultType>> {
   return {
-    queryKey: ["search_members", appId],
+    queryKey: ["search__members", appId],
     initialPageParam: 0,
     enabled: true,
     queryFn: async (
@@ -37,9 +37,9 @@ export function getInfiniteSearchMemberOptions(
       let response;
       
       if (appId) {
-        response = await weavy.fetch(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.fetch(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}${getAgent() !== undefined ? `&agent=${Boolean(getAgent())}` : ""}`);
       } else {
-        response = await weavy.fetch(`/api/users?q=${query}&skip=${skip}${bot() !== undefined ? `&bot=${Boolean(bot())}` : ""}`);
+        response = await weavy.fetch(`/api/users?q=${query}&skip=${skip}${getAgent() !== undefined ? `&agent=${Boolean(getAgent())}` : ""}`);
       }          
 
       const result = await response.json() as MembersResultType;

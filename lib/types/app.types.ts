@@ -11,7 +11,7 @@ export enum AppTypeGuid {
   Posts = "5ebfa152-de85-48da-82dd-30a1b560c313",
   ChatRoom = "edb400ac-839b-45a7-b2a8-6a01820d1c44",
   PrivateChat = "7e14f418-8f15-46f4-b182-f619b671e470",
-  BotChat = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
+  AgentChat = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
 }
 
 export enum AppTypeString {
@@ -21,7 +21,7 @@ export enum AppTypeString {
   Posts = "posts",
   ChatRoom = "chat_room",
   PrivateChat = "private_chat",
-  BotChat = "bot_chat",
+  AgentChat = "agent_chat",
 }
 
 export enum AppTypeGuidMapping {
@@ -31,7 +31,7 @@ export enum AppTypeGuidMapping {
   "5ebfa152-de85-48da-82dd-30a1b560c313" = "posts",
   "edb400ac-839b-45a7-b2a8-6a01820d1c44" = "chat_room",
   "7e14f418-8f15-46f4-b182-f619b671e470" = "private_chat",
-  "2352a1c6-abc6-420e-8b85-ca7d5aed8779" = "bot_chat",
+  "2352a1c6-abc6-420e-8b85-ca7d5aed8779" = "agent_chat",
 }
 
 export enum AppTypeStringMapping {
@@ -41,15 +41,15 @@ export enum AppTypeStringMapping {
   "posts" = "5ebfa152-de85-48da-82dd-30a1b560c313",
   "chat_room" = "edb400ac-839b-45a7-b2a8-6a01820d1c44",
   "private_chat" = "7e14f418-8f15-46f4-b182-f619b671e470",
-  "bot_chat" = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
+  "agent_chat" = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
 }
 
-export enum BotAppTypeGuidMapping {
-  "2352a1c6-abc6-420e-8b85-ca7d5aed8779" = "bot_chat",
+export enum AgentAppTypeGuidMapping {
+  "2352a1c6-abc6-420e-8b85-ca7d5aed8779" = "agent_chat",
 }
 
-export enum BotAppTypeStringMapping {
-  "bot_chat" = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
+export enum AgentAppTypeStringMapping {
+  "agent_chat" = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
 }
 
 export enum ComponentType {
@@ -141,8 +141,8 @@ export type EntityType = {
 };
 
 export type LinkType = EntityType & {
-  /** Any bot used for the entity */ 
-  bot?: string;
+  /** Any agent used for the entity */ 
+  agent?: string;
 };
 
 export type AppsResultType = InfiniteQueryResultType<AppType>;

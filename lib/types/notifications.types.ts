@@ -1,7 +1,7 @@
 import { EntityType, LinkType } from "./app.types";
 import { MetadataType } from "./lists.types";
 import { InfiniteQueryResultType } from "./query.types";
-import { UserType } from "./users.types";
+import { UserOrAgentType, UserType } from "./users.types";
 
 export type NotificationType = {
   /** The id of the notification. */
@@ -11,7 +11,7 @@ export type NotificationType = {
   /** The type of action that triggered the notification. */
   action: string;
   /** The user that performed the action that triggered the notification. */
-  actor: UserType;
+  actor: UserOrAgentType;
   /** The notification template string. */
   template: string;
   /** The arguments used to format *template* into a (localized) string. */

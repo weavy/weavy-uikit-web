@@ -13,10 +13,10 @@ import hostScrollYStyles from "./scss/host-scroll-y.scss";
 import hostFontStyles from "./scss/host-font.scss";
 
 import "./components/wy-comment-list";
-import "./components/wy-empty";
-import "./components/base/wy-spinner";
 import "./components/base/wy-button";
 import "./components/wy-notification-button-list";
+import "./components/wy-context-data";
+import { property } from "lit/decorators.js";
 
 export const WY_COMMENTS_TAGNAME = "wy-comments";
 
@@ -47,6 +47,7 @@ export class WyComments extends WeavyComponent {
     // All available features as enabled/disabled by default
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
+    [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
@@ -61,12 +62,19 @@ export class WyComments extends WeavyComponent {
 
   protected theme = new ThemeController(this, WyComments.styles);
 
+  /**
+   * Placeholder text for the comment editor. Overrides default text.
+   */
+  @property()
+  placeholder?: string;
+
   override render() {
     return html`
       <wy-buttons floating reverse>
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
-      <wy-comment-list parentId=${this.app?.id} .location=${"apps"}></wy-comment-list>
+      <wy-comment-list parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}></wy-comment-list>
+      <wy-context-data-progress></wy-context-data-progress>
     `;
   }
 }

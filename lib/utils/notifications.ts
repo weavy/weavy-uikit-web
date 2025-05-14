@@ -10,7 +10,7 @@ import { NotificationType } from "../types/notifications.types";
 import { WyLinkEventType } from "../types/notifications.events";
 import { msg, str } from "@lit/localize";
 import { type WeavyType } from "../client/weavy";
-import { AppTypeGuids, BotAppTypeGuids } from "../classes/weavy-component";
+import { AppTypeGuids, AgentAppTypeGuids } from "../classes/weavy-component";
 import { NamedEvent } from "../types/generic.types";
 
 export function getEntityChain(entity?: EntityType) {
@@ -77,7 +77,7 @@ export async function dispatchLinkEvent(
     detail: {
       link: {
         ...notification.link,
-        bot: getBotName(notification),
+        agent: getAgentName(notification),
       },
       app_type: (notification.link.app?.type && AppTypeGuids.get(notification.link.app?.type)) || ComponentType.Unknown,
       source_name: metadata?.source_name,
@@ -89,8 +89,8 @@ export async function dispatchLinkEvent(
   return target.dispatchEvent(event);
 }
 
-export function getBotName(notification: NotificationType) {
-  return notification.link.app?.type && BotAppTypeGuids.has(notification.link.app?.type) && notification.actor.is_bot
+export function getAgentName(notification: NotificationType) {
+  return notification.link.app?.type && AgentAppTypeGuids.has(notification.link.app?.type) && notification.actor.is_agent
     ? notification.actor.uid
     : undefined;
 }

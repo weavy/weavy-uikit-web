@@ -1,4 +1,4 @@
-import { LitElement, PropertyValueMap, PropertyValues, html, nothing } from "lit";
+import { PropertyValueMap, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -12,7 +12,7 @@ import type { FileOpenEventType } from "../types/files.events";
 import { PollOptionType } from "../types/polls.types";
 import type { EmbedType } from "../types/embeds.types";
 import { relativeTime } from "../utils/datetime";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypeString } from "../types/app.types";
 import { isEntityChainMatch } from "../utils/notifications";
@@ -44,7 +44,7 @@ import "./base/wy-skeleton";
  **/
 @customElement("wy-comment-view")
 @localized()
-export default class WyCommentView extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyCommentView extends WeavySubComponent {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
@@ -144,7 +144,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
               .src="${this.createdBy.avatar_url}"
               .size=${32}
               .name=${this.createdBy.name}
-              .isBot=${this.createdBy.is_bot}
+              .isAgent=${this.createdBy.is_agent}
             ></wy-avatar>
             <div class="wy-item-body">
               <div class="wy-item-title"><span class="wy-placeholder">${this.createdBy.name}</span></div>
@@ -163,7 +163,7 @@ export default class WyCommentView extends WeavyComponentConsumerMixin(LitElemen
               .src=${this.createdBy.avatar_url}
               .size=${32}
               .name=${this.createdBy.name}
-              .isBot=${this.createdBy.is_bot}
+              .isAgent=${this.createdBy.is_agent}
             ></wy-avatar>
             <div class="wy-item-body">
               <div class="wy-item-title">${this.createdBy.name}</div>

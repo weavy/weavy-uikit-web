@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValueMap, PropertyValues } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -8,8 +8,7 @@ import { computePosition, autoUpdate, offset, flip, shift, type Placement } from
 import type { ReactableType, ReactionsResultType } from "../../types/reactions.types";
 import { reactionMutation, getReactionListOptions } from "../../data/reactions";
 import { QueryController } from "../../controllers/query-controller";
-import { WeavyProps } from "../../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../../classes/weavy-sub-component";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 import { partMap } from "../../utils/directives/shadow-part-map";
 import { clickOnEnterAndConsumeOnSpace, clickOnEnterAndSpace, clickOnSpace } from "../../utils/keyboard";
@@ -26,10 +25,11 @@ import reactionCss from "../../scss/components/reactions.scss";
 import itemCss from "../../scss/components/item.scss";
 import emojiCss from "../../scss/components/emoji.scss";
 import hostContentsCss from "../../scss/host-contents.scss";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 @customElement("wy-reactions")
 @localized()
-export default class WyReactions extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyReactions extends WeavySubComponent {
   static override styles = [rebootCss, reactionCss, emojiCss, hostContentsCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -141,7 +141,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
     this.show = false;
   }
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     // Start tracking reaction list data when showing the sheet
@@ -321,7 +321,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
             @click=${(e: MouseEvent) => this.handleClickToggle(e)}
             @keyup=${clickOnEnterAndSpace}
             ?hidden=${!this.show}
-            ?popover=${!isPopoverPolyfilled()}
+            popover=${ifDefined(isPopoverPolyfilled() ? undefined : "auto")}
           >
             <div part="wy-reaction-picker">
               ${this.emojis.split(" ").map(
@@ -380,7 +380,7 @@ export default class WyReactions extends WeavyComponentConsumerMixin(LitElement)
       : [reactionButtons, reactionSheet];
   }
 
-  protected override firstUpdated(_changedProperties: PropertyValues<this>) {
+  protected override firstUpdated(_changedProperties: PropertyValueMap<this>) {
     this.menuRef.value?.addEventListener(this.menuRef.value.popover ? "toggle" : "click", (e: Event) =>
       this.handleClose(e as ToggleEvent)
     );

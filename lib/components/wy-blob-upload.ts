@@ -1,11 +1,11 @@
-import { LitElement, css, html, nothing } from "lit";
+import { css, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized } from "@lit/localize";
 import { getSimpleUploadBlobMutationOptions } from "../data/blob-upload";
 import { MutationController } from "../controllers/mutation-controller";
 import { BlobType, MutateFileProps } from "../types/files.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
@@ -19,7 +19,7 @@ import "./base/wy-button";
  */
 @customElement("wy-blob-upload")
 @localized()
-export default class WyBlobUpload extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyBlobUpload extends WeavySubComponent {
   @property({ attribute: false })
   label?: string;
 

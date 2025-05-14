@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -9,7 +9,7 @@ import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { NotificationType } from "../types/notifications.types";
 import { dispatchLinkEvent, getNotificationText } from "../utils/notifications";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import {
   NotificationCloseEventType,
   NotificationHideEventType,
@@ -29,7 +29,7 @@ import "./base/wy-button";
 
 @customElement("wy-notification-list-item")
 @localized()
-export default class WyNotificationListItem extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyNotificationListItem extends WeavySubComponent {
   static override styles = [rebootCss, itemCss, metaCss, notificationsCss];
   protected exportParts = new ShadowPartsController(this);
 
@@ -150,7 +150,7 @@ export default class WyNotificationListItem extends WeavyComponentConsumerMixin(
             src=${ifDefined(otherMember?.avatar_url)}
             name=${ifDefined(otherMember?.name)}
             presence=${otherMember?.presence || "away"}
-            ?isBot=${otherMember?.is_bot}
+            ?isAgent=${otherMember?.is_agent}
             id=${ifDefined(otherMember?.id)}
             size=${48}
           ></wy-avatar>

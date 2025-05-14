@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -6,7 +6,7 @@ import { localized, msg } from "@lit/localize";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { WeavyPostalParent } from "../utils/postal-parent";
 import type { ExternalBlobType } from "../types/files.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 
 import cloudFilesCss from "../scss/all.scss";
@@ -18,7 +18,7 @@ import { NamedEvent } from "../types/generic.types";
 
 @customElement("wy-cloud-files")
 @localized()
-export default class WyCloudFiles extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyCloudFiles extends WeavySubComponent {
   static override styles = cloudFilesCss;
 
   protected exportParts = new ShadowPartsController(this);

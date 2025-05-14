@@ -1,9 +1,8 @@
-import { LitElement, html, nothing, type PropertyValueMap } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized } from "@lit/localize";
-import { WeavyProps } from "../types/weavy.types";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { NotificationTypes, NotificationsResultType } from "../types/notifications.types";
 import {
@@ -16,7 +15,7 @@ import hostContentsStyles from "../scss/host-contents.scss";
 
 @customElement("wy-notification-badge")
 @localized()
-export default class WyNotificationBadge extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyNotificationBadge extends WeavySubComponent {
   static override styles = [
     allStyles,
     hostContentsStyles
@@ -34,7 +33,7 @@ export default class WyNotificationBadge extends WeavyComponentConsumerMixin(Lit
 
   #unsubscribeToRealtime?: () => void;
 
-  protected override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if ((changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app")) && this.weavy ) {

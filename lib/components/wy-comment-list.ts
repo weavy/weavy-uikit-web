@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, type PropertyValueMap } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -16,9 +16,8 @@ import { MutationController } from "../controllers/mutation-controller";
 import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMutation } from "../data/comment-remove";
 import { PollMutationType, getPollMutation } from "../data/poll";
 import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
-import { WeavyComponentConsumerMixin } from "../classes/weavy-component-consumer-mixin";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 import type { RealtimeReactionEventType } from "../types/realtime.types";
-import type { WeavyProps } from "../types/weavy.types";
 import type { MsgType } from "../types/msg.types";
 import { classMap } from "lit/directives/class-map.js";
 import { Feature } from "../types/features.types";
@@ -36,7 +35,7 @@ import "./wy-empty";
 
 @customElement("wy-comment-list")
 @localized()
-export default class WyCommentList extends WeavyComponentConsumerMixin(LitElement) {
+export default class WyCommentList extends WeavySubComponent {
   static override styles = [chatCss, pagerStyles];
 
   protected exportParts = new ShadowPartsController(this);
@@ -46,6 +45,9 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
 
   @property({ attribute: false })
   location: "posts" | "files" | "apps" = "apps";
+
+  @property()
+  placeholder?: string;
 
   #resolveParentId?: (parentId: number) => void;
   #whenParentId = new Promise<number>((r) => {
@@ -67,7 +69,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
 
   #unsubscribeToRealtime?: () => void;
 
-  override async willUpdate(changedProperties: PropertyValueMap<this & WeavyProps>): Promise<void> {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("parentId") && this.parentId) {
@@ -245,7 +247,7 @@ export default class WyCommentList extends WeavyComponentConsumerMixin(LitElemen
         .typing=${false}
         .draft=${true}
         ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
-        placeholder=${msg("Create a comment...")}
+        placeholder=${this.placeholder ?? msg("Create a comment...")}
         buttonText=${msg("Comment", { desc: "Button action to comment" })}
         @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
       ></wy-comment-editor>

@@ -19,9 +19,9 @@ export enum Feature {
    */
   Attachments = "attachments",
   /**
-   * Bot users available.
+   * AI Agents available.
    */
-  Bots = "bots",
+  agents = "agents",
   /**
    * Cloud file picker (Google Drive, Dropbox etc.).
    */
