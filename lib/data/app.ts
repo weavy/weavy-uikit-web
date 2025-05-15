@@ -62,7 +62,7 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
       } else {
         appsRequests.push(
           // Get, update or create app using app uid
-          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ uid, type, members, ...appData }) })
+          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ type, members, ...appData }) })
         );
       }
 
