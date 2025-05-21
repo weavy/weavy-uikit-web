@@ -47,6 +47,7 @@ import { DropFilesEventType, ExternalBlobsEventType } from "../types/files.event
 import type { EditorSubmitEventType } from "../types/editor.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { EmbedRemoveEventType } from "../types/embeds.events";
+import { getStorage } from "../utils/data";
 
 import chatCss from "../scss/all.scss";
 
@@ -62,6 +63,7 @@ export default class WyEditor extends WeavySubComponent {
   static override styles = chatCss;
 
   protected exportParts = new ShadowPartsController(this);
+  protected storage = getStorage("localStorage");
 
   @property({ type: Boolean })
   disabled: boolean = false;
@@ -270,8 +272,8 @@ export default class WyEditor extends WeavySubComponent {
         `${this.editorLocation}-${this.parentId || this.mutationAppId}`
       );
 
-      if (this.draft) {
-        const draftString = localStorage.getItem(this.draftKey);
+      if (this.draft && this.storage) {
+        const draftString = this.storage.getItem(this.draftKey);
         if (draftString) {
           const draft = JSON.parse(draftString) as EditorDraftType;
 
@@ -638,7 +640,7 @@ export default class WyEditor extends WeavySubComponent {
   }
 
   protected saveDraft() {
-    if (!this.draft) return;
+    if (!this.draft || !this.storage) return;
 
     const files = this.mutatingFiles.result;
 
@@ -655,7 +657,7 @@ export default class WyEditor extends WeavySubComponent {
       (!this.pollOptions.length || this.pollOptions.filter((option) => option.text.trim() !== "").length === 0) &&
       text === ""
     ) {
-      localStorage.removeItem(this.draftKey);
+      this.storage.removeItem(this.draftKey);
     } else {
       const draft: EditorDraftType = {
         meeting: this.meeting,
@@ -663,7 +665,7 @@ export default class WyEditor extends WeavySubComponent {
         pollOptions: this.pollOptions.filter((option) => option.text.trim() !== ""),
         embeds: this.embeds,
       };
-      localStorage.setItem(this.draftKey, JSON.stringify(draft));
+      this.storage.setItem(this.draftKey, JSON.stringify(draft));
     }
   }
 
@@ -721,7 +723,7 @@ export default class WyEditor extends WeavySubComponent {
       ]);
     }
 
-    localStorage.removeItem(this.draftKey);
+    this.storage?.removeItem(this.draftKey);
   }
 
   protected clearEditor() {
