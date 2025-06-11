@@ -8,7 +8,7 @@ import {
 } from "../contexts/settings-context";
 import { defaultVisibilityCheckOptions, whenParentsDefined } from "../utils/dom";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
-import type { AgentType, UserType } from "../types/users.types";
+import type { UserType } from "../types/users.types";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { getOrCreateAppOptions } from "../data/app";
@@ -30,7 +30,6 @@ import { getStorage } from "../utils/data";
 import type { NotificationsAppearanceType, NotificationsBadgeType } from "../types/notifications.types";
 import type { WyLinkEventType, WyNotificationEventType } from "../types/notifications.events";
 import { asArray, findAsyncSequential, objectAsIterable } from "../utils/objects";
-import { AgentContext } from "../contexts/agent-context";
 import { ComponentFeatures } from "../contexts/features-context";
 import { WeavyClient } from "../client/weavy";
 import { WyAppEventType } from "../types/app.events";
@@ -130,15 +129,15 @@ export interface WeavyComponentContextProps {
    */
   whenApp: () => Promise<AppType>;
 
-  /**
-   * The current agent.
-   */
-  agentUser: AgentType | undefined;
+  // /**
+  //  * The current agent.
+  //  */
+  // agentUser: AgentType | undefined;
 
-  /**
-   * Resolves when current agent user data is available.
-   */
-  whenAgentUser: () => Promise<AgentType>;
+  // /**
+  //  * Resolves when current agent user data is available.
+  //  */
+  // whenAgentUser: () => Promise<AgentType>;
 
   /**
    * Uploaded context data blob ids.
@@ -233,9 +232,9 @@ export class WeavyComponent
   @state()
   app: AppType | undefined;
 
-  @provide({ context: AgentContext })
-  @state()
-  agentUser: AgentType | undefined;
+  // @provide({ context: AgentContext })
+  // @state()
+  // agentUser: AgentType | undefined;
 
   @provide({ context: DataBlobsContext })
   @state()
@@ -494,13 +493,13 @@ export class WeavyComponent
   // TODO: Switch to Promise.withResolvers() when allowed by typescript
   // Promise.withResolvers() is available in ES2024, that needs to be set in TSConfig
 
-  #resolveAgentUser?: (agent: AgentType) => void;
-  #whenAgentUser = new Promise<AgentType>((r) => {
-    this.#resolveAgentUser = r;
-  });
-  async whenAgentUser() {
-    return await this.#whenAgentUser;
-  }
+  // #resolveAgentUser?: (agent: AgentType) => void;
+  // #whenAgentUser = new Promise<AgentType>((r) => {
+  //   this.#resolveAgentUser = r;
+  // });
+  // async whenAgentUser() {
+  //   return await this.#whenAgentUser;
+  // }
 
   #resolveApp?: (app: AppType) => void;
   #whenApp = new Promise<AppType>((r) => {
@@ -569,7 +568,7 @@ export class WeavyComponent
   // INTERNAL PROPERTIES
 
   #appQuery = new QueryController<AppType>(this);
-  #agentUserQuery = new QueryController<AgentType>(this);
+  // #agentUserQuery = new QueryController<AgentType>(this);
   #userQuery = new QueryController<UserType>(this);
 
   #contextDataRefs: Map<ContextDataType, DataRefType> = new Map();
@@ -607,9 +606,9 @@ export class WeavyComponent
       this.requestUpdate("app");
     }
 
-    if (this.agentUser) {
-      this.requestUpdate("agentUser");
-    }
+    // if (this.agentUser) {
+    //   this.requestUpdate("agentUser");
+    // }
 
     if (this.componentFeatures) {
       this.requestUpdate("componentFeatures");
@@ -672,12 +671,10 @@ export class WeavyComponent
 
     if (!this.#userQuery.result?.isPending) {
       if (this.user && this.#userQuery.result.data && this.user.id !== this.#userQuery.result.data.id) {
-        console.warn("User changed, invalidating cache");
-        await this.weavy?.queryClient.invalidateQueries();
+        console.warn("User mismatch, resetting");
+        void this.weavy?.reset();
       }
-    }
 
-    if (!this.#userQuery.result?.isPending) {
       this.user = this.#userQuery.result?.data;
     }
 
@@ -749,13 +746,13 @@ export class WeavyComponent
 
     // Agent
 
-    if ((changedProperties.has("weavy") || changedProperties.has("agent")) && this.weavy && this.agent) {
-      await this.#agentUserQuery.trackQuery(getApiOptions<AgentType>(this.weavy, ["users", this.agent]));
-    }
+    // if ((changedProperties.has("weavy") || changedProperties.has("agent")) && this.weavy && this.agent) {
+    //   await this.#agentUserQuery.trackQuery(getApiOptions<AgentType>(this.weavy, ["users", this.agent]));
+    // }
 
-    if (!this.#agentUserQuery.result?.isPending) {
-      this.agentUser = this.#agentUserQuery.result?.data;
-    }
+    // if (!this.#agentUserQuery.result?.isPending) {
+    //   this.agentUser = this.#agentUserQuery.result?.data;
+    // }
 
     // contextData
     if (
@@ -895,15 +892,15 @@ export class WeavyComponent
       this.#resolveApp?.(this.app);
     }
 
-    if (changedProperties.has("agentUser") && this.agentUser) {
-      if (changedProperties.get("agentUser")) {
-        // reset promise
-        this.#whenAgentUser = new Promise<AgentType>((r) => {
-          this.#resolveAgentUser = r;
-        });
-      }
-      this.#resolveAgentUser?.(this.agentUser);
-    }
+    // if (changedProperties.has("agentUser") && this.agentUser) {
+    //   if (changedProperties.get("agentUser")) {
+    //     // reset promise
+    //     this.#whenAgentUser = new Promise<AgentType>((r) => {
+    //       this.#resolveAgentUser = r;
+    //     });
+    //   }
+    //   this.#resolveAgentUser?.(this.agentUser);
+    // }
 
     if (changedProperties.has("contextDataBlobs") && this.contextDataBlobs) {
       if (changedProperties.get("contextDataBlobs")) {

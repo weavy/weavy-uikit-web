@@ -88,8 +88,8 @@ export class WyButtons extends LitElement {
   @property({ type: Boolean })
   tabs = false;
 
-  @property({ type: Boolean })
-  floating = false;
+  @property({ type: String })
+  position: "normal" | "floating" | "sticky" = "normal";
 
   @property({ type: Boolean })
   reverse = false;
@@ -99,7 +99,8 @@ export class WyButtons extends LitElement {
       "wy-buttons": !this.tabs,
       "wy-buttons-reverse": this.reverse,
       "wy-tabs": this.tabs,
-      "wy-buttons-floating": this.floating
+      "wy-buttons-floating": this.position === "floating",
+      "wy-buttons-sticky": this.position === "sticky"
     };
     return html`<div part=${partMap(buttonsParts)}><slot></slot></div>`;
   }

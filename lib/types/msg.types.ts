@@ -25,6 +25,8 @@ export type MsgType = {
   embed?: EmbedType;
   /** Any *Meeting* attached to the message. */
   meeting?: MeetingType;
+  /** Paged list of any annotated files. */
+  annotations?: FilesResultType;
   /** Paged list of any attached files. */
   attachments?: FilesResultType;
   /** Paged list of any poll options. */

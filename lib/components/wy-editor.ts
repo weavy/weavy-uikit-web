@@ -348,8 +348,8 @@ export default class WyEditor extends WeavySubComponent {
               this.editorRef.value.innerHTML = "";
             }
 
-            this.editorEditable = new Compartment();
-            this.editorPlaceholder = new Compartment();
+            this.editorEditable = new Compartment;
+            this.editorPlaceholder = new Compartment;
             this.EditorView = EditorView;
             this.placeholderExtension = placeholder;
 
@@ -447,28 +447,21 @@ export default class WyEditor extends WeavySubComponent {
                   }
                 },
               }),
+              // Compartments
+              this.editorEditable.of(EditorView.editable.of(!this.disabled)),
+              this.editorPlaceholder.of(this.placeholderExtension(this.placeholder)),
               EditorView.updateListener.of((_v: ViewUpdate) => {
                 // HACK because placeholder extension doesn't allow change
                 this.setPlaceHolderText();
+                
+                // HACK to fix compartment references, order must be same as initial config
+                const compartments = Array.from((this.editor?.state as unknown as { config: { compartments: Map<Compartment, unknown>}}).config.compartments.keys())
+                this.editorEditable = compartments[0];
+                this.editorPlaceholder = compartments[1]
               }),
-              this.editorEditable.of(EditorView.editable.of(!this.disabled)),
-              this.editorPlaceholder.of(this.placeholderExtension(this.placeholder)),
             ];
 
-            if (this.editor) {
-              this.editor.dispatch({
-                // Update readonly state
-                effects: this.editorEditable.reconfigure(EditorView.editable.of(!this.disabled)),
-              });
-
-              this.editor.dispatch({
-                // Update placeholder state
-                effects: this.editorPlaceholder.reconfigure(this.placeholderExtension(this.placeholder)),
-              });
-
-              // HACK because the placeholder update above might not work
-              this.setPlaceHolderText();
-            } else {
+            if (!this.editor) {
               this.editor = new EditorView({
                 state: EditorState.create({
                   doc: this.text,
@@ -501,7 +494,7 @@ export default class WyEditor extends WeavySubComponent {
         effects: this.editorPlaceholder.reconfigure(placeholder),
       });
 
-      // HACK because the update above might not work
+      // HACK because reconfigure might not work
       this.setPlaceHolderText();
     }
   }
@@ -509,10 +502,18 @@ export default class WyEditor extends WeavySubComponent {
   setPlaceHolderText() {
     const cmPlaceholder = this.renderRoot.querySelector<HTMLElement>(".cm-placeholder");
 
-      if (cmPlaceholder && this.editor) {
-        cmPlaceholder.setAttribute("aria-label", `placeholder ${this.placeholder}`);
-        cmPlaceholder.innerText = this.placeholder;
-      }
+    if (cmPlaceholder && this.editor) {
+      cmPlaceholder.setAttribute("aria-label", `placeholder ${this.placeholder}`);
+      cmPlaceholder.innerText = this.placeholder;
+    }
+  }
+
+  setEditable() {
+    const cmContent = this.renderRoot.querySelector<HTMLElement>(".cm-content");
+
+    if (cmContent && this.editor) {
+      cmContent.contentEditable = String(!this.disabled);
+    }
   }
 
   override connectedCallback() {

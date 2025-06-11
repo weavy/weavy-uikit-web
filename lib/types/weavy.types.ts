@@ -102,3 +102,10 @@ export interface Destructable {
   readonly isDestroyed: boolean;
   destroy: () => void;
 }
+
+export interface Resettable {
+  /**
+   * Resetting state and data.
+   */
+  reset: () => Promise<void> | void;
+}

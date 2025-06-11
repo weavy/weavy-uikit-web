@@ -363,10 +363,6 @@
         <source>Select a conversation</source>
         <target>Välj en konversation</target>
       </trans-unit>
-      <trans-unit id="sf001ba58cf846564">
-        <source>Messenger</source>
-        <target>Meddelanden</target>
-      </trans-unit>
       <trans-unit id="se323ece17b96a4df">
         <source>No more users found.</source>
         <target>Inga fler personer funna.</target>

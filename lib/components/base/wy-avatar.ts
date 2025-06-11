@@ -4,7 +4,6 @@ import { property, state } from "lit/decorators.js";
 import { getInitials } from "../../utils/strings";
 import { type MemberType } from "../../types/members.types";
 import { type UserType } from "../../types/users.types";
-import { ifDefined } from "lit/directives/if-defined.js";
 import { Presence, type PresenceType } from "../../types/presence.types";
 import { consume } from "@lit/context";
 import { UserContext } from "../../contexts/user-context";
@@ -35,6 +34,9 @@ export default class WyAvatar extends LitElement {
   @property()
   name?: string = "";
 
+  @property()
+  description?: string = "";
+
   @property({ type: Boolean, reflect: true })
   isAgent?: boolean = false;
 
@@ -62,7 +64,7 @@ export default class WyAvatar extends LitElement {
         ? html`
             <img
               alt=""
-              title="${ifDefined(this.title || this.name)}"
+              title="${this.name}${this.description ? ` • ${this.description}` : ''}"
               part=${partMap(avatarParts)}
               style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
               height="${this.size}"
@@ -76,7 +78,7 @@ export default class WyAvatar extends LitElement {
             <div
               part=${partMap(avatarParts)}
               style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
-              title="${ifDefined(this.title || this.name)}"
+              title="${this.name}${this.description ? ` • ${this.description}` : ''}"
             >
               <span part="wy-avatar-initials-text">${initials}</span>
             </div>
@@ -192,7 +194,15 @@ export class WyAvatarHeader extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
+  @property()
+  description?: string;
+
   protected override render() {
-    return html`<slot></slot>`;
+    return html`
+      <slot></slot>
+      ${this.description ? html`
+        <div part="wy-avatar-description">${this.description}</div>
+          `: nothing}
+      `;
   }
 }

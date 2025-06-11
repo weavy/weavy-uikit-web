@@ -190,7 +190,7 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
   override render() {
     return this.agent
       ? html`
-          <wy-buttons floating reverse>
+          <wy-buttons position="floating" reverse>
             ${this.app && this.uid ? html` <wy-notification-button-list></wy-notification-button-list> ` : nothing}
             <slot name="actions"></slot>
           </wy-buttons>

@@ -70,7 +70,7 @@ export class WyComments extends WeavyComponent {
 
   override render() {
     return html`
-      <wy-buttons floating reverse>
+      <wy-buttons position="floating" reverse>
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
       <wy-comment-list parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}></wy-comment-list>

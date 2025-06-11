@@ -11,7 +11,7 @@
 
 <body>
   <h1>uikit-web</h1>
-  <form action="/api/user" method="post">
+  <form action="/api/user" method="post" id="userform">
     <select name="username" id="users">
     </select>
     <button type="submit">Sign in</button>
@@ -31,7 +31,17 @@
     <li><a href="dev/pages/iframe.html">IFrames</a></li>
   </ul>
 
-  <script>
+  <script type="module">
+    import { Weavy } from "/lib/index.ts";
+
+    const weavy = new Weavy({
+      url: "%WEAVY_URL%",
+    });
+
+    document.getElementById("userform").addEventListener("submit", () => {
+      weavy.reset();
+    });
+
     const users = fetch("/api/users", {
       credentials: "include",
     }).then(res => res.json()

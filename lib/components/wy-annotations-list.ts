@@ -4,17 +4,17 @@ import { property } from "lit/decorators.js";
 import { FileType } from "../types/files.types";
 import { FileOpenEventType } from "../types/files.events";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
-import { ifDefined } from "lit/directives/if-defined.js";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss";
 
 import "./base/wy-icon";
-import { NamedEvent } from "../types/generic.types";
+import "./base/wy-button";
 
 /**
  * @fires {FileOpenEventType} file-open - When opening a file in preview is requested
  */
-@customElement("wy-attachments-list")
+@customElement("wy-annotations-list")
 export default class WyAttachmentsList extends LitElement {
   static override styles = chatCss;
 
@@ -35,29 +35,27 @@ export default class WyAttachmentsList extends LitElement {
 
   override render() {
     return html`
-      <div class="wy-list wy-list-bordered">
+      <div>
         ${this.files.map((a: FileType) => {
           const fileSize = a.size && a.size > 0 ? fileSizeAsString(a.size) : null;
           const ext = getExtension(a.name);
           const { icon } = getIcon(a.name);
           const kind = getKind(a.name);
           const provider = getProvider(a.provider);
+          const title = `${a.name}${fileSize ? ` • ${fileSize}` : ''}`;
 
           return html`
-            <a
+            <wy-button
               @click=${(e: Event) => {
                 !e.defaultPrevented && !a.is_trashed && this.dispatchFileOpen(e, a);
               }}
-              class="wy-item wy-list-item"
-              href="${ifDefined(a.download_url)}"
-              title=${a.name}
+              kind="filled"
+              small
+              title=${title}
             >
-              <wy-icon name=${icon} .overlayName=${provider} size="48" kind=${kind} ext=${ext}></wy-icon>
-              <div class="wy-item-body ">
-                <div class="wy-item-title">${a.name}</div>
-                ${fileSize ? html`<div class="wy-item-text" title="${fileSize}">${fileSize}</div>` : ``}
-              </div>
-            </a>
+              <wy-icon name=${icon} .overlayName=${provider} size="24" kind=${kind} ext=${ext}></wy-icon>
+              <span>${a.name}</span>
+            </wy-button>
           `;
         })}
       </div>

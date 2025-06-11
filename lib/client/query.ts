@@ -106,12 +106,18 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
       //console.log(this.weavyId, "Query cache restored from session", this.#queryClient.getMutationCache())
     }
 
+    override async reset() {
+      await super.reset();
+      
+      await this._queryClient.cancelQueries();
+      await this._sessionStoragePersister?.removeClient();
+      await this.queryClient.resetQueries();
+    }
+
     async disconnectQueryClient() {
       console.info(this.weavyId, "Query client disconnected");
       await this._queryClient.cancelQueries();
-      this.queryClient.setQueriesData({}, undefined);
-      await this.queryClient.resetQueries();
-      this._sessionStoragePersister?.removeClient();
+      await this._sessionStoragePersister?.removeClient();
       this._unsubscribeQueryClient?.();
       this._queryClient.unmount();
       this._queryClient.clear();

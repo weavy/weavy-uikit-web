@@ -7,6 +7,7 @@ import type {
   WeavyClientOptionsType,
   WeavyTokenFactory,
   StrictWeavyOptions,
+  Resettable,
 } from "../types/weavy.types";
 import { WeavyApiMixin, WeavyApiProps, type AppType } from "./api";
 import { WeavyAuthenticationMixin, WeavyAuthenticationProps } from "./authentication";
@@ -62,7 +63,7 @@ export type WeavyType = WeavyClient &
  *
  * @fires wy-notifications {WyNotificationsEventType}
  */
-export class WeavyClient implements WeavyOptions, Destructable {
+export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   /**
    * The semver version of the package.
    */
@@ -178,6 +179,7 @@ export class WeavyClient implements WeavyOptions, Destructable {
     return `${WeavyClient.version}:${this.url}`;
   }
 
+
   // CONSTRUCTOR
 
   constructor(options?: WeavyClientOptionsType) {
@@ -206,6 +208,11 @@ export class WeavyClient implements WeavyOptions, Destructable {
     if (validOptions) {
       Object.assign(this, validOptions);
     }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async reset() {
+    console.info(this.weavyId, "is reset");
   }
 
   #isDestroyed = false;

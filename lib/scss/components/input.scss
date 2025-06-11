@@ -127,12 +127,23 @@
   display: flex;
   gap: var.default(--wy-gap);
   align-items: center;
+  flex: 1 0 auto;
 }
 
 
 // Required trailing button
 .wy-input-group-button-icon {
+  --wy-component-background-color: transparent;
+}
+
+// compact/overlay
+.wy-input-group-input-with-overlay {
+  padding-right: calc(var.default(--wy-input-padding-y) + var.default(--wy-button-size))
+}
+
+.wy-input-group-button-icon-overlay {
   position: absolute;
+  display: inline-flex;
   top: 0;
   right: 0;
   z-index: 4;

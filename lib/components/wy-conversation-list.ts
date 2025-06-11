@@ -1,4 +1,4 @@
-import { html, nothing, css, type PropertyValueMap } from "lit";
+import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
@@ -24,9 +24,7 @@ import {
   getTrashConversationMutation,
 } from "../data/conversation";
 import { getFlatInfiniteResultData, updateCacheItems } from "../utils/query-cache";
-import throttle from "lodash.throttle";
 import { localized, msg } from "@lit/localize";
-import { inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -39,8 +37,13 @@ import {
   TrashEventType,
 } from "../types/app.events";
 import { MessagesMarkEventType } from "../types/messages.events";
+import { NamedEvent } from "../types/generic.types";
+import { SearchEventType } from "../types/search.events";
 
-import chatCss from "../scss/all.scss";
+import conversationsCss from "../scss/components/conversations.scss";
+import paneCss from "../scss/components/pane.scss";
+import hostBlockCss from "../scss/host-block.scss";
+import hostScrollYCss from "../scss/host-scroll-y.scss";
 import pagerStyles from "../scss/components/pager.scss";
 
 import "./wy-conversation-list-item";
@@ -49,27 +52,19 @@ import "./base/wy-presence";
 import "./base/wy-avatar";
 import "./wy-empty";
 import "./base/wy-spinner";
-import { NamedEvent } from "../types/generic.types";
+import "./base/wy-search";
 
 @customElement("wy-conversation-list")
 @localized()
 export default class WeavyConversationList extends WeavySubComponent {
   static override styles = [
-    chatCss,
-    css`
-      :host {
-        position: relative;
-      }
-    `,
+    conversationsCss,
+    paneCss,
+    hostBlockCss,
+    hostScrollYCss,
     pagerStyles,
   ];
   protected exportParts = new ShadowPartsController(this);
-
-  @property({ type: Object })
-  avatarUser?: UserType;
-
-  @property({ type: String })
-  name?: string;
 
   @property({ type: Number })
   conversationId?: number;
@@ -88,8 +83,6 @@ export default class WeavyConversationList extends WeavySubComponent {
     const event: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: id } });
     return this.dispatchEvent(event);
   }
-
-  private inputRef: Ref<HTMLInputElement> = createRef();
 
   conversationsQuery = new InfiniteQueryController<AppsResultType>(this);
 
@@ -165,18 +158,6 @@ export default class WeavyConversationList extends WeavySubComponent {
     void this.conversationsQuery.result.refetch();
   }
 
-  private throttledSearch = throttle(
-    () => {
-      this.searchText = this.inputRef.value?.value || "";
-    },
-    250,
-    { leading: false, trailing: true }
-  );
-
-  private clear() {
-    this.searchText = "";
-  }
-
   #unsubscribeToRealtime?: () => void;
 
   protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
@@ -218,12 +199,6 @@ export default class WeavyConversationList extends WeavySubComponent {
         this.#unsubscribeToRealtime = undefined;
       };
     }
-
-    if (changedProperties.has("user") && this.user) {
-      if (!this.agent) {
-        this.avatarUser ??= this.user;
-      }
-    }
   }
 
   protected override update(changedProperties: PropertyValueMap<this>): void {
@@ -233,7 +208,7 @@ export default class WeavyConversationList extends WeavySubComponent {
 
   override async updated(changedProperties: PropertyValueMap<this & { searchText: string }>) {
     // searchText is changed but undefined on initial load
-    if (changedProperties.has("searchText") && changedProperties.get("searchText") && this.conversationsQuery.result) {
+    if (changedProperties.has("searchText") && changedProperties.get("searchText") !== undefined && this.conversationsQuery.result) {
       await this.conversationsQuery.result.refetch?.();
     }
   }
@@ -276,55 +251,23 @@ export default class WeavyConversationList extends WeavySubComponent {
 
   override render() {
     const { data: infiniteData, isPending, hasNextPage } = this.conversationsQuery.result ?? {};
-    const avatarIsPending = !this.avatarUser;
 
     return html`
       ${this.user
         ? html`
-            <header class="wy-appbars">
-              <nav class="wy-appbar">
-                ${avatarIsPending
-                  ? html` <wy-spinner></wy-spinner> `
-                  : html`
-                      <wy-avatar
-                        .src=${this.avatarUser?.avatar_url}
-                        .name=${this.avatarUser?.name}
-                        .size=${24}
-                      ></wy-avatar>
-                    `}
-                <div class="wy-appbar-text">${this.name ?? (this.agent ? this.avatarUser?.name : msg("Messenger"))}</div>
-                <wy-conversation-new
-                  .agent=${this.agent}
-                  @selected=${(e: SelectedEventType) => this.dispatchSelected(e.detail.id)}
-                ></wy-conversation-new>
-              </nav>
-            </header>
-            ${!this.agent
-              ? html`
-                  <div class="wy-pane-body">
-                    <div class="wy-pane-group">
-                      <div class="wy-input-group">
-                        <input
-                          class="wy-input wy-input-group-input wy-input-filled"
-                          name="text"
-                          .value=${this.searchText || ""}
-                          ${ref(this.inputRef)}
-                          @input=${() => this.throttledSearch()}
-                          @keydown=${inputClearAndBlurOnEscape}
-                          @keyup=${inputConsume}
-                          placeholder=${msg("Search for conversations...")}
-                        />
-                        <wy-button type="reset" @click=${() => this.clear()} kind="icon" class="wy-input-group-button-icon">
-                          <wy-icon name="close-circle"></wy-icon>
-                        </wy-button>
-                        <wy-button kind="icon" class="wy-input-group-button-icon">
-                          <wy-icon name="magnify"></wy-icon>
-                        </wy-button>
-                      </div>
-                    </div>
-                  </div>
-                `
-              : nothing}
+            <wy-buttons position=${this.agent ? "floating" : "sticky"} ?reverse=${Boolean(this.agent)}>
+              ${this.agent
+                ? nothing
+                : html`
+                    <wy-search
+                      compact
+                      placeholder=${msg("Search for conversations...")}
+                      @search=${(e: SearchEventType) => (this.searchText = e.detail.query)}
+                    ></wy-search>
+                  `}
+              <slot name="actions"></slot>
+            </wy-buttons>
+
             <div class="wy-conversations">
               ${!isPending && this.user && infiniteData
                 ? infiniteData.pages[0]?.count || this.searchText

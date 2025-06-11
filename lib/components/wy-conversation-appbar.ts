@@ -381,6 +381,7 @@ export default class WyConversationAppbar extends WeavySubComponent {
                                             <wy-avatar
                                               .src=${member.avatar_url}
                                               .name=${member.name}
+                                              .description=${member.comment}
                                               .isAgent=${member.is_agent}
                                               size=${32}
                                             ></wy-avatar>

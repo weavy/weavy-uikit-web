@@ -149,6 +149,7 @@ export default class WyNotificationListItem extends WeavySubComponent {
             class="wy-item-top"
             src=${ifDefined(otherMember?.avatar_url)}
             name=${ifDefined(otherMember?.name)}
+            description=${ifDefined(otherMember?.comment)}
             presence=${otherMember?.presence || "away"}
             ?isAgent=${otherMember?.is_agent}
             id=${ifDefined(otherMember?.id)}

@@ -72,7 +72,7 @@ export class WyChat extends WeavyComponent {
   override render() {
     return html`
       <wy-context-data-progress></wy-context-data-progress>
-      <wy-buttons floating reverse>
+      <wy-buttons position="floating" reverse>
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
 

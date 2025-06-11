@@ -4,13 +4,12 @@ import { consume } from "@lit/context";
 import { type WeavyComponentSettingsType, WeavyComponentSettingsContext } from "../contexts/settings-context";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 
-import type { AgentType, UserType } from "../types/users.types";
+import type { UserType } from "../types/users.types";
 import { type AppType, AppContext } from "../contexts/app-context";
 import { type LinkType, LinkContext } from "../contexts/link-context";
 import { UserContext } from "../contexts/user-context";
 import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/features-context";
 import { WeavyComponentContextProps } from "./weavy-component";
-import { AgentContext } from "../contexts/agent-context";
 import { type ContextDataBlobsType, DataBlobsContext } from "../contexts/data-context";
 import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
 
@@ -20,9 +19,9 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
   @state()
   app: AppType | undefined;
 
-  @consume({ context: AgentContext, subscribe: true })
-  @state()
-  agentUser: AgentType | undefined;
+  // @consume({ context: AgentContext, subscribe: true })
+  // @state()
+  // agentUser: AgentType | undefined;
 
   @consume({ context: DataBlobsContext, subscribe: true })
   @state()
@@ -63,13 +62,13 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
     return await this.#whenApp;
   }
 
-  #resolveAgentUser?: (agentUser: AgentType) => void;
-  #whenAgentUser = new Promise<AgentType>((r) => {
-    this.#resolveAgentUser = r;
-  });
-  async whenAgentUser() {
-    return await this.#whenAgentUser;
-  }
+  // #resolveAgentUser?: (agentUser: AgentType) => void;
+  // #whenAgentUser = new Promise<AgentType>((r) => {
+  //   this.#resolveAgentUser = r;
+  // });
+  // async whenAgentUser() {
+  //   return await this.#whenAgentUser;
+  // }
 
   #resolveContextDataBlobs?: (blobs: ContextDataBlobsType) => void;
   #whenContextDataBlobs = new Promise<ContextDataBlobsType>((r) => {
@@ -134,15 +133,15 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
-    if (changedProperties.has("agentUser") && this.agentUser) {
-      if (changedProperties.get("agentUser")) {
-        // reset promise
-        this.#whenAgentUser = new Promise<AgentType>((r) => {
-          this.#resolveAgentUser = r;
-        });
-      }
-      this.#resolveAgentUser?.(this.agentUser);
-    }
+    // if (changedProperties.has("agentUser") && this.agentUser) {
+    //   if (changedProperties.get("agentUser")) {
+    //     // reset promise
+    //     this.#whenAgentUser = new Promise<AgentType>((r) => {
+    //       this.#resolveAgentUser = r;
+    //     });
+    //   }
+    //   this.#resolveAgentUser?.(this.agentUser);
+    // }
 
     if (changedProperties.has("app") && this.app) {
       if (changedProperties.get("app")) {
@@ -228,9 +227,9 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
   override connectedCallback(): void {
     super.connectedCallback();
 
-    if (this.agentUser) {
-      this.requestUpdate("agentUser");
-    }
+    // if (this.agentUser) {
+    //   this.requestUpdate("agentUser");
+    // }
 
     if (this.app) {
       this.requestUpdate("app");

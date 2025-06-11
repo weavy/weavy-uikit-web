@@ -7,6 +7,7 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
   #prefixKey: string = "";
   #cachePrefix?: string;
   properties: Array<PersistProp<T>> = [];
+  initialProperties: Map<keyof T, unknown> = new Map()
 
   persistStorageCache = new PersistStorageCache();
 
@@ -41,6 +42,17 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
 
   public observe(properties: Array<PersistProp<T>>, prefixKey?: string, cachePrefix?: string) {
     this.properties = properties;
+
+    const prefixHasChanged = Boolean(this.prefixKey && this.prefixKey !== prefixKey || this.cachePrefix && this.cachePrefix !== cachePrefix);
+
+    this.properties.forEach((prop) => {
+      if (prefixHasChanged && this.initialProperties.has(prop.name)) {
+        // Reset to initial when needed
+        this.host[prop.name] = this.initialProperties.get(prop.name) as T[keyof T];
+      } else if (!this.initialProperties.has(prop.name)) {
+        this.initialProperties.set(prop.name, this.host[prop.name])
+      }
+    })
 
     if (prefixKey) {
       this.prefixKey = prefixKey;

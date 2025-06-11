@@ -8,6 +8,7 @@ import { ShadowPartsController } from "../../controllers/shadow-parts-controller
 
 import overlayStyles from "../../scss/all.scss"
 import colorModesStyles from "../../scss/color-modes.scss";
+import hostContentsCss from "../../scss/host-contents.scss";
 
 import "./wy-button";
 import "./wy-icon";
@@ -21,7 +22,8 @@ export default class WyOverlay extends LitElement {
   
   static override styles = [
     overlayStyles,
-    colorModesStyles
+    colorModesStyles,
+    hostContentsCss,
   ];
 
   protected exportParts = new ShadowPartsController(this);

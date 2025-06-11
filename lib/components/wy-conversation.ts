@@ -578,7 +578,7 @@ export class WyConversation extends WeavySubComponent {
         : null;
 
     return html`
-      <wy-avatar-header>
+      <wy-avatar-header description=${ifDefined(otherMember?.comment)}>
         ${this.conversation.avatar_url
           ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
           : this.isChatRoom()
@@ -592,6 +592,7 @@ export class WyConversation extends WeavySubComponent {
               <wy-avatar
                 src=${ifDefined(otherMember?.avatar_url)}
                 name=${this.conversation.name}
+                description=${ifDefined(otherMember?.comment)}
                 ?isAgent=${otherMember?.is_agent}
                 size=${96}
               ></wy-avatar>

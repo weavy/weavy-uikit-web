@@ -4,18 +4,18 @@ import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import throttle from "lodash.throttle";
 import type { MemberType } from "../types/members.types";
 import { getInfiniteSearchMemberOptions } from "../data/members";
 import { localized, msg } from "@lit/localize";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
-import { clickOnEnterAndConsumeOnSpace, inputClearAndBlurOnEscape, inputConsume } from "../utils/keyboard";
+import { clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { InfiniteQueryResultType } from "../types/query.types";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
-import { MemberSearchSubmitEventType } from "../types/members.events";
-import { NamedEvent } from "../types/generic.types";
+import type { MemberSearchSubmitEventType } from "../types/members.events";
+import type { NamedEvent } from "../types/generic.types";
+import type { SearchEventType } from "../types/search.events";
 
 import chatCss from "../scss/all.scss";
 import footerbarCss from "../scss/components/footerbar.scss";
@@ -26,6 +26,8 @@ import "./base/wy-button";
 import "./base/wy-icon";
 import "./base/wy-avatar";
 import "./base/wy-spinner";
+import "./base/wy-search";
+import WySearch from "./base/wy-search";
 
 @customElement("wy-users-search")
 @localized()
@@ -62,7 +64,7 @@ export default class WyUsersSearch extends LitElement {
   text: string = "";
 
   peopleQuery = new InfiniteQueryController<InfiniteQueryResultType<MemberType>>(this);
-  private inputRef: Ref<HTMLInputElement> = createRef();
+  private searchRef: Ref<WySearch> = createRef();
 
   private infiniteScroll = new InfiniteScrollController(this);
   private pagerRef: Ref<HTMLElement> = createRef();
@@ -94,18 +96,6 @@ export default class WyUsersSearch extends LitElement {
     }
   }
 
-  private clear() {
-    this.text = "";
-  }
-
-  private throttledSearch = throttle(
-    () => {
-      this.text = this.inputRef.value?.value || "";
-    },
-    250,
-    { leading: false, trailing: true }
-  );
-
   getSelected() {
     if (this.selected.length > 0) {
       return html`
@@ -121,6 +111,7 @@ export default class WyUsersSearch extends LitElement {
                 id=${member.id}
                 .src=${member.avatar_url}
                 .name=${member.name}
+                .description=${member.comment}
                 .presence=${member.presence}
                 .isAgent=${member.is_agent}
                 size=${32}
@@ -167,6 +158,7 @@ export default class WyUsersSearch extends LitElement {
                 id=${member.id}
                 .src=${member.avatar_url}
                 .name=${member.name}
+                .description=${member.comment}
                 .presence=${member.presence}
                 .isAgent=${member.is_agent}
                 size=${32}
@@ -187,24 +179,7 @@ export default class WyUsersSearch extends LitElement {
     return html`<div class="wy-pane wy-scroll-y">
       <div class="wy-pane-body">
         <div class="wy-pane-group">
-          <div class="wy-input-group">
-            <input
-              class="wy-input wy-input-group-input wy-input-filled"
-              name="search"
-              .value=${this.text || ""}
-              ${ref(this.inputRef)}
-              @input=${() => this.throttledSearch()}
-              @keydown=${inputClearAndBlurOnEscape}
-              @keyup=${inputConsume}
-              placeholder=${msg("Search...")}
-            />
-            <wy-button type="reset" @click=${() => this.clear()} kind="icon" class="wy-input-group-button-icon">
-              <wy-icon name="close-circle"></wy-icon>
-            </wy-button>
-            <wy-button kind="icon" class="wy-input-group-button-icon">
-              <wy-icon name="magnify"></wy-icon>
-            </wy-button>
-          </div>
+          <wy-search ${ref(this.searchRef)} @search=${(e: SearchEventType) => this.text = e.detail.query}></wy-search>
         </div>
         <div>
           <wy-buttons tabs>
@@ -266,7 +241,7 @@ export default class WyUsersSearch extends LitElement {
         this.select = [];
       }
       await this.peopleQuery.result?.refetch?.();
-      this.inputRef.value?.focus();
+      this.searchRef.value?.focusInput();
     }
   }
 }

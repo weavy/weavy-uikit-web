@@ -30,6 +30,7 @@ import "./wy-embed";
 import "./base/wy-icon";
 import "./wy-attachment";
 import "./base/wy-image-grid";
+import "./wy-annotations-list";
 import "./wy-attachments-list";
 import "./base/wy-reactions";
 import "./wy-meeting-card";
@@ -63,6 +64,9 @@ export default class WyMessage extends WeavySubComponent {
   name: string = "";
 
   @property()
+  comment?: string = "";
+
+  @property()
   avatar?: string = "";
 
   @property()
@@ -73,6 +77,9 @@ export default class WyMessage extends WeavySubComponent {
 
   @property()
   text: string = "";
+
+  @property({ type: Array })
+  annotations?: FileType[] = [];
 
   @property({ type: Array })
   attachments?: FileType[] = [];
@@ -95,7 +102,8 @@ export default class WyMessage extends WeavySubComponent {
   @property({ type: Boolean })
   highlight: boolean = false;
 
-  private previewRef: Ref<WeavyPreview> = createRef();
+  private previewAnnotationsRef: Ref<WeavyPreview> = createRef();
+  private previewAttachmentsRef: Ref<WeavyPreview> = createRef();
   private highlightRef: Ref<HTMLElement> = createRef();
 
   private dispatchVote(optionId: number) {
@@ -134,9 +142,10 @@ export default class WyMessage extends WeavySubComponent {
           ? html`
               <div class="wy-message-author">
                 <wy-avatar
-                  .src="${this.avatar}"
+                  .src=${this.avatar}
                   .size=${32}
-                  .name="${this.name}"
+                  .name=${this.name}
+                  .description=${this.comment}
                   .isAgent=${this.isAgent}
                 ></wy-avatar>
               </div>
@@ -154,12 +163,12 @@ export default class WyMessage extends WeavySubComponent {
               ? html`<wy-skeleton .text=${this.text}></wy-skeleton>`
               : html`
                   <!-- image grid -->
-                  ${images && !!images.length
+                  ${images && Boolean(images.length)
                     ? html`<wy-image-grid
                         class="wy-message-area"
                         .images=${images}
                         @file-open=${(e: FileOpenEventType) => {
-                          void this.previewRef.value?.open(e.detail.fileId);
+                          void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-image-grid>`
                     : ``}
@@ -172,8 +181,19 @@ export default class WyMessage extends WeavySubComponent {
                   <!-- text -->
                   ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
 
+                  <!-- annotations -->
+                  ${this.annotations && Boolean(this.annotations.length)
+                    ? html`<wy-annotations-list
+                        class="wy-message-area"
+                        .files=${this.annotations}
+                        @file-open=${(e: FileOpenEventType) => {
+                          void this.previewAnnotationsRef.value?.open(e.detail.fileId);
+                        }}
+                      ></wy-annotations-list>`
+                    : ``}
+
                   <!-- poll -->
-                  ${this.pollOptions && this.pollOptions.length > 0
+                  ${this.pollOptions && Boolean(this.pollOptions.length)
                     ? html`
                         <wy-poll
                           .pollOptions=${this.pollOptions}
@@ -186,12 +206,12 @@ export default class WyMessage extends WeavySubComponent {
                   ${this.meeting ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>` : ``}
 
                   <!-- files -->
-                  ${files && !!files.length
+                  ${files && Boolean(files.length)
                     ? html`<wy-attachments-list
                         class="wy-message-area"
                         .files=${files}
                         @file-open=${(e: FileOpenEventType) => {
-                          void this.previewRef.value?.open(e.detail.fileId);
+                          void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-attachments-list>`
                     : ``}
@@ -248,8 +268,20 @@ export default class WyMessage extends WeavySubComponent {
             `preview-message-${this.messageId}`,
             html`
               <wy-preview
-                ${ref(this.previewRef)}
+                ${ref(this.previewAttachmentsRef)}
                 .files=${[...images, ...files]}
+                .isAttachment=${true}
+              ></wy-preview>
+            `
+          )
+        : nothing}
+      ${this.annotations
+        ? keyed(
+            `annotation-preview-message-${this.messageId}`,
+            html`
+              <wy-preview
+                ${ref(this.previewAnnotationsRef)}
+                .files=${this.annotations}
                 .isAttachment=${true}
               ></wy-preview>
             `

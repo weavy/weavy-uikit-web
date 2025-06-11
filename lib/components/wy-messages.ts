@@ -110,6 +110,9 @@ export default class WyMessages extends WeavySubComponent {
                   </div>`;
                 }
 
+                // Get additional member data
+                const createdBy = this.members?.data?.find((m) => m.id === message.created_by.id) || message.created_by;
+
                 return html`${[
                   html`${dateContent}`,
                   html`${this.unreadMarkerPosition === "above" ? unreadMarkerContent : nothing}`,
@@ -119,15 +122,17 @@ export default class WyMessages extends WeavySubComponent {
                       id="message-${message.id}"
                       .conversation=${this.conversation}
                       .messageId=${message.id}
-                      .me=${message.created_by.id === this.user?.id}
-                      .isAgent=${message.created_by.is_agent || false}
+                      .me=${createdBy.id === this.user?.id}
+                      .isAgent=${createdBy.is_agent || false}
                       .isPrivateChat=${this.conversation?.type === AppTypeGuid.PrivateChat ||
                       this.conversation?.type === AppTypeGuid.AgentChat}
-                      .name=${message.created_by.name}
-                      .avatar=${message.created_by.avatar_url}
+                      .name=${createdBy.name}
+                      .comment=${createdBy.comment}
+                      .avatar=${createdBy.avatar_url}
                       .createdAt=${message.created_at}
                       .text=${message.plain}
                       .html=${message.html}
+                      .annotations=${message.annotations?.data}
                       .attachments=${message.attachments?.data}
                       .meeting=${message.meeting}
                       .pollOptions=${message.options?.data}

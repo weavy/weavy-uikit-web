@@ -123,6 +123,7 @@ export default class WyMessageTyping extends LitElement {
                     <wy-avatar
                       .size=${32}
                       .src=${members[0]?.avatar_url}
+                      .description=${members[0]?.comment}
                       .name=${typingNames}
                       .isAgent=${members[0]?.is_agent}
                     ></wy-avatar>

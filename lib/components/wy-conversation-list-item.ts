@@ -261,6 +261,7 @@ export default class WyConversationListItem extends LitElement {
                 <wy-avatar
                   src=${ifDefined(otherMember?.avatar_url)}
                   name=${ifDefined(otherMember?.name)}
+                  description=${ifDefined(otherMember?.comment)}
                   presence=${otherMember?.presence || "away"}
                   ?isAgent=${otherMember?.is_agent}
                   id=${ifDefined(otherMember?.id)}

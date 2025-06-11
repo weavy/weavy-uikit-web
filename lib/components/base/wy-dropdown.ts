@@ -88,11 +88,15 @@ export default class WyDropdown extends LitElement {
 
   private handleClickToggle(e: Event) {
     e.stopPropagation();
-    this.showMenu = !this.showMenu;
+    this.showMenu = this.disabled ? false : !this.showMenu;
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>): void {
     super.willUpdate(changedProperties);
+
+    if ((changedProperties.has("disabled") || changedProperties.has("showMenu")) && this.disabled && this.showMenu) {
+      this.showMenu = false;
+    }
     
     if (changedProperties.has("directionX") || changedProperties.has("directionY")) {
       this._placement =

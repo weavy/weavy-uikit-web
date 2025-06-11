@@ -81,7 +81,7 @@ export class WyPosts extends WeavyComponent {
 
   override render() {
     return html`
-      <wy-buttons floating reverse>
+      <wy-buttons position="floating" reverse>
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
 
