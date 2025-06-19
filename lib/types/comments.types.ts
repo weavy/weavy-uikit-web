@@ -8,15 +8,16 @@ export type CommentsResultType = InfiniteQueryResultType<CommentType>;
 
 export type MutateCommentProps = {
   id?: number;
-  appId?: number;
-  parentId: number;
+  app_id?: number;
+  parent_id: number;
   type: "posts" | "files" | "apps";
   text: string;
   blobs?: number[];
   attachments?: number[];
-  meetingId?: number;
-  pollOptions: PollOptionType[];
-  embedId: number;
+  meeting_id?: number;
+  poll_options: PollOptionType[];
+  embed_id: number;
+  context?: number[];
   user?: UserType;
 };
 

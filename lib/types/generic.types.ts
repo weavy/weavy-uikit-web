@@ -12,7 +12,7 @@ export type Constructor<T = object> = new (...args: any[]) => T;
 export type ValueOf<T> = T[keyof T];
 
 /** Generic type for JSON serializable objects */
-export type JsonType = boolean | number | string | null | { [key: string]: JsonType } | Array<JsonType>;
+export type JsonType = boolean | number | string | null | { [key: PropertyKey]: JsonType } | Array<JsonType>;
 
 /**
  * Sets all properties as nullable for type T

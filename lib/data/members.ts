@@ -37,9 +37,9 @@ export function getInfiniteSearchMemberOptions(
       let response;
       
       if (appId) {
-        response = await weavy.fetch(`/api/apps/${appId}/members?member=false&q=${query}&skip=${skip}${getAgent() !== undefined ? `&agent=${Boolean(getAgent())}` : ""}`);
+        response = await weavy.fetch(`/api/apps/${appId}/members?q=${query}${getAgent() !== undefined ? `&agent=${Boolean(getAgent())}` : ""}&member=false&system=false&skip=${skip}`);
       } else {
-        response = await weavy.fetch(`/api/users?q=${query}&skip=${skip}${getAgent() !== undefined ? `&agent=${Boolean(getAgent())}` : ""}`);
+        response = await weavy.fetch(`/api/users?q=${query}${getAgent() !== undefined ? `&agent=${Boolean(getAgent())}` : ""}&system=false&skip=${skip}`);
       }          
 
       const result = await response.json() as MembersResultType;

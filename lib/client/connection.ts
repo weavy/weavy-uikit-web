@@ -16,7 +16,7 @@ export interface WeavyConnectionProps {
     group: string | null,
     event: string,
     callback: (realTimeEvent: T) => void | Promise<void>
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   unsubscribe: <T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
@@ -167,8 +167,8 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           this.connectionState = "reconnecting";
           //this.networkStateIsPending = true;
         });
-        this._connection.onreconnected(() => {
-          console.info(this.weavyId, "SignalR reconnected.");
+        this._connection.onreconnected((connectionId) => {
+          console.info(this.weavyId, `SignalR reconnected ${connectionId}`);
           this.connectionState = "connected";
           this.networkStateIsPending = false;
           for (let i = 0; i < this._connectionEventListeners.length; i++) {
@@ -214,7 +214,7 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
         this.networkStateIsPending = false;
         this.connectionState = "connected";
         this._whenConnectionStartedResolve?.(connection);
-        console.info(this.weavyId, "SignalR connected.");
+        console.info(this.weavyId, `SignalR connected ${connection.connectionId}`);
       } catch (e: unknown) {
         if (e instanceof DestroyError) {
           console.warn(this.weavyId, "SignalR connection aborted.");
@@ -276,8 +276,9 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
 
       this._resolveConnectionRequested?.(true);
 
+      const name = group ? group + ":" + event : event;
+
       try {
-        const name = group ? group + ":" + event : event;
         if (!this._connectionEventListeners) {
           // Wait for init to complete
           await new Promise((r) => queueMicrotask(() => r(true)));
@@ -295,11 +296,30 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           throw new Error("Connection not created");
         }
         this._connection.on(name, callback);
-        await this._connection.invoke("Subscribe", name);
+        
+        const subscribed = await this._connection.invoke<boolean|undefined>("Subscribe", name) ;
+
+        if (subscribed === false) {
+          throw new Error("Could not subscribe to " + name);
+        }
+
+        return true;
       } catch (e: unknown) {
         if (!(e instanceof DestroyError)) {
           console.error(this.weavyId, "Error in Subscribe:", e);
         }
+
+        // Clean up
+
+        // get first occurrence of group name and remove it
+        const index = this._connectionEventListeners.findIndex((el) => el.name === name && el.callback === callback);
+
+        if (index !== -1) {
+          this._connectionEventListeners.splice(index, 1);
+          this._connection?.off(name, callback);
+        }
+
+        return false;
       }
     }
 

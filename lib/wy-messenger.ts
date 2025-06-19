@@ -98,6 +98,9 @@ const DefaultMessengerAgentFeatures: ComponentFeaturePolicyConfig = {
  * @extends {WeavyComponent}
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
+ * 
+ * @slot actions - Buttons placed in the top right of the conversation list.
+ * @slot conversation-new - The button for creating a new conversation. Replaces the button.
  */
 @customElement(WY_MESSENGER_TAGNAME)
 @localized()
@@ -265,6 +268,7 @@ export class WyMessenger extends WeavyComponent {
             .conversationId=${this.conversationId || undefined}
             .conversation=${conversation}
             @release-focus=${() => this.dispatchEvent(this.releaseFocusEvent())}
+            @selected=${(e: SelectedEventType) => (this.conversationId = e.detail.id)}
             ?hidden=${Boolean(!this.conversationId)}
           >
             <span slot="action" class="wy-close-conversation">

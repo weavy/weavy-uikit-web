@@ -49,13 +49,13 @@ export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: M
           text: variables.text,
           blobs: variables.blobs,
           attachments: variables.attachments,
-          meeting_id: variables.meetingId,
-          options: variables.pollOptions
+          meeting_id: variables.meeting_id,
+          options: variables.poll_options
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { id: o.id, text: o.text };
             }),
-          embed_id: variables.embedId || null,
+          embed_id: variables.embed_id || null,
         }),
       });
       return await response.json() as CommentType;
@@ -64,7 +64,7 @@ export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: M
     onSuccess: (data: CommentType, variables: MutateCommentProps) => {
       if (variables.id) {
 
-        updateCacheItem(weavy.queryClient, [variables.type, variables.parentId, "comments"], variables.id, (item: CommentType) => {
+        updateCacheItem(weavy.queryClient, [variables.type, variables.parent_id, "comments"], variables.id, (item: CommentType) => {
           item.text = data.text;
           item.html = data.html;
           item.attachments = data.attachments;
@@ -86,25 +86,26 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
 
   const options = {
     mutationFn: async (variables: MutateCommentProps) => {
-      const response = await weavy.fetch("/api/" + variables.type + "/" + variables.parentId + "/comments", {
+      const response = await weavy.fetch("/api/" + variables.type + "/" + variables.parent_id + "/comments", {
         method: "POST",
         body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
-          meeting_id: variables.meetingId,
-          options: variables.pollOptions
+          meeting_id: variables.meeting_id,
+          options: variables.poll_options
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { text: o.text };
             }),
-          embed_id: variables.embedId,
+          embed_id: variables.embed_id,
+          context: variables.context
         }),
       });
       return await response.json() as CommentType;
     },
     onMutate: async (variables: MutateCommentProps) => {
       
-      const queryKey = [variables.type, variables.parentId, "comments"];
+      const queryKey = [variables.type, variables.parent_id, "comments"];
 
       await queryClient.cancelQueries({ queryKey: queryKey });
       const newest = getPendingCacheItem<CommentType>(weavy.queryClient, queryKey, false);
@@ -112,7 +113,7 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
       if (variables.user) {
         const tempData: CommentType = {
           id: newest ? newest.id - 1 : -1,
-          app: variables.type === "apps" ? { id: variables.parentId } : { id: -1 },
+          app: variables.type === "apps" ? { id: variables.parent_id } : { id: -1 },
           is_trashed: false,
           text: variables.text,
           html: variables.text,
@@ -126,9 +127,9 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
         };
 
         if (variables.type === "files") {
-          tempData.parent = { type: EntityTypeString.File, id: variables.parentId };
+          tempData.parent = { type: EntityTypeString.File, id: variables.parent_id };
         } else if (variables.type === "posts") {
-          tempData.parent = { type: EntityTypeString.Post, id: variables.parentId };
+          tempData.parent = { type: EntityTypeString.Post, id: variables.parent_id };
         }
 
         addCacheItem(queryClient, queryKey, tempData, { descending: false });

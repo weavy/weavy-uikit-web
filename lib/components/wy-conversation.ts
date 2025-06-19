@@ -109,6 +109,9 @@ export class WyConversation extends WeavySubComponent {
   @state()
   isCreatingConversation: boolean = false;
 
+  @state()
+  showReadReceipts: boolean = false;
+
   createConversation?: (payload: Omit<MutateMessageProps, "app_id">) => Promise<AppType>;
   requestMetadata?: (payload: MutateMessageProps) => Promise<MetadataType | undefined>;
 
@@ -184,10 +187,10 @@ export class WyConversation extends WeavySubComponent {
       text: e.detail.text,
       meeting_id: e.detail.meetingId,
       poll_options: e.detail.pollOptions,
-      embed_id: e.detail.embed,
+      embed_id: e.detail.embedId,
       blobs: e.detail.blobs,
       user: this.user,
-      context_id: e.detail.contextData?.[0],
+      context: e.detail.contextData,
     };
 
     if (this.agentInstructions) {
@@ -277,6 +280,8 @@ export class WyConversation extends WeavySubComponent {
 
     await this.messagesQuery.observer?.getCurrentQuery().promise;
 
+    const appUidOrId = realtimeEvent.message.app.uid ?? realtimeEvent.message.app.id;
+
     // set message in messages cache
     const queryKey = ["messages", realtimeEvent.message.app.id];
     let existing = getCacheItem<MessageType>(this.weavy.queryClient, queryKey, realtimeEvent.message.id);
@@ -310,7 +315,7 @@ export class WyConversation extends WeavySubComponent {
     }
 
     // set last_message in cache
-    this.weavy.queryClient.setQueryData(["apps", realtimeEvent.message.app.id], (app: AppType) =>
+    this.weavy.queryClient.setQueryData(["apps", appUidOrId], (app: AppType) =>
       app ? { ...app, last_message: realtimeEvent.message } : app
     );
 
@@ -324,7 +329,7 @@ export class WyConversation extends WeavySubComponent {
         });
       } else {
         // set is_unread in cache
-        this.weavy.queryClient.setQueryData(["apps", realtimeEvent.message.app.id], (app: AppType) =>
+        this.weavy.queryClient.setQueryData(["apps", appUidOrId], (app: AppType) =>
           app ? { ...app, is_unread: true } : app
         );
 
@@ -334,9 +339,9 @@ export class WyConversation extends WeavySubComponent {
       }
 
       // update members cache to indicate that creator has seen the message
-      updateCacheItem(
+      updateCacheItems(
         this.weavy.queryClient,
-        ["members", realtimeEvent.message.app.id],
+        { queryKey: ["members", realtimeEvent.message.app.id], exact: false },
         realtimeEvent.actor.id,
         (item: MemberType) => {
           item.marked_id = realtimeEvent.message.id;
@@ -390,9 +395,9 @@ export class WyConversation extends WeavySubComponent {
       return;
     }
 
-    updateCacheItem(
+    updateCacheItems(
       this.weavy.queryClient,
-      ["members", this.conversation.id],
+      { queryKey: ["members", this.conversation.id] },
       realtimeEvent.actor.id,
       (item: MemberType) => {
         item.marked_id = realtimeEvent.marked_id;
@@ -478,7 +483,9 @@ export class WyConversation extends WeavySubComponent {
         }
 
         if (this.componentFeatures?.allowsFeature(Feature.Receipts)) {
-          void this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
+          void this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked).then((showReceipts) => {
+            this.showReadReceipts = showReceipts;
+          });
         }
 
         this.#unsubscribeToRealtime = () => {
@@ -486,6 +493,7 @@ export class WyConversation extends WeavySubComponent {
           void this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
           void this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
           void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
+          this.showReadReceipts = false;
           this.#unsubscribeToRealtime = undefined;
         };
       } else {
@@ -619,6 +627,7 @@ export class WyConversation extends WeavySubComponent {
               .unreadMarkerId=${this.lastReadMessageId}
               .unreadMarkerPosition=${this.lastReadMessagePosition}
               .unreadMarkerShow=${this.showNewMessages}
+              .seenByShow=${this.showReadReceipts}
               @vote=${(e: PollVoteEventType) => {
                 if (e.detail.parentType && e.detail.parentId) {
                   void this.pollMutation?.mutate({

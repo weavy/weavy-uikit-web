@@ -149,14 +149,15 @@ export default class WyCommentList extends WeavySubComponent {
   private async handleSubmit(e: EditorSubmitEventType) {
     if (this.app && this.parentId && this.user) {
       await this.addCommentMutation.mutate({
-        appId: this.app.id,
-        parentId: this.parentId,
+        app_id: this.app.id,
+        parent_id: this.parentId,
         type: this.location,
         text: e.detail.text,
-        meetingId: e.detail.meetingId,
+        meeting_id: e.detail.meetingId,
         blobs: e.detail.blobs,
-        pollOptions: e.detail.pollOptions,
-        embedId: e.detail.embed,
+        poll_options: e.detail.pollOptions,
+        embed_id: e.detail.embedId,
+        context: e.detail.contextData,
         user: this.user,
       });
     }
@@ -179,6 +180,7 @@ export default class WyCommentList extends WeavySubComponent {
               .isTrashed=${comment.is_trashed}
               .html=${comment.html}
               .text=${comment.text}
+              .annotations=${comment.annotations?.data}
               .attachments=${comment.attachments?.data}
               .embed=${comment.embed}
               .meeting=${comment.meeting}

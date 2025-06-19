@@ -36,11 +36,12 @@ import "./wy-embed";
 import "./wy-comment-list";
 import WeavyPreview from "./wy-preview";
 import "./base/wy-skeleton";
+import "./wy-annotations-list";
 
-/** 
+/**
  * @fires {PollVoteEventType} vote
  * @fires {CommentTrashEventType} trash
- * @fires {CommentEditEventType} edit 
+ * @fires {CommentEditEventType} edit
  **/
 @customElement("wy-comment-view")
 @localized()
@@ -77,6 +78,9 @@ export default class WyCommentView extends WeavySubComponent {
   html: string = "";
 
   @property({ type: Array })
+  annotations?: FileType[] = [];
+
+  @property({ type: Array })
   attachments?: FileType[] = [];
 
   @property({ attribute: false })
@@ -91,7 +95,8 @@ export default class WyCommentView extends WeavySubComponent {
   @property({ type: Array })
   reactions?: ReactableType[] = [];
 
-  private previewRef: Ref<WeavyPreview> = createRef();
+  private previewAnnotationsRef: Ref<WeavyPreview> = createRef();
+  private previewAttachmentsRef: Ref<WeavyPreview> = createRef();
   private highlightRef: Ref<HTMLElement> = createRef();
 
   @property({ type: Boolean })
@@ -116,7 +121,9 @@ export default class WyCommentView extends WeavySubComponent {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("link")) {
-      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.commentId }));
+      this.highlight = Boolean(
+        this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.commentId })
+      );
     }
 
     if (changedProperties.has("highlight")) {
@@ -129,8 +136,8 @@ export default class WyCommentView extends WeavySubComponent {
   }
 
   override render() {
-    const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url);
-    const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url);
+    const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url) || [];
+    const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url) || [];
 
     const dateFull = new Intl.DateTimeFormat(this.weavy?.locale, {
       dateStyle: "full",
@@ -196,13 +203,24 @@ export default class WyCommentView extends WeavySubComponent {
           </div>
           <div class="wy-comment-body">
             <div class="wy-comment-content">
+              <!-- annotations -->
+              ${this.annotations && Boolean(this.annotations.length)
+                ? html`<wy-annotations-list
+                    class="wy-message-area"
+                    .files=${this.annotations}
+                    @file-open=${(e: FileOpenEventType) => {
+                      void this.previewAnnotationsRef.value?.open(e.detail.fileId);
+                    }}
+                  ></wy-annotations-list>`
+                : ``}
+
               <!-- image grid -->
-              ${images && !!images.length
+              ${images && Boolean(images.length)
                 ? html`<wy-image-grid
                     class="wy-comment-area"
                     .images=${images}
                     @file-open=${(e: FileOpenEventType) => {
-                      void this.previewRef.value?.open(e.detail.fileId);
+                      void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                     }}
                   ></wy-image-grid>`
                 : ``}
@@ -224,11 +242,11 @@ export default class WyCommentView extends WeavySubComponent {
                 : nothing}
 
               <!-- files -->
-              ${files && !!files.length
+              ${files && Boolean(files.length)
                 ? html`<wy-attachments-list
                     .files=${files ?? []}
                     @file-open=${(e: FileOpenEventType) => {
-                      void this.previewRef.value?.open(e.detail.fileId);
+                      void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                     }}
                   ></wy-attachments-list>`
                 : ``}
@@ -249,8 +267,19 @@ export default class WyCommentView extends WeavySubComponent {
                 entityType="comments"
               ></wy-reactions>`
             : nothing}
+          ${this.annotations?.length
+            ? html`<wy-preview
+                ${ref(this.previewAnnotationsRef)}
+                .files=${this.annotations}
+                .isAttachment=${true}
+              ></wy-preview> `
+            : nothing}
           ${this.attachments?.length
-            ? html`<wy-preview ${ref(this.previewRef)} .files=${this.attachments} .isAttachment=${true}></wy-preview> `
+            ? html`<wy-preview
+                ${ref(this.previewAttachmentsRef)}
+                .files=${[...images, ...files]}
+                .isAttachment=${true}
+              ></wy-preview> `
             : nothing} `;
   }
 

@@ -39,27 +39,27 @@ export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: Muta
           text: variables.text,
           blobs: variables.blobs,
           attachments: variables.attachments,
-          meeting_id: variables.meetingId,
-          options: variables.pollOptions
+          meeting_id: variables.meeting_id,
+          options: variables.poll_options
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { id: o.id, text: o.text };
             }),
-          embed_id: variables.embed || null,
+          embed_id: variables.embed_id || null,
         }),
       });
       return await response.json() as PostType;
     },
     mutationKey: mutationKey,
     onMutate: (variables: MutatePostProps) => {
-      updateCacheItem(weavy.queryClient, ["posts", variables.appId], variables.id, (item: PostType) => {
+      updateCacheItem(weavy.queryClient, ["posts", variables.app_id], variables.id, (item: PostType) => {
         item.text = variables.text;
         item.html = variables.text;
       });
     },
     onSuccess: (data: PostType, variables: MutatePostProps) => {
       if (variables.id) {
-        updateCacheItem(weavy.queryClient, ["posts", variables.appId], variables.id, (item: PostType) => {
+        updateCacheItem(weavy.queryClient, ["posts", variables.app_id], variables.id, (item: PostType) => {
           item.text = data.text;
           item.html = data.html;
           item.attachments = data.attachments;
@@ -81,25 +81,26 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
 
   const options = {
     mutationFn: async (variables: MutatePostProps) => {
-      const response = await weavy.fetch("/api/apps/" + variables.appId + "/posts", {
+      const response = await weavy.fetch("/api/apps/" + variables.app_id + "/posts", {
         method: "POST",
         body: JSON.stringify({
           text: variables.text,
           blobs: variables.blobs,
-          meeting_id: variables.meetingId,
-          options: variables.pollOptions
+          meeting_id: variables.meeting_id,
+          options: variables.poll_options
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { text: o.text };
             }),
-          embed_id: variables.embed,
+          embed_id: variables.embed_id,
+          context: variables.context
         }),
       });
       return await response.json() as PostType;
     },
     mutationKey: mutationKey,
     onMutate: async (variables: MutatePostProps) => {
-      const queryKey = ["posts", variables.appId];
+      const queryKey = ["posts", variables.app_id];
 
       await queryClient.cancelQueries({ queryKey: queryKey });
       const newest = getPendingCacheItem<PostType>(weavy.queryClient, queryKey, false);
@@ -107,7 +108,7 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
       if (variables.user) {
         const tempData: PostType = {
           id: newest ? newest.id - 1 : -1,
-          app: { id: variables.appId },
+          app: { id: variables.app_id },
           is_subscribed: true,
           is_trashed: false,
           text: variables.text,
@@ -120,7 +121,7 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
           is_starred: false,
           comments: { count: 0 },
         };
-        addCacheItem(queryClient, ["posts", variables.appId], tempData, { descending: true });
+        addCacheItem(queryClient, ["posts", variables.app_id], tempData, { descending: true });
       }
     },
     onSuccess: (data: PostType) => {

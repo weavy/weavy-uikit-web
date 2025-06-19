@@ -25,6 +25,8 @@ import { type AppType, AppTypeGuid, AccessType, PermissionType } from "../types/
 import { hasPermission } from "../utils/permission";
 import type { BlobUploadedEventType } from "../types/files.events";
 import type { MemberSearchSubmitEventType } from "../types/members.events";
+import { SelectedEventType } from "../types/app.events";
+import { NamedEvent } from "../types/generic.types";
 
 import chatCss from "../scss/all.scss";
 import hostContentsCss from "../scss/host-contents.scss";
@@ -164,10 +166,12 @@ export default class WyConversationAppbar extends WeavySubComponent {
       });
     }
 
-    if (!memberId) {
+    if (!memberId || memberId === this.user.id) {
       this.showDetails = false;
       this.conversation = undefined;
       this.conversationId = undefined;
+      const eventSelect: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: undefined } });
+      this.dispatchEvent(eventSelect);
     } else {
       await this.membersQuery.result.refetch();
     }
@@ -262,7 +266,7 @@ export default class WyConversationAppbar extends WeavySubComponent {
         ? (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user
         : null;
 
-    return html`
+    return this.conversationId ? html`
       <header class="wy-appbars">
         <nav class="wy-appbar">
           <slot class="wy-appbar-buttons wy-appbar-buttons-first" name="action"></slot>
@@ -493,7 +497,7 @@ export default class WyConversationAppbar extends WeavySubComponent {
             </wy-overlay>
           `
         : nothing}
-    `;
+    ` : nothing;
   }
 
   override disconnectedCallback(): void {

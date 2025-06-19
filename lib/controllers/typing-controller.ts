@@ -6,17 +6,30 @@ import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { whenParentsDefined } from "../utils/dom";
 import { TypingEventType } from "../types/typing.events";
 import { NamedEvent } from "../types/generic.types";
+import { type ComponentFeaturePolicy, Feature, FeaturePolicyContext } from "../contexts/features-context";
 
 export class TypingController implements ReactiveController {
   host: ReactiveControllerHost & LitElement;
-  context?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
-  whenContext?: Promise<WeavyType>;
-  resolveContext?: (value: WeavyType | PromiseLike<WeavyType>) => void;
-
+  
+  // Weavy context
+  weavyContext?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
+  whenWeavyContext?: Promise<WeavyType>;
+  resolveWeavyContext?: (value: WeavyType | PromiseLike<WeavyType>) => void;
+  
   get weavy() {
-    return this.context?.value;
+    return this.weavyContext?.value;
   }
 
+  // Feature context
+  componentFeaturesContext?: ContextConsumer<{ __context__: ComponentFeaturePolicy }, LitElement>;
+  whenComponentFeaturesContext?: Promise<ComponentFeaturePolicy>;
+  resolveComponentFeaturesContext?: (value: ComponentFeaturePolicy | PromiseLike<ComponentFeaturePolicy>) => void;
+
+  get componentFeatures() {
+    return this.componentFeaturesContext?.value;
+  }
+  
+  private registrationRequested: boolean = false;
   private typingTimeout: number | null = null;
   private discardTime = 5 * 1000;
 
@@ -58,33 +71,43 @@ export class TypingController implements ReactiveController {
   constructor(host: ReactiveControllerHost) {
     host.addController(this);
     this.host = host as ReactiveControllerHost & LitElement;
-    void this.setContext();
+    void this.setContexts();
   }
 
-  async setContext() {
-    this.whenContext = new Promise((r) => (this.resolveContext = r));
+  async setContexts() {
+    this.whenWeavyContext = new Promise((r) => (this.resolveWeavyContext = r));
+    this.whenComponentFeaturesContext = new Promise((r) => (this.resolveComponentFeaturesContext = r));
     await whenParentsDefined(this.host as LitElement);
-    this.context = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
+    this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
+    this.componentFeaturesContext = new ContextConsumer(this.host as LitElement, { context: FeaturePolicyContext, subscribe: true });
   }
 
   hostUpdate(): void {
-    if (this.context?.value) {
-      this.resolveContext?.(this.context?.value);
+    if (this.weavyContext?.value) {
+      this.resolveWeavyContext?.(this.weavyContext?.value);
+    }
+
+    if (this.componentFeaturesContext?.value) {
+      this.resolveComponentFeaturesContext?.(this.componentFeaturesContext?.value);
     }
   }
 
   async registerRealtime() {
-    if (this.appId && this._userId) {
-      await this.whenContext;
-      //console.log("typing subscribe", this.appId)
-      void this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
-      void this.weavy?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
+    if (!this.registrationRequested && this.appId && this._userId) {
+      this.registrationRequested = true;
+      await Promise.all([this.whenWeavyContext, this.whenComponentFeaturesContext]);
+      if (this.componentFeatures?.allowsFeature(Feature.Typing)) {
+        //console.log("typing subscribe", this.appId)
+        void this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+        void this.weavy?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
+      }
+      this.registrationRequested = false;
     }
   }
 
   async unregisterRealtime() {
-    if (this.appId && this.userId) {
-      await this.whenContext;
+    if (!this.registrationRequested && this.appId && this.userId) {
+      await this.whenWeavyContext;
       void this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
       void this.weavy?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
     }

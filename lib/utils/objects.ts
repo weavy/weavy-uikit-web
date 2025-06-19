@@ -5,7 +5,7 @@
  * Released under the MIT License.
  */
 
-import { PlainObjectType } from "../types/generic.types";
+import { JsonType, PlainObjectType } from "../types/generic.types";
 
 /**
  * Checks if an object is an object.
@@ -13,7 +13,7 @@ import { PlainObjectType } from "../types/generic.types";
  * @param {any} maybeObject - The object to check
  * @returns {boolean} True if the object is an object
  */
-export function isObject(maybeObject: unknown) {
+export function isObject(maybeObject: unknown): maybeObject is object {
   return Object.prototype.toString.call(maybeObject) === "[object Object]";
 }
 
@@ -23,7 +23,7 @@ export function isObject(maybeObject: unknown) {
  * @param {object} maybePlainObject - The object to check
  * @returns {boolean} True if the object is plain
  */
-export function isPlainObject(maybePlainObject: unknown) {
+export function isPlainObject(maybePlainObject: unknown): maybePlainObject is PlainObjectType {
   if (isObject(maybePlainObject as object) === false) return false;
 
   // If has modified constructor
@@ -42,6 +42,31 @@ export function isPlainObject(maybePlainObject: unknown) {
 
   // Most likely a plain Object
   return true;
+}
+
+/**
+ * Type guard to determine if an object has a `toJSON()` method
+ * @param obj - The object to check 
+ * @returns boolean
+ */
+export function hasToJSON(obj: unknown): obj is { toJSON: () => string } {
+  return typeof (obj as { toJSON?: () => string }).toJSON === "function";
+}
+
+/**
+ * 
+ * @param maybeJSON - The object to check
+ * @returns boolean
+ */
+export function isJSONSerializable(maybeJSON: unknown): maybeJSON is JsonType {
+  return (
+    typeof maybeJSON === "boolean" ||
+    typeof maybeJSON === "number" ||
+    typeof maybeJSON === "string" ||
+    maybeJSON === null ||
+    isPlainObject(maybeJSON) ||
+    Array.isArray(maybeJSON)
+  );
 }
 
 /**
@@ -70,11 +95,7 @@ export function assign<TTarget>(target: TTarget, properties: TTarget, recursive:
   for (const property in properties) {
     if (Object.prototype.hasOwnProperty.call(properties, property)) {
       if (recursive && copy[property] && isPlainObject(copy[property]) && isPlainObject(properties[property])) {
-        copy[property] = assign(
-          copy[property],
-          properties[property],
-          recursive
-        );
+        copy[property] = assign(copy[property], properties[property], recursive);
       } else {
         copy[property] = properties[property];
       }
@@ -99,14 +120,14 @@ export function asArray(maybeArray: unknown) {
 
 /**
  * Async version of Array.find()
- * 
+ *
  * @param array The array to search in
  * @param predicate The predicate for the search
  * @returns Any found item.
  */
 export async function findAsyncSequential<T>(
   array: T[],
-  predicate: (t: T) => Promise<boolean>,
+  predicate: (t: T) => Promise<boolean>
 ): Promise<T | undefined> {
   for (const t of array) {
     if (await predicate(t)) {
@@ -197,7 +218,7 @@ export function includeReversedProperties<T extends PlainObjectType<PropertyKey>
  * @param obj - The plain object to get keys and values from.
  * @returns {Iterable} - An iterable array with key value pairs.
  */
-export function objectAsIterable<T extends PlainObjectType, TValue = T >(obj: T) {
+export function objectAsIterable<T extends PlainObjectType, TValue = T>(obj: T) {
   return Object.entries(obj) as [keyof T, TValue][];
 }
 
@@ -207,7 +228,8 @@ export function objectAsIterable<T extends PlainObjectType, TValue = T >(obj: T)
  * @returns {Object} - An iterable array with the original properties together with reversed properties as key value pairs.
  */
 export function includeReversedPropertiesAsIterable<T extends PlainObjectType<PropertyKey>>(obj: T) {
-  return Object.entries(obj).concat(
-    Object.entries(obj).map(([key, value]) => [value, key]) as [string, keyof T][]
-  ) as [PropertyKey, keyof T | T][];
+  return Object.entries(obj).concat(Object.entries(obj).map(([key, value]) => [value, key]) as [string, keyof T][]) as [
+    PropertyKey,
+    keyof T | T
+  ][];
 }

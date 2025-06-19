@@ -1,5 +1,5 @@
 import { PlainObjectType } from "../types/generic.types";
-import { isPlainObject } from "./objects";
+import { hasToJSON, isPlainObject } from "./objects";
 import { toCamelCase, toSnakeCase } from "./strings";
 
 export const defaultFetchSettings: RequestInit = {
@@ -34,13 +34,60 @@ export function sanitizeJSON(_key: string, value: unknown) {
 }
 
 /**
+ * Returns a replacer function to use with JSON.stringify to ensure the object doesn't have circular references.
+ * @returns {Function} replacer function
+ */
+export function getCircularReferenceReplacer() {
+  const seen = new WeakSet();
+
+  const replacer = function (key: string | number, value: unknown): unknown {
+    // Handle objects with a custom `.toJSON()` method.
+    if (hasToJSON(value)) {
+      value = value.toJSON();
+    }
+
+    if (!(value !== null && typeof value === "object")) {
+      return value;
+    }
+
+    if (seen.has(value)) {
+      return "[Circular]";
+    }
+
+    let returnValue;
+
+    seen.add(value);
+
+    if (isPlainObject(value)) {
+      const n: PlainObjectType = {};
+
+      Object.keys(value).forEach((k) => {
+        n[k] = replacer(k, value[k as keyof typeof value]);
+      });
+
+      returnValue = n;
+    } else if (Array.isArray(value)) {
+      returnValue = value.map((v, k) => {
+        return replacer(k, v);
+      });
+    }
+
+    seen.delete(value);
+
+    return returnValue;
+  };
+
+  return replacer;
+}
+
+/**
  * Changes all object keys recursively to camelCase from PascalCase, spinal-case and snake_case.
  *
  * @param {Object} obj - The object containing keys to process
  * @param {boolean} pascal - Make keys PascalCase
  * @returns {Object} The processed object with any camelCase or PascalCase keys
  */
-export function keysToCamelCase(obj: PlainObjectType, pascal?: boolean): object {
+export function keysToCamelCase(obj: object, pascal?: boolean): object {
   if (isPlainObject(obj)) {
     const n: PlainObjectType = {};
 
@@ -137,7 +184,7 @@ export function getStorage(type: "sessionStorage" | "localStorage" | "sharedStor
       storage.removeItem(x);
     }
   } catch (e) {
-    if(
+    if (
       e instanceof DOMException &&
       e.name === "QuotaExceededError" &&
       // acknowledge QuotaExceededError only if there's something already stored

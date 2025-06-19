@@ -63,11 +63,11 @@ export default class WyConversationNew extends WeavySubComponent {
       ? { members: [this.agent], type: AppTypeString.AgentChat }
       : { members, type: members.length === 1 ? AppTypeString.PrivateChat : AppTypeString.ChatRoom };
 
-    // create conversation
-    const conversation = await this.addConversationMutation?.mutate(memberOptions);
-
     // close modal
     this.close();
+
+    // create conversation
+    const conversation = await this.addConversationMutation?.mutate(memberOptions);
 
     const eventSelect: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: conversation?.id } });
     return this.dispatchEvent(eventSelect);

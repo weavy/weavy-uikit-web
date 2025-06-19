@@ -12,6 +12,7 @@ import {
   getCacheItem,
   getPendingCacheItem,
   updateCacheItem,
+  updateCacheItems,
 } from "../utils/query-cache";
 import { MemberType } from "../types/members.types";
 
@@ -62,7 +63,7 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
               return { text: o.text };
             }),
           metadata: variables.metadata || null,
-          context_id: variables.context_id || null
+          context: variables.context
         }),
       });
       return await response.json() as MessageType;
@@ -93,9 +94,9 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
     },
     onSuccess: (data: MessageType) => {
       // update members and set marked_id for current user
-      updateCacheItem(
+      updateCacheItems(
         weavy.queryClient,
-        ["members", data.app.id],
+        { queryKey: ["members", data.app.id] },
         data.created_by.id,
         (item: MemberType) => {
           item.marked_id = data.id;

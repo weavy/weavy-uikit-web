@@ -74,13 +74,13 @@ export default class WyCommentEdit extends LitElement {
     void this.updateCommentMutation.mutate({
       id: this.commentId,
       type: this.location,
-      parentId: this.parentId,
+      parent_id: this.parentId,
       text: e.detail.text,
-      meetingId: e.detail.meetingId,
+      meeting_id: e.detail.meetingId,
       blobs: e.detail.blobs,
       attachments: e.detail.attachments,
-      pollOptions: e.detail.pollOptions,
-      embedId: e.detail.embed,
+      poll_options: e.detail.pollOptions,
+      embed_id: e.detail.embedId,
     });
 
     this.dispatchEdit(false);

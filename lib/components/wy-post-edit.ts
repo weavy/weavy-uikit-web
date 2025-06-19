@@ -84,13 +84,13 @@ export default class WyPostEdit extends WeavySubComponent {
     const app = await this.whenApp();
     void this.updatePostMutation.mutate({
       id: this.postId,
-      appId: app.id,
+      app_id: app.id,
       text: e.detail.text,
-      meetingId: e.detail.meetingId,
+      meeting_id: e.detail.meetingId,
       blobs: e.detail.blobs,
       attachments: e.detail.attachments,
-      pollOptions: e.detail.pollOptions,
-      embed: e.detail.embed,
+      poll_options: e.detail.pollOptions,
+      embed_id: e.detail.embedId,
     });
 
     this.dispatchEdit(false);

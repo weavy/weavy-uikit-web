@@ -60,6 +60,9 @@ export default class WyComment extends LitElement {
   text: string = "";
 
   @property({ attribute: false })
+  annotations?: FileType[] = [];
+
+  @property({ attribute: false })
   attachments?: FileType[] = [];
 
   @property({ type: Array })
@@ -134,7 +137,8 @@ export default class WyComment extends LitElement {
             .modifiedAt=${this.modifiedAt}
             .isTrashed=${this.isTrashed}
             .text=${this.text}
-            .html=${this.html}            
+            .html=${this.html}
+            .annotations=${this.annotations}          
             .attachments=${this.attachments}
             .embed=${this.embed}
             .meeting=${this.meeting}

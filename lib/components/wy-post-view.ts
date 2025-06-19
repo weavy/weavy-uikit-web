@@ -40,10 +40,7 @@ import { PollVoteEventType } from "../types/polls.events";
 @customElement("wy-post-view")
 @localized()
 export default class WyPostView extends WeavySubComponent {
-  static override styles = [
-    chatCss,
-    hostContentsCss,
-  ];
+  static override styles = [chatCss, hostContentsCss];
 
   protected exportParts = new ShadowPartsController(this);
 
@@ -70,6 +67,9 @@ export default class WyPostView extends WeavySubComponent {
 
   @property()
   text: string = "";
+
+  @property({ type: Array })
+  annotations: FileType[] = [];
 
   @property({ type: Array })
   attachments: FileType[] = [];
@@ -104,7 +104,8 @@ export default class WyPostView extends WeavySubComponent {
   @state()
   isCommentLinked: boolean = false;
 
-  private previewRef: Ref<WeavyPreview> = createRef();
+  private previewAnnotationsRef: Ref<WeavyPreview> = createRef();
+  private previewAttachmentsRef: Ref<WeavyPreview> = createRef();
   private highlightRef: Ref<HTMLElement> = createRef();
 
   private dispatchVote(optionId: number) {
@@ -113,7 +114,9 @@ export default class WyPostView extends WeavySubComponent {
   }
 
   private dispatchSubscribe(subscribe: boolean) {
-    const event: PostSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", { detail: { id: this.postId, subscribe } });
+    const event: PostSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", {
+      detail: { id: this.postId, subscribe },
+    });
     return this.dispatchEvent(event);
   }
 
@@ -135,7 +138,7 @@ export default class WyPostView extends WeavySubComponent {
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
-    
+
     if (changedProperties.has("link")) {
       this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Post, { id: this.postId }));
       this.isCommentLinked = Boolean(
@@ -248,12 +251,12 @@ export default class WyPostView extends WeavySubComponent {
               </div>
               <!-- image grid -->
               ${
-                images && !!images.length
+                images && Boolean(images.length)
                   ? html`<wy-image-grid
                       class="wy-post-area-full-width"
                       .images=${images}
                       @file-open=${(e: FileOpenEventType) => {
-                        void this.previewRef.value?.open(e.detail.fileId);
+                        void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                       }}
                     ></wy-image-grid>`
                   : ``
@@ -269,6 +272,19 @@ export default class WyPostView extends WeavySubComponent {
               <div class="wy-post-body">
                 ${this.html ? html`<div class="wy-content">${unsafeHTML(this.html)}</div>` : ``}
 
+                <!-- annotations -->
+                  ${
+                    this.annotations && Boolean(this.annotations.length)
+                      ? html`<wy-annotations-list
+                          class="wy-message-area"
+                          .files=${this.annotations}
+                          @file-open=${(e: FileOpenEventType) => {
+                            void this.previewAnnotationsRef.value?.open(e.detail.fileId);
+                          }}
+                        ></wy-annotations-list>`
+                      : ``
+                  }
+
                 <!-- poll -->
                 ${
                   this.pollOptions && this.pollOptions.length > 0
@@ -283,11 +299,11 @@ export default class WyPostView extends WeavySubComponent {
 
                 <!-- files -->
                 ${
-                  files && !!files.length
+                  files && Boolean(files.length)
                     ? html`<wy-attachments-list
                         .files=${files ?? []}
                         @file-open=${(e: FileOpenEventType) => {
-                          void this.previewRef.value?.open(e.detail.fileId);
+                          void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                         }}
                       ></wy-attachments-list>`
                     : ``
@@ -345,10 +361,19 @@ export default class WyPostView extends WeavySubComponent {
             </div>
           
             ${
+              this.annotations?.length
+                ? html`<wy-preview
+                    ${ref(this.previewAnnotationsRef)}
+                    .files=${this.annotations}
+                    .isAttachment=${true}
+                  ></wy-preview> `
+                : nothing
+            }
+            ${
               this.attachments?.length
                 ? html`<wy-preview
-                    ${ref(this.previewRef)}
-                    .files=${this.attachments}
+                    ${ref(this.previewAttachmentsRef)}
+                    .files=${[...images, ...files]}
                     .isAttachment=${true}
                   ></wy-preview> `
                 : nothing

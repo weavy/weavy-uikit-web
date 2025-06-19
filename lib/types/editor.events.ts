@@ -6,7 +6,7 @@ export type EditorSubmitEventDetailType = {
     blobs: number[] | undefined;
     attachments: number[];
     pollOptions: PollOptionType[];
-    embed: number;
+    embedId: number;
     contextData: number[] | undefined;
   };
 

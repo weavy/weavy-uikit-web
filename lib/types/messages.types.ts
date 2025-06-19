@@ -15,7 +15,7 @@ export type MutateMessageProps = {
   poll_options: PollOptionType[];
   embed_id: number;
   metadata?: MetadataType;
-  context_id?: number
+  context?: number[];
 };
 
 export type MessageType = MsgType;

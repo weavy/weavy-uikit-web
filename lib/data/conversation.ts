@@ -94,7 +94,7 @@ export function getMarkConversationMutationOptions(weavy: WeavyType) {
 
       // Update members after apps
       if (variables.userId) {
-        updateCacheItem(weavy.queryClient, ["members", variables.appId], variables.userId, (member: MemberType) => {
+        updateCacheItems(weavy.queryClient, { queryKey: ["members", variables.appId] }, variables.userId, (member: MemberType) => {
           if (variables.messageId) {
             member.marked_at = new Date().toISOString();
             member.marked_id = variables.messageId

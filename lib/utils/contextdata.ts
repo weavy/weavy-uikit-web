@@ -1,5 +1,7 @@
 import { v4 as uuid_v4 } from "uuid";
 import { DataRefType } from "../types/refs.types";
+import { hasToJSON, isJSONSerializable } from "./objects";
+import { getCircularReferenceReplacer } from "./data";
 
 /**
  * Returns an URL if the object is an URL or a string that is an URL.
@@ -39,6 +41,16 @@ export function getContextDataRef(item: unknown) {
       type: "file",
       item: new File([item], `${uuid_v4()}.data.txt`, { type: "text/plain;charset=UTF-8" }),
     };
+  } else if (isJSONSerializable(item) || hasToJSON(item)) {
+    try {
+      const jsonItem = hasToJSON(item) ? item.toJSON() : JSON.stringify(item, getCircularReferenceReplacer(), 2);
+      dataRef = {
+        type: "file",
+        item: new File([jsonItem], `${uuid_v4()}.json.txt`, { type: "text/plain;charset=UTF-8" }),
+      };
+    } catch (e) {
+      console.error("Could not serialize context data to JSON.", e)
+    }
   }
 
   return dataRef;

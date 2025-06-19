@@ -56,6 +56,9 @@ export default class WyMessages extends WeavySubComponent {
   @property({ attribute: false })
   unreadMarkerShow: boolean = true;
 
+  @property({ attribute: false })
+  seenByShow: boolean = false;
+
   private dispatchVote(optionId: number, parentId: number) {
     const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentId, parentType: "messages" } });
     return this.dispatchEvent(event);
@@ -138,7 +141,7 @@ export default class WyMessages extends WeavySubComponent {
                       .pollOptions=${message.options?.data}
                       .embed=${message.embed}
                       .reactions=${message.reactions?.data}
-                      .seenBy=${this.members && this.members.data && this.members.data.length > 0
+                      .seenBy=${this.seenByShow && this.members && this.members.data && this.members.data.length > 0
                         ? this.members.data.filter((member) => {
                             return member.marked_id === message.id && member.id !== this.user?.id;
                           })

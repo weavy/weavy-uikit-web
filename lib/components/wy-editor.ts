@@ -5,7 +5,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
-import { AppTypeGuid, AccessType } from "../types/app.types";
+import { AccessType } from "../types/app.types";
 import throttle from "lodash.throttle";
 import { typingMutation } from "../data/typing";
 import { type MeetingType } from "../types/meetings.types";
@@ -48,6 +48,7 @@ import type { EditorSubmitEventType } from "../types/editor.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { EmbedRemoveEventType } from "../types/embeds.events";
 import { getStorage } from "../utils/data";
+import { AgentAppTypeGuids } from "../classes/weavy-component";
 
 import chatCss from "../scss/all.scss";
 
@@ -199,7 +200,7 @@ export default class WyEditor extends WeavySubComponent {
       if (
         this.weavy &&
         this.app &&
-        (this.app.type === AppTypeGuid.ChatRoom || this.app.type === AppTypeGuid.PrivateChat)
+        (!AgentAppTypeGuids.has(this.app.type))
       ) {
         // TODO: Maybe not a new observer for every time?
         const mutation = typingMutation(this.weavy, this.app.id);
@@ -702,7 +703,7 @@ export default class WyEditor extends WeavySubComponent {
     const contextData = this.contextDataBlobs.length ? this.contextDataBlobs : undefined;
 
     const submitEvent: EditorSubmitEventType = new (CustomEvent as NamedEvent)("submit", {
-      detail: { text, meetingId, blobs, attachments, pollOptions, embed: this.embeds[0]?.id, contextData },
+      detail: { text, meetingId, blobs, attachments, pollOptions, embedId: this.embeds[0]?.id, contextData },
       bubbles: true,
       composed: true,
     });

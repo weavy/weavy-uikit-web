@@ -12,14 +12,15 @@ export type PostsResultType = {
 
 export type MutatePostProps = {
   id?: number;
-  appId: number;
+  app_id: number;
   user?: UserType;
   text: string;
   blobs?: number[];
   attachments?: number[];
-  meetingId?: number;
-  pollOptions: PollOptionType[];
-  embed: number;
+  meeting_id?: number;
+  poll_options: PollOptionType[];
+  embed_id?: number;
+  context?: number[];
 };
 
 export type PostType = MsgType & {

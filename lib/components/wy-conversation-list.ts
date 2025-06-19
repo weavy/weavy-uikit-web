@@ -140,21 +140,27 @@ export default class WeavyConversationList extends WeavySubComponent {
   }
 
   private async handleLeaveConversation(appId: number) {
+    if (this.conversationId === appId) {
+      this.dispatchSelected(undefined);
+    }
     const user = await this.whenUser();
     await this.leaveConversationMutation?.mutate({ appId, members: [user.id] });
-    this.dispatchSelected(undefined);
     void this.conversationsQuery.result.refetch();
   }
 
   private async handleRemoveConversation(appId: number) {
+    if (this.conversationId === appId) {
+      this.dispatchSelected(undefined);
+    }
     await this.removeConversationMutation?.mutate({ appId });
-    this.dispatchSelected(undefined);
     void this.conversationsQuery.result.refetch();
   }
 
   private async handleTrashConversation(appId: number) {
+    if (this.conversationId === appId) {
+      this.dispatchSelected(undefined);
+    }
     await this.trashConversationMutation?.mutate({ appId });
-    this.dispatchSelected(undefined);
     void this.conversationsQuery.result.refetch();
   }
 

@@ -56,6 +56,9 @@ export default class WyPost extends LitElement {
   plain: string = "";
 
   @property({ attribute: false })
+  annotations?: FileType[] = [];
+
+  @property({ attribute: false })
   attachments?: FileType[] = [];
 
   @property({ type: Array })
@@ -132,6 +135,7 @@ export default class WyPost extends LitElement {
             .isTrashed=${this.isTrashed}
             .html=${this.html}
             .text=${this.plain}
+            .annotations=${this.annotations ?? []}
             .attachments=${this.attachments ?? []}
             .meeting=${this.meeting}
             .pollOptions=${this.pollOptions}

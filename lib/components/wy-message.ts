@@ -15,7 +15,7 @@ import WeavyPreview from "./wy-preview";
 import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { WeavySubComponent } from "../classes/weavy-sub-component";
-import { type AppType, EntityTypeString} from "../types/app.types";
+import { type AppType, EntityTypeString } from "../types/app.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { isEntityChainMatch } from "../utils/notifications";
 import { partMap } from "../utils/directives/shadow-part-map";
@@ -107,15 +107,19 @@ export default class WyMessage extends WeavySubComponent {
   private highlightRef: Ref<HTMLElement> = createRef();
 
   private dispatchVote(optionId: number) {
-    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentId: this.messageId } });
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", {
+      detail: { optionId, parentId: this.messageId },
+    });
     return this.dispatchEvent(event);
   }
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
-    
+
     if (changedProperties.has("link")) {
-      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Message, { id: this.messageId }));
+      this.highlight = Boolean(
+        this.link && isEntityChainMatch(this.link, EntityTypeString.Message, { id: this.messageId })
+      );
     }
   }
 
@@ -263,18 +267,6 @@ export default class WyMessage extends WeavySubComponent {
               : nothing}
           </div>`
         : nothing}
-      ${this.attachments
-        ? keyed(
-            `preview-message-${this.messageId}`,
-            html`
-              <wy-preview
-                ${ref(this.previewAttachmentsRef)}
-                .files=${[...images, ...files]}
-                .isAttachment=${true}
-              ></wy-preview>
-            `
-          )
-        : nothing}
       ${this.annotations
         ? keyed(
             `annotation-preview-message-${this.messageId}`,
@@ -287,12 +279,24 @@ export default class WyMessage extends WeavySubComponent {
             `
           )
         : nothing}
+      ${this.attachments
+        ? keyed(
+            `preview-message-${this.messageId}`,
+            html`
+              <wy-preview
+                ${ref(this.previewAttachmentsRef)}
+                .files=${[...images, ...files]}
+                .isAttachment=${true}
+              ></wy-preview>
+            `
+          )
+        : nothing}
     `;
   }
 
   protected override updated(changedProperties: PropertyValueMap<this>) {
-      if (changedProperties.has("highlight") && this.highlight) {
-        this.highlightRef.value?.scrollIntoView({ block: "nearest" })
-      } 
+    if (changedProperties.has("highlight") && this.highlight) {
+      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
+    }
   }
 }

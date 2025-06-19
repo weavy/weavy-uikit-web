@@ -58,13 +58,14 @@ export class WyPostList extends WeavySubComponent {
     const user = await this.whenUser();
 
     void this.addPostMutation.mutate({
-      appId: app.id,
+      app_id: app.id,
       text: e.detail.text,
-      meetingId: e.detail.meetingId,
+      meeting_id: e.detail.meetingId,
       blobs: e.detail.blobs,
-      pollOptions: e.detail.pollOptions,
-      embed: e.detail.embed,
+      poll_options: e.detail.pollOptions,
+      embed_id: e.detail.embedId,
       user: user,
+      context: e.detail.contextData,
     });
   }
 
@@ -224,6 +225,7 @@ export class WyPostList extends WeavySubComponent {
                         .html=${post.html}
                         .text=${post.text}
                         .plain=${post.plain}
+                        .annotations=${post.annotations?.data}
                         .attachments=${post.attachments?.data}
                         .meeting=${post.meeting}
                         .pollOptions=${post.options?.data}
