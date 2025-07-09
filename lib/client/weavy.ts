@@ -88,6 +88,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
     tokenFactoryRetryDelay: 2000,
     tokenFactoryTimeout: 20000,
     // WeavyComponentSettingProps
+    annotations: "buttons-inline",
     notifications: "button-list",
     notificationsBadge: "count",
     reactions: "😍 😎 😉 😜 👍",

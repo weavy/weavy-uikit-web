@@ -14,6 +14,18 @@ export const WeavySettingsMixin = <TBase extends Constructor<WeavyClient>>(Base:
       super(...args);
     }
 
+    // annotations
+    _annotations?: WeavySettingsProps["annotations"];
+
+    set annotations(annotations) {
+      this._annotations = annotations;
+      (this as this & WeavyType).updateContext();
+    }
+
+    get annotations() {
+      return this._annotations ?? WeavyClient.defaults.annotations;
+    }
+
     // notifications
     _notifications?: WeavySettingsProps["notifications"];
 

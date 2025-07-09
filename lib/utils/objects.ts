@@ -111,11 +111,12 @@ export function assign<TTarget>(target: TTarget, properties: TTarget, recursive:
  * asArray(1); // [1]
  * asArray([1]); // [1]
  *
- * @param {any} maybeArray
- * @returns {Array}
+ * @param {unknown} maybeArray
+ * @returns Array
  */
-export function asArray(maybeArray: unknown) {
-  return (maybeArray && (Array.isArray(maybeArray) ? maybeArray : [maybeArray])) || [];
+export function asArray<TArrayItems = unknown>(maybeArray: unknown): TArrayItems[] {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return maybeArray ? (Array.isArray(maybeArray) ? maybeArray : [maybeArray as TArrayItems]) : [];
 }
 
 /**

@@ -12,10 +12,13 @@
         padding: 0;
       }
 
-      iframe {
-        width: 30vw;
+      .frames {
+        display: flex;
+        flex-direction: row;
         height: 100vh;
-        border: 0;
+      }
+      iframe {
+        flex: 1 1 auto;
       }
     </style>
     <script type="module" src="/lib"></script>
@@ -61,8 +64,10 @@
         }
       };
     </script>
-    <iframe src="posts.html"></iframe>
-    <iframe src="chat.html"></iframe>
-    <iframe src="files.html"></iframe>
+    <div class="frames">
+      <iframe src="posts.html"></iframe>
+      <iframe src="chat.html"></iframe>
+      <iframe src="files.html"></iframe>
+    </div>
   </body>
 </html>

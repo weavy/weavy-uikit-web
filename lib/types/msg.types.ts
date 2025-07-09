@@ -52,3 +52,8 @@ export type MsgType = {
   /** The user that modified the entity. */
   updated_by?: UserOrAgentType;
 };
+
+/**
+ * The layout for displaying annotations.
+ */
+export type AnnotationsAppearanceType = "none" | "buttons-inline";

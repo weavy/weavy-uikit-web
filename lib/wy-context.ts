@@ -49,6 +49,9 @@ export class WyContext extends LitElement implements StrictWeavyOptions, WeavySe
   provider: boolean = false;
 
 
+  @property()
+  annotations = Weavy.defaults.annotations;
+
   @property({
     attribute: true,
     converter: {

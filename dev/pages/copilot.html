@@ -42,12 +42,12 @@
 
       .wyx-article {
         padding: 1rem;
+        background: antiquewhite;
       }
 
       .wyx-aside {
-        flex: 0 0 320px;
+        flex: 0 0 50%;
         display: flex;
-        max-width: 38%;
         position: sticky;
         top: 3rem;
 
@@ -276,15 +276,17 @@
 
       //copilot.instructions = `Use the provided text, answer in a piratey way with lots of emojis. Don't forget to brag about how great everything is in Sweden.`;
 
-      const data = []
+      //const data = []
 
       // Increase length to create a huge upload
-      data.length = 1
-      data.fill(document.getElementById("example-content").innerHTML)
+      //data.length = 1
+      //data.fill(`Weavy concepts:\n${document.getElementById("example-content").innerHTML}`)
 
-      //copilot.data = [document.getElementById("example-content").innerHTML]; // normal usage
+      //copilot.data = [{ weavy: document.getElementById("example-content").innerHTML }]; // normal usage
       //copilot.data = [data.join("\n")] // concat the upload array
-      copilot.data = data // Provide an array (only first item is currently used)
+      //copilot.data = data // Provide an array (only first item is currently used)
+
+      copilot.contextualData = `Weavy concepts:\n${document.getElementById("example-content").innerHTML}`;
 
 
       /*copilot.instructions = `Page:

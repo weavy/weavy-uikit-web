@@ -17,6 +17,7 @@ export class WeavyComponentSettings implements WeavyComponentSettingProps {
   notifications = WeavyClient.defaults.notifications;
   notificationsBadge = WeavyClient.defaults.notificationsBadge;
   reactions = WeavyClient.defaults.reactions;
+  annotations = WeavyClient.defaults.annotations;
 
   // PROPERTY INIT
   constructor(host: WeavyComponentSettingProps) {

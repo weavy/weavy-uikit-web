@@ -47,6 +47,7 @@ import { DataBlobsContext } from "../contexts/data-context";
 import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
 import { v4 as uuid_v4 } from "uuid";
 import { toIntOrString } from "../converters/string";
+import { AnnotationsAppearanceType } from "../types/msg.types";
 
 export interface WeavyComponentProps {
   /**
@@ -77,11 +78,27 @@ export interface WeavyComponentProps {
   agent?: string | null;
 
   /**
-   * Array with any contextual data. The data is uploaded upon change.
+   * Array with contextual data. 
    *
    * *Note: Only the first item in the array is currently used.*
+   * @deprecated
    */
   data?: ContextDataType[];
+
+  /**
+   * Contextual data for agents to reference.
+   *
+   * Provide descriptive data for optimal results.
+   *
+   * @example
+   * ```js
+   * myComponent.contextualData = `
+   *  Country data:
+   *  ${serializedCountryData}
+   * `;
+   * ```
+   */
+  contextualData?: string;
 
   /**
    * Sets the uid property with automatically appended user and agent name (where applicable).
@@ -95,6 +112,11 @@ export interface WeavyComponentProps {
 }
 
 export interface WeavyComponentSettingProps {
+  /**
+   * Appearance of annotations.
+   */
+  annotations: AnnotationsAppearanceType;
+
   /**
    * Appearance of the built in notifications.
    */
@@ -300,9 +322,6 @@ export class WeavyComponent
   private _link: LinkType | undefined;
 
   @property({ type: Object })
-  get link(): LinkType | undefined {
-    return this._link;
-  }
   set link(link: LinkType | undefined) {
     const oldLink = this._link;
 
@@ -316,6 +335,9 @@ export class WeavyComponent
       this._link = this.matchesLink(link) ? link : undefined;
       this.requestUpdate("link", oldLink);
     }
+  }
+  get link(): LinkType | undefined {
+    return this._link;
   }
 
   /**
@@ -415,12 +437,21 @@ export class WeavyComponent
   protected _agentUid?: string;
 
   @property({ type: String })
-  get agent(): string | undefined {
-    return this._agentUid;
-  }
   set agent(agent: string | undefined) {
     this._agentUid = agent || undefined;
   }
+  get agent(): string | undefined {
+    return this._agentUid;
+  }
+
+  @property({
+    attribute: true,
+    type: String,
+  })
+  contextualData?: string;
+
+  // DEPRECATED .data property
+  #data?: ContextDataType[];
 
   @property({
     attribute: true,
@@ -431,7 +462,13 @@ export class WeavyComponent
       },
     },
   })
-  data?: ContextDataType[];
+  set data(data) {
+    console.warn(".data property array is deprecated. Use .contextualData string instead.");
+    this.#data = data;
+  }
+  get data() {
+    return this.#data;
+  }
 
   @property()
   autoUid?: string | null;
@@ -453,6 +490,17 @@ export class WeavyComponent
 
   // SETTINGS
 
+  // annotations
+  #annotations?: WeavyComponentSettingProps["annotations"];
+
+  @property({ type: String })
+  set annotations(annotations) {
+    this.#annotations = annotations;
+  }
+  get annotations() {
+    return this.#annotations ?? this.weavy?.annotations ?? WeavyClient.defaults.annotations;
+  }
+
   // notifications
   #notifications?: WeavyComponentSettingProps["notifications"];
 
@@ -460,7 +508,6 @@ export class WeavyComponent
   set notifications(notifications) {
     this.#notifications = notifications;
   }
-
   get notifications() {
     return this.#notifications ?? this.weavy?.notifications ?? WeavyClient.defaults.notifications;
   }
@@ -472,7 +519,6 @@ export class WeavyComponent
   set notificationsBadge(notificationsBadge) {
     this.#notificationsBadge = notificationsBadge;
   }
-
   get notificationsBadge() {
     return this.#notificationsBadge ?? this.weavy?.notificationsBadge ?? WeavyClient.defaults.notificationsBadge;
   }
@@ -484,7 +530,6 @@ export class WeavyComponent
   set reactions(reactions) {
     this.#reactions = reactions;
   }
-
   get reactions() {
     return this.#reactions ?? this.weavy?.reactions ?? WeavyClient.defaults.reactions;
   }
@@ -781,12 +826,21 @@ export class WeavyComponent
     }
 
     // Update context data refs
-    if (changedProperties.has("data") || changedProperties.has("componentFeatures")) {
+    if (
+      changedProperties.has("contextualData") ||
+      changedProperties.has("data") ||
+      changedProperties.has("componentFeatures")
+    ) {
+      // Provide as array for processing
+      // DEPRECATED: this.data
+      const contextualData = this.contextualData ? [this.contextualData] : this.data ? this.data : [];
+
+      // Process array of contextual data
       const prevContextDataRefs = this.#contextDataRefs;
       this.#contextDataRefs = new Map();
 
       // Add items
-      this.data?.forEach((dataItem) => {
+      contextualData.forEach((dataItem) => {
         const prevItem = prevContextDataRefs.get(dataItem);
         if (prevItem) {
           this.#contextDataRefs.set(dataItem, prevItem);

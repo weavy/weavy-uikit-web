@@ -185,6 +185,10 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
         };
       }
     }
+
+    if (changedProperties.has("agent") && changedProperties.get("agent") && this.agent) {
+      this.reset();
+    } 
   }
 
   override render() {
