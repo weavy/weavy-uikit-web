@@ -98,7 +98,7 @@ const DefaultMessengerAgentFeatures: ComponentFeaturePolicyConfig = {
  * @extends {WeavyComponent}
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
- * 
+ *
  * @slot actions - Buttons placed in the top right of the conversation list.
  * @slot conversation-new - The button for creating a new conversation. Replaces the button.
  */
@@ -174,11 +174,11 @@ export class WyMessenger extends WeavyComponent {
   }
 
   /**
-   * Creates a new conversation. 
-   * 
+   * Creates a new conversation.
+   *
    * - When no members are specified, the user selector is shown.
    * - When in agent mode, a conversation is created instantly.
-   * 
+   *
    * @param members {(number|string)[] | undefined} - Optional array of member id or member uid to bypass user selection dialog.
    */
   async createConversation(members?: (number | string)[]) {
@@ -238,7 +238,7 @@ export class WyMessenger extends WeavyComponent {
     const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: conversation } = this.conversationQuery.result ?? { isPending: networkIsPending };
 
-    const conversationListLength = this.conversationListRef.value?.conversationsQuery.result.data?.pages[0].count || 0
+    const conversationListLength = this.conversationListRef.value?.conversationsQuery.result.data?.pages[0].count || 0;
 
     return html`
       <div class="wy-messenger-layout">
@@ -254,7 +254,7 @@ export class WyMessenger extends WeavyComponent {
             .agent=${this.agent}
             @selected=${(e: SelectedEventType) => (this.conversationId = e.detail.id)}
             ${ref(this.conversationNewRef)}
-            >
+          >
             <slot name="conversation-new"></slot>
           </wy-conversation-new>
           <slot name="actions" slot="actions"></slot>
@@ -286,7 +286,9 @@ export class WyMessenger extends WeavyComponent {
                 .placeholder=${this.placeholder ?? (this.agent ? msg("Ask anything...") : undefined)}
                 .header=${!this.agent}
               ></wy-conversation>`
-            : (conversationListLength ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>` : nothing) }
+            : conversationListLength
+            ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
+            : nothing}
         </div>
 
         <wy-context-data-progress></wy-context-data-progress>

@@ -44,7 +44,10 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
     _resolveUrlAndTokenFactory?: (value: unknown) => void;
 
     _whenUrlAndTokenFactory = new Promise((r) => {
-      this._resolveUrlAndTokenFactory = r;
+      this._resolveUrlAndTokenFactory = (value: unknown) => {
+        r(value);
+        (this as unknown as WeavyType).configurationState = "configured";
+      };
     });
 
     async whenUrlAndTokenFactory() {
@@ -179,7 +182,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
     _validTokenFromFactory: (refresh: boolean) => Promise<string> = async (refresh = false) => {
       const racePromises = [this.whenTokenFactory()];
 
-      if (this.tokenFactoryRetryDelay !== Infinity) {
+      if (this.tokenFactoryRetryDelay >= 0 && this.tokenFactoryRetryDelay < Infinity) {
         racePromises.push(new Promise((r) => setTimeout(r, this.tokenFactoryRetryDelay)));
       }
 
@@ -198,7 +201,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
         }
       } else if (refresh && token === this._token) {
         // same token, try again in a while?
-        if (this.tokenFactoryRetryDelay !== Infinity) {
+        if (this.tokenFactoryRetryDelay >= 0 && this.tokenFactoryRetryDelay < Infinity) {
           await new Promise((r) => setTimeout(r, this.tokenFactoryRetryDelay));
           return await this._validTokenFromFactory(true);
         }
@@ -228,7 +231,7 @@ export const WeavyAuthenticationMixin = <TBase extends Constructor<WeavyClient>>
           // Try getting a valid token
           this._validTokenFromFactory(refresh).then(resolve).catch(reject);
 
-          if (this.tokenFactoryTimeout !== Infinity) {
+          if (this.tokenFactoryTimeout >= 0 && this.tokenFactoryTimeout < Infinity) {
             setTimeout(() => reject(new Error("Token factory timeout.")), this.tokenFactoryTimeout);
           }
 

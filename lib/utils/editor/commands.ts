@@ -1,8 +1,11 @@
 import type { EditorView, KeyBinding } from "@codemirror/view";
 import { completionStatus, acceptCompletion } from "@codemirror/autocomplete";
 
+export const weavyModifierEnterSendKeymap: KeyBinding[] = [{ key: "Mod-Enter", run: softSubmit }];
+
+export const weavyEnterSendKeymap: KeyBinding[] = [{ key: "Enter", run: softSubmit }];
+
 export const weavyKeymap: KeyBinding[] = [
-  { key: "Mod-Enter", run: softSubmit },
   {
     key: "Tab",
     run: (e) => {
@@ -11,8 +14,6 @@ export const weavyKeymap: KeyBinding[] = [
     },
   },
 ];
-
-export const weavyDesktopMessageKeymap: KeyBinding[] = [{ key: "Enter", run: softSubmit }];
 
 function softSubmit(target: EditorView) {
   // dispatch event on the outer codemirror dom element

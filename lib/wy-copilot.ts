@@ -188,7 +188,7 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
 
     if (changedProperties.has("agent") && changedProperties.get("agent") && this.agent) {
       this.reset();
-    } 
+    }
   }
 
   override render() {
@@ -261,7 +261,6 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
             </slot>
             <wy-context-data-progress slot="footerbar"></wy-context-data-progress>
           </wy-conversation>
-
         `
       : html`
           <wy-empty>

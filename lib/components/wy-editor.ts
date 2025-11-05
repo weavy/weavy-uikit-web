@@ -35,7 +35,7 @@ import { DropZoneController } from "../controllers/dropzone-controller";
 import { getMeetingIconName, getMeetingTitle } from "../utils/meetings";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
-import type { Compartment, EditorState, Extension } from "@codemirror/state";
+import type { Compartment, EditorState, Extension, Facet } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { desktop } from "../utils/browser";
 import { WeavySubComponent } from "../classes/weavy-sub-component";
@@ -183,6 +183,17 @@ export default class WyEditor extends WeavySubComponent {
   // For modifying readonly state
   protected editorEditable?: Compartment;
 
+  // For modifying keymap
+  protected editorKeymap?: Compartment;
+  protected keymapFacet?: Facet<readonly KeyBinding[], readonly (readonly KeyBinding[])[]>;
+  protected keymaps?: {
+    weavyEnterSendKeymap: KeyBinding[];
+    weavyModifierEnterSendKeymap: KeyBinding[];
+    weavyKeymap: KeyBinding[];
+    defaultKeymap: KeyBinding[];
+    historyKeymap: KeyBinding[];
+  };
+
   // For modifying placeholder
   protected editorPlaceholder?: Compartment;
   protected placeholderExtension?: (content: string | HTMLElement | ((view: EditorView) => HTMLElement)) => Extension;
@@ -197,11 +208,7 @@ export default class WyEditor extends WeavySubComponent {
 
   private throttledTyping = throttle(
     async () => {
-      if (
-        this.weavy &&
-        this.app &&
-        (!AgentAppTypeGuids.has(this.app.type))
-      ) {
+      if (this.weavy && this.app && !AgentAppTypeGuids.has(this.app.type)) {
         // TODO: Maybe not a new observer for every time?
         const mutation = typingMutation(this.weavy, this.app.id);
         await mutation.mutate();
@@ -339,7 +346,8 @@ export default class WyEditor extends WeavySubComponent {
             languages,
             EditorView,
             EditorState,
-            weavyDesktopMessageKeymap,
+            weavyEnterSendKeymap,
+            weavyModifierEnterSendKeymap,
             Compartment,
           }) => {
             this.editorInitialized = true;
@@ -349,21 +357,26 @@ export default class WyEditor extends WeavySubComponent {
               this.editorRef.value.innerHTML = "";
             }
 
-            this.editorEditable = new Compartment;
-            this.editorPlaceholder = new Compartment;
+            this.editorEditable = new Compartment();
+            this.editorPlaceholder = new Compartment();
+            this.editorKeymap = new Compartment();
             this.EditorView = EditorView;
             this.placeholderExtension = placeholder;
-
-            const extraKeyMap =
-              this.editorType === "messages" && desktop && weavyDesktopMessageKeymap
-                ? [...weavyDesktopMessageKeymap]
-                : [];
+            this.keymapFacet = keymap;
+            this.keymaps = {
+              weavyEnterSendKeymap,
+              weavyModifierEnterSendKeymap,
+              weavyKeymap,
+              defaultKeymap: [...defaultKeymap],
+              historyKeymap: [...historyKeymap],
+            };
 
             this.editorExtensions = [
               EditorView.contentAttributes.of({
                 spellcheck: "true",
                 autocorrect: "on",
                 autocapitalize: "on",
+                enterkeyhint: this.settings?.enterToSend === "always" ? "send" : "enter",
               }),
               history(),
               dropCursor(),
@@ -405,7 +418,6 @@ export default class WyEditor extends WeavySubComponent {
               }),
               syntaxHighlighting(weavyHighlighter, { fallback: true }),
               EditorView.lineWrapping,
-              keymap.of([...extraKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap]),
               markdown({ codeLanguages: languages }),
               EditorView.domEventHandlers({
                 paste: (evt: ClipboardEvent, _view: EditorView): boolean | void => {
@@ -451,14 +463,20 @@ export default class WyEditor extends WeavySubComponent {
               // Compartments
               this.editorEditable.of(EditorView.editable.of(!this.disabled)),
               this.editorPlaceholder.of(this.placeholderExtension(this.placeholder)),
+              this.editorKeymap.of(this.keymapFacet.of(this.getKeymaps())),
               EditorView.updateListener.of((_v: ViewUpdate) => {
                 // HACK because placeholder extension doesn't allow change
                 this.setPlaceHolderText();
-                
+
                 // HACK to fix compartment references, order must be same as initial config
-                const compartments = Array.from((this.editor?.state as unknown as { config: { compartments: Map<Compartment, unknown>}}).config.compartments.keys())
+                const compartments = Array.from(
+                  (
+                    this.editor?.state as unknown as { config: { compartments: Map<Compartment, unknown> } }
+                  ).config.compartments.keys()
+                );
                 this.editorEditable = compartments[0];
-                this.editorPlaceholder = compartments[1]
+                this.editorPlaceholder = compartments[1];
+                this.editorKeymap = compartments[2];
               }),
             ];
 
@@ -489,7 +507,7 @@ export default class WyEditor extends WeavySubComponent {
     }
 
     if (changedProperties.has("placeholder") && this.editor && this.editorPlaceholder && this.placeholderExtension) {
-      const placeholder = this.placeholderExtension(this.placeholder)
+      const placeholder = this.placeholderExtension(this.placeholder);
       this.editor.dispatch({
         // Update placeholder state
         effects: this.editorPlaceholder.reconfigure(placeholder),
@@ -497,6 +515,16 @@ export default class WyEditor extends WeavySubComponent {
 
       // HACK because reconfigure might not work
       this.setPlaceHolderText();
+    }
+
+    if (changedProperties.has("settings") && this.editor && this.editorKeymap && this.keymapFacet) {
+      this.editor.dispatch({
+        // Update readonly state
+        effects: this.editorKeymap.reconfigure(this.keymapFacet.of(this.getKeymaps())),
+      });
+
+      // HACK to update the enterkeyhint
+      this.setEnterKeyHint();
     }
   }
 
@@ -515,6 +543,46 @@ export default class WyEditor extends WeavySubComponent {
     if (cmContent && this.editor) {
       cmContent.contentEditable = String(!this.disabled);
     }
+  }
+
+  setEnterKeyHint() {
+    const cmContent = this.renderRoot.querySelector<HTMLElement>(".cm-content");
+
+    if (cmContent && this.editor) {
+      cmContent.enterKeyHint = this.settings?.enterToSend === "always" ? "send" : "enter";
+    }
+  }
+
+  getKeymaps() {
+    if(!this.keymaps) {
+      return []
+    }
+
+    const {
+      weavyEnterSendKeymap,
+      weavyModifierEnterSendKeymap,
+      weavyKeymap,
+      defaultKeymap,
+      historyKeymap,
+    } = this.keymaps;
+
+    /**
+     * Enter-to-send keymap:
+     * - never - No keymap
+     * - modifier - Mod+Enter
+     * - auto - Mod+Enter for all. Enter for "messages" on desktop.
+     * - always - Mod+Enter and Enter for all.
+     */
+
+    let enterKeyMap = this.settings?.enterToSend === "never"? [] : [...weavyModifierEnterSendKeymap];
+
+    if (
+      ((!this.settings?.enterToSend || this.settings?.enterToSend === "auto") && this.editorType === "messages" && desktop) ||
+      this.settings?.enterToSend === "always"
+    ) {
+      enterKeyMap = [...weavyEnterSendKeymap, ...enterKeyMap];
+    }
+    return [...enterKeyMap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap];
   }
 
   override connectedCallback() {

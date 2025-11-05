@@ -14,6 +14,7 @@ export class WeavyComponentSettings implements WeavyComponentSettingProps {
   }
 
   // SETTINGS
+  enterToSend = WeavyClient.defaults.enterToSend;
   notifications = WeavyClient.defaults.notifications;
   notificationsBadge = WeavyClient.defaults.notificationsBadge;
   reactions = WeavyClient.defaults.reactions;

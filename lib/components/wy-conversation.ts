@@ -134,7 +134,6 @@ export class WyConversation extends WeavySubComponent {
 
   protected messagesQuery = new InfiniteQueryController<MessagesResultType>(this);
   protected membersQuery = new QueryController<MembersResultType>(this);
-  protected agentsQuery = new QueryController<MembersResultType>(this);
 
   protected markConversationMutation?: MarkConversationMutationType;
   protected updateConversationMutation?: UpdateConversationMutationType;
@@ -411,7 +410,7 @@ export class WyConversation extends WeavySubComponent {
 
     await Promise.race([whenElementVisible(this), whenConnected(this, false)]);
 
-    if (!this.isConnected) {
+    if (!this.componentFeatures?.allowsFeature(Feature.Receipts) || !this.isConnected) {
       return;
     }
 
@@ -465,7 +464,6 @@ export class WyConversation extends WeavySubComponent {
         );
 
         await this.membersQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}));
-        await this.agentsQuery.trackQuery(getMemberOptions(this.weavy, this.conversationId, {}, true));
 
         this.pollMutation = getPollMutation(this.weavy, this.conversationId, ["messages", this.conversationId]);
 
@@ -500,7 +498,6 @@ export class WyConversation extends WeavySubComponent {
         this.messagesQuery.untrackInfiniteQuery();
         this.addMessageMutation.untrackMutation();
         this.membersQuery.untrackQuery();
-        this.agentsQuery.untrackQuery();
       }
     }
 
@@ -524,7 +521,7 @@ export class WyConversation extends WeavySubComponent {
         oldConversation?.id !== this.conversation?.id ||
         oldConversation?.is_unread !== this.conversation?.is_unread
       ) {
-        if (this.conversation?.is_unread) {
+        if (this.componentFeatures?.allowsFeature(Feature.Receipts) && this.conversation?.is_unread) {
           // show new messages (before we mark as read)?
           const markedId = this.membersQuery.result.data?.data?.find(
             (member) => member.id === this.user?.id
@@ -614,7 +611,6 @@ export class WyConversation extends WeavySubComponent {
     const { isPending: networkIsPending } = this.weavy?.network ?? { isPending: true };
     const { data: infiniteData, isPending, hasNextPage } = this.messagesQuery.result ?? { isPending: networkIsPending };
     const { data: membersData } = this.membersQuery.result ?? {};
-    const { data: agentsData } = this.agentsQuery.result ?? {};
 
     return html`
       ${this.renderConversationHeader()}
@@ -641,15 +637,18 @@ export class WyConversation extends WeavySubComponent {
               ${hasNextPage
                 ? html`<div slot="start" ${ref(this.pagerRef)} part="wy-pager wy-pager-top"></div>`
                 : nothing}
-              <wy-message-typing
-                slot="end"
-                .conversationId=${this.conversation.id}
-                .userId=${this.user?.id}
-                .isPrivateChat=${this.isPrivateChat()}
-                .members=${membersData?.data}
-                .agents=${agentsData?.data}
-                @typing=${(e: TypingEventType) => this.handleTyping(e)}
-              ></wy-message-typing>
+              ${this.componentFeatures?.allowsFeature(Feature.Typing)
+                ? html`
+                    <wy-message-typing
+                      slot="end"
+                      .conversationId=${this.conversation.id}
+                      .userId=${this.user?.id}
+                      .isPrivateChat=${this.isPrivateChat()}
+                      .members=${membersData?.data ?? []}
+                      @typing=${(e: TypingEventType) => this.handleTyping(e)}
+                    ></wy-message-typing>
+                  `
+                : nothing}
             </wy-messages>
           `
         : html`

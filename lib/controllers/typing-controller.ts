@@ -10,12 +10,12 @@ import { type ComponentFeaturePolicy, Feature, FeaturePolicyContext } from "../c
 
 export class TypingController implements ReactiveController {
   host: ReactiveControllerHost & LitElement;
-  
+
   // Weavy context
   weavyContext?: ContextConsumer<{ __context__: WeavyType }, LitElement>;
   whenWeavyContext?: Promise<WeavyType>;
   resolveWeavyContext?: (value: WeavyType | PromiseLike<WeavyType>) => void;
-  
+
   get weavy() {
     return this.weavyContext?.value;
   }
@@ -25,10 +25,11 @@ export class TypingController implements ReactiveController {
   whenComponentFeaturesContext?: Promise<ComponentFeaturePolicy>;
   resolveComponentFeaturesContext?: (value: ComponentFeaturePolicy | PromiseLike<ComponentFeaturePolicy>) => void;
 
+  private _componentFeatures?: ComponentFeaturePolicy;
   get componentFeatures() {
-    return this.componentFeaturesContext?.value;
+    return this._componentFeatures;
   }
-  
+
   private registrationRequested: boolean = false;
   private typingTimeout: number | null = null;
   private discardTime = 5 * 1000;
@@ -79,7 +80,10 @@ export class TypingController implements ReactiveController {
     this.whenComponentFeaturesContext = new Promise((r) => (this.resolveComponentFeaturesContext = r));
     await whenParentsDefined(this.host as LitElement);
     this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
-    this.componentFeaturesContext = new ContextConsumer(this.host as LitElement, { context: FeaturePolicyContext, subscribe: true });
+    this.componentFeaturesContext = new ContextConsumer(this.host as LitElement, {
+      context: FeaturePolicyContext,
+      subscribe: true,
+    });
   }
 
   hostUpdate(): void {
@@ -87,8 +91,22 @@ export class TypingController implements ReactiveController {
       this.resolveWeavyContext?.(this.weavyContext?.value);
     }
 
-    if (this.componentFeaturesContext?.value) {
-      this.resolveComponentFeaturesContext?.(this.componentFeaturesContext?.value);
+    const typingFeatureHasChanged =
+      this.componentFeaturesContext &&
+      this.componentFeaturesContext.value?.allowsFeature(Feature.Typing) !==
+        this._componentFeatures?.allowsFeature(Feature.Typing);
+
+    if (typingFeatureHasChanged) {
+      this._componentFeatures = this.componentFeaturesContext?.value;
+
+      if (this.componentFeaturesContext?.value) {
+        this.resolveComponentFeaturesContext?.(this.componentFeaturesContext.value);
+      }
+
+      if (typingFeatureHasChanged) {
+        void this.unregisterRealtime(true);
+        void this.registerRealtime();
+      }
     }
   }
 
@@ -105,9 +123,9 @@ export class TypingController implements ReactiveController {
     }
   }
 
-  async unregisterRealtime() {
+  async unregisterRealtime(skipAwait: boolean = false) {
     if (!this.registrationRequested && this.appId && this.userId) {
-      await this.whenWeavyContext;
+      !skipAwait && await this.whenWeavyContext;
       void this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
       void this.weavy?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
     }
@@ -196,5 +214,19 @@ export class TypingController implements ReactiveController {
     // track time when we received this event
     const trackedActor = { ...actor, time: Date.now() };
     this.typingMembers.push(trackedActor);
+  }
+
+  hostDisconnected(): void {
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = null;
+    }
+
+    this.typingMembers.length = 0;
+    this.names.length = 0;
+
+    if (this.weavy) {
+      void this.unregisterRealtime(true);
+    }
   }
 }

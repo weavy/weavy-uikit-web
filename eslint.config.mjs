@@ -1,14 +1,11 @@
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 import * as lit from "eslint-plugin-lit";
 import { defineConfig, globalIgnores } from "eslint/config";
-
+import eslint from "@eslint/js";
 import * as wc from "eslint-plugin-wc";
 import globals from "globals";
 import ts_eslint from "typescript-eslint";
-
-import eslint from "@eslint/js";
-import { fixupPluginRules } from "@eslint/compat";
-import { rules as litA11yRules, configs as litA11yConfigs } from "eslint-plugin-lit-a11y";
+import litA11y from "eslint-plugin-lit-a11y";
 
 export default defineConfig([
   globalIgnores(["**/dist/"]),
@@ -17,13 +14,8 @@ export default defineConfig([
   wc.configs["flat/recommended"],
   lit.configs["flat/recommended"],
   ...tanstackQuery.configs["flat/recommended"],
+  litA11y.configs.recommended,
   {
-    plugins: {
-      "lit-a11y": {
-        rules: fixupPluginRules(litA11yRules),
-      },
-    },
-
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -39,7 +31,6 @@ export default defineConfig([
     },
 
     rules: {
-      ...litA11yConfigs.recommended.rules,
       "@typescript-eslint/no-unsafe-argument": "warn",
       "no-prototype-builtins": "off",
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],

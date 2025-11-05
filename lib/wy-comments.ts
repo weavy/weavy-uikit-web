@@ -5,6 +5,7 @@ import { AppTypeGuid } from "./types/app.types";
 import { ThemeController } from "./controllers/theme-controller";
 import { WeavyComponent } from "./classes/weavy-component";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
+import { property } from "lit/decorators.js";
 
 import colorModesStyles from "./scss/color-modes.scss";
 import allStyles from "./scss/all.scss";
@@ -16,7 +17,6 @@ import "./components/wy-comment-list";
 import "./components/base/wy-button";
 import "./components/wy-notification-button-list";
 import "./components/wy-context-data";
-import { property } from "lit/decorators.js";
 
 export const WY_COMMENTS_TAGNAME = "wy-comments";
 

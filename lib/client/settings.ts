@@ -26,6 +26,18 @@ export const WeavySettingsMixin = <TBase extends Constructor<WeavyClient>>(Base:
       return this._annotations ?? WeavyClient.defaults.annotations;
     }
 
+    // enterToSend
+    _enterToSend?: WeavySettingsProps["enterToSend"];
+
+    set enterToSend(enterToSend) {
+      this._enterToSend = enterToSend;
+      (this as this & WeavyType).updateContext();
+    }
+
+    get enterToSend() {
+      return this._enterToSend ?? WeavyClient.defaults.enterToSend;
+    }
+
     // notifications
     _notifications?: WeavySettingsProps["notifications"];
 

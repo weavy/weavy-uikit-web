@@ -48,6 +48,7 @@ import { ContextIdContext, type ContextIdType } from "../contexts/context-id-con
 import { v4 as uuid_v4 } from "uuid";
 import { toIntOrString } from "../converters/string";
 import { AnnotationsAppearanceType } from "../types/msg.types";
+import { EnterToSend } from "../types/editor.types";
 
 export interface WeavyComponentProps {
   /**
@@ -116,6 +117,16 @@ export interface WeavyComponentSettingProps {
    * Appearance of annotations.
    */
   annotations: AnnotationsAppearanceType;
+
+  /**
+   * Enter-to-send keymap in the editor.
+   *
+   * - `never` - No keymap
+   * - `modifier` - Mod+Enter
+   * - `auto` - Mod+Enter on mobile. Enter on desktop.
+   * - `always` - Mod+Enter and Enter for all.
+   */
+  enterToSend: EnterToSend;
 
   /**
    * Appearance of the built in notifications.
@@ -499,6 +510,18 @@ export class WeavyComponent
   }
   get annotations() {
     return this.#annotations ?? this.weavy?.annotations ?? WeavyClient.defaults.annotations;
+  }
+
+  // enterToSend
+  #enterToSend?: WeavyComponentSettingProps["enterToSend"];
+
+  @property({ type: String })
+  set enterToSend(enterToSend) {
+    this.#enterToSend = enterToSend;
+  } 
+  
+  get enterToSend() {
+    return this.#enterToSend ?? this.weavy?.enterToSend ?? WeavyClient.defaults.enterToSend;
   }
 
   // notifications

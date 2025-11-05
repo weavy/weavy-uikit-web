@@ -9,3 +9,12 @@ export type EditorDraftType = {
   embeds: EmbedType[];
 };
 
+export type EnterToSend = 
+  /** No keymap */
+  "never" |
+  /** Mod+Enter */
+  "modifier" |
+  /** Mod+Enter for all. Enter for "messages" on desktop. */
+  "auto" |
+  /** Mod+Enter and Enter for all. */
+  "always";

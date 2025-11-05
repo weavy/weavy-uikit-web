@@ -79,6 +79,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   static defaults: StrictWeavyOptions & WeavyComponentSettingProps = {
     // StrictWeavyOptions
     cloudFilePickerUrl: "https://filebrowser.weavy.io/v14/",
+    configurationTimeout: 5000,
     disableEnvironmentImports: false,
     gcTime: 1000 * 60 * 60 * 24, // 24h,
     locale: SOURCE_LOCALE,
@@ -89,6 +90,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
     tokenFactoryTimeout: 20000,
     // WeavyComponentSettingProps
     annotations: "buttons-inline",
+    enterToSend: "auto",
     notifications: "button-list",
     notificationsBadge: "count",
     reactions: "😍 😎 😉 😜 👍",
@@ -105,6 +107,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   // OPTIONS
 
   cloudFilePickerUrl = WeavyClient.defaults.cloudFilePickerUrl;
+  configurationTimeout = WeavyClient.defaults.configurationTimeout;
   disableEnvironmentImports = WeavyClient.defaults.disableEnvironmentImports;
   gcTime = WeavyClient.defaults.gcTime;
   scrollBehavior = WeavyClient.defaults.scrollBehavior;

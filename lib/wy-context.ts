@@ -48,7 +48,6 @@ export class WyContext extends LitElement implements StrictWeavyOptions, WeavySe
   @property({ attribute: true, type: Boolean })
   provider: boolean = false;
 
-
   @property()
   annotations = Weavy.defaults.annotations;
 
@@ -66,9 +65,15 @@ export class WyContext extends LitElement implements StrictWeavyOptions, WeavySe
       fromAttribute: (value) => toUrl(value),
     },
   })
+
+  @property({ attribute: true })
+  configurationTimeout = Weavy.defaults.configurationTimeout;
   
   @property({ type: Boolean })
   disableEnvironmentImports = Weavy.defaults.disableEnvironmentImports;
+
+  @property({ attribute: true })
+  enterToSend = Weavy.defaults.enterToSend;
 
   @property({ attribute: true })
   locale = Weavy.defaults.locale;

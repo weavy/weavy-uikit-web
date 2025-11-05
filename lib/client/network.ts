@@ -1,8 +1,9 @@
 import { WeavyClient } from "./weavy";
-import type { ConnectionState, NetworkState, NetworkStatus, ServerState } from "../types/server.types";
+import type { ConfigurationState, ConnectionState, NetworkState, NetworkStatus, ServerState } from "../types/server.types";
 import { Constructor } from "../types/generic.types";
 
 export interface WeavyNetworkProps {
+  configurationState: ConfigurationState;
   networkState: NetworkState;
   serverState: ServerState;
   connectionState: ConnectionState;
@@ -30,14 +31,31 @@ export const WeavyNetworkMixin = <TBase extends Constructor<WeavyClient>>(Base: 
         this.networkState = "offline";
         this.networkStateIsPending = false;
       });
+
+      queueMicrotask(() => this.requestConfigurationCheck());
     }
     // NETWORK
 
+    _configurationState: ConfigurationState = "pending";
+    _configurationTimer?: number | null;
     _networkEvents = new Set<(status: NetworkStatus) => void>();
     _connectionState: ConnectionState = "connecting";
     _serverState: ServerState = "ok";
     _networkState: NetworkState = window.navigator.onLine ? "online" : "offline";
     _networkStateIsPending: boolean = false;
+
+    get configurationState() {
+      return this._configurationState;
+    }
+
+    set configurationState(state: ConfigurationState) {
+      this._configurationState = state;
+      if (this._configurationTimer && state === "configured") {
+        window.clearTimeout(this._configurationTimer);
+        this._configurationTimer = null;
+      }
+      this.triggerNetworkChange();
+    }
 
     get networkState() {
       return this._networkState;
@@ -79,12 +97,24 @@ export const WeavyNetworkMixin = <TBase extends Constructor<WeavyClient>>(Base: 
       return {
         state:
           this._networkState === "online"
-            ? this._connectionState === "connected" || this._serverState === "ok"
+            ? (this._connectionState === "connected" || this._serverState === "ok") && this.configurationState !== "uninitialized"
               ? "online"
               : "unreachable"
             : "offline",
         isPending: this._networkStateIsPending,
       };
+    }
+
+    requestConfigurationCheck() {
+      if (!this._configurationTimer && this.configurationTimeout >= 0 && this.configurationTimeout < Infinity) {
+        this._configurationTimer = window.setTimeout(() => {
+          if (this.configurationState === "pending") {
+            this.configurationState = "uninitialized";
+            console.error("Weavy was not configured with required url and tokenFactory/tokenUrl within a reasonable time. Please check your configuration!")
+          }
+          this._configurationTimer = null;
+        }, this.configurationTimeout)
+      }
     }
 
     triggerNetworkChange() {

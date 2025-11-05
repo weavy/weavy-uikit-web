@@ -21,6 +21,12 @@ export interface StrictWeavyOptions {
   cloudFilePickerUrl: string | URL;
 
   /**
+   * The time allowed to pass before configuration is considered to have timed out.
+   * `Infinity` disables the timeout.
+   */
+  configurationTimeout: number;
+
+  /**
    * Should the dynamic import of modules from the environment be disabled?
    */
   disableEnvironmentImports: boolean;

@@ -31,9 +31,17 @@ export class ContextController<TContext extends Context<unknown, unknown>> imple
     }
   }
 
+  /** 
+   * Set the DOM connected element that can subscribe to a context.
+   * Wrapper function for React linting compatibility. 
+   */
+  setRef(refElement?: HTMLElement) {
+    this.ref = refElement;
+  }
+
   /**
-   * Promise that resolves when a ref is set.
-   * @resolves The ref.
+   * Promise that resolves when a ref element is set.
+   * @resolves The ref element.
    */
   whenRef: Promise<HTMLElement> = new Promise((r) => (this.resolveRef = r));
 
@@ -55,7 +63,7 @@ export class ContextController<TContext extends Context<unknown, unknown>> imple
   constructor(host: ReactiveControllerHost, context: TContext, ref?: HTMLElement) {
     host.addController(this);
     this.host = host;
-    this.ref = ref;
+    this.setRef(ref);
     void this.setContext(context);
   }
 

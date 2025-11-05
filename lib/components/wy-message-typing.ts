@@ -46,10 +46,7 @@ export default class WyMessageTyping extends LitElement {
   isPrivateChat: boolean = false;
 
   @property({ attribute: false })
-  members?: MemberType[];
-
-  @property({ attribute: false })
-  agents?: MemberType[];
+  members: MemberType[] = [];
 
   @state()
   private typingMembers: TypingUserType[] = [];
@@ -84,7 +81,7 @@ export default class WyMessageTyping extends LitElement {
 
   override render() {
     const members = this.typingMembers.map((typingMember) =>
-      [...(this.members ?? []), ...(this.agents ?? [])].find((member) => member.id === typingMember.id)
+      this.members.find((member) => member.id === typingMember.id)
     ).filter((x) => x);
 
     // Make a readable list

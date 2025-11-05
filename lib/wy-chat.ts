@@ -5,6 +5,7 @@ import { AppTypeGuid } from "./types/app.types";
 import { WeavyComponent } from "./classes/weavy-component";
 import { localized } from "@lit/localize";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
+import { property } from "lit/decorators.js";
 
 import allStyles from "./scss/all.scss";
 import hostBlockStyles from "./scss/host-block.scss";
@@ -16,7 +17,6 @@ import "./components/wy-conversation";
 import "./components/wy-notification-button-list";
 import "./components/base/wy-button";
 import "./components/wy-context-data";
-import { property } from "lit/decorators.js";
 
 export const WY_CHAT_TAGNAME = "wy-chat";
 
@@ -76,7 +76,11 @@ export class WyChat extends WeavyComponent {
         <wy-notification-button-list></wy-notification-button-list>
       </wy-buttons>
 
-      <wy-conversation .conversation=${this.app} .conversationId=${this.app?.id} .placeholder=${this.placeholder}>
+      <wy-conversation
+        .conversation=${this.app}
+        .conversationId=${this.app?.id}
+        .placeholder=${this.placeholder}
+      >
         <wy-context-data-progress slot="footerbar"></wy-context-data-progress>
       </wy-conversation>
     `;
