@@ -66,7 +66,9 @@ export function weavyChunkNames(chunkInfo) {
   }
 
   //return `esm/${chunkInfo.isDynamicEntry ? "dynamic/" : ""}${name}.js`;
-  return `[format]/${name}.${chunkInfo.format === "cjs" ? "cjs" : "js"}`;
+  
+  //return `[format]/${name}.${chunkInfo.format === "cjs" ? "cjs" : "js"}`;
+  return `[format]/${name}-[hash].${chunkInfo.format === "cjs" ? "cjs" : "js"}`;
 }
 
 export function utf8BomPlugin() {

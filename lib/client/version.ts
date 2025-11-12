@@ -61,17 +61,17 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
           if (semverVersion[0] !== semverEnvironmentVersion[0]) {
             throw new Error();
           } else if (semverVersion[1] !== semverEnvironmentVersion[1]) {
-            console.warn(
+            console.error(
               `Version inconsistency: ${WeavyClient.sourceName}@${this.version} ≠ ${
                 (this.url as URL)?.hostname
-              }@${environmentVersion}`
+              }@${environmentVersion} - This may cause unexpected errors!`
             );
           }
         } catch {
           throw new Error(
             `Version mismatch! ${WeavyClient.sourceName}@${this.version} ≠ ${
               (this.url as URL)?.hostname
-            }@${environmentVersion}`
+            }@${environmentVersion} - This will likely cause errors!`
           );
         }
       }
