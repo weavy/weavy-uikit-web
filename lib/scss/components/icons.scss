@@ -1,5 +1,13 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
+
+[part~="wy-icon-wrapper"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  position: relative;
+}
 
 [part~="wy-icon"] {
   display: inline-flex;
@@ -28,13 +36,6 @@
 // For being last element in buttons etc
 [part~="wy-icon-last"] {
   margin-right: var.wy-rem(-0.5);
-}
-
-[part~="wy-icon-padded"] {
-  //width: calc(var(--wy-component-icon-width, var.wy-rem(1.5)) * 9 / 10);
-  //height: calc(var(--wy-component-icon-height, var.wy-rem(1.5)) * 9 / 10);
-  //margin: calc(var(--wy-component-icon-width, var.wy-rem(1.5)) / 10)
-  margin: 16.66666667%;
 }
 
 [part~="wy-icon-inline"] {
@@ -92,7 +93,7 @@
 }
 
 // big file type icon
-[part~=wy-icon-display] {
+[part~="wy-icon-display"] {
   color: color.token(--wy-on-surface-variant); // Default currentColor
   border-radius: var(--wy-component-border-radius, var.default(--wy-border-radius));
   display: flex;
@@ -101,10 +102,14 @@
   flex-direction: column;
   text-align: center;
   padding: var.wy-rem(1) var.wy-rem(2);
-  margin: auto;
+  //margin: auto;
 }
 
-[part~=wy-icon-display-icon] {
+[part~="wy-icon-display-fill"] {
+  flex: 1 0 auto;
+}
+
+[part~="wy-icon-display-icon"] {
   color: var(--wy-component-color);
   --wy-component-icon-width: #{var.wy-rem(4)};
   --wy-component-icon-height: #{var.wy-rem(4)};
@@ -112,11 +117,12 @@
 }
 
 // Name after content icon
-[part~=wy-icon-display-text],
-[part~=wy-icon-display-meta] {
+[part~="wy-icon-display-text"],
+[part~="wy-icon-display-meta"] {
   color: var(--wy-component-color);
   padding: var.wy-rem(1) var.wy-rem(2);
   text-align: center;
+  line-height: var.default(--wy-line-height);
 }
 
 // theme icons

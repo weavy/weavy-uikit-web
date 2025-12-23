@@ -26,12 +26,7 @@ function getResult<TResult = MutationState>(
 ): Array<TResult> {
   return mutationCache
     .findAll(options.filters)
-    .map(
-      (mutation): TResult =>
-        (options.select
-          ? options.select(mutation)
-          : mutation.state) as TResult
-    );
+    .map((mutation): TResult => (options.select ? options.select(mutation) : mutation.state) as TResult);
 }
 
 export class MutationStateController<TData, TError, TVariables, TContext> implements ReactiveController {
@@ -65,7 +60,7 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
 
   async trackMutationState(
     options: MutationStateOptions<MutationState<TData, TError, TVariables, TContext>>,
-    queryClient?: QueryClient
+    queryClient?: QueryClient    
   ) {
     if (!queryClient) {
       await this.whenContext;
@@ -81,6 +76,7 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
     this.options = options;
 
     this.mutationCache = queryClient.getMutationCache();
+
     this.mutationCacheSubscribe();
 
     return this.result;
@@ -96,8 +92,8 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
           //const nextResult = replaceEqualDeep(this.result, getResult(mutationCache, options));
           const nextResult = getResult(this.mutationCache, this.options);
           if (
-            this.result !== nextResult ||
-            eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)
+            this.result !== nextResult &&
+            !eqObjects(this.result as unknown as PlainObjectType, nextResult as unknown as PlainObjectType)
           ) {
             //console.log("trackMutationState update", this.result, nextResult)
 
@@ -135,5 +131,5 @@ export class MutationStateController<TData, TError, TVariables, TContext> implem
   hostDisconnected() {
     // Clear the subscription when the host is disconnected
     this.mutationCacheUnsubscribe?.();
-  }
+  }  
 }

@@ -1,0 +1,134 @@
+@use "sass:selector";
+@use "color";
+
+@mixin scroll-y {
+  & {
+    overflow-y: auto;
+    max-height: 100%;
+
+    // Disable other axis
+    overflow-x: hidden;
+    
+    // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
+    overflow-anchor: none;
+    
+    // to enable HW acceleration and not cause repaint on scroll
+    // opacity needed for custom scrollbar to paint
+    touch-action: pan-y;
+    will-change: scroll-position, opacity;
+    backface-visibility: hidden;
+  }
+
+  // ios momentum scrolling on iOS <= 12, cannot be used on the <body> element!
+  &:not(body) {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@mixin scroll-x {
+  & {
+    overflow-x: auto;
+    max-width: 100%;
+
+    // Disable other axis
+    overflow-y: hidden;
+  
+    // Disable scroll anchoring https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor/Guide_to_scroll_anchoring
+    overflow-anchor: none;
+    
+    // to enable HW acceleration and not cause repaint on scroll
+    touch-action: pan-x;
+    will-change: scroll-position, opacity;
+    backface-visibility: hidden;
+  }
+}
+
+@mixin scroll-x-y {
+  @include scroll-y;
+  @include scroll-x;
+  & {
+    overflow-y: auto;
+    overflow-x: auto;
+    touch-action: pan-y, pan-x;
+  }
+}
+
+// custom scrollbar styling
+@mixin custom-scrollbar {
+  & {
+    // custom scrollbar for firefox
+    scrollbar-width: thin;
+    scrollbar-color: #{color.token(--wy-outline)} transparent;
+  }
+
+  // custom scrollbar for webkit browsers
+  // reference https://webkit.org/blog/363/styling-scrollbars/
+
+  &::-webkit-scrollbar {
+    height: .625rem;
+    width: .625rem;
+    background: transparent;
+    z-index: 999;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: color.token(--wy-outline);
+    border: .125rem solid transparent;
+    border-radius: .5rem;
+    background-clip: padding-box;
+    opacity: 75%;
+
+    &:hover {
+      background-color: color.token(--wy-outline-variant);
+      opacity: 75%;
+    }
+
+    &:window-inactive {
+      background-color: color.token(--wy-outline);
+      opacity: 50%;
+    }
+  }
+}
+
+// custom scrollbar styling
+@mixin thin-scrollbar {
+  & {
+    // custom scrollbar for firefox
+    scrollbar-width: thin;
+    scrollbar-color: #{color.token(--wy-outline-variant)} transparent;
+  }
+
+  // custom scrollbar for webkit browsers
+  &::-webkit-scrollbar {
+    height: .375rem;
+    width: .375rem;
+    background: transparent;
+    z-index: 999;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: color.token(--wy-outline-variant);
+    opacity: 75%;
+    border: 0 solid transparent;
+    border-radius: 0;
+    background-clip: padding-box;
+
+    &:hover {
+      background-color: color.token(--wy-outline);
+      opacity: 75%;
+    }
+
+    &:window-inactive {
+      background-color: color.token(--wy-outline);
+      opacity: 50%;
+    }
+  }
+}

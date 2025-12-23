@@ -11,75 +11,159 @@ import type { EmbedType } from "../types/embeds.types";
 import { PollOptionType } from "../types/polls.types";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdatePostMutationOptions } from "../data/posts";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { PostEditEventType } from "../types/posts.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { EditorSubmitEventType } from "../types/editor.events";
+import { relativeTime } from "../utils/datetime";
 
-import chatCss from "../scss/all.scss"
+import postCss from "../scss/components/post.scss";
+import textCss from "../scss/components/text.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
+import "./ui/wy-button";
+import "./ui/wy-icon";
+import "./ui/wy-item";
 import "./wy-editor";
-import "./base/wy-button";
-import "./base/wy-icon";
 
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-post-edit": WyPostEdit;
+  }
+}
+
+/**
+ * Post edit UI for editing an existing post.
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-item>`](./ui/wy-item.ts)
+ * - [`<wy-button>`](./ui/wy-button.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ * - [`<wy-editor>`](./wy-editor.ts)
+ * - [`<wy-avatar>`](./ui/wy-avatar.ts)
+ *
+ * @csspart wy-post - Root post container.
+ * @csspart wy-post-header - Header area with avatar and close button.
+ *
+ * @fires {PostEditEventType} edit - Emitted when editable state should change.
+ */
 @customElement("wy-post-edit")
 @localized()
-export default class WyPostEdit extends WeavySubComponent {
-  
-  static override styles = chatCss;
+export class WyPostEdit extends WeavySubAppComponent {
+  static override styles = [postCss, textCss, hostContentsCss];
 
+  /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
+  /**
+   * Identifier of the post being edited.
+   */
   @property({ type: Number })
   postId!: number;
 
+  /**
+   * True when the post has not yet been persisted.
+   */
   @property({ type: Boolean })
   temp: boolean = false;
 
+  /**
+   * Author metadata for the post.
+   */
   @property({ attribute: false })
   createdBy!: MemberType;
 
+  /**
+   * ISO timestamp when the post was created.
+   */
   @property()
   createdAt: string = "";
 
+  /**
+   * ISO timestamp when the post was last modified.
+   */
   @property()
   modifiedAt: string | undefined = undefined;
 
+  /**
+   * Indicates if the current user is subscribed to the post.
+   */
   @property({ type: Boolean })
   isSubscribed: boolean = false;
 
+  /**
+   * Indicates if the post resides in the trash.
+   */
   @property({ type: Boolean })
   isTrashed: boolean = false;
 
+  /**
+   * HTML content of the post.
+   */
   @property()
   text: string = "";
 
+  /**
+   * Files attached to the post.
+   */
   @property({ type: Array })
   attachments?: FileType[] = [];
 
+  /**
+   * Poll options configured for the post.
+   */
   @property({ type: Array })
   pollOptions: PollOptionType[] | undefined = [];
 
+  /**
+   * Meeting attached to the post, if any.
+   */
   @property({ attribute: false })
   meeting?: MeetingType;
 
+  /**
+   * Embed metadata attached to the post.
+   */
   @property({ attribute: false })
   embed?: EmbedType;
 
+  /**
+   * Reactions applied to the post.
+   */
   @property({ type: Array })
   reactions: ReactableType[] = [];
 
+  /**
+   * Members who have viewed the post.
+   */
   @property({ type: Array })
   seenBy: MemberType[] = [];
 
+  /**
+   * Mutation controller used to persist post updates.
+   *
+   * @internal
+   */
   private updatePostMutation = new MutationController<PostType, Error, MutatePostProps, unknown>(this);
 
+  /**
+   * Emit an `edit` event toggling edit mode for the post.
+   *
+   * @param edit - Desired edit state.
+   * @returns {boolean} True if the event was not canceled.
+   */
   private dispatchEdit(edit: boolean) {
     const event: PostEditEventType = new (CustomEvent as NamedEvent)("edit", { detail: { edit: edit } });
     return this.dispatchEvent(event);
   }
 
+  /**
+   * Handle editor submit events and trigger the post update mutation.
+   *
+   * @param e - Editor submit detail containing updated content.
+   */
   private async handleSubmit(e: EditorSubmitEventType) {
     const app = await this.whenApp();
     void this.updatePostMutation.mutate({
@@ -105,28 +189,39 @@ export default class WyPostEdit extends WeavySubComponent {
   }
 
   override render() {
-    return html`
-      <nav class="wy-item">
-        <div class="wy-item-body">
-          <div class="wy-item-title">${msg("Edit post")}</div>
-        </div>
+    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.createdAt));
 
-        <wy-button kind="icon" @click=${() => this.dispatchEdit(false)}>
-          <wy-icon name="close"></wy-icon>
-        </wy-button>
-      </nav>
-      <wy-editor
-        editorLocation="apps"
-        .text=${this.text}
-        .embed=${this.embed}
-        .options=${this.pollOptions}
-        .attachments=${this.attachments ?? []}
-        .parentId=${this.postId}
-        .typing=${false}
-        .draft=${false}
-        placeholder=${msg("Edit post...")}
-        buttonText=${msg("Update", { desc: "Button action to update" })}
-        @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}></wy-editor>
+    return html`
+      <div part="wy-post">
+        <wy-item part="wy-post-header" align="top" size="md" noPadding>
+          <wy-avatar
+            slot="image"
+            .src="${this.createdBy.avatar_url}"
+            .isAgent=${this.createdBy.is_agent}
+            .size=${48}
+            .name=${this.createdBy.name}
+          ></wy-avatar>
+          <span slot="title" part="wy-placeholder">${this.createdBy.name}</span>
+          <time slot="text" part="wy-placeholder">${dateFromNow}</time>
+          <wy-button slot="actions" kind="icon" @click=${() => this.dispatchEdit(false)}>
+            <wy-icon name="close"></wy-icon>
+          </wy-button>
+        </wy-item>
+
+        <wy-editor
+          editorLocation="apps"
+          .text=${this.text}
+          .embed=${this.embed}
+          .options=${this.pollOptions}
+          .attachments=${this.attachments ?? []}
+          .parentId=${this.postId}
+          .typing=${false}
+          .draft=${false}
+          placeholder=${msg("Edit post...")}
+          buttonText=${msg("Update", { desc: "Button action to update" })}
+          @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
+        ></wy-editor>
+      </div>
     `;
   }
 }

@@ -1,6 +1,6 @@
 import { WeavyClient, WeavyType } from "./weavy";
 import { Constructor } from "../types/generic.types";
-import { WeavyComponentSettingProps } from "../classes/weavy-component";
+import { WeavyComponentSettingProps } from "../types/component.types";
 
 export interface WeavySettingsProps extends WeavyComponentSettingProps {}
 
@@ -36,30 +36,6 @@ export const WeavySettingsMixin = <TBase extends Constructor<WeavyClient>>(Base:
 
     get enterToSend() {
       return this._enterToSend ?? WeavyClient.defaults.enterToSend;
-    }
-
-    // notifications
-    _notifications?: WeavySettingsProps["notifications"];
-
-    set notifications(notifications) {
-      this._notifications = notifications;
-      (this as this & WeavyType).updateContext();
-    }
-
-    get notifications() {
-      return this._notifications ?? WeavyClient.defaults.notifications;
-    }
-
-    // notificationsBadge
-    _notificationsBadge?: WeavySettingsProps["notificationsBadge"];
-
-    set notificationsBadge(notificationsBadge) {
-      this._notificationsBadge = notificationsBadge;
-      (this as this & WeavyType).updateContext();
-    }
-
-    get notificationsBadge() {
-      return this._notificationsBadge ?? WeavyClient.defaults.notificationsBadge;
     }
 
     // reactions

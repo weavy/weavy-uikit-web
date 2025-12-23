@@ -31,3 +31,5 @@ export const webView =
 // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent#browser_name_and_version
 
 export const chrome = /Chrome\/[0-9]/.test(userAgent) && !/Chromium\/[0-9]/.test(userAgent) && !/Edg.*\/[0-9]/.test(userAgent);
+
+export const safari = /Safari\/[0-9]/.test(userAgent) && !/Chrome\/[0-9]/.test(userAgent) && !/Chromium\/[0-9]/.test(userAgent);

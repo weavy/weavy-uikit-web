@@ -6,7 +6,6 @@ import { repeat } from "lit/directives/repeat.js";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { AppType, AppTypeGuid, AppsResultType } from "../types/app.types";
-import type { UserType } from "../types/users.types";
 import { getAppListOptions } from "../data/app";
 import { InfiniteData } from "@tanstack/query-core";
 import {
@@ -28,77 +27,175 @@ import { localized, msg } from "@lit/localize";
 import { RealtimePresenceEventType } from "../types/realtime.types";
 import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import {
-  LeaveEventType,
-  PinEventType,
-  RemoveEventType,
-  SelectedEventType,
-  StarEventType,
-  TrashEventType,
-} from "../types/app.events";
+import { LeaveEventType, PinEventType, RemoveEventType, StarEventType, TrashEventType } from "../types/app.events";
 import { MessagesMarkEventType } from "../types/messages.events";
 import { NamedEvent } from "../types/generic.types";
 import { SearchEventType } from "../types/search.events";
+import { WyActionEventType } from "../types/action.events";
+import { ActionType } from "../types/action.types";
 
 import conversationsCss from "../scss/components/conversations.scss";
 import paneCss from "../scss/components/pane.scss";
-import hostBlockCss from "../scss/host-block.scss";
-import hostScrollYCss from "../scss/host-scroll-y.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 import pagerStyles from "../scss/components/pager.scss";
 
-import "./wy-conversation-list-item";
-import "./wy-conversation-new";
-import "./base/wy-presence";
-import "./base/wy-avatar";
+import "./ui/wy-progress-circular";
+import "./ui/wy-button";
+import "./ui/wy-search";
+import "./wy-conversation-item";
 import "./wy-empty";
-import "./base/wy-spinner";
-import "./base/wy-search";
 
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-conversation-list": WyConversationList;
+  }
+}
+
+/**
+ * Displays a list of conversation items, with search and create conversation button.
+ *
+ * **Used sub components**
+ *
+ * - [`<wy-buttons>`](./ui/wy-button.ts)
+ * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
+ * - [`<wy-search>`](./ui/wy-search.ts)
+ * - [`<wy-conversation-item>`](./wy-conversation-item.ts)
+ * - [`<wy-empty>`](./wy-empty.ts)
+ *
+ * @slot navigation - Any navigation actions placed in front of the search.
+ * @slot actions - Any actions placed next to the search.
+ *
+ * @csspart wy-conversations - Outer wrapper for the conversation list.
+ * @csspart wy-conversation-list - Inner wrapper for the conversation list.
+ * @csspart wy-conversations-toolbar - Search/new/actions toolbar in the top of the list
+ * @csspart wy-pane - Body for empty state.
+ * @csspart wy-pane-body - Body for list empty state.
+ * @csspart wy-pane-group - Body section for the list empty state.
+ * @csspart wy-pager - Pager element for infinite scroll.
+ * @csspart wy-pager-bottom - Bottom styling for the pager element.
+ *
+ * @fires {WyActionEventType} wy-action - Emitted when a conversation is selected (detail: { action: "select", app: { ... } })
+ */
 @customElement("wy-conversation-list")
 @localized()
-export default class WeavyConversationList extends WeavySubComponent {
-  static override styles = [
-    conversationsCss,
-    paneCss,
-    hostBlockCss,
-    hostScrollYCss,
-    pagerStyles,
-  ];
+export class WyConversationList extends WeavySubComponent {
+  static override styles = [conversationsCss, paneCss, hostContentsCss, pagerStyles];
+
+  /**
+   * Controller for exporting named shadow parts.
+   *
+   * @internal
+   */
   protected exportParts = new ShadowPartsController(this);
 
+  /** The id of the currently selected conversation */
   @property({ type: Number })
   conversationId?: number;
 
+  /** The conversation type guids to show in the list. */
   @property({ type: Array })
   conversationTypes?: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
 
+  /** Any agent uid to display items for. */
   @property()
   agent?: string;
 
+  /** Input text to search for. */
   @state()
   private searchText?: string = "";
 
-  private dispatchSelected(id: number | undefined) {
-    this.conversationId = id;
-    const event: SelectedEventType = new (CustomEvent as NamedEvent)("selected", { detail: { id: id } });
+  /**
+   * Selects a conversation and triggers an action event.
+   *
+   * @param conversation - The conversation to select.
+   */
+  selectConversation(conversation: AppType | null) {
+    this.conversationId = conversation?.id;
+    this.dispatchAction(ActionType.Select, conversation);
+  }
+
+  /**
+   * Triggers `wy-action` event.
+   * @param action - The performed action.
+   * @param app - The conversation to select.
+   * @returns Whether the event was successful.
+   */
+  private dispatchAction(action: ActionType, conversation: AppType | null) {
+    const event: WyActionEventType = new (CustomEvent as NamedEvent)("wy-action", {
+      detail: { action, app: conversation },
+      bubbles: true,
+      composed: true,
+    });
     return this.dispatchEvent(event);
   }
 
+  /**
+   * The query data controller for the conversation list.
+   *
+   * @internal
+   */
   conversationsQuery = new InfiniteQueryController<AppsResultType>(this);
 
+  /**
+   * Mutation for marking conversations (read/unread).
+   *
+   * @internal
+   */
   private markConversationMutation?: MarkConversationMutationType;
+  /**
+   * Mutation for starring/unstarring conversations.
+   *
+   * @internal
+   */
   private starConversationMutation?: StarConversationMutationType;
+  /**
+   * Mutation for pinning/unpinning conversations.
+   *
+   * @internal
+   */
   private pinConversationMutation?: PinConversationMutationType;
+  /**
+   * Mutation for leaving a conversation.
+   *
+   * @internal
+   */
   private leaveConversationMutation?: LeaveConversationMutationType;
+  /**
+   * Mutation for removing a conversation.
+   *
+   * @internal
+   */
   private removeConversationMutation?: RemoveConversationMutationType;
+  /**
+   * Mutation for trashing a conversation.
+   *
+   * @internal
+   */
   private trashConversationMutation?: TrashConversationMutationType;
+
+  /**
+   * Infinite scroll controller instance used to observe the pager node.
+   *
+   * @internal
+   */
   private infiniteScroll = new InfiniteScrollController(this);
+
+  /**
+   * Ref for pager element used by the infinite scroll controller.
+   *
+   * @internal
+   */
   private pagerRef: Ref<HTMLElement> = createRef();
 
+  /** Refresh the conversation query */
   private handleRefresh = () => {
     void this.conversationsQuery.result.refetch();
   };
 
+  /**
+   * Updates member data when realtime presence is received.
+   * @param data - Realtime presence event data
+   */
   private handlePresenceChange = (data: RealtimePresenceEventType) => {
     if (!this.weavy) {
       return;
@@ -127,43 +224,81 @@ export default class WeavyConversationList extends WeavySubComponent {
     );
   };
 
-  private async handleMark(appId: number, messageId?: number | null) {
-    await this.markConversationMutation?.mutate({ appId, messageId, userId: this.user?.id });
+  /**
+   * Marks a conversation as read.
+   *
+   * @param appId - The id of the conversation to mark.
+   * @param messageId - Optional message id to set the marker to.
+   */
+  private async handleMark(app: AppType, messageId?: number | null) {
+    await this.markConversationMutation?.mutate({ app, messageId, userId: this.user?.id });
   }
 
+  /**
+   * Sets a conversation as starred.
+   *
+   * @param appId -  The id of the conversation to star.
+   * @param star - Whether to make the conversation starred.
+   */
   private async handleStar(appId: number, star: boolean) {
     await this.starConversationMutation?.mutate({ appId, star });
   }
 
+  /**
+   * Sets a conversation as pinned.
+   *
+   * @param appId - The id of the conversation to pin.
+   * @param pin - Whether to make the conversation pinned.
+   */
   private async handlePin(appId: number, pin: boolean) {
     await this.pinConversationMutation?.mutate({ appId, pin });
   }
 
+  /**
+   * Leave a conversation (for the current user).
+   *
+   * @param appId - The id of the conversation to leave.
+   */
   private async handleLeaveConversation(appId: number) {
     if (this.conversationId === appId) {
-      this.dispatchSelected(undefined);
+      this.selectConversation(null);
     }
     const user = await this.whenUser();
     await this.leaveConversationMutation?.mutate({ appId, members: [user.id] });
     void this.conversationsQuery.result.refetch();
   }
 
+  /**
+   * Remove a conversation.
+   *
+   * @param appId - The id of the conversation to remove.
+   */
   private async handleRemoveConversation(appId: number) {
     if (this.conversationId === appId) {
-      this.dispatchSelected(undefined);
+      this.selectConversation(null);
     }
     await this.removeConversationMutation?.mutate({ appId });
     void this.conversationsQuery.result.refetch();
   }
 
+  /**
+   * Trash a conversation.
+   *
+   * @param appId - The id of the conversation to trash.
+   */
   private async handleTrashConversation(appId: number) {
     if (this.conversationId === appId) {
-      this.dispatchSelected(undefined);
+      this.selectConversation(null);
     }
     await this.trashConversationMutation?.mutate({ appId });
     void this.conversationsQuery.result.refetch();
   }
 
+  /**
+   * Unsubscribe function for realtime subscriptions.
+   *
+   * @internal
+   */
   #unsubscribeToRealtime?: () => void;
 
   protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
@@ -214,12 +349,16 @@ export default class WeavyConversationList extends WeavySubComponent {
 
   override async updated(changedProperties: PropertyValueMap<this & { searchText: string }>) {
     // searchText is changed but undefined on initial load
-    if (changedProperties.has("searchText") && changedProperties.get("searchText") !== undefined && this.conversationsQuery.result) {
+    if (
+      changedProperties.has("searchText") &&
+      changedProperties.get("searchText") !== undefined &&
+      this.conversationsQuery.result
+    ) {
       await this.conversationsQuery.result.refetch?.();
     }
   }
 
-  private renderConversations(user: UserType, infiniteData?: InfiniteData<AppsResultType>) {
+  private renderConversations(infiniteData?: InfiniteData<AppsResultType>) {
     if (infiniteData) {
       const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
@@ -228,8 +367,8 @@ export default class WeavyConversationList extends WeavySubComponent {
         (conversation) => conversation?.id,
         (conversation) => {
           return [
-            html`<wy-conversation-list-item
-              .conversationId=${conversation?.id}
+            html`<wy-conversation-item
+              conversationId=${conversation?.id}
               .avatarUrl=${conversation?.avatar_url}
               .hideAvatar=${Boolean(this.agent)}
               .name=${conversation.name}
@@ -240,14 +379,14 @@ export default class WeavyConversationList extends WeavySubComponent {
               .pinned=${conversation.is_pinned}
               .type=${conversation.type}
               .selected=${this.conversationId == conversation.id}
-              @selected=${(e: SelectedEventType) => this.dispatchSelected(e.detail.id)}
-              @mark=${(e: MessagesMarkEventType) => this.handleMark(e.detail.id, e.detail.messageId)}
+              @selected=${() => this.selectConversation(conversation)}
+              @mark=${(e: MessagesMarkEventType) => this.handleMark(conversation, e.detail.messageId)}
               @star=${(e: StarEventType) => this.handleStar(e.detail.id, e.detail.star)}
               @pin=${(e: PinEventType) => this.handlePin(e.detail.id, e.detail.pin)}
               @leave=${(e: LeaveEventType) => this.handleLeaveConversation(e.detail.id)}
               @remove=${(e: RemoveEventType) => this.handleRemoveConversation(e.detail.id)}
               @trash=${(e: TrashEventType) => this.handleTrashConversation(e.detail.id)}
-            ></wy-conversation-list-item>`,
+            ></wy-conversation-item>`,
           ];
         }
       );
@@ -259,37 +398,36 @@ export default class WeavyConversationList extends WeavySubComponent {
     const { data: infiniteData, isPending, hasNextPage } = this.conversationsQuery.result ?? {};
 
     return html`
-      ${this.user
-        ? html`
-            <wy-buttons position=${this.agent ? "floating" : "sticky"} ?reverse=${Boolean(this.agent)}>
-              ${this.agent
-                ? nothing
-                : html`
-                    <wy-search
-                      compact
-                      placeholder=${msg("Search for conversations...")}
-                      @search=${(e: SearchEventType) => (this.searchText = e.detail.query)}
-                    ></wy-search>
-                  `}
-              <slot name="actions"></slot>
-            </wy-buttons>
+      <div part="wy-conversations">
+        <wy-buttons part="wy-conversations-toolbar" position=${this.agent ? "floating" : "sticky"} ?reverse=${Boolean(this.agent)}>
+          <slot name="navigation"></slot>
+          ${this.agent
+            ? nothing
+            : html`
+                <wy-search
+                  compact
+                  placeholder=${msg("Search for conversations...")}
+                  @search=${(e: SearchEventType) => (this.searchText = e.detail.query)}
+                ></wy-search>
+              `}
+          <slot name="actions"></slot>
+        </wy-buttons>
 
-            <div class="wy-conversations">
-              ${!isPending && this.user && infiniteData
-                ? infiniteData.pages[0]?.count || this.searchText
-                  ? this.renderConversations(this.user, infiniteData)
-                  : html`
-                      <div class="wy-pane-body">
-                        <div class="wy-pane-group">
-                          <wy-empty noNetwork>${msg("Create a conversation to get started.")}</wy-empty>
-                        </div>
-                      </div>
-                    `
-                : html`<wy-empty><wy-spinner padded></wy-spinner></wy-empty>`}
-              ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
-            </div>
-          `
-        : html`<wy-empty class="wy-pane"><wy-spinner overlay></wy-spinner></wy-empty>`}
+        <div part="wy-conversation-list">
+          ${!isPending && this.user && infiniteData
+            ? infiniteData.pages[0]?.count || this.searchText
+              ? this.renderConversations(infiniteData)
+              : html`
+                  <div part="wy-pane-body">
+                    <div part="wy-pane-group">
+                      <wy-empty noNetwork>${msg("Create a conversation to get started.")}</wy-empty>
+                    </div>
+                  </div>
+                `
+            : html`<wy-empty><wy-progress-circular indeterminate padded></wy-progress-circular></wy-empty>`}
+          ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
+        </div>
+      </div>
     `;
   }
 

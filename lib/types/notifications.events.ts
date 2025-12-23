@@ -1,8 +1,13 @@
-import { AppTypeString, ComponentType, LinkType } from "./app.types";
-import { FormattedNotificationType } from "./notifications.types";
+import { AppTypeString, LinkType, UnknownAppType } from "./app.types";
+import { MetadataType } from "./lists.types";
+import { FormattedNotificationType, NotificationTypes } from "./notifications.types";
 import { RealtimeNotificationsEventDetailType } from "./realtime.types";
 
 // Local ShadowDOM events (composed: false, bubbling: true)
+
+export type NotificationFilterEventType = CustomEvent<{
+    typeFilter: NotificationTypes;
+}> & { type: "filter" };
 
 export type NotificationSelectEventType = CustomEvent<{
   notificationId: number;
@@ -21,10 +26,13 @@ export type NotificationCloseEventType = CustomEvent & { type: "close" };
 
 export type WyLinkEventDetailType = {
   /** Link with entity data. */
-  link: LinkType;
+  link?: LinkType;
 
   /** Readable app type string. */
-  app_type?: AppTypeString | ComponentType;
+  app_type?: AppTypeString | UnknownAppType;
+
+  /** Optional additional metadata */
+  metadata?: MetadataType
 
   /** The name of the context where the app lives. */
   source_name?: string;
@@ -34,6 +42,7 @@ export type WyLinkEventDetailType = {
 
   /** Any additional data needed to show the app in the context where it lives. */
   source_data?: string;
+
 };
 
 /**
@@ -57,7 +66,7 @@ declare global {
      * A 'wy-notifications' event can be emitted by the Weavy client instance on it's host when realtime notification events occur.
      */
     "wy-notifications": WyNotificationsEventType;
-
+    
     /**
      * A 'wy-notification' event can be emitted when notification events occur.
      */

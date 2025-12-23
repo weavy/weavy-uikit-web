@@ -1,0 +1,53 @@
+@use "../base/var";
+@use "../base/color";
+@use "../base/const";
+@use "../base/breakpoints";
+
+$drawer-width: 24;
+
+[part~="wy-drawer"] {
+    --wy-component-background-color: #{color.token(--wy-surface-container-low)};
+    --wy-component-color: #{color.token(--wy-on-surface)};
+
+    position: fixed;
+    z-index: const.$zindex-modal;
+    
+    box-shadow: var.default(--wy-shadow-level1);
+    
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 0;
+
+    @include breakpoints.container-size-up(md) {
+      top: var(--wy-padding-outer, 0px);
+      right: var(--wy-padding-outer, 0px);
+      bottom: var(--wy-padding-outer, 0px);
+      left: auto;
+      width: var.wy-rem($drawer-width);
+      min-width: var.wy-rem($drawer-width);
+      border-radius: var(--wy-border-radius-outer, 0px); 
+  }
+
+  &[part~="wy-maximized"] {
+     @include breakpoints.container-size-up(md) {
+      //left: var(--wy-padding-outer, #{var.default(--wy-padding)});
+      width: calc(100% - 2 * var(--wy-padding-outer, 0px));
+    }
+  }
+}
+
+// Transitions (extending wy-overlay transition)
+
+[part~="wy-drawer"] {
+  &:not([part~="wy-open"]) {
+    transform: translateX(calc(100% + var(--wy-padding-outer, 0px)));
+  }
+
+  &[part~="wy-open"] {
+    @starting-style {
+      transform: translateX(calc(100% + var(--wy-padding-outer, 0px)));
+    }
+  }
+}

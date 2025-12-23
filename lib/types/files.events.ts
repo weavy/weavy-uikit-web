@@ -46,6 +46,14 @@ export type FileVersionSelectEventType = CustomEvent<{
   versionFile: FileType;
 }> & { type: "file-version-select" }
 
+/**
+ * Fired when a file preview is considered loaded.
+ */
+export type FilePreviewLoadedEventType = CustomEvent<{
+  file?: FileType;
+}> & {
+  type: "file-preview-loaded";
+};
 
 // Public component API events (composed: true, bubbling: false)
 

@@ -1,0 +1,94 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+
+// Dialog wrapper top layer
+
+[part~="wy-dialog"] {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  container-type: inline-size;
+  pointer-events: none;
+
+  &[popover] {
+    position: fixed;
+    inset: 0;
+    z-index: const.$zindex-modal;
+  }
+}
+
+[part~="wy-dialog-modal"] {
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+
+  &[open] {
+    display: flex;
+  }
+
+  &:popover-open {
+    display: flex;
+  }
+
+  &:focus-visible {
+    // Temporary fix for misplaced focus-ring
+    outline: none;
+  }
+}
+
+// Overlays
+
+[part~="wy-overlay"] {
+  --wy-component-background-color: #{color.token(--wy-background)};
+  --wy-component-color: #{color.token(--wy-on-background)};
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+    container-type: inline-size;
+}
+
+// Transitions
+[part~="wy-overlay"] {
+  interpolate-size: allow-keywords;
+
+  // hiding transition
+  transition: 
+    opacity var.default(--wy-transition-fast) 0.01s, 
+    visibility 0.01s step-end var.default(--wy-transition-duration-fast);
+
+  &:not([part~="wy-open"]) {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  &[part~="wy-open"] {
+    // opening transition
+    transition: 
+      opacity var.default(--wy-transition), 
+      transform var.default(--wy-transition),
+      visibility var.default(--wy-transition-duration) step-start,
+      top var.default(--wy-transition),
+      right var.default(--wy-transition),
+      bottom var.default(--wy-transition),
+      left var.default(--wy-transition),
+      width var.default(--wy-transition),
+      height var.default(--wy-transition);
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+
+    @starting-style {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+}

@@ -1,0 +1,72 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/backdrop";
+@use "../base/position";
+
+/*
+[part~="wy-message-editor"] {
+  background-color: color.token(--wy-surface-container-lowest);
+}
+*/
+
+[part~="wy-message-editor-inputs"] {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding: var.default(--wy-padding) var.default(--wy-padding-sm);
+  min-height: calc(
+    var.default(--wy-input-font-size) * var.wy-rem(1.5) + var.default(--wy-input-padding-y) * 2 +
+      var.default(--wy-padding-sm) * 2
+  );
+}
+
+[part~="wy-message-editor-text"] {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  margin-inline: var.default(--wy-padding-sm);
+}
+
+[part~="wy-editor-parts"] {
+  padding: var.default(--wy-padding);
+  min-height: 0;
+}
+
+/** CODEMIRROR **/
+[part~="wy-message-editor"] {
+  .cm-editor {
+    flex: 1 1 100%;
+    max-height: 11.25em;
+    background-color: color.token(--wy-surface-container-lowest);
+    color: color.token(--wy-on-surface);
+    border-radius: var.default(--wy-input-filled-border-radius);
+    border: var.default(--wy-input-border-width) solid transparent; //#{color.token(--wy-background)};
+    margin: calc(-1 * #{var.default(--wy-input-border-width)});
+
+    &:focus {
+      border-color: #{color.token(--wy-outline-variant)};
+    }
+
+    &.cm-focused {
+      border-color: #{color.token(--wy-outline-variant)};
+    }
+
+    .cm-content {
+      font-family: #{var.default(--wy-input-font-family)},  inherit;
+      font-size: var.default(--wy-input-font-size);
+      padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
+      min-height: calc(
+        var.default(--wy-input-font-size) * var.wy-rem(1.5) + var.default(--wy-input-padding-y) * 2 - #{var.default(
+            --wy-input-border-width
+          )}
+      );
+      line-height: var.wy-rem(1.5);
+    }
+  }
+
+  [part~="wy-is-invalid"] + [data-editor-target] .cm-editor,
+  [part~="wy-is-invalid"] .cm-editor {
+    border-color: color.token(--wy-error) !important;
+  }
+}

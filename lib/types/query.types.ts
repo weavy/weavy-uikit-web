@@ -8,3 +8,8 @@ export type QueryResultType<TDataItem extends PlainObjectType> = {
 };
 
 export type InfiniteQueryResultType<TDataItem extends PlainObjectType> = QueryResultType<TDataItem>;
+
+export type MutationAbortProps = {
+    signal?: AbortSignal;
+    abort?: AbortController["abort"];
+}

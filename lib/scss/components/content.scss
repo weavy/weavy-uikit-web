@@ -1,9 +1,9 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
 @use "code";
 
 // user generated content, e.g. comments, messages etc.
-.wy-content {
+[part~="wy-content"] {
   @include code.themes;
 
   overflow-wrap: break-word;
@@ -21,20 +21,26 @@
     margin-bottom: 0;
   }
 
-  b, strong {
+  b,
+  strong {
     font-weight: var.default(--wy-font-weight-bold);
   }
 
   blockquote {
-    border-left: calc(2  * var.default(--wy-border)) solid color.default(--wy-neutral-80);
-    margin: var.default(--wy-size) 0;
-    padding: var.default(--wy-gap);
-    padding-left: var.default(--wy-size);
+    border-left: calc(2 * var.default(--wy-border)) solid color.token(--wy-outline-variant);
+    margin: var.default(--wy-gap) 0;
+    padding-left: var.default(--wy-padding);
 
     > p {
       margin: 0;
     }
-}
+  }
+
+  hr {
+    border-color: color.token(--wy-outline-variant);
+    border-width: var.default(--wy-border) 0 0 0;
+    border-style: solid;
+  }
 
   // code
   pre,
@@ -62,43 +68,52 @@
   h5,
   h6 {
     font-family: var.default(--wy-headings-font-family);
-    font-weight: var.default(--wy-headings-font-weight);
     line-height: var.default(--wy-headings-line-height);
-    margin: 0 0 var.default(--wy-gap) 0;
   }
 
   h1 {
-    font-size: calc(2 * var.default(--wy-font-size));
+    font-size: var.default(--wy-h1-font-size);
+    font-weight: var.default(--wy-h1-font-weight);
+    margin: var.default(--wy-h1-margin);
   }
 
   h2 {
-    font-size: calc(1.8 * var.default(--wy-font-size));
+    font-size: var.default(--wy-h2-font-size);
+    font-weight: var.default(--wy-h2-font-weight);
+    margin: var.default(--wy-h2-margin);
   }
 
   h3 {
-    font-size: calc(1.6 * var.default(--wy-font-size));
+    font-size: var.default(--wy-h3-font-size);
+    font-weight: var.default(--wy-h3-font-weight);
+    margin: var.default(--wy-h3-margin);
   }
 
   h4 {
-    font-size: calc(1.4 * var.default(--wy-font-size));
+    font-size: var.default(--wy-h4-font-size);
+    font-weight: var.default(--wy-h4-font-weight);
+    margin: var.default(--wy-h4-margin);
   }
 
   h5 {
-    font-size: calc(1.2 * var.default(--wy-font-size));
+    font-size: var.default(--wy-h5-font-size);
+    font-weight: var.default(--wy-h5-font-weight);
+    margin: var.default(--wy-h5-margin);
   }
 
   h6 {
-    font-size: var.default(--wy-font-size);
+    font-size: var.default(--wy-h6-font-size);
+    font-weight: var.default(--wy-h6-font-weight);
+    margin: var.default(--wy-h6-margin);
   }
 
   // tables
   table {
     /* For scrolling */
     display: block; /* This is needed for scrollbar */
-    width: 100%; 
+    width: 100%;
     max-width: -moz-max-content;
     max-width: max-content; 
-    margin: 0 auto; /* this centers the table */
     overflow-x: auto; /* This is needed for scrollbar */
     white-space: nowrap; /* Keeps each cell on one line */
 
@@ -160,46 +175,56 @@
     border-radius: var.default(--wy-border-radius-sm);
     margin-block: var.default(--wy-padding-sm);
   }
-}
 
-// lists
-ol {
-  list-style-type: decimal;
-}
+  // lists
+  ol {
+    list-style-type: decimal;
+  }
 
-ul {
-  list-style-type: disc;
-}
+  ul {
+    list-style-type: disc;
+  }
 
-li {
-  margin: var.default(--wy-gap-sm) 0;
-}
+  li {
+    margin: var.default(--wy-gap-sm) 0;
+  }
 
-ol,
-ul {
-  margin: var.default(--wy-size) 0;
-  padding: 0 0 0 1.625em;
+  ol,
+  ul {
+    margin: var.default(--wy-size) 0;
+    padding: 0 0 0 1.625em;
 
-  > li {
-    padding-left: var.default(--wy-gap-sm);
+    > li {
+      padding-left: var.default(--wy-gap-sm);
 
-    > :first-child {
-      margin-bottom: 0;
-      margin-top: 0;
+      > :first-child {
+        margin-bottom: 0;
+        margin-top: 0;
+      }
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // hashtags
+  .wy-hashtag {
+    color: #{color.token(--wy-primary)};
+  }
+
+  // mentions
+  .wy-mention {
+    font-weight: var.default(--wy-font-weight-bold);
+    &::before{
+      content: "@";
     }
 
-    > :last-child {
-      margin-bottom: 0;
-    }
   }
 }
 
-// hashtags
-.wy-hashtag {
-  color: #{color.token(--wy-primary)};
-}
-
-// mentions
-.wy-mention {
-  font-weight: bold;
+[part~="wy-content-emoji"] {
+  .wy-emoji {
+    font-size: 3em;
+  }
 }

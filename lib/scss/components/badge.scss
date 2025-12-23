@@ -1,73 +1,96 @@
-@use "base/var";
-@use "base/color";
-@use "base/text";
+@use "../base/var";
+@use "../base/color";
+@use "../base/text";
 
-$badge-padding-y: 0.35em !default;
-$badge-padding-x: 0.65em !default;
+// Font-size relative: 16px * 0.75 -> 12px * .333333 -> 4px
+$badge-padding: 0.333333em !default;
 
-.wy-badge {
+[part~="wy-badge"] {
   display: inline-block;
-  padding: $badge-padding-y $badge-padding-x;
-  font-size: var.default(--wy-font-size-xs);
-  font-weight: var.default(--wy-font-weight-bold);
-  line-height: 1;
-  color: color.token(--wy-on-primary);
   text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-
+  vertical-align: middle;
+  
+  // For placing in flex layout
+  align-self: center;
+  
+  font-weight: var.default(--wy-font-weight-bold);
+  font-size: var.default(--wy-font-size-xs);
+  line-height: normal;
+ 
+  color: color.token(--wy-on-primary);
   border-radius: var.default(--wy-border-radius-pill);
   background-color: color.token(--wy-primary);
 
+  padding: #{$badge-padding}; 
+  min-width: 1lh;
+
   // Empty badges collapse automatically
   &:empty {
-    display: none;
+    display: none !important; 
   }
 }
 
-.wy-badge-reveal {
-  opacity: 1;
-  transition: opacity var.default(--wy-transition)
-      calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));
-
-  @starting-style {
-    opacity: 0;
-  }
-}
-
-.wy-button-badge {
+[part~="wy-badge-positioned"] {
+  margin: calc(-0.5 * (var.default(--wy-font-size-xs) + #{$badge-padding} * 2));
   position: absolute;
-  right: 0;
+
+  &:not(:empty) {
+    display: block;
+  }
+}
+
+[part~="wy-badge-top-right"] {
   top: 0;
-  //border-radius: var.wy-rem(1);
-  margin: calc(var.default(--wy-button-padding-y) * .5);
-  padding: var.default(--wy-padding-sm);
-  min-width: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
-  max-width: calc(var.default(--wy-font-size-xs) * 3 + var.default(--wy-padding-sm) * 2);
+  right: 0;
+}
+
+[part~="wy-badge-bottom-right"] {
+  bottom: 0;
+  right: 0;
+}
+
+[part~="wy-badge-bottom-left"] {
+  bottom: 0;
+  left: 0;
+}
+
+[part~="wy-badge-top-left"] {
+  top: 0;
+  left: 0;
+}
+
+[part~="wy-badge-compact"] {
+  padding: calc(var.default(--wy-padding-sm) * 0.25);
+  max-width: calc(var.default(--wy-font-size-xs) * 3 + var.default(--wy-padding-sm));
   height: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
-  line-height: calc(var.default(--wy-font-size-xs) - var.default(--wy-padding-sm));
-  display: block;
-  text-align: center;
+  line-height: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
 
   @include text.truncate;
 
-  &:empty {
-    display: none;
+  &[part~="wy-badge-positioned"] {
+    margin: calc(-0.5 * (var.default(--wy-font-size-xs) + var.default(--wy-padding-sm) * .5));
   }
 }
 
-.wy-button-dot {
-  position: absolute;
-  right: 0;
-  top: 0;
+[part~="wy-badge-dot"] {
   content-visibility: hidden;
-  padding: var.default(--wy-padding-sm);
-  margin: var.default(--wy-button-padding-y);
   line-height: 0;
   min-width: 0;
   height: 0;
+  width: 0;
+  padding: var.default(--wy-padding-sm);
+  
+  &[part~="wy-badge-positioned"] {
+    margin: calc(-1 * #{var.default(--wy-padding-sm)});
+  }
+}
 
-  &:empty {
-    display: none;
+[part~="wy-badge-reveal"] {
+  opacity: 1;
+  transition: opacity var.default(--wy-transition)
+    calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));
+
+  @starting-style {
+    opacity: 0;
   }
 }

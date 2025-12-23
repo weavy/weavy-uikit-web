@@ -3,46 +3,59 @@ import { customElement } from "./utils/decorators/custom-element";
 import { localized } from "@lit/localize";
 import { AppTypeGuid } from "./types/app.types";
 import { ThemeController } from "./controllers/theme-controller";
-import { WeavyComponent } from "./classes/weavy-component";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
 import { property } from "lit/decorators.js";
+import { WeavyAppComponent } from "./classes/weavy-app-component";
 
-import colorModesStyles from "./scss/color-modes.scss";
-import allStyles from "./scss/all.scss";
-import hostBlockStyles from "./scss/host-block.scss";
-import hostScrollYStyles from "./scss/host-scroll-y.scss";
-import hostFontStyles from "./scss/host-font.scss";
+import colorModesCss from "./scss/color-modes.scss";
+import hostBlockCss from "./scss/host-block.scss";
+import hostPaddedCss from "./scss/host-padded.scss";
+import hostScrollYCss from "./scss/host-scroll-y.scss";
+import hostFontCss from "./scss/host-font.scss";
+import commentsCss from "./scss/components/comments.scss";
 
 import "./components/wy-comment-list";
-import "./components/base/wy-button";
-import "./components/wy-notification-button-list";
+import "./components/ui/wy-button";
 import "./components/wy-context-data";
-
-export const WY_COMMENTS_TAGNAME = "wy-comments";
 
 declare global {
   interface HTMLElementTagNameMap {
-    [WY_COMMENTS_TAGNAME]: WyComments;
+    "wy-comments": WyComments;
   }
 }
 
 /**
+ * @import { WyAppEventType } from "./types/app.events"
+ * @import { WyActionEventType } from "./types/action.events"
+ * @import { WyPreviewOpenEventType } from "./types/files.events"
+ * @import { WyPreviewCloseEventType } from "./types/files.events"
+ */
+
+/**
  * Weavy component to render contextual comments.
+ * 
+ * **Used sub components:**
  *
- * @element wy-comments
- * @class WyComments
- * @extends {WeavyComponent}
+ * - [`<wy-comment-list>`](./components/wy-comment-list.ts)
+ * - [`<wy-buttons>`](./components/ui/wy-button.ts)
+ * - [`<wy-context-data-progress>`](./components/wy-context-data.ts)
+ *
+ * @tagname wy-comments
+ * @slot actions - Floating buttons placed in the top right.
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  */
-@customElement(WY_COMMENTS_TAGNAME)
+@customElement("wy-comments")
 @localized()
-export class WyComments extends WeavyComponent {
-  static override styles = [allStyles, hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles];
+export class WyComments extends WeavyAppComponent {
+  static override styles = [hostBlockCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss, commentsCss];
 
-  override componentType = AppTypeGuid.Comments;
+  /** @internal */
+  override appType = AppTypeGuid.Comments;
 
+  /** @internal */
   override componentFeatures = new ComponentFeatures({
     // All available features as enabled/disabled by default
     [Feature.Attachments]: true,
@@ -60,6 +73,7 @@ export class WyComments extends WeavyComponent {
     [Feature.ZoomMeetings]: false,
   });
 
+  /** @internal */
   protected theme = new ThemeController(this, WyComments.styles);
 
   /**
@@ -70,10 +84,8 @@ export class WyComments extends WeavyComponent {
 
   override render() {
     return html`
-      <wy-buttons position="floating" reverse>
-        <wy-notification-button-list></wy-notification-button-list>
-      </wy-buttons>
-      <wy-comment-list parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}></wy-comment-list>
+      <wy-buttons position="floating" reverse><slot name="actions"></slot></wy-buttons>
+      <wy-comment-list .parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}></wy-comment-list>
       <wy-context-data-progress></wy-context-data-progress>
     `;
   }

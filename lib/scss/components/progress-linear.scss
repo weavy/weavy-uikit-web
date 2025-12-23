@@ -1,5 +1,5 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
 
 // LINEAR
 // See: https://github.com/material-components/material-web/blob/main/progress/internal/_linear-progress.scss
@@ -23,7 +23,7 @@ $_indeterminate-duration: 2s;
   position: relative;
 }
 
-[part~="wy-progress"] {
+[part~="wy-progress-linear"] {
   border-radius: var(--_track-shape);
   display: flex;
   position: relative;
@@ -45,28 +45,15 @@ $_indeterminate-duration: 2s;
   align-items: center;
 }
 
-[part~="wy-progress"][part~="wy-progress-overlay"],
+[part~="wy-progress-linear"][part~="wy-progress-padded"] {
+  margin: var.wy-rem(1) var.wy-rem(2);
+}
+
 [part~="wy-inactive-track"],
 [part~="wy-bar"],
 [part~="wy-bar-inner"] {
   position: absolute;
 }
-
-[part~="wy-progress-reveal"] {
-    opacity: 1;
-    transition: width var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
-      height var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
-      margin var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
-      opacity var.default(--wy-transition)
-        calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));
-  
-    @starting-style {
-      width: 0;
-      height: 0;
-      opacity: 0;
-      margin: 0;
-    }
-  }
 
 [part~="wy-bar"] {
   animation: none;
@@ -95,37 +82,37 @@ $_indeterminate-duration: 2s;
 }
 
 // indeterminate
-[part~="wy-indeterminate"] [part~="wy-bar"] {
+[part~="wy-progress-indeterminate"] [part~="wy-bar"] {
   transition: none;
 }
 
 // note, the numbers here come directly from the mdc implementation.
 // see https://github.com/material-components/material-components-web/blob/main/packages/mdc-linear-progress/_linear-progress.scss#L208.
-[part~="wy-indeterminate"] [part~="wy-primary-bar"] {
+[part~="wy-progress-indeterminate"] [part~="wy-primary-bar"] {
   inset-inline-start: -145.167%;
 }
 
-[part~="wy-indeterminate"] [part~="wy-secondary-bar"] {
+[part~="wy-progress-indeterminate"] [part~="wy-secondary-bar"] {
   inset-inline-start: -54.8889%;
   // this is display none by default.
   display: block;
 }
 
-[part~="wy-indeterminate"] [part~="wy-primary-bar"] {
+[part~="wy-progress-indeterminate"] [part~="wy-primary-bar"] {
   animation: linear infinite $_indeterminate-duration;
   animation-name: primary-indeterminate-translate;
 }
 
-[part~="wy-indeterminate"] [part~="wy-primary-bar"] > [part~="wy-bar-inner"] {
+[part~="wy-progress-indeterminate"] [part~="wy-primary-bar"] > [part~="wy-bar-inner"] {
   animation: linear infinite $_indeterminate-duration primary-indeterminate-scale;
 }
 
-[part~="wy-indeterminate"] [part~="wy-secondary-bar"] {
+[part~="wy-progress-indeterminate"] [part~="wy-secondary-bar"] {
   animation: linear infinite $_indeterminate-duration;
   animation-name: secondary-indeterminate-translate;
 }
 
-[part~="wy-indeterminate"] [part~="wy-secondary-bar"] > [part~="wy-bar-inner"] {
+[part~="wy-progress-indeterminate"] [part~="wy-secondary-bar"] > [part~="wy-bar-inner"] {
   animation: linear infinite $_indeterminate-duration secondary-indeterminate-scale;
 }
 

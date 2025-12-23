@@ -1,6 +1,6 @@
-@use "base/color";
-@use "base/var";
-@use "base/scroll";
+@use "../base/color";
+@use "../base/var";
+@use "../base/scroll";
 
 [part~=wy-tabs] {
     display: flex;
@@ -20,7 +20,7 @@
 
 [part~=wy-tab] {
     --wy-component-color: #{color.token(--wy-primary)};
-    --wy-component-background-color: transparent; // #{color.token(--wy-surface-2)};
+    --wy-component-background-color: transparent; // #{color.token(--wy-surface-container-low)};
   
     color: var(--wy-component-color);
     background: var(--wy-component-background-color);

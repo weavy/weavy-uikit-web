@@ -1,0 +1,76 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/backdrop";
+@use "../base/position";
+
+[part~="wy-post-editor"] {
+  padding: var.default(--wy-padding-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap-lg);
+}
+
+[part~="wy-post-editor-inputs"] {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var.default(--wy-gap-sm);
+}
+
+[part~="wy-post-editor-buttons"] {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var.default(--wy-gap-sm);
+  flex: 1 0 auto;
+}
+
+[part~="wy-post-editor-text"] {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+[part~="wy-editor-parts"] {
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap);
+  min-height: 0;
+}
+
+/** CODEMIRROR **/
+
+[part~="wy-post-editor"] {
+  .cm-editor {
+    flex: 1 1 100%;
+    max-height: 11.25em;
+    min-height: 4em;
+    background-color: color.token(--wy-surface-container-lowest);
+    color: color.token(--wy-on-surface);
+    border-radius: var.default(--wy-border-radius);
+    border: var.default(--wy-input-border-width) solid transparent; //#{color.token(--wy-outline-variant)};
+    caret-color: #{color.token(--wy-primary)};
+
+    &:focus {
+      border-color: #{color.token(--wy-primary)};
+    }
+
+    .cm-content {
+      font-family: #{var.default(--wy-input-font-family)}, inherit;
+      font-size: var.default(--wy-input-font-size);
+      padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
+    }
+
+    .cm-line {
+      padding: 0;
+    }
+  }
+
+  [part~="wy-is-invalid"] + [data-editor-target] .cm-editor,
+  [part~="wy-is-invalid"] .cm-editor {
+    border-color: color.token(--wy-error) !important;
+  }
+}

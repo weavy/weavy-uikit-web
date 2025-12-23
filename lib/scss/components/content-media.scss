@@ -1,0 +1,32 @@
+// Video and audio
+[part~="wy-content-video"] {
+  box-sizing: border-box;
+  
+  &:not([part~="wy-error"]) {
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+    flex: 1 1 auto;
+  }
+}
+
+[part~="wy-content-video"],
+[part~="wy-content-audio"] {
+  margin: auto;
+
+  &[part~="wy-loading"] {
+    &:not([part~="wy-loaded"]) {
+      visibility: hidden;
+    }
+
+    &[part~="wy-loaded"] {
+      ~ [part~="wy-content-progress"] {
+        display: none;
+      }
+    }
+  }
+
+  &:focus {
+    outline: none;
+  }
+}

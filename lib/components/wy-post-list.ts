@@ -19,40 +19,122 @@ import { MsgType } from "../types/msg.types";
 import { updateReaction } from "../data/reactions";
 import { Feature } from "../contexts/features-context";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import type { PollVoteEventType } from "../types/polls.events";
 import type { PostRestoreEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
 import type { EditorSubmitEventType } from "../types/editor.events";
+import { property } from "lit/decorators.js";
 
-import allStyles from "../scss/all.scss";
-import pagerStyles from "../scss/components/pager.scss";
+import postsCss from "../scss/components/post.scss";
+import headerCss from "../scss/components/header.scss";
+import pagerCss from "../scss/components/pager.scss";
+import hostContentsCss from "../scss/host-contents.scss";
 
 import "./wy-editor";
 import "./wy-empty";
 import "./wy-post";
-import "./base/wy-spinner";
-import { property } from "lit/decorators.js";
+import "./ui/wy-progress-circular";
 
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-post-list": WyPostList;
+  }
+}
+
+/**
+ * List container rendering a post editor and a paginated feed of posts.
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-editor>`](./wy-editor.ts)
+ * - [`<wy-post>`](./wy-post.ts)
+ * - [`<wy-empty>`](./wy-empty.ts)
+ * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
+ *
+ * @csspart wy-posts - Root posts container.
+ * @csspart wy-post - Wrapper for each post/editor block.
+ * @csspart wy-pager - Pager container.
+ * @csspart wy-pager-bottom - Pager modifier for bottom placement.
+ *
+ * @fires {WyActionEventType} wy-action - Emitted when an embed action button is triggered.
+ * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
+ * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
+ */
 @customElement("wy-post-list")
 @localized()
-export class WyPostList extends WeavySubComponent {
-  static override styles = [allStyles, pagerStyles];
+export class WyPostList extends WeavySubAppComponent {
+  static override styles = [postsCss, headerCss, pagerCss, hostContentsCss];
 
+  /** @internal */
+  protected exportParts = new ShadowPartsController(this);
+
+  /**
+   * Placeholder text shown in the post editor input.
+   */
   @property()
   placeholder?: string;
 
-  protected exportParts = new ShadowPartsController(this);
-
+  /**
+   * Infinite query controller providing paginated posts.
+   *
+   * @internal
+   */
   protected postsQuery = new InfiniteQueryController<PostsResultType>(this);
 
+  /**
+   * Intersection observer used for infinite scrolling.
+   *
+   * @internal
+   */
   private infiniteScroll = new InfiniteScrollController(this);
+
+  /**
+   * Pager sentinel reference for lazy loading.
+   *
+   * @internal
+   */
   private pagerRef: Ref<HTMLElement> = createRef();
+
+  /**
+   * Mutation used when creating new posts.
+   *
+   * @internal
+   */
   private addPostMutation = new MutationController<PostType, Error, MutatePostProps, void>(this);
+
+  /**
+   * Mutation used to toggle post subscription state.
+   *
+   * @internal
+   */
   private subscribePostMutation?: SubscribePostMutationType;
+
+  /**
+   * Mutation used to trash posts.
+   *
+   * @internal
+   */
   private removePostMutation?: RemovePostMutationType;
+
+  /**
+   * Mutation used to restore trashed posts.
+   *
+   * @internal
+   */
   private restorePostMutation?: RemovePostMutationType;
+
+  /**
+   * Mutation used for poll vote submissions on posts.
+   *
+   * @internal
+   */
   private pollMutation?: PollMutationType;
 
+  /**
+   * Handle editor submissions by dispatching the create-post mutation.
+   *
+   * @param e - Submitted editor data.
+   */
   private async handleSubmit(e: EditorSubmitEventType) {
     const app = await this.whenApp();
     const user = await this.whenUser();
@@ -69,6 +151,11 @@ export class WyPostList extends WeavySubComponent {
     });
   }
 
+  /**
+   * React to realtime post creation events.
+   *
+   * @internal
+   */
   handleRealtimePostCreated = async (realtimeEvent: RealtimePostEventType) => {
     const weavy = await this.whenWeavy();
     const app = await this.whenApp();
@@ -84,6 +171,11 @@ export class WyPostList extends WeavySubComponent {
     });
   };
 
+  /**
+   * React to realtime comment creation events.
+   *
+   * @internal
+   */
   handleRealtimeCommentCreated = async (realtimeEvent: RealtimeCommentEventType) => {
     const weavy = await this.whenWeavy();
     const app = await this.whenApp();
@@ -104,6 +196,11 @@ export class WyPostList extends WeavySubComponent {
     await weavy.queryClient.invalidateQueries({ queryKey: ["posts", realtimeEvent.comment.app.id, "comments"] });
   };
 
+  /**
+   * React to realtime reaction additions.
+   *
+   * @internal
+   */
   handleRealtimeReactionAdded = async (realtimeEvent: RealtimeReactionEventType) => {
     const weavy = await this.whenWeavy();
     const app = await this.whenApp();
@@ -119,6 +216,11 @@ export class WyPostList extends WeavySubComponent {
     // TODO: open sheet should also be updated in some way?
   };
 
+  /**
+   * React to realtime reaction deletions.
+   *
+   * @internal
+   */
   handleRealtimeReactionDeleted = async (realtimeEvent: RealtimeReactionEventType) => {
     const weavy = await this.whenWeavy();
     const app = await this.whenApp();
@@ -134,6 +236,11 @@ export class WyPostList extends WeavySubComponent {
     // TODO: open sheet should also be updated in some way?
   };
 
+  /**
+   * Active realtime unsubscribe callback.
+   *
+   * @internal
+   */
   #unsubscribeToRealtime?: () => void;
 
   override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
@@ -193,8 +300,8 @@ export class WyPostList extends WeavySubComponent {
     const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
     return html`
-      <div class="wy-posts">
-        <div class="wy-post">
+      <div part="wy-posts">
+        <div part="wy-posts-header">
           <wy-editor
             editorLocation="apps"
             ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
@@ -259,7 +366,7 @@ export class WyPostList extends WeavySubComponent {
                 : html`<wy-empty></wy-empty>`}
               ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
             `
-          : html`<wy-empty><wy-spinner padded reveal></wy-spinner></wy-empty> `}
+          : html`<wy-empty><wy-progress-circular indeterminate padded></wy-progress-circular></wy-empty> `}
       </div>
     `;
   }

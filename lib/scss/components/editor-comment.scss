@@ -1,0 +1,69 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/backdrop";
+@use "../base/position";
+
+[part~="wy-comment-editor"] {
+  position: relative;
+  //background-color: color.token(--wy-surface-container-low);
+  border-radius: var.default(--wy-padding-outer);
+}
+
+[part~="wy-comment-editor-bottom"] {
+  // we need the editor to appear below dropdowns
+  position: sticky;
+  bottom: 0;
+  z-index: #{const.$zindex-dropdown - 1};
+  background-color: var(--wy-component-background-color);
+  padding: var.default(--wy-padding) var.default(--wy-padding-sm);
+  border-radius: var(--wy-component-border-radius);
+  color: var(--wy-component-color);
+}
+
+[part~="wy-comment-editor-inputs"] {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var.default(--wy-gap-sm);
+}
+
+[part~="wy-comment-editor-text"] {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+[part~="wy-editor-parts"] {
+  padding-top: var.default(--wy-padding);
+  min-height: 0;
+}
+
+/** CODEMIRROR **/
+
+[part~="wy-comment-editor"] {
+  .cm-editor {
+    flex: 1 1 100%;
+    max-height: var.wy-rem(11.25);
+    background-color: color.token(--wy-surface-container-lowest);
+    color: color.token(--wy-on-surface);
+    border-radius: var.wy-rem(1.25);
+    border: var.default(--wy-input-border-width) solid transparent; //#{color.token(--wy-outline-variant)};
+    margin: calc(-1 * #{var.default(--wy-input-border-width)});
+
+    &:focus {
+      border-color: #{color.token(--wy-primary)};
+    }
+
+    .cm-content {
+      font-family: #{var.default(--wy-input-font-family)}, inherit;
+      font-size: var.default(--wy-input-font-size);
+      padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
+    }
+  }
+
+  [part~="wy-is-invalid"] + .cm-editor,
+  [part~="wy-is-invalid"] .cm-editor {
+    border-color: color.token(--wy-error) !important;
+  }
+}

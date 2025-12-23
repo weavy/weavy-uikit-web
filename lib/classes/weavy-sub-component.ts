@@ -1,52 +1,31 @@
 import { LitElement, PropertyValueMap } from "lit";
 import { state } from "lit/decorators.js";
 import { consume } from "@lit/context";
-import { type WeavyComponentSettingsType, WeavyComponentSettingsContext } from "../contexts/settings-context";
 import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
-
 import type { UserType } from "../types/users.types";
-import { type AppType, AppContext } from "../contexts/app-context";
-import { type LinkType, LinkContext } from "../contexts/link-context";
 import { UserContext } from "../contexts/user-context";
-import { type ComponentFeaturePolicy, FeaturePolicyContext } from "../contexts/features-context";
-import { WeavyComponentContextProps } from "./weavy-component";
-import { type ContextDataBlobsType, DataBlobsContext } from "../contexts/data-context";
 import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
+import { WeavyComponentContextProps } from "../types/component.types";
 
 export class WeavySubComponent extends LitElement implements WeavyComponentContextProps {
   // CONTEXT PROVIDERS
-  @consume({ context: AppContext, subscribe: true })
-  @state()
-  app: AppType | undefined;
-
-  // @consume({ context: AgentContext, subscribe: true })
-  // @state()
-  // agentUser: AgentType | undefined;
-
-  @consume({ context: DataBlobsContext, subscribe: true })
-  @state()
-  contextDataBlobs: ContextDataBlobsType | undefined;
-
+  /**
+   * @internal
+   */
   @consume({ context: ContextIdContext, subscribe: true })
   @state()
   contextId: ContextIdType | undefined;
 
-  @consume({ context: FeaturePolicyContext, subscribe: true })
-  @state()
-  componentFeatures: ComponentFeaturePolicy | undefined;
-
-  @consume({ context: LinkContext, subscribe: true })
-  @state()
-  link: LinkType | undefined;
-
-  @consume({ context: WeavyComponentSettingsContext, subscribe: true })
-  @state()
-  settings: WeavyComponentSettingsType | undefined;
-
+  /**
+   * @internal
+   */
   @consume({ context: UserContext, subscribe: true })
   @state()
   user: UserType | undefined;
 
+  /**
+   * @internal
+   */
   @consume({ context: WeavyContext, subscribe: true })
   @state()
   weavy: WeavyType | undefined;
@@ -54,81 +33,47 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
   // PROMISES
   // TODO: Switch to Promise.withResolvers() when allowed by typescript
 
-  #resolveApp?: (app: AppType) => void;
-  #whenApp = new Promise<AppType>((r) => {
-    this.#resolveApp = r;
-  });
-  async whenApp() {
-    return await this.#whenApp;
+  /**
+   * Resolves when a contextual id is available.
+   *
+   * @internal
+   * @returns {Promise<ContextIdType>}
+   */
+  async whenContextId() {
+    return await this.#whenContextId;
   }
-
-  // #resolveAgentUser?: (agentUser: AgentType) => void;
-  // #whenAgentUser = new Promise<AgentType>((r) => {
-  //   this.#resolveAgentUser = r;
-  // });
-  // async whenAgentUser() {
-  //   return await this.#whenAgentUser;
-  // }
-
-  #resolveContextDataBlobs?: (blobs: ContextDataBlobsType) => void;
-  #whenContextDataBlobs = new Promise<ContextDataBlobsType>((r) => {
-    this.#resolveContextDataBlobs = r;
-  });
-  async whenContextDataBlobs() {
-    return await this.#whenContextDataBlobs;
-  }
-
   #resolveContextId?: (contextId: ContextIdType) => void;
   #whenContextId = new Promise<ContextIdType>((r) => {
     this.#resolveContextId = r;
   });
-  async whenContextId() {
-    return await this.#whenContextId;
-  }
 
-  #resolveComponentFeatures?: (componentFeatures: ComponentFeaturePolicy) => void;
-  #whenComponentFeatures = new Promise<ComponentFeaturePolicy>((r) => {
-    this.#resolveComponentFeatures = r;
-  });
-  async whenComponentFeatures() {
-    return await this.#whenComponentFeatures;
+  /**
+   * Resolves when current user data is available.
+   *
+   * @internal
+   * @returns {Promise<UserType>}
+   */
+  async whenUser() {
+    return await this.#whenUser;
   }
-
-  #resolveLink?: (link: LinkType) => void;
-  #whenLink = new Promise<LinkType>((r) => {
-    this.#resolveLink = r;
-  });
-  async whenLink() {
-    return await this.#whenLink;
-  }
-
-  #resolveSettings?: (settings: WeavyComponentSettingsType) => void;
-  #whenSettings = new Promise<WeavyComponentSettingsType>((r) => {
-    this.#resolveSettings = r;
-  });
-  async whenSettings() {
-    return await this.#whenSettings;
-  }
-
   #resolveUser?: (user: UserType) => void;
   #whenUser = new Promise<UserType>((r) => {
     this.#resolveUser = r;
   });
-  async whenUser() {
-    return await this.#whenUser;
-  }
 
+  /**
+   * Resolves when a weavy context is available.
+   *
+   * @internal
+   * @returns {Promise<WeavyType>}
+   */
+  async whenWeavy() {
+    return await this.#whenWeavy;
+  }
   #resolveWeavy?: (weavy: WeavyType) => void;
   #whenWeavy = new Promise<WeavyType>((r) => {
     this.#resolveWeavy = r;
   });
-  async whenWeavy() {
-    return await this.#whenWeavy;
-  }
-
-  constructor() {
-    super();
-  }
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
@@ -143,26 +88,6 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
     //   this.#resolveAgentUser?.(this.agentUser);
     // }
 
-    if (changedProperties.has("app") && this.app) {
-      if (changedProperties.get("app")) {
-        // reset promise
-        this.#whenApp = new Promise<AppType>((r) => {
-          this.#resolveApp = r;
-        });
-      }
-      this.#resolveApp?.(this.app);
-    }
-
-    if (changedProperties.has("contextDataBlobs") && this.contextDataBlobs) {
-      if (changedProperties.get("contextDataBlobs")) {
-        // reset promise
-        this.#whenContextDataBlobs = new Promise<ContextDataBlobsType>((r) => {
-          this.#resolveContextDataBlobs = r;
-        });
-      }
-      this.#resolveContextDataBlobs?.(this.contextDataBlobs);
-    }
-
     if (changedProperties.has("contextId") && this.contextId) {
       if (changedProperties.get("contextId")) {
         // reset promise
@@ -171,36 +96,6 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
         });
       }
       this.#resolveContextId?.(this.contextId);
-    }
-
-    if (changedProperties.has("componentFeatures") && this.componentFeatures) {
-      if (changedProperties.get("componentFeatures")) {
-        // reset promise
-        this.#whenComponentFeatures = new Promise<ComponentFeaturePolicy>((r) => {
-          this.#resolveComponentFeatures = r;
-        });
-      }
-      this.#resolveComponentFeatures?.(this.componentFeatures);
-    }
-
-    if (changedProperties.has("link") && this.link) {
-      if (changedProperties.get("link")) {
-        // reset promise
-        this.#whenLink = new Promise<LinkType>((r) => {
-          this.#resolveLink = r;
-        });
-      }
-      this.#resolveLink?.(this.link);
-    }
-
-    if (changedProperties.has("settings") && this.settings) {
-      if (changedProperties.get("settings")) {
-        // reset promise
-        this.#whenSettings = new Promise<WeavyComponentSettingsType>((r) => {
-          this.#resolveSettings = r;
-        });
-      }
-      this.#resolveSettings?.(this.settings);
     }
 
     if (changedProperties.has("user") && this.user) {
@@ -227,32 +122,8 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
   override connectedCallback(): void {
     super.connectedCallback();
 
-    // if (this.agentUser) {
-    //   this.requestUpdate("agentUser");
-    // }
-
-    if (this.app) {
-      this.requestUpdate("app");
-    }
-
-    if (this.contextDataBlobs) {
-      this.requestUpdate("contextDataBlobs");
-    }
-
     if (this.contextId) {
       this.requestUpdate("contextId");
-    }
-
-    if (this.componentFeatures) {
-      this.requestUpdate("componentFeatures");
-    }
-
-    if (this.link) {
-      this.requestUpdate("link");
-    }
-
-    if (this.settings) {
-      this.requestUpdate("settings");
     }
 
     if (this.user) {

@@ -1,5 +1,5 @@
-@use "base/var";
-@use "base/color";
+@use "../base/var";
+@use "../base/color";
 
 [part~="wy-image"] {
   padding: 0;
@@ -8,6 +8,29 @@
   flex: auto;
   background-color: inherit;
   background-clip: content-box;
+  max-height: var.default(--wy-image-max-size);
+}
+
+[part~="wy-image-filled"] {
+  position: relative;
+  background-size: 100%, 100% 100%;
+  background-position: center;
+  background-clip: content-box;
+  clip-path: content-box;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    backdrop-filter: blur(32px);
+    background-color: color.token(--wy-shade);
+  }
 }
 
 [part~="wy-image-full-width"] {
@@ -20,32 +43,36 @@
   flex-wrap: wrap;
   justify-content: space-evenly;
   position: relative;
-  //border-radius: var.default(--wy-border-radius);
+  border-radius: var.default(--wy-border-radius-sm);
   overflow: hidden;
-  //background-color: $body-bg;
-  column-gap: 1px;
-  row-gap: 1px;
+  gap: var.default(--wy-gap-sm);
+}
+
+[part~="wy-image-grid-outer"] {
+  border-radius: 0;
 }
 
 [part~="wy-image-area"] {
-  display: block;
+  display: flex;
   height: 100%;
   cursor: pointer;
+  align-items: center;
 }
 
 [part~="wy-image-content"] {
   position: absolute;
-  height: 100%;
+  height: auto;
+  max-height: 100%;
   width: 100%;
-  // TODO: scale down only for small images like icons (with inline style?)
   object-fit: contain;
+  z-index: 2;
 
   // image loading classes
-  &[part~=wy-loading] {
+  &[part~="wy-loading"] {
     transition: opacity 0.15s ease-out;
     opacity: 0;
 
-    &[part~=wy-loaded] {
+    &[part~="wy-loaded"] {
       opacity: 1;
       transition: opacity 0.15s ease-out;
 
@@ -58,8 +85,14 @@
   }
 }
 
+[part~="wy-image-icon"] {
+  object-fit: scale-down;
+  object-position: center center;
+}
+
 [part~="wy-image-grid-more"] {
   position: absolute;
+  z-index: 3;
   line-height: 100%;
   color: color.default(--wy-white);
   top: 0;

@@ -1,17 +1,51 @@
 import { throwOnDomNotAvailable } from "./dom";
 
 /**
- * Gets the next positioned child relative to the element.
+ * Gets the next positioned child relative to the element. Elements with `display: contents;` will be checked for their children.
  *
- * @param {Element} el - Reference element in the scrollable area
+ * @param {HTMLElement} el - Reference element in the scrollable area
  * @returns HTMLElement
  */
-export function getNextPositionedChild(el: Element | null) {
-  while (el) {
+export function getNextPositionedChild(el: Element | null, includeSelf: boolean = false): HTMLElement | null {
+  if (el && !includeSelf) {
     el = el.nextElementSibling;
-    if (el instanceof HTMLElement && /absolute|sticky|fixed/.test(getComputedStyle(el).position) === false) {
+  }
+
+  while (el) {
+    if (!(el instanceof HTMLElement)) {
+      continue;
+    }
+
+    const computedStyle = getComputedStyle(el);
+    
+    if (computedStyle.display === "none") {
+      continue;
+    }
+
+    if (computedStyle.display === "contents") {
+      if (el.shadowRoot && el.shadowRoot.firstElementChild instanceof HTMLElement) {
+        const shadowEl = getNextPositionedChild(el.shadowRoot.firstElementChild, true);
+
+        if (shadowEl) {
+          return shadowEl;
+        }
+      }
+
+      if (el.firstElementChild instanceof HTMLElement) {
+        const childEl = getNextPositionedChild(el.firstElementChild, true);
+
+        if (childEl) {
+          return childEl;
+        }
+      }
+    }
+   
+    if (/absolute|sticky|fixed/.test(computedStyle.position) === false) {
       return el;
     }
+
+    // next    
+    el = el.nextElementSibling;
   }
   return null;
 }

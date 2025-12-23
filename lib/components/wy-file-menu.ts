@@ -20,34 +20,62 @@ import {
 } from "../types/files.events";
 import { NamedEvent } from "../types/generic.types";
 
-import "./base/wy-icon";
-import "./base/wy-dropdown";
+import "./ui/wy-icon";
+import "./ui/wy-dropdown";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-file-menu": WyFileMenu;
+  }
+}
 
 /**
- * @fires {FileEditNameEventType} edit-name
- * @fires {FileSubscribeEventType} subscribe
- * @fires {FileTrashEventType} trash
- * @fires {FileRestoreEventType} restore
- * @fires {FileDeleteForeverEventType} delete-forever
+ * Dropdown menu for file actions (download, open, rename, subscribe, trash etc).
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-dropdown>`](./ui/wy-dropdown.ts)
+ * - [`<wy-dropdown-item>`](./ui/wy-dropdown.ts)
+ * - [`<wy-dropdown-divider>`](./ui/wy-dropdown.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ *
+ * @slot - Additional file menu items
+ *
+ * @fires {FileEditNameEventType} edit-name - Emitted when rename mode should be activated.
+ * @fires {FileSubscribeEventType} subscribe - Emitted when subscribe/unsubscribe is requested.
+ * @fires {FileTrashEventType} trash - Emitted when a file should be moved to trash.
+ * @fires {FileRestoreEventType} restore - Emitted when a trashed file should be restored.
+ * @fires {FileDeleteForeverEventType} delete-forever - Emitted when a file should be permanently deleted.
  */
 @customElement("wy-file-menu")
 @localized()
-export default class WyFileMenu extends LitElement {
+export class WyFileMenu extends LitElement {
+  /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
+  /**
+   * @internal
+   * Consumed feature policy controlling which actions are available.
+   */
   @consume({ context: FeaturePolicyContext, subscribe: true })
   @state()
   protected componentFeatures?: ComponentFeaturePolicy | undefined;
 
+  /**
+   * File to operate on when rendering menu actions.
+   */
   @property({ type: Object })
   file!: FileType;
 
-  @property({ type: Boolean })
-  noWrapper: boolean = false;
-
+  /**
+   * Render the dropdown using compact button styling.
+   */
   @property({ type: Boolean })
   small: boolean = false;
 
+  /**
+   * Tracks which action events have listeners attached.
+   */
   @property({ type: Object })
   hasEventListener: { [key: string]: boolean } = {
     "edit-name": false,
@@ -57,8 +85,11 @@ export default class WyFileMenu extends LitElement {
     "delete-forever": false,
   };
 
-  
-  override addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+  override addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ): void {
     // Check if any event is listened to
 
     if (this.hasEventListener) {
@@ -73,18 +104,34 @@ export default class WyFileMenu extends LitElement {
     super.addEventListener(type, listener, options);
   }
 
+  /**
+   * Open download URL for the current file.
+   * @internal
+   */
   private triggerDownload() {
     this.file && openUrl(this.file.download_url, "_top", this.file.name, true);
   }
 
+  /**
+   * Open external provider URL for the current file.
+   * @internal
+   */
   private triggerExternal() {
     this.file && openUrl(this.file.external_url, "_blank", this.file.name);
   }
 
+  /**
+   * Open application-specific URL for the current file.
+   * @internal
+   */
   private triggerApplication() {
     this.file && openUrl(this.file.application_url, "_top", this.file.name);
   }
 
+  /**
+   * Emit an `edit-name` event for the current file.
+   * @internal
+   */
   private dispatchEditName() {
     const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", {
       detail: { file: this.file },
@@ -92,6 +139,12 @@ export default class WyFileMenu extends LitElement {
     return this.dispatchEvent(event);
   }
 
+  /**
+   * Emit a `subscribe` event toggling subscription state.
+   *
+   * @internal
+   * @param subscribe - Desired subscription setting.
+   */
   private dispatchSubscribe(subscribe: boolean) {
     const event: FileSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", {
       detail: {
@@ -102,6 +155,10 @@ export default class WyFileMenu extends LitElement {
     return this.dispatchEvent(event);
   }
 
+  /**
+   * Emit a `trash` event for the current file.
+   * @internal
+   */
   private dispatchTrash() {
     const event: FileTrashEventType = new (CustomEvent as NamedEvent)("trash", {
       detail: { file: this.file },
@@ -109,6 +166,10 @@ export default class WyFileMenu extends LitElement {
     return this.dispatchEvent(event);
   }
 
+  /**
+   * Emit a `restore` event for the current file.
+   * @internal
+   */
   private dispatchRestore() {
     const event: FileRestoreEventType = new (CustomEvent as NamedEvent)("restore", {
       detail: { file: this.file },
@@ -116,6 +177,10 @@ export default class WyFileMenu extends LitElement {
     return this.dispatchEvent(event);
   }
 
+  /**
+   * Emit a `delete-forever` event for the current file.
+   * @internal
+   */
   private dispatchDeleteForever() {
     const event: FileDeleteForeverEventType = new (CustomEvent as NamedEvent)("delete-forever", {
       detail: { file: this.file },
@@ -136,7 +201,7 @@ export default class WyFileMenu extends LitElement {
     const fileAppProvider = this.file.provider || "app";
 
     return html`
-      <wy-dropdown directionX="left" ?noWrapper=${this.noWrapper} ?small=${this.small}>
+      <wy-dropdown directionX="left" ?small=${this.small}>
         ${isNotTemp && this.file.is_trashed
           ? html`
               ${this.hasEventListener["restore"]

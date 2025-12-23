@@ -1,0 +1,66 @@
+@use "../base/breakpoints";
+@use "../base/color";
+@use "../base/highlight";
+@use "../base/var";
+@use "../base/text";
+
+table {
+  // hide on smaller screens
+  thead {
+    text-align: left;
+    display: none;
+    @include breakpoints.container-size-up(sm) {
+      display: table-header-group;
+    }
+  }
+}
+
+// filename
+[part~="wy-col-name"] {
+  width: 100%;
+  @include text.truncate;
+
+  // rename input
+  [part~="wy-input"] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+// created/modified
+[part~="wy-col-time"] {
+  width: var.wy-rem(8);
+
+  display: none;
+  @include breakpoints.container-size-up(md) {
+    display: table-cell;
+  }
+
+  @include text.truncate;
+}
+
+// kind
+[part~="wy-col-kind"] {
+  width: var.wy-rem(8);
+  //text-align: right;
+
+  display: none;
+  @include breakpoints.container-size-up(md) {
+    display: table-cell;
+  }
+
+  @include text.truncate;
+}
+
+// size
+[part~="wy-col-size"] {
+  width: var.wy-rem(6);
+  text-align: right;
+
+  display: none;
+  @include breakpoints.container-size-up(sm) {
+    display: table-cell;
+  }
+
+  @include text.truncate;
+}

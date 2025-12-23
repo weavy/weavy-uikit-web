@@ -12,18 +12,19 @@ import {
   AppsResultType,
   AppTypeGuid,
   AppTypeString,
-  ComponentType,
   type AppType,
+  UnknownAppType,
 } from "../types/app.types";
 import { getApi, getApiMutation, getApiOptions } from "./api";
+import { UnknownApp } from "../classes/weavy-app-component";
 
 export function getAppOptions<T extends AppType = AppType>(
   weavy: WeavyType,
   uid: string | number,
-  type: AppTypeString | ComponentType = ComponentType.Unknown,
+  type: AppTypeString | UnknownAppType = UnknownApp,
   appData?: AppUpProperties
 ) {
-  return type === ComponentType.Unknown || typeof uid === "number"
+  return type === UnknownApp || typeof uid === "number"
     ? getApiOptions<T>(weavy, ["apps", uid])
     : getApiOptions<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
@@ -31,10 +32,10 @@ export function getAppOptions<T extends AppType = AppType>(
 export function getApp<T extends AppType = AppType>(
   weavy: WeavyType,
   uid: string | number,
-  type: AppTypeString | ComponentType = ComponentType.Unknown,
+  type: AppTypeString | UnknownAppType = UnknownApp,
   appData?: AppUpProperties
 ) {
-  return type === ComponentType.Unknown || typeof uid === "number"
+  return type === UnknownApp || typeof uid === "number"
     ? getApi<T>(weavy, ["apps", uid])
     : getApi<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
 }
@@ -42,7 +43,7 @@ export function getApp<T extends AppType = AppType>(
 export function getOrCreateAppOptions<T extends AppType = AppType>(
   weavy: WeavyType,
   uid: string | number,
-  type: AppTypeGuid | ComponentType = ComponentType.Unknown,
+  type: AppTypeGuid | UnknownAppType = UnknownApp,
   members?: (number | string)[],
   appData?: AppUpProperties
 ) {
@@ -54,7 +55,7 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
 
       const appsRequests = [];
 
-      if (type === ComponentType.Unknown || typeof uid === "number") {
+      if (type === UnknownApp || typeof uid === "number") {
         appsRequests.push(
           // Get existing app
           weavy.fetch(`/api/apps/${uid}`)
@@ -84,7 +85,7 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
 export async function getOrCreateApp<T extends AppType = AppType>(
   weavy: WeavyType,
   uid: string | number,
-  type: AppTypeGuid | ComponentType = ComponentType.Unknown,
+  type: AppTypeGuid | UnknownAppType = UnknownApp,
   members?: (number | string)[],
   appData?: AppUpProperties
 ) {
@@ -185,15 +186,18 @@ export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
   return options;
 }
 
-export function getBadgeOptions(
+/**
+ * Gets number of unread conversations/apps.
+ */
+export function getAppsUnreadOptions(
   weavy: WeavyType,
   types: AppTypeGuid[] | null = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat],
-  member?: string,
-  options: object = {}
+  member?: string
 ) {
   const queryParams = new URLSearchParams({
     count_only: "true",
     unread: "true",
+    uid: "false",
   });
 
   if (member) {
@@ -202,8 +206,8 @@ export function getBadgeOptions(
 
   types?.forEach((type) => queryParams.append("type", type));
   const url = `/api/apps?${queryParams.toString()}`;
-  const queryKey = ["apps", "badge", types];
-  return getApiOptions<AppsResultType>(weavy, queryKey, url, options);
+  const queryKey = ["apps", "unread", types, member];
+  return getApiOptions<AppsResultType>(weavy, queryKey, url);
 }
 
 export function getAppListOptions(

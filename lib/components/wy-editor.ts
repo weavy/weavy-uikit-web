@@ -1,8 +1,7 @@
 import { html, nothing, type TemplateResult, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
-import { localized, msg } from "@lit/localize";
+import { localized, msg, str } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { MentionsCompletion } from "../types/codemirror.types";
 import { AccessType } from "../types/app.types";
@@ -10,7 +9,7 @@ import throttle from "lodash.throttle";
 import { typingMutation } from "../data/typing";
 import { type MeetingType } from "../types/meetings.types";
 import { addMeetingMutation } from "../data/meetings";
-import { MutationController } from "../controllers/mutation-controller";
+import { hasAbort, MutationController } from "../controllers/mutation-controller";
 import {
   BlobType,
   ExternalBlobType,
@@ -26,7 +25,7 @@ import { MutationStateController } from "../controllers/mutation-state-controlle
 import { repeat } from "lit/directives/repeat.js";
 import { Mutation, MutationState } from "@tanstack/query-core";
 import { removeMutation, removeMutations } from "../utils/mutation-cache";
-import WeavyCloudFiles from "./wy-cloud-files";
+import { WyCloudFiles } from "./wy-cloud-files";
 import { ExternalBlobMutationType, getExternalBlobMutation } from "../data/blob-external";
 import { PollOptionType } from "../types/polls.types";
 import { clearEmbeds, getEmbeds, initEmbeds, isFetchingEmbeds } from "../utils/embeds";
@@ -38,7 +37,7 @@ import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
 import type { Compartment, EditorState, Extension, Facet } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { desktop } from "../utils/browser";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { Feature } from "../types/features.types";
 import type { MetadataType } from "../types/lists.types";
@@ -48,74 +47,175 @@ import type { EditorSubmitEventType } from "../types/editor.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { EmbedRemoveEventType } from "../types/embeds.events";
 import { getStorage } from "../utils/data";
-import { AgentAppTypeGuids } from "../classes/weavy-component";
+import { AgentAppTypeGuids } from "../classes/weavy-type-component";
+import { partMap } from "../utils/directives/shadow-part-map";
 
-import chatCss from "../scss/all.scss";
+import rebootCss from "../scss/reboot.scss";
+import editorCss from "../scss/components/editor-base-cm.scss";
+import postEditorCss from "../scss/components/editor-post.scss";
+import pollCss from "../scss/components/poll.scss";
+import dropzoneCss from "../scss/components/dropzone.scss";
+import inputCss from "../scss/components/input.scss";
 
-import WeavyAvatar from "./base/wy-avatar";
+import "./ui/wy-avatar";
+import "./ui/wy-dropdown";
+import "./ui/wy-item";
 import "./wy-embed";
-import "./base/wy-dropdown";
 import "./wy-file-item";
-import "./base/wy-progress-linear";
+import "./wy-cloud-files";
+import "./ui/wy-button";
+import "./ui/wy-icon";
 
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-editor": WyEditor;
+  }
+}
+
+/**
+ * Rich text editor used for posts, messages and comments.
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-avatar>`](./ui/wy-avatar.ts)
+ * - [`<wy-dropdown>`](./ui/wy-dropdown.ts)
+ * - [`<wy-item>`](./ui/wy-item.ts)
+ * - [`<wy-button>`](./ui/wy-button.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ * - [`<wy-file-item>`](./wy-file-item.ts)
+ * - [`<wy-embed>`](./wy-embed.ts)
+ * - [`<wy-cloud-files>`](./wy-cloud-files.ts)
+ * - [`<wy-embed-select>`](./wy-embed.ts)
+ *
+ * @csspart wy-editor - Root editor container
+ * @csspart wy-dragging - Applied when dragging files over the editor
+ * @csspart wy-post-editor-text - Wrapper for the editor text area
+ * @csspart wy-is-invalid - Applied when editor is in error state
+ * @csspart wy-post-editor-inputs - Container for inputs/buttons
+ * @csspart wy-post-editor-buttons - Container for action buttons
+ * @csspart wy-poll-form - Poll options container
+ * @csspart wy-input - Inputs inside poll options
+ *
+ * @fires {EditorSubmitEventType} submit - Emitted when the editor content is submitted (detail: { text, meetingId, blobs, attachments, pollOptions, embedId, contextData })
+ */
 @customElement("wy-editor")
 @localized()
-export default class WyEditor extends WeavySubComponent {
-  static override styles = chatCss;
+export class WyEditor extends WeavySubAppComponent {
+  static override styles = [rebootCss, editorCss, postEditorCss, pollCss, dropzoneCss, inputCss];
 
+  /**
+   * Controller for exporting named shadow parts.
+   *
+   * @internal
+   */
   protected exportParts = new ShadowPartsController(this);
+  
+  /** @internal */
   protected storage = getStorage("localStorage");
 
+  /**
+   * Whether the editor is disabled.
+   */
   @property({ type: Boolean })
   disabled: boolean = false;
 
+  /**
+   * Parent id for context (message/comment/post).
+   */
   @property({ attribute: false })
   parentId?: number;
 
+  /**
+   * Placeholder text for the editor input.
+   */
   private _placeholder: string = "";
-
   @property()
+  set placeholder(placeholder) {
+    this._placeholder = placeholder;
+  }
   get placeholder() {
     return this._placeholder;
   }
 
-  set placeholder(placeholder) {
-    this._placeholder = placeholder;
-  }
-
+  /**
+   * Initial editor text content (draft or loaded content).
+   */
   @property()
   text?: string = "";
 
+  /**
+   * Metadata associated with the editor content (e.g. agent instructions).
+   *
+   * @internal
+   */
   @property({ type: Object })
   metadata?: MetadataType = {};
 
+  /**
+   * Optional single embed to prefill the editor.
+   *
+   * @internal
+   */
   @property({ attribute: false })
   embed?: EmbedType;
 
+  /**
+   * Poll option templates passed to the editor.
+   *
+   * @internal
+   */
   @property({ attribute: false })
   options?: PollOptionType[] = [];
 
+  /**
+   * Attached file references (ids/resolved) shown in the editor.
+   *
+   * @internal
+   */
   @property({ attribute: false })
   attachments: FileType[] = [];
 
+  /**
+   * Text for the submit button.
+   */
   @property()
   buttonText: string = "";
 
+  /**
+   * Whether typing indicators should be emitted.
+   */
   @property({ type: Boolean })
   typing: boolean = true;
 
+  /**
+   * Whether this instance should persist drafts.
+   */
   @property({ type: Boolean })
   draft: boolean = false;
 
+  /**
+   * Editor usage context, used to adjust behavior and styling.
+   */
   @property()
   editorType: "messages" | "posts" | "comments" = "posts";
 
+  /**
+   * CSS class applied to the editor container.
+   */
   @property()
   editorClass: string = "wy-post-editor";
 
+  /**
+   * Location context to use for file uploads and embeds.
+   */
   @property()
   editorLocation: "messages" | "posts" | "apps" | "files" = "apps";
 
+  /**
+   * Select all content in the editor.
+   *
+   * @internal
+   */
   selectAllContent() {
     this.editor?.dispatch({
       selection: {
@@ -125,6 +225,11 @@ export default class WyEditor extends WeavySubComponent {
     });
   }
 
+  /**
+   * Place cursor at the end of the editor content.
+   *
+   * @internal
+   */
   setCursorLast() {
     this.editor?.dispatch({
       selection: {
@@ -134,24 +239,63 @@ export default class WyEditor extends WeavySubComponent {
     });
   }
 
+  /**
+   * Focus the editor input.
+   *
+   * @internal
+   */
   focusInput() {
     this.editor?.focus();
   }
 
+  /**
+   * Meeting object attached to the editor (if any).
+   *
+   * @internal
+   */
   @state()
   protected meeting?: MeetingType;
 
+  /**
+   * Whether the editor is in an error state.
+   *
+   * @internal
+   */
   @state()
   protected editorError: boolean = false;
 
+  /**
+   * Whether poll UI is expanded.
+   *
+   * @internal
+   */
   @state()
   protected showPolls: boolean = false;
 
+  /**
+   * Poll option values in the editor.
+   *
+   * @internal
+   */
   @state()
   protected pollOptions: PollOptionType[] = [];
 
+  /**
+   * Internal embeds array derived from `embed` or discovered content.
+   *
+   * @internal
+   */
+  protected _embeds: EmbedType[] = [];
+
   @state()
-  protected embeds: EmbedType[] = [];
+  set embeds(embeds: EmbedType[]) {
+    // Filter out "empty" embeds
+    const filteredEmbeds = embeds.filter((embed) => embed.type !== "link" || embed.title || embed.description);
+    this._embeds = [...filteredEmbeds];
+  }
+  get embeds() {
+    return this._embeds;
+  }
 
   @state()
   protected draftKey: string = "";
@@ -159,31 +303,79 @@ export default class WyEditor extends WeavySubComponent {
   @state()
   protected mutationAppId?: number;
 
+  /**
+   * Mutation controller for uploading blobs.
+   *
+   * @internal
+   */
   protected uploadBlobMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(
     this
   );
+  /**
+   * Tracks state of file mutation uploads.
+   *
+   * @internal
+   */
   protected mutatingFiles = new MutationStateController<
     BlobType | FileType,
     Error,
     MutateFileProps,
     FileMutationContextType
   >(this);
+  /**
+   * External blob mutation handler (e.g. importing external files).
+   *
+   * @internal
+   */
   protected externalBlobMutation?: ExternalBlobMutationType;
 
+  /**
+   * File input element reference.
+   *
+   * @internal
+   */
   protected fileInputRef: Ref<HTMLInputElement> = createRef();
-  protected cloudFilesRef: Ref<WeavyCloudFiles> = createRef();
+  /**
+   * Cloud files picker reference.
+   *
+   * @internal
+   */
+  protected cloudFilesRef: Ref<WyCloudFiles> = createRef();
+  /**
+   * Drop zone controller for drag & drop file handling.
+   *
+   * @internal
+   */
   protected dropZone: DropZoneController = new DropZoneController(this);
 
+  /**
+   * Active key bindings for the editor instance.
+   *
+   * @internal
+   */
   @state()
   protected keyMap: KeyBinding[] = [];
 
+  /**
+   * Programmatic editor view instance and extensions.
+   *
+   * @internal
+   */
   @state()
   protected editorExtensions?: Extension[];
 
-  // For modifying readonly state
+  /**
+   * Compartment to toggle editable/readonly.
+   *
+   * @internal
+   */
   protected editorEditable?: Compartment;
 
-  // For modifying keymap
+  /**
+   * Compartment and facets used to manage the editor keymap.
+   *
+   * @internal
+   */
   protected editorKeymap?: Compartment;
   protected keymapFacet?: Facet<readonly KeyBinding[], readonly (readonly KeyBinding[])[]>;
   protected keymaps?: {
@@ -194,18 +386,42 @@ export default class WyEditor extends WeavySubComponent {
     historyKeymap: KeyBinding[];
   };
 
-  // For modifying placeholder
+  /**
+   * Placeholder compartment for dynamic placeholder extension.
+   *
+   * @internal
+   */
   protected editorPlaceholder?: Compartment;
   protected placeholderExtension?: (content: string | HTMLElement | ((view: EditorView) => HTMLElement)) => Extension;
 
+  /**
+   * EditorView constructor reference (lazy loaded).
+   *
+   * @internal
+   */
   protected EditorView?: typeof EditorView;
 
+  /**
+   * The active EditorView instance.
+   *
+   * @internal
+   */
   @state()
   protected editor?: EditorView;
 
+  /**
+   * Reference to the editor DOM node wrapper.
+   *
+   * @internal
+   */
   protected editorRef: Ref<HTMLElement> = createRef();
   protected editorInitialized: boolean = false;
 
+  /**
+   * Throttled typing indicator sender to reduce network traffic.
+   *
+   * @internal
+   */
   private throttledTyping = throttle(
     async () => {
       if (this.weavy && this.app && !AgentAppTypeGuids.has(this.app.type)) {
@@ -220,6 +436,11 @@ export default class WyEditor extends WeavySubComponent {
 
   protected authWindow?: WindowProxy | null;
 
+  /**
+   * Throttled drafting saver to minimize writes.
+   *
+   * @internal
+   */
   private throttledDrafting = throttle(
     () => {
       this.saveDraft();
@@ -239,17 +460,23 @@ export default class WyEditor extends WeavySubComponent {
   override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
+    if (changedProperties.has("app")) {
+      // clear mutationAppId when app changes - will be assigned later
+      this.mutationAppId = undefined;
+    }
+
     if (
       (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
         changedProperties.has("user") ||
         changedProperties.has("parentId")) &&
       this.weavy &&
+      this.app &&
       this.user
     ) {
       this.mutationAppId = this.mutationAppId ?? this.app?.id ?? Date.now() * -1;
-
       this.draftKey = `draft-${this.editorType}-${this.parentId || this.mutationAppId}`;
+
       void this.uploadBlobMutation.trackMutation(
         getUploadBlobMutationOptions(
           this.weavy,
@@ -293,7 +520,7 @@ export default class WyEditor extends WeavySubComponent {
             this.pollOptions = draft.pollOptions;
           }
 
-          initEmbeds(this.embeds.map((embed) => embed.original_url));
+          initEmbeds(this.embeds.map((embed) => embed.url).filter((url): url is string => typeof url === "string"));
         } else {
           // clear editor
           this.clearEditor();
@@ -303,7 +530,7 @@ export default class WyEditor extends WeavySubComponent {
       // set other editor content properties
       if (this.embed) {
         this.embeds = [this.embed];
-        initEmbeds(this.embeds.map((embed) => embed.original_url));
+        initEmbeds(this.embeds.map((embed) => embed.url).filter((url): url is string => typeof url === "string"));
       }
 
       if (this.options && this.options.length > 0) {
@@ -350,12 +577,11 @@ export default class WyEditor extends WeavySubComponent {
             weavyModifierEnterSendKeymap,
             Compartment,
           }) => {
-            this.editorInitialized = true;
-
-            // Clear the fallback dummy
-            if (this.editorRef.value && !this.editor) {
-              this.editorRef.value.innerHTML = "";
+            if (this.editorInitialized) {
+              return;
             }
+
+            this.editorInitialized = true;
 
             this.editorEditable = new Compartment();
             this.editorPlaceholder = new Compartment();
@@ -391,26 +617,26 @@ export default class WyEditor extends WeavySubComponent {
                 addToOptions: [
                   {
                     render: function (completion: MentionsCompletion, _state: EditorState) {
-                      const div = document.createElement("div");
-                      div.classList.add("wy-item");
-                      div.classList.add("wy-list-item");
-                      div.classList.add("wy-item-hover");
+                      const item = document.createElement("wy-item");
+
+                      item.interactive = false;
 
                       if (!completion.item?.access || completion.item.access === AccessType.None) {
-                        div.classList.add("wy-disabled");
+                        item.disabled = true;
                       }
 
-                      const avatar = document.createElement("wy-avatar") as WeavyAvatar;
+                      const avatar = document.createElement("wy-avatar");
+                      avatar.slot = "image";
                       avatar.src = completion.item?.avatar_url || "";
                       avatar.name = completion.item?.name || "";
 
-                      const name = document.createElement("div");
-                      name.classList.add("wy-item-body");
+                      const name = document.createElement("span");
+                      name.slot = "title";
                       name.innerText = completion.item?.name || "";
 
-                      div.appendChild(avatar);
-                      div.appendChild(name);
-                      return div;
+                      item.appendChild(avatar);
+                      item.appendChild(name);
+                      return item;
                     },
                     position: 10,
                   },
@@ -490,9 +716,7 @@ export default class WyEditor extends WeavySubComponent {
               });
 
               // listen for custom event (ctrl+enter)
-              this.editorRef.value
-                ?.querySelector(".cm-editor")
-                ?.addEventListener("Weavy-SoftSubmit", this.submit.bind(this));
+              this.editorRef.value?.addEventListener("wy-submit", this.submit.bind(this));
             }
           }
         );
@@ -528,6 +752,11 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Update the visible placeholder text within the fallback DOM copy.
+   *
+   * @internal
+   */
   setPlaceHolderText() {
     const cmPlaceholder = this.renderRoot.querySelector<HTMLElement>(".cm-placeholder");
 
@@ -537,6 +766,11 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Update contentEditable attribute on the fallback editor.
+   *
+   * @internal
+   */
   setEditable() {
     const cmContent = this.renderRoot.querySelector<HTMLElement>(".cm-content");
 
@@ -545,6 +779,11 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Update enter key hint on the content element.
+   *
+   * @internal
+   */
   setEnterKeyHint() {
     const cmContent = this.renderRoot.querySelector<HTMLElement>(".cm-content");
 
@@ -553,18 +792,18 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Compute and return keymaps for the current settings/editor type.
+   *
+   * @internal
+   */
   getKeymaps() {
-    if(!this.keymaps) {
-      return []
+    if (!this.keymaps) {
+      return [];
     }
 
-    const {
-      weavyEnterSendKeymap,
-      weavyModifierEnterSendKeymap,
-      weavyKeymap,
-      defaultKeymap,
-      historyKeymap,
-    } = this.keymaps;
+    const { weavyEnterSendKeymap, weavyModifierEnterSendKeymap, weavyKeymap, defaultKeymap, historyKeymap } =
+      this.keymaps;
 
     /**
      * Enter-to-send keymap:
@@ -574,10 +813,12 @@ export default class WyEditor extends WeavySubComponent {
      * - always - Mod+Enter and Enter for all.
      */
 
-    let enterKeyMap = this.settings?.enterToSend === "never"? [] : [...weavyModifierEnterSendKeymap];
+    let enterKeyMap = this.settings?.enterToSend === "never" ? [] : [...weavyModifierEnterSendKeymap];
 
     if (
-      ((!this.settings?.enterToSend || this.settings?.enterToSend === "auto") && this.editorType === "messages" && desktop) ||
+      ((!this.settings?.enterToSend || this.settings?.enterToSend === "auto") &&
+        this.editorType === "messages" &&
+        desktop) ||
       this.settings?.enterToSend === "always"
     ) {
       enterKeyMap = [...weavyEnterSendKeymap, ...enterKeyMap];
@@ -603,6 +844,15 @@ export default class WyEditor extends WeavySubComponent {
     this.meeting = undefined;
   }
 
+  /**
+   * Autocomplete handler for mentions. Returns completion results or null.
+   *
+   * Called by the editor to resolve mention suggestions.
+   *
+   * @internal
+   * @param context - Completion context from the editor
+   * @returns Promise<CompletionResult | null>
+   */
   protected async autocomplete(context: CompletionContext): Promise<CompletionResult | null> {
     if (!this.weavy || !this.app) {
       return null;
@@ -610,8 +860,7 @@ export default class WyEditor extends WeavySubComponent {
 
     // match @mention except when preceded by ](
     // regex lookbehind is unfortunately not supported in safari
-    // let before = context.matchBefore(/(?<!\]\()@[^@]+/);
-    let before = context.matchBefore(/(?!\]\(@)(^[^@]{0,1}|[^@]{2})@([^@]+)/);
+    let before = context.matchBefore(/(?:^|\s)(?!\]\()@(?=\S)([^@]+)/);
 
     // If completion wasn't explicitly started and there
     // is no word before the cursor, don't open completions.
@@ -658,14 +907,30 @@ export default class WyEditor extends WeavySubComponent {
     };
   }
 
+  /**
+   * Open native file picker.
+   *
+   * @internal
+   */
   protected openFileInput = () => {
     this.fileInputRef.value?.click();
   };
 
+  /**
+   * Open cloud files picker overlay.
+   *
+   * @internal
+   */
   protected openCloudFiles = () => {
     this.cloudFilesRef.value?.open();
   };
 
+  /**
+   * Handle files dropped on the editor.
+   *
+   * @internal
+   * @param e - Drop files event
+   */
   protected handleDropFiles(e: DropFilesEventType) {
     const eventDetail = e.detail;
     if (eventDetail.files) {
@@ -673,6 +938,15 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Upload array of File objects via the upload blob mutation controller.
+   *
+   * Preserves input value if provided and saves draft after each upload.
+   *
+   * @internal
+   * @param files - FileList or array of File objects to upload
+   * @param input - Optional input element to reset after upload
+   */
   protected async handleUploadFiles(files: File[] | FileList | null, input?: HTMLInputElement) {
     if (files) {
       for (let i = 0; i < files.length; i++) {
@@ -687,6 +961,12 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Handle external blob imports (cloud/external sources).
+   *
+   * @internal
+   * @param externalBlobs - Array of external blob descriptors
+   */
   protected handleExternalBlobs(externalBlobs: ExternalBlobType[] | null) {
     if (externalBlobs) {
       for (let i = 0; i < externalBlobs.length; i++) {
@@ -696,9 +976,20 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Handle removal/abortion of an upload mutation and clean cache state.
+   *
+   * @internal
+   * @param mutation - Mutation state object to remove
+   */
   protected handleRemoveUpload(mutation: MutationState<BlobType, Error, MutateFileProps, FileMutationContextType>) {
     if (!this.weavy || !this.mutationAppId) {
       return;
+    }
+
+    if (mutation.status === "pending" && hasAbort(mutation.variables)) {
+      // Abort any ongoing upload
+      mutation.variables.abort?.();
     }
 
     removeMutation(
@@ -709,6 +1000,13 @@ export default class WyEditor extends WeavySubComponent {
     );
   }
 
+  /**
+   * Persist draft to storage if draft mode is enabled.
+   *
+   * Saves editor text, embeds, poll options and ongoing file uploads to localStorage.
+   *
+   * @internal
+   */
   protected saveDraft() {
     if (!this.draft || !this.storage) return;
 
@@ -739,10 +1037,23 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Handle removal of an attachment reference from the editor state.
+   *
+   * @internal
+   * @param attachment - Attachment to remove
+   */
   protected handleRemoveAttachment(attachment: FileType) {
     this.attachments = this.attachments.filter((a) => a.id !== attachment.id);
   }
 
+  /**
+   * Submit the editor content by dispatching a `submit` event.
+   *
+   * Validates that there is content to submit and that no uploads/embeds are still processing.
+   *
+   * @internal
+   */
   protected submit() {
     const fileMutationResults = this.mutatingFiles.result;
 
@@ -781,6 +1092,13 @@ export default class WyEditor extends WeavySubComponent {
     this.resetEditor();
   }
 
+  /**
+   * Reset the editor state after a successful submit.
+   *
+   * Clears editor content, removes pending uploads from the query cache and deletes the stored draft.
+   *
+   * @internal
+   */
   protected resetEditor() {
     this.clearEditor();
 
@@ -796,6 +1114,11 @@ export default class WyEditor extends WeavySubComponent {
     this.storage?.removeItem(this.draftKey);
   }
 
+  /**
+   * Clear the editor UI and internal state (text, embeds, attachments, metadata).
+   *
+   * @internal
+   */
   protected clearEditor() {
     this.editor?.dispatch({ changes: { from: 0, to: this.editor.state.doc.length, insert: "" } });
     this.text = "";
@@ -807,6 +1130,14 @@ export default class WyEditor extends WeavySubComponent {
     clearEmbeds();
   }
 
+  /**
+   * Message event handler for meeting OAuth responses.
+   *
+   * Listens for postMessage responses from the meeting auth window and completes meeting creation.
+   *
+   * @internal
+   * @param e - MessageEvent containing meeting authorization payload (e.data.name).
+   */
   private createMeeting = async (e: MessageEvent<{ name: string }>) => {
     if (!this.weavy) {
       return;
@@ -829,6 +1160,14 @@ export default class WyEditor extends WeavySubComponent {
     }
   };
 
+  /**
+   * Create or initiate a meeting for the current user.
+   *
+   * If the meeting requires third-party auth, opens an auth popup; otherwise stores the created meeting.
+   *
+   * @internal
+   * @param name - Provider key for the meeting (e.g. "zoom", "google", "microsoft")
+   */
   protected async handleMeetingClick(name: string) {
     if (!this.weavy || !this.user) {
       return;
@@ -844,11 +1183,23 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Add a discovered embed to the editor and persist draft.
+   *
+   * @internal
+   * @param embed - Embed object to add.
+   */
   protected setEmbeds(embed: EmbedType) {
     this.embeds = [embed, ...this.embeds];
     this.saveDraft();
   }
 
+  /**
+   * Scan content for embeds and add them via setEmbeds callback.
+   *
+   * @internal
+   * @param content - Text content to scan for embed links.
+   */
   protected handleEmbeds(content: string) {
     if (!this.weavy) {
       return;
@@ -857,11 +1208,22 @@ export default class WyEditor extends WeavySubComponent {
     getEmbeds(content, this.setEmbeds.bind(this), this.weavy);
   }
 
+  /**
+   * Remove an embed by id from the editor embeds list and persist draft.
+   *
+   * @internal
+   * @param e - Embed remove event containing embed id.
+   */
   protected removeEmbed(e: EmbedRemoveEventType) {
     this.embeds = this.embeds.filter((embed: EmbedType) => embed.id !== e.detail.id);
     this.saveDraft();
   }
 
+  /**
+   * Cycle the primary embed (move first to the end) and persist draft.
+   *
+   * @internal
+   */
   protected swapEmbed() {
     const first = this.embeds.shift();
     if (first) {
@@ -870,11 +1232,15 @@ export default class WyEditor extends WeavySubComponent {
     this.saveDraft();
   }
 
+  /**
+   * Toggle the poll UI in the editor and initialize default options when opened.
+   *
+   * @internal
+   */
   protected openPolls() {
     if (!this.showPolls) {
       if (this.pollOptions.length === 0) {
-        const option = { id: null, text: "" };
-        this.pollOptions = [...this.pollOptions, option];
+        this.pollOptions = Array.from({ length: 3 }, () => ({ id: null, text: "" }));
       }
       this.showPolls = true;
     } else {
@@ -882,6 +1248,13 @@ export default class WyEditor extends WeavySubComponent {
     }
   }
 
+  /**
+   * Handle change to a poll option input and persist draft.
+   *
+   * @internal
+   * @param e - Input event
+   * @param index - Index of the poll option changed
+   */
   protected handlePollOptionChange(e: Event, index: number) {
     const newValues = [...this.pollOptions];
     newValues[index].text = (e.target as HTMLInputElement).value;
@@ -890,6 +1263,13 @@ export default class WyEditor extends WeavySubComponent {
     this.saveDraft();
   }
 
+  /**
+   * Add a new poll option when focus reaches the last option (limit 5).
+   *
+   * @internal
+   * @param e - Focus/keyboard event
+   * @param index - Index of the poll option that triggered the add
+   */
   protected handlePollOptionAdd(e: Event, index: number) {
     // NOTE: only allow 5 options for now
     if (index === this.pollOptions.length - 1 && this.pollOptions.length < 5) {
@@ -929,12 +1309,12 @@ export default class WyEditor extends WeavySubComponent {
   protected renderMiddleSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return html`
       <!-- Input -->
-      <div class=${classMap({ "wy-post-editor-text": true, "wy-is-invalid": this.editorError })} ${ref(this.editorRef)}>
+      <div part=${partMap({ "wy-post-editor-text": true, "wy-is-invalid": this.editorError })} ${ref(this.editorRef)}>
         ${this.renderEditorDummy()}
       </div>
 
-      <div class="wy-post-editor-inputs">
-        <div class="wy-post-editor-buttons">
+      <div part="wy-post-editor-inputs">
+        <div part="wy-post-editor-buttons">
           ${this.componentFeatures?.allowsFeature(Feature.Attachments)
             ? html`<wy-button
                   kind="icon"
@@ -1025,30 +1405,55 @@ export default class WyEditor extends WeavySubComponent {
     `;
   }
 
+  /**
+   * Render the bottom slot which aggregates lists (polls, meetings, file uploads, attachments, embeds).
+   *
+   * @internal
+   */
   protected renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return [this.renderLists()];
   }
 
+  /**
+   * Render the lists section (poll options, meetings, file uploads, attachments, embeds).
+   *
+   * @internal
+   */
   protected renderLists(): TemplateResult | typeof nothing {
     const fileMutationResults = this.mutatingFiles.result;
 
-    if (this.disabled) {
+    const hasPolls =
+      (this.componentFeatures?.allowsFeature(Feature.Polls) && this.showPolls && this.pollOptions.length > 0) || false;
+    const hasMeetings =
+      (this.meeting?.provider === "zoom" &&
+        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.ZoomMeetings)) ||
+      (this.meeting?.provider === "google" &&
+        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.GoogleMeet)) ||
+      (this.meeting?.provider === "microsoft" &&
+        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.MicrosoftTeams)) ||
+      false;
+    const hasFileMutations = (fileMutationResults && fileMutationResults.length > 0) || false;
+    const hasAttachments = this.attachments && this.attachments.length > 0;
+    const hasEmbeds = (this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embeds.length > 0) || false;
+
+    if (this.disabled || !(hasPolls || hasMeetings || hasFileMutations || hasAttachments || hasEmbeds)) {
       return nothing;
     }
 
-    return html`
+    return html` <div part="wy-editor-parts">
       <!-- polls -->
-      ${this.componentFeatures?.allowsFeature(Feature.Polls) && this.showPolls && this.pollOptions.length > 0
+      ${hasPolls
         ? html`
-            <div class="wy-poll-form">
+            <div part="wy-poll-form">
               ${this.pollOptions.map((p: PollOptionType, index: number) => {
+                const optionNumber = index + 1;
                 return html`<input
-                  value=${p.text}
+                  value="${p.text}"
+                  part="wy-input"
+                  type="text"
+                  placeholder=${msg(str`Option ${optionNumber}`)}
                   @change=${(e: Event) => this.handlePollOptionChange(e, index)}
                   @keyup=${inputConsume}
-                  class="wy-input"
-                  type="text"
-                  placeholder=${msg("+ add an option")}
                   @focus=${(e: Event) => this.handlePollOptionAdd(e, index)}
                 />`;
               })}
@@ -1057,97 +1462,107 @@ export default class WyEditor extends WeavySubComponent {
         : nothing}
 
       <!-- meetings -->
-      ${(this.meeting?.provider === "zoom" &&
-        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.ZoomMeetings)) ||
-      (this.meeting?.provider === "google" &&
-        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.GoogleMeet)) ||
-      (this.meeting?.provider === "microsoft" &&
-        this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.MicrosoftTeams))
+      ${hasMeetings && this.meeting
         ? html`
-            <div class="wy-item wy-list-item">
-              <wy-icon svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
-              <div class="wy-item-body">${getMeetingTitle(this.meeting.provider)}</div>
-              <wy-button kind="icon" @click=${() => this.handleRemoveMeeting()}>
-                <wy-icon name="close-circle"></wy-icon>
+            <wy-item size="sm">
+              <wy-icon slot="image" svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
+              <span slot="title">${getMeetingTitle(this.meeting.provider)}</span>
+              <wy-button slot="actions" kind="icon" @click=${() => this.handleRemoveMeeting()}>
+                <wy-icon name="close"></wy-icon>
               </wy-button>
-            </div>
+            </wy-item>
           `
         : nothing}
 
       <!-- blobs -->
-      ${fileMutationResults && fileMutationResults.length
-        ? repeat(
-            fileMutationResults,
-            (mutation) => "mutation" + mutation.submittedAt,
-            (mutation) => {
-              if (mutation.context?.file) {
-                const file = mutation.context.file;
-                const fileStatus: FileStatusType = {
-                  ...mutation.context.status,
-                };
-                return html`
-                  <wy-file-item
-                    .file=${mutation.context.file}
-                    .status=${fileStatus}
-                    title="${toUpperCaseFirst(mutation.context.type)}: ${file.name +
-                    (fileStatus.text ? `: ${fileStatus.text}` : "")}"
-                  >
-                    <span slot="title"
-                      ><strong></strong> ${file.name}
-                      ${fileStatus.text ? html`: <em>${fileStatus.text}</em>` : nothing}</span
+      ${hasFileMutations && fileMutationResults
+        ? html`<div>
+            ${repeat(
+              fileMutationResults,
+              (mutation) => "mutation" + mutation.submittedAt,
+              (mutation) => {
+                if (mutation.context?.file) {
+                  const file = mutation.context.file;
+                  const fileStatus: FileStatusType = {
+                    ...mutation.context.status,
+                  };
+                  return html`
+                    <wy-file-item
+                      .file=${mutation.context.file}
+                      .status=${fileStatus}
+                      title="${toUpperCaseFirst(mutation.context.type)}: ${file.name +
+                      (fileStatus.text ? `: ${fileStatus.text}` : "")}"
                     >
-                    <wy-button
-                      slot="actions"
-                      kind="icon"
-                      @click=${() => this.handleRemoveUpload(mutation)}
-                      title=${msg("Discard", { desc: "Button action to discard" })}
-                    >
-                      <wy-icon name="close"></wy-icon>
-                    </wy-button>
-                  </wy-file-item>
-                `;
-              }
+                      <span slot="title"
+                        ><strong></strong> ${file.name}
+                        ${fileStatus.text ? html`: <em>${fileStatus.text}</em>` : nothing}</span
+                      >
+                      ${fileStatus.state === "pending"
+                        ? html`
+                            <wy-progress-circular
+                              slot="actions"
+                              padded
+                              ?indeterminate=${Boolean(!fileStatus.progress)}
+                              .max=${100}
+                              .value=${fileStatus.progress || 0}
+                            ></wy-progress-circular>
+                          `
+                        : nothing}
+                      <wy-button
+                        slot="actions"
+                        kind="icon"
+                        @click=${() => {
+                          this.handleRemoveUpload(mutation);
+                        }}
+                        title=${msg("Discard", { desc: "Button action to discard" })}
+                      >
+                        <wy-icon name="close"></wy-icon>
+                      </wy-button>
+                    </wy-file-item>
+                  `;
+                }
 
-              return nothing;
-            }
-          )
+                return nothing;
+              }
+            )}
+          </div>`
         : nothing}
 
       <!-- attachments -->
-      ${this.attachments &&
-      this.attachments.map(
-        (attachment) => html`<wy-file-item .file=${attachment} title="${attachment.name}">
-          <span slot="title">${attachment.name}</span>
-          <wy-button
-            slot="actions"
-            kind="icon"
-            @click=${() => this.handleRemoveAttachment(attachment)}
-            title=${msg("Remove", { desc: "Button action to remove" })}
-          >
-            <wy-icon name="close"></wy-icon>
-          </wy-button>
-        </wy-file-item>`
-      )}
+      ${hasAttachments
+        ? this.attachments.map(
+            (attachment) => html`<wy-file-item .file=${attachment} title="${attachment.name}">
+              <span slot="title">${attachment.name}</span>
+              <wy-button
+                slot="actions"
+                kind="icon"
+                @click=${() => this.handleRemoveAttachment(attachment)}
+                title=${msg("Remove", { desc: "Button action to remove" })}
+              >
+                <wy-icon name="close"></wy-icon>
+              </wy-button>
+            </wy-file-item>`
+          )
+        : nothing}
 
       <!-- embeds -->
-      ${this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embeds.length > 0
-        ? html`<div class="wy-embed-preview">
-            ${this.embeds.map(
-              (embed: EmbedType) => html`
-                <wy-embed
-                  class="wy-embed"
-                  .embed=${embed}
-                  @embed-remove=${(e: EmbedRemoveEventType) => this.removeEmbed(e)}
-                  @embed-swap=${() => this.swapEmbed()}
-                  .enableSwap=${this.embeds.length > 1}
-                ></wy-embed>
-              `
-            )}
-          </div> `
+      ${hasEmbeds
+        ? html`
+            <wy-embed-select
+              .embeds=${this.embeds}
+              @embed-remove=${(e: EmbedRemoveEventType) => this.removeEmbed(e)}
+              @embed-swap=${() => this.swapEmbed()}
+            ></wy-embed-select>
+          `
         : nothing}
-    `;
+    </div>`;
   }
 
+  /**
+   * Render the cloud files picker if cloud files feature is enabled.
+   *
+   * @internal
+   */
   protected renderCloudFiles(): TemplateResult | typeof nothing {
     if (this.disabled) {
       return nothing;
@@ -1166,12 +1581,12 @@ export default class WyEditor extends WeavySubComponent {
 
     return html`
       <div
-        class=${classMap({
+        part=${partMap({
           "wy-editor": true,
           [this.editorClass]: true,
           "wy-dragging": isDragActive,
         })}
-        data-drag-title=${msg("Drop files here to upload.")}
+        data-drag-title=${msg("Drop files here")}
       >
         ${this.renderTopSlot()} ${this.renderMiddleSlot()} ${this.renderBottomSlot()}
       </div>

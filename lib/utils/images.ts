@@ -3,7 +3,7 @@ export function checkImageLoad(element?: Element) {
   if (img) {
     const isLoaded = img.complete && img.naturalHeight !== 0;
     if (isLoaded) {
-      if (!img.classList.contains("wy-loading")) {
+      if (!img.classList.contains("wy-loading") && !img.part.contains("wy-loading")) {
         //console.debug("image is instantly loaded")
         img.classList.add("wy-loading", "wy-loaded");
         img.part.add("wy-loading", "wy-loaded");
@@ -24,7 +24,12 @@ export function checkImageLoad(element?: Element) {
 
 export function imageLoaded(event: Event) {
   const img = event.target as HTMLElement;
-  if (img.tagName === "IMG" && img.classList.contains("wy-loading") && !img.classList.contains("wy-loaded")) {
+  if (
+    img.tagName === "IMG" &&
+    (img.classList.contains("wy-loading") || img.part.contains("wy-loading")) &&
+    !img.classList.contains("wy-loaded") &&
+    !img.part.contains("wy-loaded")
+  ) {
     img.classList.add("wy-loaded");
     img.part.add("wy-loaded");
   }

@@ -1,7 +1,6 @@
 import { TemplateResult, html, nothing } from "lit";
 import {
   AppWithSourceMetadataType,
-  ComponentType,
   EntityType,
   EntityTypeString,
   MetadataSourceType,
@@ -10,8 +9,10 @@ import { NotificationType } from "../types/notifications.types";
 import { WyLinkEventType } from "../types/notifications.events";
 import { msg, str } from "@lit/localize";
 import { type WeavyType } from "../client/weavy";
-import { AppTypeGuids, AgentAppTypeGuids } from "../classes/weavy-component";
+import { AppTypeGuids, AgentAppTypeGuids } from "../classes/weavy-type-component";
 import { NamedEvent } from "../types/generic.types";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { UnknownApp } from "../classes/weavy-app-component";
 
 export function getEntityChain(entity?: EntityType) {
   const chain = [entity];
@@ -61,12 +62,13 @@ export async function dispatchLinkEvent(
   weavy: WeavyType | undefined,
   notification: NotificationType
 ) {
-  let metadata: MetadataSourceType | undefined;
+  let appMetadata: MetadataSourceType | undefined;
 
-  if (weavy && notification.link.app?.id) {
+  if (weavy && notification?.link?.app?.id) {
+    // HACK: fetch app metadata to get source info used for navigation context
     const response = await weavy.fetch(`/api/apps/${notification.link.app.id}`);
     if (response.ok) {
-      metadata = ((await response.json()) as AppWithSourceMetadataType).metadata;
+      appMetadata = ((await response.json()) as AppWithSourceMetadataType).metadata;
     }
   }
 
@@ -74,25 +76,21 @@ export async function dispatchLinkEvent(
     bubbles: true,
     composed: true,
     cancelable: true,
-    detail: {
-      link: {
-        ...notification.link,
-        agent: getAgentName(notification),
-      },
-      app_type: (notification.link.app?.type && AppTypeGuids.get(notification.link.app?.type)) || ComponentType.Unknown,
-      source_name: metadata?.source_name,
-      source_url: metadata?.source_url,
-      source_data: metadata?.source_data,
+    detail: {      
+      link: notification.link ? {
+        ...notification?.link,   
+        // HACK: pass along the agent uid so uikit can match the correct agent chat     
+        agent: notification.actor.is_agent && notification.link?.app?.type && AgentAppTypeGuids.has(notification.link.app.type) ? notification.actor.uid : undefined,
+      } : undefined,
+      metadata: notification.metadata,      
+      app_type: (notification?.link?.app?.type && AppTypeGuids.get(notification.link.app.type)) || UnknownApp,
+      source_name: appMetadata?.source_name,
+      source_url: appMetadata?.source_url,
+      source_data: appMetadata?.source_data,
     },
   });
 
   return target.dispatchEvent(event);
-}
-
-export function getAgentName(notification: NotificationType) {
-  return notification.link.app?.type && AgentAppTypeGuids.has(notification.link.app?.type) && notification.actor.is_agent
-    ? notification.actor.uid
-    : undefined;
 }
 
 export function getNotificationText(notification: NotificationType): {
@@ -298,8 +296,13 @@ export function getNotificationText(notification: NotificationType): {
       };
     }
     default: {
-      console.error(`Notification template not found! '${notification.template}'`);
-      return { title: "", titleHtml: nothing };
+      return {
+        title: notification.plain,
+        titleHtml: html`${unsafeHTML(notification.html)}`
+      };
+      // console.error(`Notification template not found! '${notification.template}'`);
+      // return { title: "", titleHtml: nothing };
+
     }
   }
 }

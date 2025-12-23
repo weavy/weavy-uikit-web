@@ -1,48 +1,78 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
+@use "../base/text";
 
-.wy-poll {
-  flex: 1 1 100%;
+[part~="wy-poll"] {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var.default(--wy-gap-sm);
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.wy-poll-form {
-  background: var(--wy-component-background-color);
-  color: var(--wy-component-color);
-  //padding: var.default(--wy-padding);
+[part~="wy-poll-form"] {
   display: flex;
   flex-direction: column;
-  gap: var.default(--wy-gap-sm);
+  gap: var.default(--wy-gap);
 
   &:empty {
     display: none;
   }
 }
 
-.wy-poll-option {
+// .wy-item needed just for increased selector specificity
+[part~="wy-poll-option"] {
+  --wy-component-color: #{color.token(--wy-on-background)};
+  display: flex;
+  align-items: center;
+  clip-path: border-box;
   overflow: hidden;
   position: relative;
-  background-color: #{color.token(--wy-background)};
-  border: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
+  background-color: #{color.token(--wy-surface-layer-lowest)};
+  border: var.default(--wy-border-outline) solid #{color.token(--wy-outline-variant)};
   border-radius: var.default(--wy-border-radius-sm);
   //margin-bottom: var.wy-rem(.25);
   padding: var.default(--wy-padding-sm) var.default(--wy-padding);
-  min-height: var.wy-rem(2.5);
+  //min-height: var.wy-rem(2.5);
   cursor: pointer;
+  gap: var.default(--wy-gap-sm);
 
-  .wy-progress {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    background-color: #{color.token(--wy-surface-5)};
-  }
-
-  > :not(.wy-progress) {
+  > :not([part~="wy-poll-meter"]) {
     z-index: 1;
   }
 }
 
+[part="wy-poll-image"] {
+  display: flex;
+  height: calc(var.default(--wy-button-size) * .6); // 2.5rem * 0.6 = 24px
+  width: calc(var.default(--wy-button-size) * .6);  
+  padding: 0;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+[part~="wy-poll-title"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  color: var(--wy-component-color);
+  font-size: var.default(--wy-item-title-font-size);
+  font-weight: var.default(--wy-item-title-font-weight);
+  align-content: center;
+  @include text.truncate;
+}
+
+[part~="wy-poll-amount"] {
+  min-width: 3em;
+  text-align: end;
+}
+
+[part~="wy-poll-meter"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #{color.token(--wy-surface-layer-highest)};
+}

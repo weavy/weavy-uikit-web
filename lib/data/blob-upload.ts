@@ -8,6 +8,7 @@ import { getTempFile } from "./file-create";
 import { updateMutationContext } from "../utils/mutation-cache";
 import { HeaderContentType } from "../types/http.types";
 import { getHash } from "../utils/files";
+import { MutationAbortProps } from "../types/query.types";
 
 export type UploadBlobProps = {
   file: File;
@@ -15,6 +16,7 @@ export type UploadBlobProps = {
 };
 
 export type UploadProgressProps = {
+  /** Upload progress in percent 0-100 */
   progress: number;
 };
 
@@ -27,7 +29,7 @@ export function removeSuccessfulUploadBlobMutations(weavy: WeavyType, app: AppTy
   queryClient
     .getMutationCache()
     .findAll({
-      mutationKey: ["apps", app.id, type, uniqueId],
+      mutationKey: uniqueId ? ["apps", app.id, type, uniqueId] : ["apps", app.id, type],
       exact: true,
       status: "success",
       predicate: (mutation) => (mutation as UploadBlobMutationType).state.data?.name === name,
@@ -37,7 +39,7 @@ export function removeSuccessfulUploadBlobMutations(weavy: WeavyType, app: AppTy
     });
 }
 
-export async function uploadBlob(weavy: WeavyType, file: File, onProgress?: (variables: UploadProgressProps) => void) {
+export async function uploadBlob(weavy: WeavyType, file: File, onProgress?: (variables: UploadProgressProps) => void, signal?: AbortSignal) {
   const formData = new FormData();
   formData.append("blob", file);
 
@@ -45,7 +47,9 @@ export async function uploadBlob(weavy: WeavyType, file: File, onProgress?: (var
     if (onProgress) {
       onProgress({ progress: progress });
     }
-  });
+  },
+  signal
+  );
 
   if (!response.ok) {
     const serverError = <ServerErrorResponseType>await response.json();
@@ -72,8 +76,8 @@ export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, a
   const blobsKey: MutationKey = uniqueId ? ["apps", appId, type, uniqueId] : ["apps", appId, type];
 
   const options = {
-    mutationFn: async (variables: MutateFileProps) => {
-      const uploadedFile = await uploadBlob(weavy, variables.file, variables.onProgress);
+    mutationFn: async (variables: MutateFileProps & MutationAbortProps) => {
+      const uploadedFile = await uploadBlob(weavy, variables.file, variables.onProgress, variables.signal);
 
       /*// Needed to be able to use the blob on errors?
             setMutationContext(weavy.queryClient, mutationKey, variables, (context) => {

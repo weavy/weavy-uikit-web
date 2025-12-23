@@ -1,0 +1,42 @@
+@use "../base/color";
+
+// Embedded iframes
+
+[part~="wy-content-embed"] {
+  border: 0;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  flex: 1 1 100%;
+
+  &[part~="wy-loaded"] {
+    --wy-component-background-color: #{color.token(--wy-surface-layer)};
+    --wy-component-color: #{color.token(--wy-on-surface)};
+
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
+
+    ~ [part~="wy-content-embed-fallback"],
+    ~ [part~="wy-content-progress"] {
+      display: none;
+    }
+  }
+
+  &[part~="wy-loading"]:not([part~="wy-loaded"]) {
+    position: absolute;
+    visibility: hidden;
+    z-index: -1;
+    pointer-events: none;
+
+    &:not([part~="wy-fallback"]) ~ [part~="wy-content-embed-fallback"] {
+      display: none;
+    }
+
+    &[part~="wy-fallback"] ~ [part~="wy-content-progress"] {
+      display: none;
+    }
+  }
+}

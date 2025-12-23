@@ -1,0 +1,17 @@
+@use "../base/color";
+@use "../base/var";
+
+[part~="wy-content-code"] {
+  /*--wy-component-background-color: #{color.token(--wy-surface-container-low)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+  */
+
+  align-self: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var.wy-rem(2) var.wy-rem(3.5);
+  font-size: var.default(--wy-font-size-sm);
+}

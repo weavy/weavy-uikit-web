@@ -17,19 +17,16 @@ export function isFetchingEmbeds() {
 }
 
 async function fetchEmbed(url: string, weavy: WeavyType) {
-  const data = new FormData();
-  data.append("url", url);
-
   let embed: EmbedType | undefined = undefined;
 
   try {
-    const response = await weavy.fetch("/api/embeds", { method: "POST", body: JSON.stringify({ url: url }) });
+    const response = await weavy.fetch(`/api/embeds?url=${encodeURIComponent(url)}`);
 
     if (!response.ok) {
       throw new Error();
     }
 
-    embed = await response.json() as EmbedType;
+    embed = (await response.json()) as EmbedType;
     delete candidates[url];
     embeds = [...embeds, url];
   } catch {
@@ -72,10 +69,8 @@ export const getEmbeds = (content: string, callback: (embed: EmbedType) => void,
 
   if (matches === null || matches.length === 0) {
     // no matches
-    //console.log(latest, embeds, failed, candidates, rejected)
   } else if (matches.length !== latest.length || !arrayEquals(matches, latest)) {
-    // matches has changed{
-    // keep matches for comparing next time the doc is updated
+    // matches has changed - keep matches for comparing next time the doc is updated
     latest = matches;
 
     matches.forEach((match: string) => {
@@ -94,10 +89,6 @@ export const getEmbeds = (content: string, callback: (embed: EmbedType) => void,
             callback(embed);
           }
         }, 500);
-        // setCandidates((prev) => {
-        //     prev[match] = setTimeout(() => { fetchEmbed(match); }, 500);
-        //     return prev;
-        // });
       }
     });
 

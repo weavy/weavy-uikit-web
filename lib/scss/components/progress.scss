@@ -1,33 +1,26 @@
-@use "base/color";
-@use "base/var";
+@use "../base/var";
 
 [part~="wy-progress"] {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  position: relative;
-
-  width: var(--wy-component-icon-width);
-  height: var(--wy-component-icon-height);
-
-  &:not([width]),
-  &[width="24"] {
-    width: var(--wy-component-icon-width, var.wy-rem(1.5));
-  }
-
-  &:not([height]),
-  &[height="24"] {
-    height: var(--wy-component-icon-height, var.wy-rem(1.5));
-  }
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    position: relative;
 }
 
 [part~="wy-progress-padded"] {
-  margin: var.wy-rem(1) var.wy-rem(2);
+  margin: var.default(--wy-padding);
+}
+
+[part~="wy-progress-overlay"] {
+  position: absolute !important;
 }
 
 [part~="wy-progress-reveal"] {
+  overflow: hidden;
   opacity: 1;
+  interpolate-size: allow-keywords;
+  height: auto;
   transition: width var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
     height var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
     margin var.default(--wy-transition) var.default(--wy-transition-reveal-delay),
@@ -40,18 +33,4 @@
     opacity: 0;
     margin: 0;
   }
-}
-
-[part~="wy-progress"][part~="wy-primary"] {
-  color: color.token(--wy-primary);
-}
-
-[part~="wy-progress-remaining"] {
-  fill: none;
-  stroke: color.token(--wy-surface-variant);
-}
-
-[part~="wy-progress-done"] {
-  fill: none;
-  stroke: currentColor;
 }

@@ -12,6 +12,11 @@ import {
 import { ContextConsumer } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { whenParentsDefined } from "../utils/dom";
+import { MutationAbortProps } from "../types/query.types";
+
+export function hasAbort(obj: unknown): obj is MutationAbortProps {
+    return (obj as MutationAbortProps).signal instanceof AbortSignal || typeof (obj as MutationAbortProps).abort === "function" ;
+}
 
 export class MutationController<TData, TError, TVariables, TContext> implements ReactiveController {
   host: ReactiveControllerHost;
@@ -19,9 +24,14 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
   whenContext: Promise<void>;
   resolveContext?: (value: void | PromiseLike<void>) => void;
   whenObserver: Promise<MutationObserver<TData, TError, TVariables, TContext>>;
-  resolveObserver?: (value: MutationObserver<TData, TError, TVariables, TContext> | PromiseLike<MutationObserver<TData, TError, TVariables, TContext>>) => void;
+  resolveObserver?: (
+    value:
+      | MutationObserver<TData, TError, TVariables, TContext>
+      | PromiseLike<MutationObserver<TData, TError, TVariables, TContext>>
+  ) => void;
   observer?: MutationObserver<TData, TError, TVariables, TContext>;
   result?: MutationObserverResult<TData, TError, TVariables, TContext>;
+  abortController?: AbortController;
 
   private observerUnsubscribe?: () => void;
 
@@ -29,8 +39,8 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
     host.addController(this);
     this.host = host;
 
-    this.whenContext = new Promise((r) => this.resolveContext = r);
-    this.whenObserver = new Promise((r) => this.resolveObserver = r);
+    this.whenContext = new Promise((r) => (this.resolveContext = r));
+    this.whenObserver = new Promise((r) => (this.resolveObserver = r));
 
     void this.setContext();
   }
@@ -41,12 +51,15 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
   }
 
   hostUpdate(): void {
-    if(this.context?.value) {
+    if (this.context?.value) {
       this.resolveContext?.();
     }
   }
 
-  async trackMutation(options: MutationObserverOptions<TData, TError, TVariables, TContext>, queryClient?: QueryClient) {
+  async trackMutation(
+    options: MutationObserverOptions<TData, TError, TVariables, TContext>,
+    queryClient?: QueryClient
+  ) {
     if (!queryClient) {
       await this.whenContext;
       queryClient = this.context?.value?.queryClient;
@@ -59,12 +72,13 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
     this.observerUnsubscribe?.();
 
     if (this.observer) {
-      this.whenObserver = new Promise((r) => this.resolveObserver = r);
+      // Reset promise if observer is set before
+      this.whenObserver = new Promise((r) => (this.resolveObserver = r));
     }
 
     this.observer = new MutationObserver(queryClient, { ...options });
     this.observerSubscribe();
-    this.resolveObserver?.(this.observer)
+    this.resolveObserver?.(this.observer);
 
     return this.observer;
   }
@@ -98,7 +112,15 @@ export class MutationController<TData, TError, TVariables, TContext> implements 
 
   async mutate(variables: TVariables, options?: MutateOptions<TData, TError, TVariables, TContext>) {
     const observer = await this.whenObserver;
-    return observer.mutate(variables, options);
+    const abortController = new AbortController();
+    return observer.mutate(
+      {
+        ...variables,
+        signal: abortController.signal,
+        abort: abortController.abort.bind(abortController),
+      },
+      options
+    );
   }
 
   hostConnected() {

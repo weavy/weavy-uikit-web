@@ -10,6 +10,10 @@ import { utf8BomPlugin, weavyAuthServer, weavyChunkNames, weavyImportUrlPlugin, 
 import litCss from "vite-plugin-lit-css";
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
+// CEM Plugins
+import { jsdocExamplePlugin } from 'cem-plugin-jsdoc-example';
+
+
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 const sourceName = process.argv.find((s) => s.startsWith("--source-name="))?.split("=")[1] || packageJson.name;
@@ -59,10 +63,15 @@ export default defineConfig(({ command, mode }) => {
         include: ["lib"],
         entryRoot: "lib",
       }),
+      // https://github.com/Kamiapp-fr/vite-plugin-cem
       VitePluginCustomElementsManifest({
-        files: ["./lib/**/wy-*.ts"],
+        files: ["./lib/classes/*.ts", "./lib/**/wy-*.ts"],
         lit: true,
-        output: "../custom-elements.json"
+        output: "../custom-elements.json",
+        plugins: [
+          // https://custom-elements-manifest.open-wc.org/analyzer/plugins/intro/
+          jsdocExamplePlugin(),
+        ]
       }),
       viteStaticCopy({
         targets: [
@@ -126,6 +135,7 @@ export default defineConfig(({ command, mode }) => {
       preprocessorOptions: {
         scss: {
           api: "modern-compiler", // or "modern"
+          style: "compressed"
         },
       },
     },

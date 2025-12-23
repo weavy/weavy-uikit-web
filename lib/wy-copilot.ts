@@ -1,8 +1,8 @@
 import { customElement } from "./utils/decorators/custom-element";
 import { ThemeController } from "./controllers/theme-controller";
-import { html, nothing, PropertyValues } from "lit";
+import { html, PropertyValues } from "lit";
 import { AppTypeGuid, AppTypeString } from "./types/app.types";
-import { WeavyComponent } from "./classes/weavy-component";
+import { WeavyAppComponent } from "./classes/weavy-app-component";
 import { localized, msg } from "@lit/localize";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
 import { property } from "lit/decorators.js";
@@ -11,53 +11,67 @@ import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { v4 as uuid_v4 } from "uuid";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "./utils/keyboard";
 import { getTitleFromText, truncateText } from "./utils/strings";
-import { handleRealtimeMessage } from "./realtime/messages.realtime";
+import { triggerMessageEvent } from "./realtime/messages.realtime";
 import { WeavyComponentAgentProps } from "./types/agent.types";
-
-import hostBlockStyles from "./scss/host-block.scss";
-import hostScrollYStyles from "./scss/host-scroll-y.scss";
-import hostFontStyles from "./scss/host-font.scss";
-import colorModesStyles from "./scss/color-modes.scss";
-import listStyles from "./scss/components/list.scss";
-
 import { WyConversation } from "./components/wy-conversation";
-import "./components/wy-notification-button-list";
-import "./components/wy-empty";
-import "./components/base/wy-button";
-import "./components/base/wy-spinner";
-import "./components/base/wy-icon";
-import "./components/wy-context-data";
 
-export const WY_COPILOT_TAGNAME = "wy-copilot";
+import hostBlockCss from "./scss/host-block.scss";
+import hostPaddedCss from "./scss/host-padded.scss";
+import hostScrollYCss from "./scss/host-scroll-y.scss";
+import hostFontCss from "./scss/host-font.scss";
+import colorModesCss from "./scss/color-modes.scss";
+
+import "./components/ui/wy-button";
+import "./components/ui/wy-icon";
+import "./components/ui/wy-item";
+import "./components/wy-empty";
+import "./components/wy-context-data";
+import "./components/wy-conversation";
 
 declare global {
   interface HTMLElementTagNameMap {
-    [WY_COPILOT_TAGNAME]: WyCopilot;
+    "wy-copilot": WyCopilot;
   }
 }
+
+/**
+ * @import { WyAppEventType } from "./types/app.events"
+ * @import { WyActionEventType } from "./types/action.events"
+ * @import { WyPreviewOpenEventType } from "./types/files.events"
+ * @import { WyPreviewCloseEventType } from "./types/files.events"
+ */
 
 /**
  * Weavy component to render a single contextual personal copilot.
  *
  * The copilot component renders a complete and functional user interface for a contextual AI agent chat. It needs to be configured with an AI agent and can have instructions and use any contextual data you provide (as long as it's a string).
  *
- * The copilot chat is agent-to-user which means each user has their own chat with the agent. Each time the chat is loaded a fresh chat is started. It can optionally be configured with a `uid` to persist the conversation. The `uid` needs to be unique to each _user_ and each _agent_ (if you intend to use several agents). You can make a _uid_ with automatically appended _user_ and _agent_ by using the `autoUid` property instead, which generates a value for the `uid` property.
+ * The copilot chat is agent-to-user which means each user has their own chat with the agent. Each time the chat is loaded a fresh chat is started. It can optionally be configured with a `uid` to persist the conversation. The `uid` needs to be unique to each _user_ and each _agent_ (if you intend to use several agents). You can make a _uid_ with automatically appended _user_ and _agent_ by using the `generateUid` property instead, which generates a value for the `uid` property.
+ * 
+ * **Used sub components:**
  *
- * @element wy-copilot
- * @class WyCopilot
- * @extends {WeavyComponent}
+ * - [`<wy-comment-list>`](./components/wy-comment-list.ts)
+ * - [`<wy-buttons>`](./components/ui/wy-button.ts)
+ * - [`<wy-item-list>`](./components/ui/wy-item.ts)
+ * - [`<wy-empty>`](./components/ui/wy-empty.ts)
+ * - [`<wy-icon>`](./components/ui/wy-icon.ts)
+ * - [`<wy-icon-display>`](./components/ui/wy-icon.ts)
+ * - [`<wy-context-data-progress>`](./components/wy-context-data.ts)
+ *
+ * @tagname wy-copilot
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on a conversation or embed.
  * @fires {WyMessageEventType} wy-message - Fired when a message has been appended to the conversation.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  *
  * @slot actions - Floating buttons placed in the top right.
  * @slot empty - All the content for the empty state.
- * @slot empty/header - Header for the empty state.
- * @slot empty/header/icon - Display icon in the header.
- * @slot empty/suggestions - Suggestion content.
- * @slot empty/suggestions/suggestion-list - Items for the list in the suggestion content.
- * @slot empty/footer - Footer for the empty state.
+ * @slot header - Header for the `empty` state.
+ * @slot icon - Display icon in the `header`.
+ * @slot suggestions - Suggestion content in the `empty` state.
+ * @slot suggestion-list - Items for the list in the `suggestion` content.
+ * @slot footer - Footer for the `empty` state.
  *
  * @example <caption>Generic Copilot</caption>
  * The agent name is required and should correspond to any configured AI agent you have. You may switch between different agents whenever you like, but remember that the conversation also changes.
@@ -122,13 +136,15 @@ declare global {
  * wy-copilot:not(:defined) { display: none; }
  * ```
  */
-@customElement(WY_COPILOT_TAGNAME)
+@customElement("wy-copilot")
 @localized()
-export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProps {
-  static override styles = [hostBlockStyles, hostScrollYStyles, colorModesStyles, hostFontStyles, listStyles];
+export class WyCopilot extends WeavyAppComponent implements WeavyComponentAgentProps {
+  static override styles = [hostBlockCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss];
 
-  override componentType = AppTypeGuid.AgentChat;
+  /** @internal */
+  override appType = AppTypeGuid.AgentChat;
 
+  /** @internal */
   override componentFeatures = new ComponentFeatures({
     // All available features as enabled/disabled by default
     [Feature.Attachments]: false,
@@ -140,12 +156,24 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
     [Feature.Typing]: true,
   });
 
+  /** @internal */
   protected theme = new ThemeController(this, WyCopilot.styles);
+
+  /** @internal */
   protected addConversationMutation?: CreateAppMutationType;
+
+  /** @internal */
   protected conversationRef: Ref<WyConversation> = createRef();
-  protected handleRealtimeMessage = handleRealtimeMessage.bind(this);
+
+  /** @internal */
+  protected handleRealtimeMessage = triggerMessageEvent.bind(this);
+  
+  /** @internal */
   protected unsubscribeToRealtime?: () => void;
 
+  /**
+   * Optional agent instructions appended to submitted messages.
+   */
   @property()
   instructions?: string;
 
@@ -195,7 +223,6 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
     return this.agent
       ? html`
           <wy-buttons position="floating" reverse>
-            ${this.app && this.uid ? html` <wy-notification-button-list></wy-notification-button-list> ` : nothing}
             <slot name="actions"></slot>
           </wy-buttons>
           <wy-conversation
@@ -251,11 +278,11 @@ export class WyCopilot extends WeavyComponent implements WeavyComponentAgentProp
                 </wy-icon-display>
               </slot>
               <slot name="suggestions">
-                <div class="wy-list">
+                <wy-item-list>
                   <slot name="suggestion-list">
                     <!--wy-button class="suggestion">Summarize this page</wy-button-->
                   </slot>
-                </div>
+                </wy-item-list>
               </slot>
               <slot name="footer"></slot>
             </slot>

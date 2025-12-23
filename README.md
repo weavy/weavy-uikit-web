@@ -64,15 +64,15 @@ You should see a list of available component demos, choose any you like.
 
 ## Documentation
 
-In-code documentation is provided as JSDoc3. It follows Typescript flavor and Open WC flavor.
+The main documentation can be found at the [Weavy documentation site](https://weavy.com/docs). A detailed API reference for all components in this package is provided as markdown in the `dist/docs` folder. The API reference is also available as a very detailed custom elements manifest in `dist/custom-elements.json`. 
 
-- [Typescript JSDoc Reference](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html)
-- [OpenWC API Viewer: JSDoc Guide](https://api-viewer.open-wc.org/docs/guide/writing-jsdoc/)
-- [Web Component Analyzer](https://github.com/runem/web-component-analyzer)
+- [weavy.com/docs](https://weavy.com/docs)
+- [Weavy Component API Reference](./dist/docs/index)
+- [Weavy Custom Elements Manifest](./dist/custom-elements.json)
 
-There is some Markdown documentation for the api available in the `dist/docs` folder. You can generate it by running `npm run docs`.
+In-code documentation is provided as JSDoc3 and typescript definitions are also available in the package. It follows Typescript flavor and Open WC flavor.
 
-There is also a [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest) available in `dist/custom-elements.json`
+Learn more about the [custom elements manifest standard](https://github.com/webcomponents/custom-elements-manifest).
 
 To learn more about the different components that you can use and how to setup the authentication flow, head over to our [documentation site](https://weavy.com/docs).
 

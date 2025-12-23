@@ -17,7 +17,6 @@ export function inputBlurOnEscape(e: KeyboardEvent) {
     e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).blur();
-    (e.target as HTMLElement).dispatchEvent(new CustomEvent("release-focus", { bubbles: true, composed: true }));
     //console.log("I got my head checked. By a jumbo jet.");
   }
 }

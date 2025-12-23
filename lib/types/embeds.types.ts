@@ -1,19 +1,21 @@
+import { BlobType } from "./files.types";
+import { MetadataType } from "./lists.types";
+
 export type EmbedType = {
     id: number;
-    title: string;
-    description: string;
-    type: "link" | "video" | "photo" | "audio" | "rich";
-    host: string;
-    original_url: string;
-    provider_name: string;
+    title?: string;
+    description?: string;
+    type: "link" | "video" | "photo" | "rich";
+    url?: string;
+    provider_name?: string;
     provider_url?: string;
     thumbnail_url?: string;
-    thumbnail_width?: number;
-    thumbnail_height?: number;
     width?: number;
     height?: number;
-    author_name: string;
-    author_url: string;
+    author_name?: string;
+    author_url?: string;
     html?: string;
-    image?: string;
+    image?: BlobType;
+    metadata?: MetadataType;
+    actions?: string[];
   };

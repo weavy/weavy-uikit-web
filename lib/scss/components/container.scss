@@ -1,0 +1,19 @@
+@use "../base/var";
+
+[part~="wy-container"] {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+[part~="wy-container-padded"] {
+  padding: var.default(--wy-padding);
+  gap: var.default(--wy-padding);
+}
+
+[part~="wy-container-outer"] {
+  padding: var.default(--wy-padding-outer);
+}

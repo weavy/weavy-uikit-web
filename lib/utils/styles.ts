@@ -1,11 +1,10 @@
 //import { TonalPalette } from "@material/material-color-utilities/dist/palettes/tonal_palette";
 import { Hct } from "@material/material-color-utilities";
-import { argbFromHex, hexFromArgb } from "@material/material-color-utilities";
-import { Blend } from "@material/material-color-utilities";
-import { TonalPalette } from "@material/material-color-utilities";
-import { argbFromRgba, getComputedColor } from "./colors";
+import { argbFromHex } from "@material/material-color-utilities";
+import { argbFromRgba, getComputedColor, hexWithAlphaFromArgb } from "./colors";
 import { type CSSResult, type CSSResultOrNative, supportsAdoptingStyleSheets } from "lit";
 import { throwOnDomNotAvailable } from "./dom";
+import { SchemeWeavy } from "./color-scheme-weavy";
 
 export function getCSSThemeColor(element: Element) {
   // By inherited --wy-theme
@@ -57,7 +56,7 @@ export function getMetaThemeColor() {
 
 export function observeMetaThemeColor(callback: (themeColor?: string) => void) {
   throwOnDomNotAvailable();
-  
+
   const metaThemeColors = Array.from(document.head.querySelectorAll("meta[name='theme-color']"));
 
   if (!metaThemeColors) {
@@ -130,131 +129,99 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
   // Red HSL Hue 0deg = HCT Hue 27,4deg
 
   const hct = Hct.fromInt(argb);
-  const hue = hct.hue;
-  const chroma = hct.chroma;
-
-  const maxChroma = Math.max(48, chroma);
-  const colorChroma = Math.min(maxChroma, 84); // Google suggests 84 for Error
-
-  const divisions = 16.0; // Number of colors
-  const colorGap = 360.0 / divisions; // Degrees between hue colors
-  const redZero = 27.4; // HCT.FromInt(unchecked(0xff0000));
-  const hueOffset = -8.0; // Average offset for the color wheel
-
-  const redHue = ((hue + 360.0 - redZero - hueOffset + colorGap / 2) % colorGap) + redZero + hueOffset - colorGap / 2;
-
-  const palette: { [key: string]: TonalPalette } = {
-    primary: TonalPalette.fromHueAndChroma(hue, maxChroma),
-    secondary: TonalPalette.fromHueAndChroma(hue, maxChroma / 3),
-    tertiary: TonalPalette.fromHueAndChroma(hue + 60, maxChroma / 2),
-    neutral: TonalPalette.fromHueAndChroma(hue, Math.min(chroma / 12, 4)),
-    "neutral-variant": TonalPalette.fromHueAndChroma(hue, Math.min(chroma / 6, 8)),
-    error: TonalPalette.fromHueAndChroma(redHue, 84),
-    warning: TonalPalette.fromHueAndChroma(redHue + 4 * colorGap, colorChroma), // Same as yellow
-
-    red: TonalPalette.fromHueAndChroma(redHue, colorChroma),
-    "deep-orange": TonalPalette.fromHueAndChroma(redHue + 1 * colorGap, colorChroma),
-    orange: TonalPalette.fromHueAndChroma(redHue + 2 * colorGap, colorChroma),
-    amber: TonalPalette.fromHueAndChroma(redHue + 3 * colorGap, colorChroma),
-    yellow: TonalPalette.fromHueAndChroma(redHue + 4 * colorGap, colorChroma),
-    lime: TonalPalette.fromHueAndChroma(redHue + 5 * colorGap, colorChroma),
-    "light-green": TonalPalette.fromHueAndChroma(redHue + 6 * colorGap, colorChroma),
-    green: TonalPalette.fromHueAndChroma(redHue + 7 * colorGap, colorChroma),
-    teal: TonalPalette.fromHueAndChroma(redHue + 8 * colorGap, colorChroma),
-    cyan: TonalPalette.fromHueAndChroma(redHue + 9 * colorGap, colorChroma),
-    "light-blue": TonalPalette.fromHueAndChroma(redHue + 10 * colorGap, colorChroma),
-    blue: TonalPalette.fromHueAndChroma(redHue + 11 * colorGap, colorChroma),
-    indigo: TonalPalette.fromHueAndChroma(redHue + 12 * colorGap, colorChroma),
-    "deep-purple": TonalPalette.fromHueAndChroma(redHue + 13 * colorGap, colorChroma),
-    purple: TonalPalette.fromHueAndChroma(redHue + 14 * colorGap, colorChroma),
-    pink: TonalPalette.fromHueAndChroma(redHue + 15 * colorGap, colorChroma),
-    gray: TonalPalette.fromHueAndChroma(hue, 4),
+  const weavySchemes = {
+    light: new SchemeWeavy(hct, false, 0.0),
+    dark: new SchemeWeavy(hct, true, 0.0),
   };
 
-  const allTones: { [key: string]: number } = {
-    //"100": 100,
-    "99": 99,
-    "95": 95,
-    "90": 90,
-    "80": 80,
-    "70": 70,
-    "60": 60,
-    "50": 50,
-    "40": 40,
-    "30": 30,
-    "20": 20,
-    "10": 10,
-    //"0": 0
+  const colorTokenMap = {
+    primary: "primary",
+    onPrimary: "on-primary",
+    primaryContainer: "primary-container",
+    onPrimaryContainer: "on-primary-container",
+
+    secondary: "secondary",
+    onSecondary: "on-secondary",
+    secondaryContainer: "secondary-container",
+    onSecondaryContainer: "on-secondary-container",
+
+    tertiary: "tertiary",
+    onTertiary: "on-tertiary",
+    tertiaryContainer: "tertiary-container",
+    onTertiaryContainer: "on-tertiary-container",
+
+    error: "error",
+    onError: "on-error",
+    errorContainer: "error-container",
+    onErrorContainer: "on-error-container",
+
+    background: "background",
+    onBackground: "on-background",
+
+    surface: "surface",
+    onSurface: "on-surface",
+
+    surfaceVariant: "surface-variant",
+    onSurfaceVariant: "on-surface-variant",
+
+    surfaceContainerLowest: "surface-container-lowest",
+    surfaceContainerLow: "surface-container-low",
+    surfaceContainer: "surface-container",
+    surfaceContainerHigh: "surface-container-high",
+    surfaceContainerHighest: "surface-container-highest",
+
+    outline: "outline",
+    outlineVariant: "outline-variant",
+
+    shadow: "shadow",
+    scrim: "scrim",
+
+    // Custom surface layers
+
+    surfaceLayerLowest: "surface-layer-lowest",
+    surfaceLayerLow: "surface-layer-low",
+    surfaceLayer: "surface-layer",
+    surfaceLayerHigh: "surface-layer-high",
+    surfaceLayerHighest: "surface-layer-highest",
+
+    // Custom tokens
+
+    warning: "warning",
+    onWarning: "on-warning",
+    warningContainer: "warning-container",
+    onWarningContainer: "on-warning-container",
+
+    highlight: "highlight",
+    onHighlight: "on-highlight",
+
+    // Named colors
+
+    red: "red",
+    deepOrange: "deep-orange",
+    orange: "orange",
+    amber: "amber",
+    yellow: "yellow",
+    lime: "lime",
+    lightGreen: "light-green",
+    green: "green",
+    teal: "teal",
+    cyan: "cyan",
+    lightBlue: "light-blue",
+    blue: "blue",
+    indigo: "indigo",
+    deepPurple: "deep-purple",
+    purple: "purple",
+    pink: "pink",
+    gray: "gray",
   };
 
-  const colorToneMap: { [key: string]: { [key: string]: number } } = {
-    primary: allTones,
-    secondary: allTones,
-    tertiary: allTones,
-    neutral: allTones,
-    "neutral-variant": allTones,
-    error: allTones,
-    warning: allTones,
-    blue: { light: 70, dark: 80 },
-    indigo: { light: 60, dark: 60 },
-    purple: { light: 60, dark: 70 },
-    pink: { light: 60, dark: 70 },
-    red: { light: 60, dark: 60 },
-    orange: { light: 70, dark: 70 },
-    yellow: { light: 70, dark: 80 },
-    green: { light: 60, dark: 60 },
-    teal: { light: 60, dark: 60 },
-    cyan: { light: 50, dark: 60 },
-    gray: { light: 50, dark: 60 },
-  };
-
-  for (const colorName in colorToneMap) {
-    const tones = colorToneMap[colorName];
-    for (const tone in tones) {
-      const hex = hexFromArgb(palette[colorName].tone(tones[tone]));
-      colors.push(`--wy-${colorName}-${tone}:${hex};`);
-    }
-  }
-
-  // Surface Tones
-  const tint = {
-    light: palette.primary.tone(40),
-    dark: palette.primary.tone(80),
-  };
-
-  const surface = {
-    light: palette.neutral.tone(99),
-    dark: palette.neutral.tone(10),
-  };
-
-  const surfaces: { [key: string]: { [key: string]: number } } = {
-    "surface-1": {
-      light: Blend.cam16Ucs(surface.light, tint.light, 0.05),
-      dark: Blend.cam16Ucs(surface.dark, tint.dark, 0.05),
-    },
-    "surface-2": {
-      light: Blend.cam16Ucs(surface.light, tint.light, 0.08),
-      dark: Blend.cam16Ucs(surface.dark, tint.dark, 0.08),
-    },
-    "surface-3": {
-      light: Blend.cam16Ucs(surface.light, tint.light, 0.11),
-      dark: Blend.cam16Ucs(surface.dark, tint.dark, 0.11),
-    },
-    "surface-4": {
-      light: Blend.cam16Ucs(surface.light, tint.light, 0.12),
-      dark: Blend.cam16Ucs(surface.dark, tint.dark, 0.12),
-    },
-    "surface-5": {
-      light: Blend.cam16Ucs(surface.light, tint.light, 0.14),
-      dark: Blend.cam16Ucs(surface.dark, tint.dark, 0.14),
-    },
-  };
-
-  for (const colorName in surfaces) {
-    const tones = surfaces[colorName];
-    for (const tone in tones) {
-      const hex = hexFromArgb(tones[tone]);
-      colors.push(`--wy-${colorName}-${tone}:${hex};`);
+  for (const colorSchemeName in weavySchemes) {
+    const weavyScheme = weavySchemes[colorSchemeName as keyof typeof weavySchemes];
+    // Tokens
+    for (const colorToken in colorTokenMap) {
+      const colorTokenName = colorTokenMap[colorToken as keyof typeof colorTokenMap];
+      const hex = hexWithAlphaFromArgb(weavyScheme[colorToken as keyof typeof colorTokenMap]);
+      colors.push(`--wy-${colorTokenName}-${colorSchemeName}:${hex};`);
     }
   }
 
@@ -266,7 +233,6 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
   return colors;
 }
 
-
 /**
  * Applies the given styles to a `shadowRoot`. When Shadow DOM is
  * available but `adoptedStyleSheets` is not, styles are appended to the
@@ -276,21 +242,17 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
  * will match spec behavior that gives adopted sheets precedence over styles in
  * shadowRoot.
  */
-export const adoptGlobalStyles = (
-  styles: Array<CSSResultOrNative>
-) => {
+export const adoptGlobalStyles = (styles: Array<CSSResultOrNative>) => {
   throwOnDomNotAvailable();
 
   if (supportsAdoptingStyleSheets) {
-    document.adoptedStyleSheets = styles.map((s) =>
-      s instanceof CSSStyleSheet ? s : s.styleSheet as CSSStyleSheet
-    );
+    document.adoptedStyleSheets = styles.map((s) => (s instanceof CSSStyleSheet ? s : (s.styleSheet as CSSStyleSheet)));
   } else {
     for (const s of styles) {
-      const style = document.createElement('style');
-      const nonce = (global as unknown as { litNonce: string})['litNonce'];
+      const style = document.createElement("style");
+      const nonce = (global as unknown as { litNonce: string })["litNonce"];
       if (nonce !== undefined) {
-        style.setAttribute('nonce', nonce);
+        style.setAttribute("nonce", nonce);
       }
       style.textContent = (s as CSSResult).cssText;
       (document.head || document.documentElement).appendChild(style);

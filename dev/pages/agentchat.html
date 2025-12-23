@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content" />
   <link rel="modulepreload" href="/locales/sv-SE.ts" />
   <script type="module" src="/lib"></script>
   <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
@@ -24,10 +25,13 @@
       align-items: center;
       padding-inline: 1rem;
       gap: 1rem;
+      border-bottom: 1px solid gray;
     }
 
     wy-messenger {
       height: calc(100vh - 3rem);
+      --wy-border-radius-outer: 0;
+      --wy-padding-outer: 0;
     }
   </style>
 </head>

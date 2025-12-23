@@ -29,7 +29,8 @@ class MentionWidget extends WidgetType {
     
     const wrap = document.createElement("span");
     wrap.className = "wy-mention";
-    wrap.innerHTML = typeof this.match[5] !== "undefined" ? this.match[5] : this.match[2];
+    wrap.part = "wy-mention";
+    wrap.innerHTML = "@" + (typeof this.match[5] !== "undefined" ? this.match[5] : this.match[2]);
     return wrap;
   }
   override ignoreEvent() {

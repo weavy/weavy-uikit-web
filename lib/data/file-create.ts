@@ -54,7 +54,7 @@ export function getFileMutationsTotalProgress(
           const file = mutationState.context?.file as FileType;
           if (file && mutationState.context?.status.progress && file.size) {
             return {
-              loaded: combinedProgress.loaded + mutationState.context.status.progress * file.size,
+              loaded: combinedProgress.loaded + Math.floor((mutationState.context.status.progress / 100) * file.size),
               total: combinedProgress.total + file.size,
             };
           }
@@ -65,9 +65,12 @@ export function getFileMutationsTotalProgress(
     : { loaded: 0, total: 0 };
 
   return {
+    /** Loaded bytes */
     loaded: progress.loaded,
+    /** Total bytes */
     total: progress.total,
-    percent: progress.total > 0 ? progress.loaded / progress.total : null,
+    /** Progress of upload provided as 0-100 percent. */
+    percent: progress.total > 0 ? progress.loaded / progress.total * 100 : null,
   };
 }
 
@@ -85,6 +88,16 @@ export function getFileMutationsTotalStatus(
     : "ok";
 }
 
+export function getPendingFileMutations(
+  mutationStates?: MutationState<BlobType | FileType, Error, unknown, FileMutationContextType>[]
+) {
+  return (
+    mutationStates?.filter((mutationState) => {
+      return mutationState.context?.status.state === "pending";
+    }) || []
+  );
+}
+
 export function getFileMutationsByConflictOrError(
   mutationStates?: MutationState<BlobType | FileType, Error, unknown, FileMutationContextType>[]
 ) {
@@ -98,10 +111,55 @@ export function getFileMutationsByConflictOrError(
 
 export type CreateFileMutationType = Mutation<FileType, Error, CreateFileProps, FileMutationContextType | undefined>;
 
-export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name: string) {
+export function removeErroredFileMutations(weavy: WeavyType, app: AppType) {
   const queryClient = weavy.queryClient;
 
+  // remove any file create mutations
+  queryClient
+    .getMutationCache()
+    .findAll({
+      mutationKey: ["apps", app.id, "blobs"],
+      exact: true,
+    })
+    .forEach((mutation) => {
+      if ((mutation.state.context as FileMutationContextType)?.status.state === "error") {
+        queryClient.getMutationCache().remove(mutation);
+      }
+    });
+
+  // remove any file create mutations
+  queryClient
+    .getMutationCache()
+    .findAll({
+      mutationKey: ["apps", app.id, "files"],
+      exact: true,
+    })
+    .forEach((mutation) => {
+      if ((mutation.state.context as FileMutationContextType)?.status.state === "conflict") {
+        queryClient.getMutationCache().remove(mutation);
+      }
+    });
+}
+
+export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name?: string) {
+  const queryClient = weavy.queryClient;
+
+  // Remove blob mutations
+  queryClient
+    .getMutationCache()
+    .findAll({
+      mutationKey: ["apps", app.id, "blobs"],
+      exact: true,
+      predicate: (mutation) =>
+        /error|success/.test(mutation.state.status) &&
+        (!name || (mutation as CreateFileMutationType).state.variables?.blob?.name === name),
+    })
+    .forEach((mutation) => {
+      queryClient.getMutationCache().remove(mutation);
+    });
+
   // Remove any file create mutations
+  // Optionally only by name
   queryClient
     .getMutationCache()
     .findAll({
@@ -109,7 +167,7 @@ export function removeSettledFileMutations(weavy: WeavyType, app: AppType, name:
       exact: true,
       predicate: (mutation) =>
         /error|success/.test(mutation.state.status) &&
-        (mutation as CreateFileMutationType).state.variables?.blob?.name === name,
+        (!name || (mutation as CreateFileMutationType).state.variables?.blob?.name === name),
     })
     .forEach((mutation) => {
       queryClient.getMutationCache().remove(mutation);
@@ -166,7 +224,6 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
           (context as FileMutationContextType).status.text = undefined;
         }
       });
-      //console.log("FILE SUCCESS");
       return queryClient.invalidateQueries({ queryKey: filesKey });
     },
     onError(error: Error, variables: CreateFileProps, _context: FileMutationContextType | undefined) {

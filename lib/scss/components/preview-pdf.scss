@@ -1,7 +1,7 @@
-@use "base/var";
-@use "base/color";
-@use "base/scroll";
-@use "base/svg";
+@use "../base/var";
+@use "../base/color";
+@use "../base/scroll";
+@use "../base/svg";
 @use "pdf-viewer";
 
 .wy-pdf-container {
@@ -11,8 +11,7 @@
   bottom: 0;
   left: 0;
 
-  @include scroll.scroll-y;
-  @include scroll.scroll-x;
+  @include scroll.scroll-x-y;
 }
 
 .wy-content-pdf {

@@ -1,0 +1,70 @@
+@use "sass:math";
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/backdrop";
+@use "../base/position";
+@use "../base/text";
+
+[part~="wy-titlebar"] {
+  --wy-component-color: #{color.token(--wy-on-surface)};
+
+  box-sizing: border-box;
+  display: grid;
+  align-items: center;
+  justify-content: space-between;
+  justify-items: center;
+  min-height: var.default(--wy-titlebar-height);
+  padding: calc(var.default(--wy-padding-sm));
+  flex: 0 0 var.default(--wy-titlebar-height);
+  grid-template-columns: #{var.default(--wy-button-size)} minmax(0, max-content) #{var.default(--wy-button-size)};
+  column-gap: calc(2 * var.default(--wy-gap) + var.default(--wy-button-size));
+  line-height: var.default(--wy-line-height);
+
+  color: var(--wy-component-color);
+}
+
+[part~="wy-titlebar-buttons"],
+[part~="wy-titlebar-section"] {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
+  max-width: 100%;
+  box-shadow: var(--wy-component-box-shadow);
+  border-radius: var.default(--wy-button-border-radius);
+  background-color: var(--wy-component-background-color);
+  
+  /*@supports (background-color: color(from var(--wy-component-background-color) srgb r g b / 0.5)) {
+    background-color: color(from var(--wy-component-background-color) srgb r g b / 0.5);
+    backdrop-filter: blur(4px);
+  }*/
+}
+
+[part~="wy-titlebar-lg"] {
+  padding: var.default(--wy-padding);
+  height: auto;
+}
+
+[part~="wy-titlebar-buttons-first"] {
+  justify-content: flex-start;
+}
+
+[part~="wy-titlebar-buttons-last"] {
+  justify-content: flex-end;
+}
+
+[part~="wy-titlebar-text"] {
+  max-width: 100%;
+  display: block;
+
+  color: inherit !important;
+  user-select: none;
+  padding: var.default(--wy-padding);
+
+  @include text.truncate;
+}
+
+[part~="wy-titlebar-text-trashed"] {
+  text-decoration: line-through;
+}

@@ -1,17 +1,17 @@
-@use "base/color";
-@use "base/var";
-@use "base/highlight";
+@use "../base/color";
+@use "../base/var";
+@use "../base/highlight";
 
-.wy-posts {
+[part~="wy-posts"] {
   display: flex;
   flex-direction: column;
-  gap: var.wy-rem(1);
+  gap: var.default(--wy-gap-xl);
 }
 
-.wy-post {
-  --wy-component-background-color: #{color.token(--wy-surface-1)};
+// post form
+[part~="wy-posts-header"] {
   --wy-component-color: #{color.token(--wy-on-surface)};
-  background-color: var(--wy-component-background-color);
+  background-color: #{color.token(--wy-surface-container-low)};
   color: var(--wy-component-color);
 
   display: flex;
@@ -19,67 +19,84 @@
   position: relative;
 
   --wy-component-border-radius: #{var.default(--wy-border-radius)};
+  border-radius: var.default(--wy-border-radius-outer);
+}
+
+[part~="wy-post"] {
+  --wy-component-color: #{color.token(--wy-on-surface)};
+  background-color: #{color.token(--wy-background)};
+  color: var(--wy-component-color);
+
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  clip-path: border-box;
+
+  --wy-component-border-radius: #{var.default(--wy-border-radius)};
   border-radius: var(--wy-component-border-radius);
 
   @include highlight.flash;
-
-  wy-comment-list {
-    border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
-  }
 }
 
-.wy-post-area {
-  border-radius: var.default(--wy-border-radius-sm);
+[part~="wy-post-images"] {
+  display: flex;
+  flex-direction: column;
+  margin-top: var.default(--wy-gap-lg);
 }
 
-.wy-post-area-full-width {
-  border-radius: 0;
+[part~="wy-post-header"] {
+  display: flex;
+  flex-direction: column;
+  padding: var.default(--wy-gap-lg) var.default(--wy-padding-lg) 0;
+  gap: var.default(--wy-gap-lg);
 }
 
-.wy-post-body {
+[part~="wy-post-body"] {
   display: flex;
   flex-direction: column;
 
-  padding: var.default(--wy-padding) var.default(--wy-padding-lg);
-  gap: var.default(--wy-gap-lg);
-
-  &:empty {
-    display: none;
-  }
+  padding: var.default(--wy-padding-lg) var.default(--wy-padding) 0;
+  gap: var.default(--wy-gap-xl);
 }
 
-.wy-post-footer {
+[part~="wy-post-footer"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 calc(var.default(--wy-padding) * .75) calc(var.default(--wy-padding) * .75);
-
-  .wy-meta {
-    margin-right: var.wy-rem(0.5);
-  }
+  padding: var.default(--wy-padding) var.default(--wy-padding-lg) var.default(--wy-padding) var.default(--wy-padding);
 }
 
-.wy-post-comments {
-  &:not(:empty) {
+[part~="wy-post-content"] {
+  padding: 0 var.default(--wy-padding-sm);
+}
+
+[part~="wy-post-comments"] {
+  background-color: #{color.token(--wy-surface-container-low)};
+  border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
+
+  interpolate-size: allow-keywords;
+
+  padding: 0 var.default(--wy-padding);
+  height: 0;
+  visibility: hidden;
+
+  transition: height var.default(--wy-transition), padding var.default(--wy-transition-fast);
+
+  overflow: hidden;
+
+  &[part~="wy-show"] {
+    height: auto;
+    visibility: visible;
     padding: var.default(--wy-padding);
   }
 }
 
-.wy-post-dragging {
-  &::after {
-    content: attr(data-drag-title, "Drop files here to upload.");
-    background-color: rgba(255, 255, 255, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: var.wy-rem(2px) dashed color.token(--wy-primary);
-    font-weight: var.default(--wy-font-weight-bold);
-    z-index: 10000;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-  }
+// style for trashed post
+[part~="wy-post-trashed"] {
+  padding-bottom: var.default(--wy-padding-lg);
 }
 
+::part(wy-trashed) {
+  text-decoration: line-through;
+  color: color.token(--wy-outline);
+}

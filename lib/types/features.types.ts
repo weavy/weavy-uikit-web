@@ -19,10 +19,6 @@ export enum Feature {
    */
   Attachments = "attachments",
   /**
-   * AI Agents available.
-   */
-  agents = "agents",
-  /**
    * Cloud file picker (Google Drive, Dropbox etc.).
    */
   CloudFiles = "cloud_files",

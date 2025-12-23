@@ -1,46 +1,72 @@
-@use "base/color";
-@use "base/var";
-@use "base/text";
-@use "base/highlight";
+@use "../base/color";
+@use "../base/var";
+@use "../base/text";
+@use "../base/highlight";
 
-.wy-comments {
+:host(wy-comments) {
+  --wy-component-background-color: #{color.token(--wy-surface-container)};
+  --wy-component-border-radius: #{var.default(--wy-border-radius-outer)};
+}
+
+
+[part~="wy-comment-list-padded"] {
+  padding: var.default(--wy-padding);
+}
+
+[part~="wy-comments"] {
   display: flex;
   flex-direction: column;
-  gap: var.default(--wy-gap-xl);
-  margin-bottom: var.default(--wy-gap);
 }
 
-.wy-comments-padded {
-  margin: var.default(--wy-gap);
-}
-
-.wy-comment {
-  --wy-component-background-color: #{color.token(--wy-surface-3)};
-  --wy-component-color: #{color.token(--wy-on-surface)};
-  --wy-component-border-radius: #{var.default(--wy-border-radius)};
-  border-radius: var(--wy-component-border-radius);
-  background-color: var(--wy-component-background-color);
-  color: var(--wy-component-color);
+[part~="wy-comment"] {
   display: flex;
   flex-direction: column;
   gap: var.default(--wy-gap-sm);
-  position: relative;
-
+  margin-bottom: var.default(--wy-gap-sm);
   @include highlight.flash;
 }
 
-.wy-comment-body {
-  flex: 1 0 auto;
-  z-index: 1;
+[part~="wy-comment-reveal"] {
+  interpolate-size: allow-keywords;
+
+  overflow: hidden;
+  transition: height var.default(--wy-transition-fast), margin-bottom var.default(--wy-transition-fast), opacity var.default(--wy-transition-fast) var.default(--wy-transition-duration-fast);
+  
+  height: auto;
+  opacity: 1;
+
+  @starting-style {
+    height: 0;
+    margin-bottom: 0;
+    opacity: 0;
+  }
 }
 
-.wy-comment-content {
-  padding: 0 var.default(--wy-padding) var.default(--wy-padding);
+[part~="wy-comment-skeleton"] {
+  transition-delay: var.default(--wy-transition-reveal-delay);
+}
+
+[part~="wy-comment-body"] {
   display: flex;
   flex-direction: column;
-  gap: var.default(--wy-gap);
+  gap: var.default(--wy-gap-lg);
+  min-width: 0;
+  flex: 1 1 100%;
 }
 
-.wy-comment-area {
-    border-radius: var.default(--wy-border-radius-sm);
+[part~="wy-comment-footer"] {
+  margin-left: calc(-1 * var.default(--wy-padding));
+  margin-top: calc(-1 * var.default(--wy-padding));
+}
+
+// style for trashed comments
+::part(wy-trashed) {
+  text-decoration: line-through;
+  color: color.token(--wy-outline);
+}
+
+wy-comment::part(wy-editor) {
+  padding-left: 0;
+  padding-right: 0;
+  margin-right: calc(-1 * var.default(--wy-size));
 }

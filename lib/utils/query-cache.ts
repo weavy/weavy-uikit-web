@@ -65,19 +65,19 @@ export function addToQueryData<
           // remove any existing item
           const newData = pageData.filter(
             (pageItem) =>
-              pageItem.id !== (item as TDataItem & PlainObjectType).id && (!previousId || pageItem.id !== previousId)
+              pageItem.id !== item.id && (!previousId || pageItem.id !== previousId)
           );
 
           if (sorting && sorting.by) {
             // Use sorting
             foundIndex = newData.findIndex((pageItem) => {
               let pageItemValue = sorting.by && pageItem[sorting.by];
-              let itemValue = sorting.by && (item as TDataItem & PlainObjectType)[sorting.by];
+              let itemValue = sorting.by && item[sorting.by];
 
               // updated_at should fallback to created_at
               if (sorting.by === "updated_at") {
                 pageItemValue ??= pageItem["created_at"];
-                itemValue ??= (item as TDataItem & PlainObjectType)["created_at"];
+                itemValue ??= item["created_at"];
               }
 
               if (typeof pageItemValue === "string" && typeof itemValue === "string") {

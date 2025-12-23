@@ -2,30 +2,68 @@ import { html, nothing, TemplateResult } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
-
-import WyEditor from "./wy-editor";
-import "./base/wy-dropdown";
-import "./base/wy-icon";
-import "./base/wy-button";
 import { Feature } from "../types/features.types";
 
+import messageEditorCss from "../scss/components/editor-message.scss";
+
+import { WyEditor } from "./wy-editor";
+import "./ui/wy-dropdown";
+import "./ui/wy-icon";
+import "./ui/wy-button";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-message-editor": WyMessageEditor;
+  }
+}
+
+/**
+ * Message editor used inside conversations for composing messages.
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-dropdown>`](./ui/wy-dropdown.ts)
+ * - [`<wy-dropdown-item>`](./ui/wy-dropdown.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ * - [`<wy-button>`](./ui/wy-button.ts)
+ *
+ * @csspart wy-message-editor-inputs - Container for the editor inputs and add menu
+ * @csspart wy-message-editor-text - Wrapper for the editor text area
+ */
 @customElement("wy-message-editor")
 @localized()
 export class WyMessageEditor extends WyEditor {
+
+  static override styles = [...WyEditor.styles, messageEditorCss];
+
   constructor() {
     super();
     this.editorType = "messages";
     this.editorClass = "wy-message-editor";
   }
 
+  /**
+   * Render content that appears above the message editor.
+   *
+   * By default returns the same lists section used by the base editor.
+   *
+   * @internal
+   */
   protected override renderTopSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return [
       this.renderLists()
     ];
   }
 
+  /**
+   * Render the primary middle slot containing the add-menu, editor and send button.
+   *
+   * Overrides the base implementation to provide message-specific controls and layout.
+   *
+   * @internal
+   */
   protected override renderMiddleSlot() {
-    return html` <div class="wy-message-editor-inputs">
+    return html` <div part="wy-message-editor-inputs">
       <!-- Add -->
       ${this.componentFeatures?.allowsAnyFeature(
         Feature.Attachments,
@@ -105,7 +143,7 @@ export class WyMessageEditor extends WyEditor {
         : nothing}
 
       <!-- Input -->
-      <div class="wy-message-editor-text" ${ref(this.editorRef)}> ${this.renderEditorDummy()} </div>
+      <div part="wy-message-editor-text" ${ref(this.editorRef)}> ${this.renderEditorDummy()} </div>
 
       <!-- Button -->
       <wy-button
@@ -120,6 +158,11 @@ export class WyMessageEditor extends WyEditor {
     </div>`;
   }
 
+  /**
+   * Render the bottom slot for message editor with no content.
+   *
+   * @internal
+   */
   protected override renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return nothing;
   }

@@ -6,7 +6,7 @@
  */
 export function defer(callback: () => void) {
   throwOnDomNotAvailable();
-  
+
   if (document.readyState !== "loading") {
     callback();
   } else {
@@ -48,20 +48,20 @@ export const observeConnected = (target: Element, callback: (isConnected: boolea
 };
 
 export async function whenConnected(target: Element, connected: boolean = true) {
-    if (target.isConnected === connected) {
-        return connected;
-    } else {
-        let resolveConnectPromise: (value: unknown) => void
-        const connectPromise = new Promise((r) => resolveConnectPromise = r)
-        const observer = observeConnected(target, (isConnected) => {
-            if (isConnected === connected) {
-                resolveConnectPromise?.(connected);
-            }
-        })
-        await connectPromise;
-        observer.disconnect();
-        return connected;
-    }
+  if (target.isConnected === connected) {
+    return connected;
+  } else {
+    let resolveConnectPromise: (value: unknown) => void;
+    const connectPromise = new Promise((r) => (resolveConnectPromise = r));
+    const observer = observeConnected(target, (isConnected) => {
+      if (isConnected === connected) {
+        resolveConnectPromise?.(connected);
+      }
+    });
+    await connectPromise;
+    observer.disconnect();
+    return connected;
+  }
 }
 
 export async function whenDocumentVisible() {
@@ -92,21 +92,35 @@ export const defaultVisibilityCheckOptions: CheckVisibilityOptions = {
   checkVisibilityCSS: true,
 };
 
-export function untilVisibility(target: HTMLElement, visibility: boolean = true, options: CheckVisibilityOptions = defaultVisibilityCheckOptions, callBack: (value: unknown) => void) {
-  if(target.checkVisibility(options) === visibility) {
+export function untilVisibility(
+  target: HTMLElement,
+  visibility: boolean = true,
+  options: CheckVisibilityOptions = defaultVisibilityCheckOptions,
+  callBack: (value: unknown) => void
+) {
+  if (target.checkVisibility(options) === visibility) {
     callBack(visibility);
   } else {
-    requestAnimationFrame(() => untilVisibility(target, visibility, options, callBack))
+    requestAnimationFrame(() => untilVisibility(target, visibility, options, callBack));
   }
 }
 
-export async function whenElementVisible(target: HTMLElement, visibility: boolean = true, options: CheckVisibilityOptions = defaultVisibilityCheckOptions) {
+export async function whenElementVisible(
+  target: HTMLElement,
+  visibility: boolean = true,
+  options: CheckVisibilityOptions = defaultVisibilityCheckOptions
+) {
   if (target.checkVisibility(options) !== visibility) {
     const whenVisible = new Promise((r) => {
       untilVisibility(target, visibility, options, r);
     });
     await whenVisible;
   }
+}
+
+// Helper to check for modified clicks (ctrl, meta, middle click)
+export function isModifiedClick(e: MouseEvent): boolean {
+  return e.ctrlKey || e.metaKey || e.button === 1;
 }
 
 export function isInShadowDom(node: Node) {
@@ -121,20 +135,56 @@ export function isPopoverPolyfilled() {
   // if the `showPopover` method is defined but is not "native code"
   // then we can infer it's been polyfilled
   // See https://github.com/oddbird/popover-polyfill/blob/main/src/popover.ts
-  return Boolean(
-    document.body?.showPopover &&
-      !/native code/i.test(document.body.showPopover.toString()),
-  );
+  return Boolean(document.body?.showPopover && !/native code/i.test(document.body.showPopover.toString()));
 }
 
 export function isDomAvailable() {
   // SSR friendly check
-  return typeof window !== 'undefined'
+  return typeof window !== "undefined";
 }
 
 export function throwOnDomNotAvailable() {
   // SSR friendly check
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     throw Error("DOM not available");
   }
+}
+
+export function getParent(element: Element | undefined, matches: (element: Element) => boolean): Element | undefined {
+  throwOnDomNotAvailable();
+
+  if (element) {
+    // Check parentElement for normal DOM traversing
+    // Check parentNode and/or host to get passed a shadow DOM
+    for (
+      let parent: Element | ParentNode | null = element;
+      (parent = parent.parentElement || parent.parentNode || (parent as unknown as ShadowRoot).host);
+
+    ) {
+      if (!(parent instanceof Element)) {
+        continue;
+      }
+
+      if (matches(parent)) {
+        return parent;
+      }
+      continue;
+    }
+  }
+
+  return undefined;
+}
+
+export function inOverlay(element?: Element) {
+  return getParent(element, (el) => {
+    const styles = getComputedStyle(el);
+    const isOverlay =
+      el instanceof HTMLElement &&
+      (el.localName === "wy-overlay" ||
+        el.popover ||
+        styles.position === "fixed" ||
+        // @ts-expect-error overlay not in CSSStyleDeclaration
+        styles.overlay === "auto");
+    return Boolean(isOverlay);
+  });
 }

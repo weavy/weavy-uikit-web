@@ -54,16 +54,19 @@ export class ShadowPartsController implements ReactiveController {
     if (isInShadowDom(this.host) && this.host.shadowRoot) {
       // Set initial parts
       const mutationTargets: Element[] = Array.from(this.host.shadowRoot.querySelectorAll("[part], [exportparts]"));
+
       this.setExportParts(mutationTargets);
 
       // observe changing parts
       this.observer = new MutationObserver((mutationList) => {
+        // get attribute target or added nodes
         const mutationTargets: Element[] = mutationList
-          .filter((mutation) => mutation.target instanceof Element)
-          .map((mutation) => mutation.target as Element);
+          .flatMap((mutation) => (mutation.type === "attributes" ? [mutation.target] : Array.from(mutation.addedNodes)))
+          .filter((node) => node instanceof Element);
 
         this.setExportParts(mutationTargets);
       });
+
       this.observer.observe(this.host.shadowRoot, {
         subtree: true,
         childList: true,

@@ -32,17 +32,32 @@ export interface WeavyFetchProps {
    * @param body { string | FormData } - The data to send.
    * @param [contentType] {HeaderContentType} - Optional content type of the body. Defaults to "application/json;charset=utf-8"
    * @param onProgress {(progress: number) => void} Callback function for the progress. The progress parameter is provided as 0-100 percent.
+   * @param signal {AbortSignal} Optional abort signal for cancelling the upload.
    * @returns { Promise<Response> } A standard fetch() Response
    */
   upload: (
+    /** The URL to the Web API endpoint. Note: Only Web API URL:s are supported. */
     url: string | URL,
+    /** The http method to use. */
     method: HttpUploadMethodType,
+    /** The data to send. */
     body: string | FormData,
+    /** Optional content type of the body. Defaults to "application/json;charset=utf-8" */
     contentType?: HeaderContentType,
+    /** 
+     * Callback function for the progress. The progress parameter is provided as 0-100 percent.
+    * @param progress { number } - The progress provided as 0-100 percent.
+    **/
     onProgress?: (progress: number) => void,
+    /**
+     * Optional abort signal for cancelling the upload.
+     */
+    signal?: AbortSignal,
   ) => Promise<Response>;
 
   /**
+   * DEPRECATED: Use `.fetch(url)` instead.
+   * 
    * Gets an Web API URL and returns a Response.
    *
    * @deprecated Use .fetch(url) instead.
@@ -52,6 +67,8 @@ export interface WeavyFetchProps {
   get: (url: string | URL) => Promise<Response>;
 
   /**
+   * DEPRECATED: Use `.fetch(url, options)` instead.
+   * 
    * Posts data to the Web API and returns a Response.
    *
    * @deprecated Use .fetch(url, options) instead.
@@ -152,6 +169,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
       body: string | FormData,
       contentType: HeaderContentType = HeaderContentType.JSON,
       onProgress?: (progress: number) => void,
+      signal?: AbortSignal,
       retry: boolean = true
     ) {
       if (this.isDestroyed) {
@@ -178,7 +196,7 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
         xhr.onload = (_evt: ProgressEvent<EventTarget>) => {
           if (retry && (xhr.status === 401 || xhr.status === 401)) {
             this.getToken(true)
-              .then(() => this.upload(url, method, body, contentType, onProgress, false))
+              .then(() => this.upload(url, method, body, contentType, onProgress, signal, false))
               .then(resolve)
               .catch(reject);
           } else {
@@ -186,6 +204,10 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
           }
         };
         xhr.onerror = reject;
+        xhr.onabort = reject;
+        signal?.addEventListener('abort', () => {
+          xhr.abort();
+        })
         xhr.send(body);
       });
     }

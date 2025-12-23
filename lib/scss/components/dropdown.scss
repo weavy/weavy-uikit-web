@@ -1,22 +1,14 @@
-@use "base/var";
-@use "base/const";
-@use "base/color";
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
 
-$dropdown-spacer: var.wy-rem(.25);
+$dropdown-spacer: var.wy-rem(0.25);
 $dropdown-min-width: var.wy-rem(10);
 $dropdown-font-size: var.default(--wy-font-size);
 $dropdown-border-radius: var.default(--wy-dropdown-border-radius);
 $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
 
-.wy-dropdown {
-  position: relative
-}
-
-.wy-dropdown-toggle {
-  white-space: nowrap;
-}
-
-.wy-dropdown-menu {
+[part~="wy-dropdown-menu"] {
   width: max-content;
   position: absolute;
 
@@ -26,9 +18,9 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
   border: none;
   padding: 0;
 
-  --wy-component-background-color: #{color.token(--wy-surface-2)};
+  --wy-component-background-color: #{color.token(--wy-surface-container-lowest)};
   --wy-component-color: #{color.token(--wy-on-surface)};
-  
+
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
 
@@ -45,12 +37,13 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
   }
 }
 
-.wy-dropdown-item {
+[part~="wy-dropdown-item"] {
   background-color: transparent; // For `<button>`s
   color: var(--wy-component-color, #{color.token(--wy-on-surface)});
 
   display: flex;
   width: 100%; // For `<button>`s
+  min-height: var.wy-rem(2.5);
   padding: var.default(--wy-dropdown-padding-y) var.default(--wy-dropdown-padding-x);
   clear: both;
   font-family: var.default(--wy-font-family), inherit;
@@ -77,7 +70,7 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
     text-decoration: none;
   }
 
-  &.wy-active,
+  &[part~="wy-active"],
   &:active {
     --wy-component-color: #{color.token(--wy-on-primary-container)};
     --wy-component-background-color: #{color.token(--wy-primary-container)};
@@ -87,10 +80,10 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
     text-decoration: none;
   }
 
-  &.wy-disabled,
+  &[part~="wy-disabled"],
   &:disabled {
     //--wy-component-color: #{color.token(--wy-on-surface};
-    //--wy-component-background-color: #{color.token(--wy-surface-3};
+    //--wy-component-background-color: #{color.token(--wy-surface-container};
 
     color: var(--wy-component-color);
     background-color: var(--wy-component-background-color);
@@ -98,40 +91,36 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
     opacity: var.default(--wy-opacity-disabled);
   }
 
-  > img, > wy-icon {
-    margin-right: var.wy-rem(.5);
+  > img,
+  > wy-icon {
+    margin-right: var.wy-rem(0.5);
+    color: inherit;
+  }
 
-    &, & .wy-icon {
+  // Again?
+  &:active {
+    > wy-icon {
       color: inherit;
     }
   }
 
-  &:active {
-    > wy-icon {
-      &, & .wy-icon {
-        color: inherit;
-      }
-    }
-  }
-
   // dropdown item with icon for marking selection option
-  &.wy-option {
+  &[part~="wy-dropdown-option"] {
     wy-icon {
       visibility: hidden;
     }
-    &.wy-selected {
+    &[part~="wy-selected"] {
       wy-icon {
         visibility: visible;
-      } 
+      }
     }
   }
 }
 
-.wy-dropdown-divider {
+[part~="wy-dropdown-divider"] {
   height: 0;
   margin: 0;
   overflow: hidden;
   border: none;
   border-top: var.default(--wy-dropdown-border-width) solid color.token(--wy-outline-variant);
 }
-

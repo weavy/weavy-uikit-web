@@ -1,5 +1,5 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
 
 // presence indicator
 [part~=wy-presence] {
@@ -42,6 +42,6 @@
     bottom: unset;
     right: unset;
     &::after {
-      left: var.wy-rem(-1);
+      left: var.wy-rem(-.5);
     }
 }

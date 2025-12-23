@@ -8,46 +8,108 @@ import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { environmentUrl } from "../utils/urls";
+import type { FilePreviewLoadedEventType } from "../types/files.events";
+import type { NamedEvent } from "../types/generic.types";
 
 //import * as type pdfjsLibType from "pdfjs-dist";
 import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 //import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
 
-import allCss from "../scss/all.scss";
-import hostContentsCss from "../scss/host-contents.scss";
-
-import "./base/wy-button";
-import "./base/wy-icon";
-
 type pdfjsLibType = typeof import("pdfjs-dist");
 type pdfjsViewerType = typeof import("pdfjs-dist/web/pdf_viewer.mjs");
 
+import pdfCss from "../scss/components/preview-pdf.scss";
+import toolbarCss from "../scss/components/toolbar.scss";
+import inputCss from "../scss/components/input.scss";
+import hostContentsCss from "../scss/host-contents.scss";
+
+import "./ui/wy-button";
+import "./ui/wy-icon";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-pdf-viewer": WyPdfViewer;
+  }
+}
+
 /**
- * PDF Viewer component based on pdfjs examples
+ * PDF Viewer component based on pdf.js examples.
  *
  * @see https://github.com/mozilla/pdf.js/blob/master/examples/mobile-viewer
  * @see https://github.com/mozilla/pdf.js/blob/master/examples/components/
+ * 
+ * **Used sub components:**
+ *
+ * - [`<wy-button>`](./ui/wy-button.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ *
+ * @csspart wy-toolbars-bottom - Bottom toolbar wrapper.
+ * @csspart wy-toolbar - Toolbar container.
+ * @csspart wy-toolbar-center - Centered toolbar area.
+ * @csspart wy-toolbar-buttons - Button group inside toolbar.
+ * @csspart wy-input - Inputs in toolbars (page number / zoom).
+ * @csspart wy-toolbar-center-text - Centered text in toolbar.
+ * @csspart wy-toolbar-text - Text elements in the toolbar.
+ * @csspart wy-pdf-container - Viewer container for PDF pages.
+ * 
+ * @fires {FilePreviewLoadedEventType} file-preview-loaded - The file preview is considered loaded.
  */
 
 @customElement("wy-pdf-viewer")
 @localized()
-export default class WyPdfViewer extends LitElement {
+export class WyPdfViewer extends LitElement {
   static override styles = [
-    allCss,
+    pdfCss,
+    toolbarCss,
+    inputCss,
     hostContentsCss,
   ];
 
+  /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
+  /** @internal */
   @consume({ context: WeavyContext, subscribe: true })
   @state()
   weavy?: WeavyType;
 
-  whenPdfjsResolve?: (value: { pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }) => void
-  whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType, pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
+  /**
+   * Emit `file-preview-loaded` once the viewer has initialized.
+   *
+   * @returns {boolean} True if the event was not canceled.
+   */
+  protected dispatchLoaded() {
+    const event: FilePreviewLoadedEventType = new (CustomEvent as NamedEvent)("file-preview-loaded");
+    return this.dispatchEvent(event);
+  }
 
+  /**
+   * Deferred resolver used while lazily loading pdf.js modules.
+   *
+   * @internal
+   */
+  whenPdfjsResolve?: (value: { pdfjsLib: pdfjsLibType; pdfjsViewer: pdfjsViewerType }) => void;
+
+  /**
+   * Promise that resolves when both pdf.js core and viewer modules are available.
+   *
+   * @internal
+   */
+  whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType; pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
+
+  /**
+   * Cached pdf.js core module.
+   *
+   * @internal
+   */
   pdfjsLib?: pdfjsLibType;
+
+  /**
+   * Cached pdf.js viewer helpers.
+   *
+   * @internal
+   */
   pdfjsViewer?: pdfjsViewerType;
 
   MAX_CANVAS_PIXELS = 0; // CSS-only zooming.
@@ -74,27 +136,79 @@ export default class WyPdfViewer extends LitElement {
   DEFAULT_CMAPS_URL: string = "/pdfjs/cmaps/";
   WORKER_URL?: URL;
 
+  /**
+   * Source URL for the PDF to display.
+   */
   @property()
   src!: string;
 
+  /**
+   * Input reference controlling the current page number.
+   *
+   * @internal
+   */
   pageNumberRef: Ref<HTMLInputElement> = createRef<HTMLInputElement>();
+
+  /**
+   * Span reference showing the total number of pages.
+   *
+   * @internal
+   */
   totalPagesRef: Ref<HTMLSpanElement> = createRef<HTMLSpanElement>();
+
+  /**
+   * Input reference controlling zoom level.
+   *
+   * @internal
+   */
   zoomLevelRef: Ref<HTMLInputElement> = createRef<HTMLInputElement>();
 
+  /**
+   * Container that hosts the PDF viewer.
+   *
+   * @internal
+   */
   viewerContainerRef = createRef<HTMLDivElement>();
 
   /////
 
   //pdfLoadingTask: null,
   pdfDocument?: PDFDocumentProxy;
+
+  /**
+   * Localization helper provided by pdf.js.
+   *
+   * @internal
+   */
   l10n?: GenericL10n;
 
+  /**
+   * Browser history helper for the PDF viewer.
+   *
+   * @internal
+   */
   pdfHistory?: PDFHistory;
 
+  /**
+   * Active PDF viewer instance.
+   *
+   * @internal
+   */
   @state()
   pdfViewer?: PDFViewer;
 
+  /**
+   * Event bus used by pdf.js sub-components.
+   *
+   * @internal
+   */
   pdfEventBus?: EventBus;
+
+  /**
+   * Link service used to handle internal navigation.
+   *
+   * @internal
+   */
   pdfLinkService?: PDFLinkService;
   /*pdfFindController: PDFFindController = new PDFFindController({
     eventBus: this.pdfEventBus,
@@ -120,6 +234,12 @@ export default class WyPdfViewer extends LitElement {
   });
 
   ////////
+
+  /**
+   * Open the configured PDF source in the viewer.
+   *
+   * @internal
+   */
   protected async open() {
     const { pdfjsLib } = await this.whenPdfjs;
     if (!this.pdfViewer || !this.pdfHistory || !this.l10n || !this.pdfLinkService) {
@@ -173,8 +293,15 @@ export default class WyPdfViewer extends LitElement {
       });
       //this.loadingBar.hide();
     }
+
+    this.dispatchLoaded();
   }
 
+  /**
+   * Close any currently loaded PDF and release resources.
+   *
+   * @internal
+   */
   protected async close() {
     if (!this.pdfLoadingTask) {
       return Promise.resolve();
@@ -198,7 +325,15 @@ export default class WyPdfViewer extends LitElement {
     return await destructionPromise;
   }
 
-  protected pdfViewError(pdfjsLib: pdfjsLibType ,message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
+  /**
+   * Log a pdf.js related error with contextual metadata.
+   *
+   * @internal
+   * @param pdfjsLib - pdf.js core library.
+   * @param message - Human readable error.
+   * @param moreInfo - Additional error metadata.
+   */
+  protected pdfViewError(pdfjsLib: pdfjsLibType, message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
     const moreInfoText = [`PDF.js v${pdfjsLib?.version || "?"} (build: ${pdfjsLib?.build || "?"})`];
     if (moreInfo) {
       moreInfoText.push(`Message: ${moreInfo.message}`);
@@ -220,6 +355,11 @@ export default class WyPdfViewer extends LitElement {
 
   ///////
 
+  /**
+   * Navigate to the provided page number.
+   *
+   * @param pageNumber - One-based page index.
+   */
   setPage(pageNumber: number) {
     //console.debug("setPage:", pageNumber)
     if (this.pdfViewer) {
@@ -227,6 +367,11 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
+  /**
+   * Increase zoom level by the configured delta.
+   *
+   * @param ticks - Number of zoom steps to apply.
+   */
   zoomIn(ticks: number = 0) {
     if (this.pdfViewer) {
       let newScale = this.pdfViewer.currentScale;
@@ -239,6 +384,11 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
+  /**
+   * Decrease zoom level by the configured delta.
+   *
+   * @param ticks - Number of zoom steps to apply.
+   */
   zoomOut(ticks: number = 0) {
     if (this.pdfViewer) {
       let newScale = this.pdfViewer.currentScale;
@@ -251,6 +401,11 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
+  /**
+   * Apply an absolute zoom level or named scale preset.
+   *
+   * @param scale - Numeric zoom or preset name.
+   */
   setScale(scale: number | string) {
     //console.debug("setScale:", scale)
     if (this.pdfViewer) {
@@ -258,6 +413,9 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
+  /**
+   * Validate and update the current page based on the input value.
+   */
   updatePage() {
     //console.debug("updatePage");
     if (this.pdfViewer && this.pageNumberRef.value) {
@@ -275,6 +433,11 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
+  /**
+   * Select all text inside an input, aiding quick replacement.
+   *
+   * @param e - Input focus event.
+   */
   select(e: Event) {
     //console.debug("select");
     const input = e.target as EventTarget as HTMLInputElement;
@@ -283,14 +446,23 @@ export default class WyPdfViewer extends LitElement {
     }
   }
 
+  /**
+   * Fit the PDF to the current viewport height.
+   */
   fitToPage() {
     this.setScale("page-fit");
   }
 
+  /**
+   * Fit the PDF to the current viewport width.
+   */
   fitToWidth() {
     this.setScale("page-width");
   }
 
+  /**
+   * Validate and persist zoom level from the input field.
+   */
   updateZoom() {
     //console.debug("updateZoom");
     if (this.pdfViewer && this.zoomLevelRef.value) {
@@ -447,28 +619,30 @@ export default class WyPdfViewer extends LitElement {
     //console.log("wy-pdf-viewer render")
     return html`
       <div class="wy-content-pdf">
-        <div class="wy-toolbars-bottom">
-          <nav class="wy-toolbar wy-toolbar-center">
-            <div class="wy-toolbar-buttons">
+        <div part="wy-toolbars-bottom">
+          <nav part="wy-toolbar wy-toolbar-center">
+            <div part="wy-toolbar-buttons">
               <input
                 type="text"
-                class="wy-input wy-pdf-page-number"
+                part="wy-input wy-toolbar-center-text"
+                class="wy-pdf-page-number"
                 ${ref(this.pageNumberRef)}
                 @keydown=${inputBlurOnEscape}
                 @keyup=${inputConsume}
                 @change=${() => this.updatePage()}
                 @click=${(e: MouseEvent) => this.select(e)}
               />
-              <span class="wy-toolbar-text">/</span>
-              <span class="wy-toolbar-text" ${ref(this.totalPagesRef)}>1</span>
+              <span part="wy-toolbar-text">/</span>
+              <span part="wy-toolbar-text" ${ref(this.totalPagesRef)}>1</span>
             </div>
-            <div class="wy-toolbar-buttons">
+            <div part="wy-toolbar-buttons">
               <wy-button kind="icon" class="btn-zoom-out" @click=${() => this.zoomOut()} title=${msg("Zoom out")}>
                 <wy-icon name="minus"></wy-icon>
               </wy-button>
               <input
                 type="text"
-                class="wy-input wy-pdf-zoom-level"
+                part="wy-input"
+                class="wy-pdf-zoom-level"
                 ${ref(this.zoomLevelRef)}
                 @keydown=${inputBlurOnEscape}
                 @keyup=${inputConsume}
@@ -480,7 +654,7 @@ export default class WyPdfViewer extends LitElement {
                 <wy-icon name="plus"></wy-icon>
               </wy-button>
             </div>
-            <div class="wy-toolbar-buttons">
+            <div part="wy-toolbar-buttons">
               <wy-button kind="icon" class="btn-fit-page" @click=${() => this.fitToWidth()} title=${msg("Fit to width")}>
                 <wy-icon name="fit-width"></wy-icon>
               </wy-button>

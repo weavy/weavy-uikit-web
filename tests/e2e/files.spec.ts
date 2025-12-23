@@ -101,7 +101,7 @@ test("trash, restore and delete a file", async ({ page }) => {
   // Verify the file is visible and has strike through
   //let row = page.locator("tr", { has: page.locator(`text="${filename}"`) });
   await expect(fileRow).toBeVisible();
-  await expect(fileRow).toHaveClass(/wy-table-row-trashed/);
+  await expect(fileRow).toHaveClass(/wy-trashed/);
 
   // Restore it
   //elemSideMenu = row.locator("wy-file-menu");
@@ -115,7 +115,7 @@ test("trash, restore and delete a file", async ({ page }) => {
   //row = page.locator("tr", { has: page.locator(`text="${filename}"`) });
   await expect(fileRow).toBeVisible();
   const list = await fileRow.getAttribute("class");
-  expect(list?.includes("wy-table-row-trashed")).toBeFalsy();
+  expect(list?.includes("wy-trashed")).toBeFalsy();
 
   // Trash and delete it
   //elemSideMenu = row.locator("wy-file-menu");
@@ -265,7 +265,7 @@ async function sortByHeader(page: Page, headerName: string) {
   await expect(page.getByText(fileZ)).toBeVisible();
 
   // Sort by clicking column header
-  const header = page.locator(".wy-table-sort-link", { hasText: headerName });
+  const header = page.locator(".wy-sort-link", { hasText: headerName });
   const files = page.locator("wy-files-list").locator("tbody").locator("tr");
   await expect(header).toBeVisible();
   if (headerName != "Name") {

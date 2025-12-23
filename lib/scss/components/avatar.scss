@@ -1,22 +1,22 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
 
 :host(wy-avatar) {
   position: relative;
   display: inline-flex;
 }
 
-[part~=wy-avatar-shape] {
+[part~="wy-avatar-shape"] {
   border-radius: var.default(--wy-avatar-border-radius);
 }
 
-[part~=wy-avatar-img] {
+[part~="wy-avatar-img"] {
   width: var(--wy-component-avatar-size, var.wy-rem(2));
   height: var(--wy-component-avatar-size, var.wy-rem(2));
   object-fit: cover;
 }
 
-[part~=wy-avatar-initials] {
+[part~="wy-avatar-initials"] {
   background-color: var(--wy-component-avatar-background-color, #{color.token(--wy-primary)});
   color: var(--wy-component-avatar-color, #{color.token(--wy-on-primary)});
   width: var(--wy-component-avatar-size, var.wy-rem(2));
@@ -29,25 +29,22 @@
   font-size: calc(var(--wy-component-avatar-size, var.wy-rem(2)));
 }
 
-[part~=wy-avatar-initials-text] {
+[part~="wy-avatar-initials-text"] {
   font-size: max(8px, #{var.default(--wy-avatar-font-size)});
   font-weight: var.default(--wy-avatar-font-weight);
-  line-height: 1;
+  line-height: normal;
 }
 
-[part~=wy-avatar-type] {
+[part~="wy-avatar-type-icon"] {
   display: flex;
   position: absolute;
   z-index: 1;
   bottom: 0;
-  right: calc(-100%/12);
+  right: calc(-100% / 12);
   border-radius: 50%;
-  // background-color: #{color.token(--wy-primary)};
-  // color: #{color.token(--wy-on-primary)};
-  color: #{color.token(--wy-primary-50)};
-  stroke: #{color.token(--wy-on-primary)};
+  color: #{color.token(--wy-tertiary)};
+  stroke: #{color.token(--wy-on-tertiary)};
 }
-
 
 :host(wy-avatar-group) {
   position: relative;
@@ -57,7 +54,7 @@
   height: var(--wy-component-avatar-size, var.wy-rem(2));
 }
 
-[part~=wy-avatar-back] {
+[part~="wy-avatar-back"] {
   position: absolute;
   top: 0;
   left: 0;
@@ -65,7 +62,7 @@
   //mask-image: radial-gradient(at bottom right, rgba(0, 0, 0, 0) calc(35% + var.wy-rem(.125)) , rgb(0, 0, 0) calc(35% + var.wy-rem(.125) + 1px));
 }
 
-[part~=wy-avatar-front] {
+[part~="wy-avatar-front"] {
   position: absolute;
   bottom: 0;
   right: 0;
@@ -84,6 +81,6 @@
   align-items: center;
 }
 
-[part~=wy-avatar-description] {
+[part~="wy-avatar-description"] {
   padding: var.default(--wy-padding);
 }

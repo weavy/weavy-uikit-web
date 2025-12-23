@@ -107,6 +107,7 @@ export default defineConfig(({ mode }) => {
       preprocessorOptions: {
         scss: {
           api: "modern-compiler", // or "modern"
+          style: "compressed"
         },
       },
     },

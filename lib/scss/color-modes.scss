@@ -1,8 +1,14 @@
-@use "components/base/color";
-@use "components/base/colormode-light";
-@use "components/base/colormode-dark";
+@use "base/color";
+@use "base/colormode-light";
+@use "base/colormode-dark";
 
-.wy-light {
+@property --wy-color-scheme {
+  syntax: "normal | light | dark";
+  inherits: true;
+  initial-value: normal;
+}
+
+@mixin color-mode($mode) {
   & :where(wy-chat),
   & :where(wy-comments),
   & :where(wy-component),
@@ -15,25 +21,28 @@
   :host(&),
   :host &,
   ::slotted(&) {
-    @include colormode-light.styles;
-    @include color.custom-properties-tokens(colormode-light.$tokens);
+    @if ($mode == dark) {
+      @include colormode-dark.styles();
+      @include color.custom-properties-tokens(colormode-dark.$tokens);
+    } @else {
+      @include colormode-light.styles();
+      @include color.custom-properties-tokens(colormode-light.$tokens);
+    }
   }
 }
 
-.wy-dark:not(.wy-light) {
-  & :where(wy-chat),
-  & :where(wy-comments),
-  & :where(wy-component),
-  & :where(wy-copilot),
-  & :where(wy-files),
-  & :where(wy-messenger),
-  & :where(wy-notification-toasts),
-  & :where(wy-notifications),
-  & :where(wy-posts),
-  :host(&),
-  :host &,
-  ::slotted(&) {
-    @include colormode-dark.styles;
-    @include color.custom-properties-tokens(colormode-dark.$tokens);
+:is(.wy-light, [part~="wy-light"]) {
+  @include color-mode(light);
+}
+
+:is(.wy-dark, [part~="wy-dark"]) {
+  &:not(.wy-light, [part~="wy-light"]) {
+    @include color-mode(dark);
+  }
+}
+
+@container style(--wy-color-scheme: dark) {
+  :not(.wy-light):not([part~="wy-light"]) {
+    @include color-mode(dark);
   }
 }

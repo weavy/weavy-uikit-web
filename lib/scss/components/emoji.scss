@@ -1,8 +1,8 @@
-@use "base/var";
+@use "../base/var";
 
 // Note: content emojis should be treated as normal text (unstyled) to avoid cross-browser/platform issues.
 
-.wy-emoji-icon {
+[part~=wy-emoji-icon] {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -12,7 +12,7 @@
   font-size: var.wy-rem(1.25);
 }
 
-.wy-emoji-icon-sm {
+[part~=wy-emoji-icon-sm] {
   width: var.wy-rem(1.125);
   height: var.wy-rem(1.125);
   font-size: var.wy-rem(1.125);

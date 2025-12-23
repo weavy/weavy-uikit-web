@@ -55,7 +55,7 @@ When using a modifier class or similar in the container, you can just override t
 ```scss
 /* _container-example.scss */
 .wy-container-example {
-    --wy-component-background-color: #{color.token(--wy-surface-1)};
+    --wy-component-background-color: #{color.token(--wy-surface-container-lowest)};
     --wy-component-color: #{color.token(--wy-on-surface)};
 
     background: var(--wy-component-background-color);

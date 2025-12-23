@@ -1,0 +1,27 @@
+@use "../base/color";
+@use "../base/var";
+@use "../base/breakpoints";
+
+[part~="wy-document"] {
+  --wy-component-background-color: #{color.token(--wy-background)};
+  --wy-component-color: #{color.token(--wy-on-background)};
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
+  align-self: flex-start;
+  padding: var.wy-rem(2) var.wy-rem(3.5);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  flex: 1 0 auto;
+  // approximate A4 dimensions (h/w = sqrt(2) = 1.4142...)
+
+  @include breakpoints.container-size-up(md) {
+    padding: var.wy-rem(3) var.wy-rem(4);
+    margin: var.wy-rem(2) auto;
+    border-radius: var.wy-rem(0.125);
+    box-shadow: var.default(--wy-shadow-level2);
+    width: 120ch;
+    min-height: 170ch;
+    max-width: calc(100% - var.wy-rem(3.5));
+  }
+}

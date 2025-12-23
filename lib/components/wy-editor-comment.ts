@@ -1,18 +1,43 @@
 import { html, nothing, type PropertyValueMap, type TemplateResult } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
-import { classMap } from "lit/directives/class-map.js";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
-
-import WyEditor from "./wy-editor";
-import "./base/wy-dropdown";
-import "./base/wy-icon";
-import "./base/wy-button";
 import { Feature } from "../types/features.types";
+import { partMap } from "../utils/directives/shadow-part-map";
 
+import commentEditorStyles from "../scss/components/editor-comment.scss";
+
+import { WyEditor } from "./wy-editor";
+import "./ui/wy-dropdown";
+import "./ui/wy-icon";
+import "./ui/wy-button";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-comment-editor": WyCommentEditor;
+  }
+}
+
+/**
+ * Comment editor used for composing comments.
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-dropdown>`](./ui/wy-dropdown.ts)
+ * - [`<wy-dropdown-item>`](./ui/wy-dropdown.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ * - [`<wy-button>`](./ui/wy-button.ts)
+ *
+ * @csspart wy-comment-editor-inputs - Container for the editor inputs and add menu
+ * @csspart wy-comment-editor-text - Wrapper for the editor text area
+ * @csspart wy-is-invalid - Applied to the editor text wrapper when there is a validation/error state
+ */
 @customElement("wy-comment-editor")
 @localized()
-export default class WyCommentEditor extends WyEditor {
+export class WyCommentEditor extends WyEditor {
+
+  static override styles = [...WyEditor.styles, commentEditorStyles]
+
   constructor() {
     super();
     this.editorType = "comments";
@@ -22,17 +47,33 @@ export default class WyCommentEditor extends WyEditor {
   override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
-    if (changedProperties.has("editorLocation") && this.editorLocation === "files") {
-      this.editorClass = "wy-comment-editor wy-comment-editor-bottom";
+    if (changedProperties.has("editorLocation")) {
+      if (this.editorLocation === "files") {
+        this.editorClass = "wy-comment-editor wy-comment-editor-bottom";
+      } else if (this.editorLocation === "apps") {
+        this.editorClass = "wy-comment-editor wy-comment-editor-bottom";
+      }
     }
   }
 
+  /**
+   * Render the top slot for comment editor with no content.
+   *
+   * @internal
+   */
   protected override renderTopSlot(): TemplateResult | typeof nothing {
     return nothing;
   }
 
+  /**
+   * Render the primary middle slot containing the add-menu, editor and send button.
+   *
+   * Overrides the base implementation to provide message-specific controls and layout.
+   *
+   * @internal
+   */
   protected override renderMiddleSlot() {
-    return html`<div class="wy-comment-editor-inputs">
+    return html`<div part="wy-comment-editor-inputs">
       <!-- Add -->
       ${this.componentFeatures?.allowsAnyFeature(
         Feature.Attachments,
@@ -107,7 +148,7 @@ export default class WyCommentEditor extends WyEditor {
 
       <!-- Input -->
       <div
-        class=${classMap({ "wy-comment-editor-text": true, "wy-is-invalid": this.editorError })}
+        part=${partMap({ "wy-comment-editor-text": true, "wy-is-invalid": this.editorError })}
         ${ref(this.editorRef)}
       >
         ${this.renderEditorDummy()}
@@ -120,6 +161,13 @@ export default class WyCommentEditor extends WyEditor {
     </div>`;
   }
 
+  /**
+   * Render content that appears below the message editor.
+   *
+   * By default returns the same lists section used by the base editor.
+   *
+   * @internal
+   */
   protected override renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
     return [
       this.renderLists()

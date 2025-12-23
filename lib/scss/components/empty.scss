@@ -1,6 +1,6 @@
-@use "./base/var";
+@use "../base/var";
 
-.wy-empty {
+[part~="wy-empty"] {
     display: flex;
     align-items: center;
     justify-content: center;

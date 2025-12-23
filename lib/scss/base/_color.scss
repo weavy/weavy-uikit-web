@@ -1,0 +1,267 @@
+@use "sass:map";
+@use "sass:list";
+@use "palette-vscode";
+@use "colormode-light" as defaultmode;
+
+// initial color used to generate palette
+$wy-blue: #61afef;
+$wy-green: #98c379;
+$wy-yellow: #e5c07b;
+$wy-magenta: #c678dd;
+
+// fixed colors
+$theme: $wy-blue;
+$black: #000000;
+$white: #ffffff;
+$shadow: $black;
+
+// css variables
+$colors: (
+  // fixed colors
+  --wy-theme: #{$theme},
+  --wy-black: #{$black},
+  --wy-white: #{$white},
+  --wy-shadow: #{$shadow},
+
+  --wy-shade-light: rgba(0,0,0,0.3),
+  --wy-shade-invert-light: rgba(255,255,255,0.15),
+  --wy-shade-opaque-light: white,
+  --wy-shade-dark: rgba(0,0,0,0.5),
+  --wy-shade-invert-dark: rgba(255,255,255,0.25),
+  --wy-shade-opaque-dark: grey,
+
+  // palette
+  --wy-primary-light: #2f628c,
+  --wy-on-primary-light: #ffffff,
+  --wy-primary-container-light: #cee5ff,
+  --wy-on-primary-container-light: #0d4a73,
+  --wy-secondary-light: #51606f,
+  --wy-on-secondary-light: #ffffff,
+  --wy-secondary-container-light: #d5e4f7,
+  --wy-on-secondary-container-light: #3a4857,
+  --wy-tertiary-light: #645f41,
+  --wy-on-tertiary-light: #ffffff,
+  --wy-tertiary-container-light: #ebe3bd,
+  --wy-on-tertiary-container-light: #4c472b,
+  --wy-error-light: #ba1821,
+  --wy-on-error-light: #ffffff,
+  --wy-error-container-light: #ffdad6,
+  --wy-on-error-container-light: #930012,
+  --wy-background-light: #f7f9ff,
+  --wy-on-background-light: #181c20,
+  --wy-surface-light: #f7f9ff,
+  --wy-on-surface-light: #181c20,
+  --wy-surface-variant-light: #dee3eb,
+  --wy-on-surface-variant-light: #42474e,
+  --wy-surface-container-lowest-light: #ffffff,
+  --wy-surface-container-low-light: #f1f3f9,
+  --wy-surface-container-light: #eceef3,
+  --wy-surface-container-high-light: #e6e8ee,
+  --wy-surface-container-highest-light: #e0e2e8,
+  --wy-surface-layer-lowest-light: #ffffffbf,
+  --wy-surface-layer-low-light: #ffffff80,
+  --wy-surface-layer-light: #0000000d,
+  --wy-surface-layer-high-light: #00000013,
+  --wy-surface-layer-highest-light: #0000001a,
+  --wy-outline-light: #72777f,
+  --wy-outline-variant-light: #c2c7cf,
+  --wy-shadow-light: #000000,
+  --wy-scrim-light: #000000,
+  --wy-warning-light: #adb140,
+  --wy-on-warning-light: #000000,
+  --wy-warning-container-light: #e5e972,
+  --wy-on-warning-container-light: #1c1d00,
+  --wy-highlight-light: #e8f2ff,
+  --wy-on-highlight-light: #001d32,
+  --wy-red-light: #db726b,
+  --wy-deep-orange-light: #d77743,
+  --wy-orange-light: #e79b3a,
+  --wy-amber-light: #cea62e,
+  --wy-yellow-light: #adb140,
+  --wy-lime-light: #87b960,
+  --wy-light-green-light: #5ebe84,
+  --wy-green-light: #00a38d,
+  --wy-teal-light: #00a0a9,
+  --wy-cyan-light: #0081a2,
+  --wy-light-blue-light: #4596d7,
+  --wy-blue-light: #8aa9fc,
+  --wy-indigo-light: #9285de,
+  --wy-deep-purple-light: #af7ccf,
+  --wy-purple-light: #c675b6,
+  --wy-pink-light: #d57193,
+  --wy-gray-light: #76777a,
+
+  --wy-primary-dark: #9bcbfa,
+  --wy-on-primary-dark: #003353,
+  --wy-primary-container-dark: #0d4a73,
+  --wy-on-primary-container-dark: #cee5ff,
+  --wy-secondary-dark: #b9c8da,
+  --wy-on-secondary-dark: #233240,
+  --wy-secondary-container-dark: #3a4857,
+  --wy-on-secondary-container-dark: #d5e4f7,
+  --wy-tertiary-dark: #cfc7a2,
+  --wy-on-tertiary-dark: #353117,
+  --wy-tertiary-container-dark: #4c472b,
+  --wy-on-tertiary-container-dark: #ebe3bd,
+  --wy-error-dark: #ffb3ad,
+  --wy-on-error-dark: #680009,
+  --wy-error-container-dark: #930012,
+  --wy-on-error-container-dark: #ffdad6,
+  --wy-background-dark: #101418,
+  --wy-on-background-dark: #e0e2e8,
+  --wy-surface-dark: #101418,
+  --wy-on-surface-dark: #e0e2e8,
+  --wy-surface-variant-dark: #42474e,
+  --wy-on-surface-variant-dark: #c2c7cf,
+  --wy-surface-container-lowest-dark: #0b0f12,
+  --wy-surface-container-low-dark: #181c20,
+  --wy-surface-container-dark: #1c2024,
+  --wy-surface-container-high-dark: #272a2f,
+  --wy-surface-container-highest-dark: #323539,
+  --wy-surface-layer-lowest-dark: #00000080,
+  --wy-surface-layer-low-dark: #00000040,
+  --wy-surface-layer-dark: #ffffff0d,
+  --wy-surface-layer-high-dark: #ffffff1a,
+  --wy-surface-layer-highest-dark: #ffffff26,
+  --wy-outline-dark: #8c9198,
+  --wy-outline-variant-dark: #42474e,
+  --wy-shadow-dark: #000000,
+  --wy-scrim-dark: #000000,
+  --wy-warning-dark: #e5e972,
+  --wy-on-warning-dark: #484a00,
+  --wy-warning-container-dark: #787c07,
+  --wy-on-warning-container-dark: #f4f87e,
+  --wy-highlight-dark: #003353,
+  --wy-on-highlight-dark: #cee5ff,
+  --wy-red-dark: #db726b,
+  --wy-deep-orange-dark: #d77743,
+  --wy-orange-dark: #e79b3a,
+  --wy-amber-dark: #cea62e,
+  --wy-yellow-dark: #c9cd59,
+  --wy-lime-dark: #87b960,
+  --wy-light-green-dark: #5ebe84,
+  --wy-green-dark: #00a38d,
+  --wy-teal-dark: #00a0a9,
+  --wy-cyan-dark: #009dc4,
+  --wy-light-blue-dark: #64b1f3,
+  --wy-blue-dark: #b2c5ff,
+  --wy-indigo-dark: #9285de,
+  --wy-deep-purple-dark: #cb96ec,
+  --wy-purple-dark: #e48fd2,
+  --wy-pink-dark: #f58bad,
+  --wy-gray-dark: #909194,
+
+  // Code
+  --wy-code-text-light: #{palette-vscode.$code-text-light},
+  --wy-code-variable-light: #{palette-vscode.$code-variable-light},
+  --wy-code-operator-light: #{palette-vscode.$code-operator-light},
+  --wy-code-prolog-light: #{palette-vscode.$code-prolog-light},
+  --wy-code-comment-light: #{palette-vscode.$code-comment-light},
+  --wy-code-builtin-light: #{palette-vscode.$code-builtin-light},
+  --wy-code-number-light: #{palette-vscode.$code-number-light},
+  --wy-code-inserted-light: #{palette-vscode.$code-inserted-light},
+  --wy-code-constant-light: #{palette-vscode.$code-constant-light},
+  --wy-code-hexcode-light: #{palette-vscode.$code-hexcode-light},
+  --wy-code-regex-light: #{palette-vscode.$code-regex-light},
+  --wy-code-char-light: #{palette-vscode.$code-char-light},
+  --wy-code-tag-light: #{palette-vscode.$code-tag-light},
+  --wy-code-attr-name-light: #{palette-vscode.$code-attr-name-light},
+  --wy-code-selector-light: #{palette-vscode.$code-selector-light},
+  --wy-code-property-light: #{palette-vscode.$code-property-light},
+  --wy-code-deleted-light: #{palette-vscode.$code-deleted-light},
+  --wy-code-string-light: #{palette-vscode.$code-string-light},
+  --wy-code-changed-light: #{palette-vscode.$code-changed-light},
+  --wy-code-punctuation-light: #{palette-vscode.$code-punctuation-light},
+  --wy-code-function-light: #{palette-vscode.$code-function-light},
+  --wy-code-keyword-light: #{palette-vscode.$code-keyword-light},
+  --wy-code-class-name-light: #{palette-vscode.$code-class-name-light},
+
+  --wy-code-text-dark: #{palette-vscode.$code-text-dark},
+  --wy-code-variable-dark: #{palette-vscode.$code-variable-dark},
+  --wy-code-operator-dark: #{palette-vscode.$code-operator-dark},
+  --wy-code-prolog-dark: #{palette-vscode.$code-prolog-dark},
+  --wy-code-comment-dark: #{palette-vscode.$code-comment-dark},
+  --wy-code-builtin-dark: #{palette-vscode.$code-builtin-dark},
+  --wy-code-number-dark: #{palette-vscode.$code-number-dark},
+  --wy-code-inserted-dark: #{palette-vscode.$code-inserted-dark},
+  --wy-code-constant-dark: #{palette-vscode.$code-constant-dark},
+  --wy-code-hexcode-dark: #{palette-vscode.$code-hexcode-dark},
+  --wy-code-regex-dark: #{palette-vscode.$code-regex-dark},
+  --wy-code-char-dark: #{palette-vscode.$code-char-dark},
+  --wy-code-tag-dark: #{palette-vscode.$code-tag-dark},
+  --wy-code-attr-name-dark: #{palette-vscode.$code-attr-name-dark},
+  --wy-code-selector-dark: #{palette-vscode.$code-selector-dark},
+  --wy-code-property-dark: #{palette-vscode.$code-property-dark},
+  --wy-code-deleted-dark: #{palette-vscode.$code-deleted-dark},
+  --wy-code-string-dark: #{palette-vscode.$code-string-dark},
+  --wy-code-changed-dark: #{palette-vscode.$code-changed-dark},
+  --wy-code-punctuation-dark: #{palette-vscode.$code-punctuation-dark},
+  --wy-code-function-dark: #{palette-vscode.$code-function-dark},
+  --wy-code-keyword-dark: #{palette-vscode.$code-keyword-dark},
+  --wy-code-class-name-dark: #{palette-vscode.$code-class-name-dark}
+);
+
+$tokens: defaultmode.$tokens;
+
+$token-color-names: ("primary", "secondary", "tertiary", "surface", "surface-variant", "error", "warning");
+
+$color-names: (
+  "blue",
+  "indigo",
+  "purple",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "teal",
+  "cyan",
+  "gray",
+  "black",
+  "white"
+);
+
+$all-color-names: list.join($token-color-names, $color-names);
+
+@function default($name) {
+  @if (not map.has-key($colors, $name)) {
+    @if (map.has-key($tokens, $name)) {
+      @warn "Unknown color.default(#{$name}), did you mean to use color.token(#{$name}) instead?";
+    } @else {
+      @warn "Unknown color.default(#{$name}).";
+    }
+  }
+
+  $value: map.get($colors, $name);
+  @return var(#{$name}, #{$value});
+}
+
+@function token($name, $tokens: $tokens) {
+  $token: null;
+  @if (map.has-key($tokens, $name)) {
+    $token: map.get($tokens, $name);
+  }
+
+  @if (not $token and map.has-key($colors, $name)) {
+    $token: $name;
+  }
+
+  @if ($token) {
+    @return var(#{$name}, #{default($token)});
+  } @else {
+    @warn "Unknown color.token(#{$name}).";
+    @return var(#{$name});
+  }
+}
+
+@mixin custom-properties-defaults {
+  @each $name, $value in $defaults {
+    #{$name}: $value;
+  }
+}
+
+@mixin custom-properties-tokens($tokens: $tokens) {
+  @each $name, $value in $tokens {
+    #{$name}: default($value);
+  }
+}

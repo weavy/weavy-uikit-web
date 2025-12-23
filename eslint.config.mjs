@@ -43,6 +43,7 @@ export default defineConfig([
       "@typescript-eslint/no-non-null-assertion": "warn",
       "@typescript-eslint/unbound-method": "warn",
       "@typescript-eslint/no-for-in-array": "warn",
+      "@typescript-eslint/no-redundant-type-constituents": "warn",
 
       "@typescript-eslint/no-empty-object-type": [
         "error",

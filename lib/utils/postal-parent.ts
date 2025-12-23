@@ -6,6 +6,8 @@ import { isDomAvailable, throwOnDomNotAvailable } from "./dom";
 
 //console.debug("postal.js", self.name);
 
+/* THIS FILE IS DEPRECATED */
+
 type WeavyPostalConfigType = {
   timeout?: number;
 };

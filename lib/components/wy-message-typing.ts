@@ -5,55 +5,115 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { TypingController } from "../controllers/typing-controller";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
-import { classMap } from "lit/directives/class-map.js";
+import { partMap } from "../utils/directives/shadow-part-map";
 import { MemberType } from "../types/members.types";
 import { TypingUserType } from "../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 
-import rebootCss from "../scss/components/base/reboot.scss";
+import rebootCss from "../scss/reboot.scss";
 import messagesCss from "../scss/components/messages.scss";
 import bouncerCss from "../scss/components/bouncer.scss";
 
-import "./base/wy-avatar";
+import "./ui/wy-avatar";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-message-typing": WyMessageTyping;
+  }
+}
 
 /**
- * Shows a typing message whenever a member is typing
- * 
-   * @fires {TypingEventType} typing - Count of typers when someone is typing
+ * Displays typing indicator for messages in a conversation.
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-avatar-group>`](./ui/wy-avatar.ts)
+ * - [`<wy-avatar>`](./ui/wy-avatar.ts)
+ *
+ * @csspart wy-message-typing - Root container for typing indicator.
+ * @csspart wy-message - Message container.
+ * @csspart wy-message-agent - Modifier for message container when author is agent .
+ * @csspart wy-message-author - Message section for the author avatar.
+ * @csspart wy-message-content - Message section for the content.
+ * @csspart wy-message-meta - Message content section for author names and time.
+ * @csspart wy-message-bubble - Message content section for the text bubble containing the bouncer.
+ * @csspart wy-bouncer - SVG bouncing graphic.
+ * @csspart wy-bouncer-dot - Dot in the SVG bouncer.
+ * @csspart wy-bouncer-dot-start - The first dot.
+ * @csspart wy-bouncer-dot-middle - The second dot.
+ * @csspart wy-bouncer-dot-end - The last dot.
+ *
+ * @fires {TypingEventType} typing - Emitted when typing state changes.
  */
 @customElement("wy-message-typing")
-export default class WyMessageTyping extends LitElement {
+export class WyMessageTyping extends LitElement {
   static override styles = [rebootCss, bouncerCss, messagesCss];
 
+  /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * @fires {TypingEventType} typing - Count of typers when someone is typing
+   * Typing controller emitting `typing` events for the current conversation.
+   *
+   * @fires {TypingEventType} typing - Count of active typers.
+   * @internal
    */
   protected typing = new TypingController(this);
 
+  /**
+   * Consumed Weavy context used for locale formatting.
+   *
+   * @internal
+   */
   @consume({ context: WeavyContext, subscribe: true })
   @state()
   private weavy?: WeavyType;
 
+  /**
+   * Conversation id to bind typing updates to.
+   */
   @property({ attribute: true, type: Number })
   conversationId?: number;
 
+  /**
+   * Current user id used to filter typing updates.
+   */
   @property({ attribute: true, type: Number })
   userId?: number;
 
+  /**
+   * Render the typing indicator using private chat layout.
+   */
   @property({ type: Boolean })
   isPrivateChat: boolean = false;
 
+  /**
+   * Members participating in the conversation.
+   */
   @property({ attribute: false })
   members: MemberType[] = [];
 
+  /**
+   * Active members currently typing.
+   *
+   * @internal
+   */
   @state()
   private typingMembers: TypingUserType[] = [];
 
+  /**
+   * Names of members currently typing.
+   *
+   * @internal
+   */
   @state()
   private names: string[] = [];
 
+  /**
+   * Timestamp when typing started.
+   *
+   * @internal
+   */
   @state()
   private typingTime?: Date;
 
@@ -106,8 +166,8 @@ export default class WyMessageTyping extends LitElement {
 
     return members.length
       ? html`
-          <div class=${classMap({ "wy-message": true, "wy-message-agent": Boolean(members[0]?.is_agent) })}>
-            <div class="wy-message-author">
+          <div part=${partMap({ "wy-message": true, "wy-message-agent": Boolean(members[0]?.is_agent) })}>
+            <div part="wy-message-author">
               ${members.length > 1
                 ? html`
                     <wy-avatar-group
@@ -127,15 +187,15 @@ export default class WyMessageTyping extends LitElement {
                   `}
             </div>
 
-            <div class="wy-message-content">
-              <div class="wy-message-meta">
+            <div part="wy-message-content">
+              <div part="wy-message-meta">
                 ${this.isPrivateChat
                   ? html`
                       <time datetime=${ifDefined(this.typingTime?.toISOString())} title=${dateFull}>${timeShort}</time>
                     `
                   : typingNames}
               </div>
-              <div class="wy-message-bubble"> ${bouncer} </div>
+              <div part="wy-message-bubble"> ${bouncer} </div>
             </div>
           </div>
         `

@@ -1,0 +1,17 @@
+@use "var";
+
+$enable-backdrop-filter: true !default;
+$backdrop-filter: blur(var.wy-rem(.5)) !default;
+
+// TODO: make use of CSS color() together with css variables to set opacity for background
+
+@mixin filter($backdrop-filter: $backdrop-filter) {
+  backface-visibility: hidden;
+
+  @if($enable-backdrop-filter) {
+    @supports(backdrop-filter: $backdrop-filter) {
+      backdrop-filter: $backdrop-filter;
+      @content;
+    }
+  }
+}

@@ -5,8 +5,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/** THIS FILE IS DEPRECATED */
+
 import { PlainObjectType } from "../types/generic.types";
 import { eqObjects } from "./objects";
+
 //console.debug("events.js");
 type Constructor = new (...args: any[]) => object;
 

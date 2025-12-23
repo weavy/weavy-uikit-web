@@ -1,9 +1,26 @@
-@use "base/var";
-@use "base/color";
+@use "../base/var";
+@use "../base/color";
+@use "../base/text";
 
-.wy-notification {
-  &.wy-read {
+[part~="wy-notification"] {
+  /*&:not([unread]) {
     opacity: var.default(--wy-opacity-muted);
     --wy-component-color: #{color.token(--wy-outline)};
+  }*/
+
+  strong {
+    font-weight: var.default(--wy-font-weight-bold);
   }
+  // Custom notifications can have markdown content which is rendered as HTML paragraphs
+  p {
+    display: inline;
+  }
+}
+
+// Truncate notification text to max 3 lines
+[part~="wy-notification-text"] {
+  color: var(--wy-component-color);
+  
+  @include text.truncate-lines(3);
+  white-space: normal;
 }

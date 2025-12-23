@@ -1,0 +1,79 @@
+@use "../base/var";
+@use "../base/color";
+@use "../base/highlight";
+@use "../base/text";
+
+[part~="wy-table"] {
+  table-layout: fixed;
+  width: 100%;
+  vertical-align: top;
+  border-collapse: collapse;
+
+  tr {
+    @include highlight.flash;
+  }
+
+  th {
+    font-weight: var.default(--wy-headings-font-weight);
+  }
+
+  th,
+  td {
+    background-color: var(--wy-component-background-color);
+
+    padding: var.default(--wy-table-cell-padding-y) var.default(--wy-table-cell-padding-x);
+    box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
+    line-height: 1;
+    vertical-align: middle;
+    height: calc(#{var.wy-rem(2)} + #{var.default(--wy-table-cell-padding-y)} * 2);
+  }
+
+  > tbody {
+    vertical-align: inherit;
+  }
+
+  > thead {
+    vertical-align: bottom;
+  }
+
+  &[part~="wy-table-interactive"] {
+      // hover effect for rows
+     > tbody > tr:hover > *  {
+        --wy-component-color: #{color.token(--wy-on-surface)};
+        background-color: #{color.token(--wy-surface-layer)};
+        color: var(--wy-component-color);
+        cursor: pointer;
+
+      
+    }
+  }
+}
+
+[part~="wy-col-icon"] {
+  vertical-align: middle;
+  text-align: center;
+  padding: calc(#{var.default(--wy-table-cell-padding-y)} * 0.5) calc(#{var.default(--wy-table-cell-padding-x)} * 0.5);
+  width: calc(#{var.wy-rem(2)} + #{var.default(--wy-table-cell-padding-x)} * 2);
+  // reset th styles (for dropdown menus in th)
+  font-size: var.default(--wy-font-size);
+  font-weight: var.default(--wy-font-weight);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+[part~="wy-col-icon-content"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+[part~="wy-trashed"] {
+  text-decoration: line-through;
+}
+
+[part~="wy-sort-link"] {
+  display: inline-flex;
+  align-items: center;
+  color: color.token(--wy-primary);
+  cursor: pointer;
+}

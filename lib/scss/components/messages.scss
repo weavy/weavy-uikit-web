@@ -1,63 +1,54 @@
-@use "base/var";
-@use "base/color";
-@use "base/highlight";
+@use "../base/var";
+@use "../base/color";
+@use "../base/highlight";
 
-.wy-messages {
+[part~="wy-messages"] {
   padding: var.default(--wy-message-padding);
   flex: 1 1 100%;
 }
 
-.wy-message-placeholder {
-  opacity: .5;
+[part~="wy-message-placeholder"] {
+  opacity: 0.5;
 }
 
-.wy-date-separator {
+[part~="wy-message-date-separator"] {
   font-size: var.default(--wy-font-size-xs);
   pointer-events: none;
-  margin: var.default(--wy-padding);
-  text-align: center;
   position: sticky;
-  top: var.default(--wy-padding-lg);
+  display: block;
+  top: calc(#{var.default(--wy-padding-lg)} + var(--wy-component-offset-top, 0px));
   z-index: 10;
-
-  time {
-    background: color.token(--wy-surface-3);
-    color: color.token(--wy-on-surface);
-    padding: var.default(--wy-padding-sm);
-    border-radius: var.default(--wy-border-radius-sm);
-    display: inline-block;
-  }
+  align-self: center;
+  justify-self: center;
+  margin: var.default(--wy-padding);
+  background: color.token(--wy-surface-container-high);
+  color: color.token(--wy-on-surface);
+  padding: var.default(--wy-padding-sm);
+  border-radius: var.default(--wy-border-radius-sm);
 }
 
-.wy-message {
+[part~="wy-message"] {
+  --wy-component-background-color: #{color.token(--wy-surface-container)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin-bottom: calc(var.default(--wy-padding) + .5 * var.default(--wy-button-size)); // Account for reaction button
+  margin-bottom: calc(var.default(--wy-padding) + 0.5 * var.default(--wy-button-size)); // Account for reaction button
   scroll-margin-block: 6rem;
-
-  --wy-component-background-color: #{color.token(--wy-surface-variant)};
-  --wy-component-color: #{color.token(--wy-on-surface-variant)};
 
   @include highlight.flash;
 }
 
-.wy-message-area {
-  border-radius: var.default(--wy-border-radius-sm);
-}
-
-.wy-message-meta {
+[part~="wy-message-meta"] {
   font-size: var.default(--wy-font-size-xs);
-  margin: 0 0 calc(.5 * var.default(--wy-gap)) calc(.5 * var.default(--wy-gap));
+  margin: 0 0 calc(0.5 * var.default(--wy-gap)) calc(0.5 * var.default(--wy-gap));
   color: color.token(--wy-on-surface-variant);
 }
 
-.wy-message-bubble {
-  //--wy-component-border-radius: #{var.default(--wy-border-radius)};
-
+[part~="wy-message-bubble"] {
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
-  //border-radius: var(--wy-component-border-radius);
 
   border-radius: #{var.default(--wy-border-radius)};
   display: flex; //inline-block;
@@ -65,21 +56,23 @@
   padding: var.default(--wy-message-padding);
   gap: var.default(--wy-gap);
   max-width: min(var.wy-rem(32), calc(100% - 2 * var.default(--wy-message-padding)));
-
-  > div {
-    // message section (images, attachments, embeds etc.)
-    flex: 1 1 100%;
-  }
 }
 
+[part~="wy-message-bubble-section"] {
+  // message section (images, attachments, embeds etc.)
+  flex: 1 1 100%;
+  display: block;
+  border-radius: var.default(--wy-border-radius-sm);
+  clip-path: border-box;
+}
 
-.wy-message-author {
+[part~="wy-message-author"] {
   // Match .wy-message-meta positioning
   font-size: var.default(--wy-font-size-xs);
-  margin: calc(1lh + .5 * var.default(--wy-gap)) var.wy-rem(.5) 0 0;
+  margin: calc(1lh + 0.5 * var.default(--wy-gap)) var.wy-rem(0.5) 0 0;
 }
 
-.wy-message-content {
+[part~="wy-message-content"] {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -89,71 +82,40 @@
   position: relative; // so that we can position reactions
 }
 
-.wy-message-content-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  max-width: 100%;
-}
-
-// override some styles for message by chat agents
-.wy-message-agent {
+// override some styles for message by ai agents
+[part~="wy-message-agent"] {
   --wy-component-background-color: #{color.token(--wy-tertiary-container)};
   --wy-component-color: #{color.token(--wy-on-tertiary-container)};
 }
 
 // override some styles for message by current user
-.wy-message-me {
+[part~="wy-message-me"] {
   margin-right: 0;
   margin-left: var.wy-rem(2.5);
   align-items: flex-end;
   --wy-component-background-color: #{color.token(--wy-primary-container)};
   --wy-component-color: #{color.token(--wy-on-primary-container)};
 
-  .wy-message-meta {
-    margin: 0 calc(.5 * var.default(--wy-gap)) calc(.5 * var.default(--wy-gap)) 0;
+  [part~="wy-message-meta"] {
+    margin: 0 calc(0.5 * var.default(--wy-gap)) calc(0.5 * var.default(--wy-gap)) 0;
   }
 
-  .wy-message-content {
+  [part~="wy-message-content"] {
     align-items: flex-end;
-  }
-
-  .wy-message-content-row {
-    flex-direction: row-reverse;
   }
 }
 
 // override some styles for message that contains only emoji
-.wy-message-emoji {
-  .wy-message-bubble {
-    background: none;
-    padding: 0 0 var.default(--wy-message-padding);
-  }
-
-  .wy-content {
-    .wy-emoji {
-      width: var.wy-rem(3);
-      height: var.wy-rem(3);
-      margin: 0;
-    }
-  }
-
-  &.wy-message-me {
-    .wy-content {
-      text-align: end;
-    }
-  }
+[part~="wy-message-bubble-emoji"] {
+  background: none;
+  padding: 0 0 var.default(--wy-message-padding);
 }
+
 // message status indicator (sending, sent, delivered, read)
-.wy-readby-status {
+[part~="wy-message-seenby"] {
   display: flex;
   gap: var.default(--wy-gap-sm);
   height: var.wy-rem(1.125); // same height as avatar (prevents layout change when readby indicators are updated)
   justify-content: flex-end;
-  margin-top: var.wy-rem(-.125);
-}
-
-.wy-message-readmore {
-  justify-self: center;
-  text-align: center;
+  margin-top: var.wy-rem(-0.125);
 }

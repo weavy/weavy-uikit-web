@@ -1,7 +1,7 @@
 import type {
   InfiniteQueryObserverOptions,
   MutationKey,
-  InfiniteData,
+  InfiniteData
 } from "@tanstack/query-core";
 
 import { type WeavyType } from "../client/weavy";
@@ -63,10 +63,10 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
               return { text: o.text };
             }),
           metadata: variables.metadata || null,
-          context: variables.context
+          context: variables.context,
         }),
       });
-      return await response.json() as MessageType;
+      return (await response.json()) as MessageType;
     },
     mutationKey: mutationKey,
     onMutate: (variables: MutateMessageProps) => {
@@ -105,35 +105,40 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
       );
 
       const queryKey = ["messages", data.app.id];
+      const { queryClient } = weavy;
 
-      // check if message already added
-      const existing = getCacheItem<MessageType>(weavy.queryClient, queryKey, data.id);
+      // try to find existing or pending message
+      const existing = getCacheItem<MessageType>(queryClient, queryKey, data.id);
+      const pending = existing ? null : getPendingCacheItem<MessageType>(queryClient, queryKey, true);
 
-      if (!existing) {
-        // get oldest pending message
-        const pending = getPendingCacheItem<MessageType>(weavy.queryClient, queryKey, true);
+      // helper to replace or update a message
+      const replaceCacheItem = (id: number, data: MessageType) => {
+        updateCacheItem(queryClient, queryKey, id, (item: MessageType) => {
+          // REVIEW: Ändra updateCacheItem så man kan sätta ett "helt" objekt?
+          item.id = data.id;
+          item.app = data.app;
+          item.text = data.text;
+          item.plain = data.plain;
+          item.html = data.html;
+          item.embed = data.embed;
+          item.meeting = data.meeting;
+          item.attachments = data.attachments;
+          item.options = data.options;
+          item.created_at = data.created_at;
+          item.created_by = data.created_by;
+          item.updated_at = data.updated_at;
+          item.updated_by = data.updated_by;
+        });
+      };
 
-        if (pending) {
-          // we found a pending message - replace it with new data
-          updateCacheItem(weavy.queryClient, queryKey, pending.id, (item: MessageType) => {
-            // REVIEW: Ändra updateCacheItem så man kan sätta ett "helt" objekt?
-            item.id = data.id;
-            item.app = data.app;
-            item.text = data.text;
-            item.html = data.html;
-            item.embed = data.embed;
-            item.meeting = data.meeting;
-            item.attachments = data.attachments;
-            item.options = data.options;
-            item.created_at = data.created_at;
-            item.created_by = data.created_by;
-            item.updated_at = data.updated_at;
-            item.updated_by = data.updated_by;
-          });
-        } else {
-          // add to cache
-          addCacheItem(weavy.queryClient, queryKey, data);
-        }
+      // update existing or pending message if found
+      if (existing) {
+        replaceCacheItem(existing.id, data);
+      } else if (pending) {
+        replaceCacheItem(pending.id, data);
+      } else {
+        // add message if not found
+        addCacheItem(queryClient, queryKey, data);
       }
     },
   };

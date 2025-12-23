@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html style="--wy-theme-color: #61afef">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+    />
     <script>
       //fetch("/api/contextual/acme-chat?type=chat")
     </script>
@@ -14,6 +18,28 @@
           "Open Sans", "Helvetica Neue", sans-serif;
       }
 
+      .header {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 20px;
+
+        > * {
+          background: lightcyan;
+          border-radius: 0.5rem;
+          padding: .5rem;
+          display: flex;
+          gap: 0.5rem;
+          justify-content: center;
+          align-items: center;
+          min-height: 2.5rem;
+        }
+
+        button {
+          height: 100%;
+          position: relative;
+        }
+      }
+
       .grid {
         height: 100vh;
         display: grid;
@@ -22,58 +48,118 @@
         gap: 0.5rem;
         background: #fff;
       }
+
+      .notification-wrapper > ::part(wy-badge) {
+        background-color: red;
+      }
+
+      wy-notification-button::part(wy-badge) {
+        background-color: violet;
+      }
     </style>
   </head>
+
   <body>
-    <wy-context
-      url="%WEAVY_URL%"
-      reactions="👍 ❤️ 😂 😒 😁"
-      locale="sv-SE"
-      tokenUrl="/api/token"
-      notificationEvents
-    >
-    <div class="grid">
-      <wy-notifications></wy-notifications>
-      <wy-posts uid="notification-posts"></wy-posts>
-    </div>
-    <wy-notification-toasts></wy-notification-toasts>
-  </wy-context>
-    <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
+    <wy-context url="%WEAVY_URL%" reactions="👍 ❤️ 😂 😒 😁" locale="sv-SE" tokenUrl="/api/token">
+      <div class="header">
+        <div class="notification-wrapper">
+          <span>App Notifications button</span>
+          <wy-notification-button list="none" uid="notification-posts"></wy-notification-button>
+        </div>
+        <div class="notification-wrapperx">
+          <span>Global notifications button</span>
+          <wy-notification-button list="drawer"></wy-notification-button>
+        </div>
+        <div>
+          <span>Global mentions button</span>
+          <wy-notification-button typeFilter="mention" list="none"></wy-notification-button>
+        </div>
+
+        <div>
+          <button>
+            <span>Global notifications badge</span>
+            <wy-notification-badge badge="dot" badgePosition="top-right"></wy-notification-badge>
+          </button>
+        </div>
+      </div>
+      <div class="grid">
+        <wy-posts uid="notification-posts"></wy-posts>
+        <div style="border: 1px solid #ccc; padding: 1rem">
+          <strong>Global Notifications</strong>
+          <wy-notifications id="global-notifications">
+            <span slot="actions">ACTIONS</span>
+            <span slot="header">HEADER</span>
+          </wy-notifications>
+        </div>
+      </div>
+      <div
+        id="notifications-flyout"
+        style="
+          display: none;
+          width: 500px;
+          position: fixed;
+          top: 64px;
+          right: 24px;
+          z-index: 1000;
+          background: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        "
+      >
+        <h3 style="margin: 20px">App notifications</h3>
+        <wy-notifications uid="notification-posts"></wy-notifications>
+      </div>
+      <wy-notification-toasts></wy-notification-toasts>
+      <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
+    </wy-context>
     <script type="module">
       import { MessengerTypes, MessengerAgentTypes } from "/lib/index.ts";
       const wyContext = document.querySelector("wy-context");
+      const badge = document.querySelector("wy-notification-button[uid=notification-posts]");
       let linkWindow;
+
+      badge.addEventListener("wy-unread", (e) => {
+        console.log("wy-unread event received. New unread count:", e.detail.unread);
+      });
+
+      wyContext.addEventListener("wy-action", (e) => {
+        console.log("wy-action event received.", e.detail);
+      });
 
       wyContext.addEventListener("wy-link", (e) => {
         // Prevents automatic sessionStorage link
         //e.preventDefault();
-        
-        const appType = e.detail.link.app.type;
-        const appUid = e.detail.link.app.uid;
-        let linkUrl;
 
-        console.log("notification link!", e.detail);
-        
-        if (MessengerTypes.has(appType)) {
-          linkUrl = new URL("./messenger.html", window.location);
-        } else if(MessengerAgentTypes.has(appType)) {
-          linkUrl = new URL(`./agentchat.html${`#${e.detail.link.agent}` || ''}`, window.location);
-        } else if (appUid && appUid.startsWith("acme-")) {
-          const pageName = appUid.substring("acme-".length);
-          linkUrl = new URL(`./${pageName}.html`, window.location);
-        } else if(e.detail.source_url) {
-          linkUrl = new Url(e.detail.source_url);
-        }
+        console.log("wy-link.detail", e.detail);
 
-        if (linkUrl) {
-          if (linkWindow && !linkWindow.closed) {
-            if (linkWindow.location.href !== linkUrl.href) {
-              linkWindow.location.href = linkUrl.href;
-            }
-            linkWindow.focus()
-          } else {
-            linkWindow = window.open(linkUrl, "wy-link");
+        if (e.detail.link) {
+          const appType = e.detail.link.app.type;
+          const appUid = e.detail.link.app.uid;
+
+          let linkUrl;
+          if (MessengerTypes.has(appType)) {
+            linkUrl = new URL("./messenger.html", window.location);
+          } else if (MessengerAgentTypes.has(appType)) {
+            linkUrl = new URL(`./agentchat.html${`#${e.detail.link.agent}` || ""}`, window.location);
+          } else if (appUid && appUid.startsWith("acme-")) {
+            const pageName = appUid.substring("acme-".length);
+            linkUrl = new URL(`./${pageName}.html`, window.location);
+          } else if (e.detail.source_url) {
+            linkUrl = new Url(e.detail.source_url);
           }
+
+          if (linkUrl) {
+            if (linkWindow && !linkWindow.closed) {
+              if (linkWindow.location.href !== linkUrl.href) {
+                linkWindow.location.href = linkUrl.href;
+              }
+              linkWindow.focus();
+            } else {
+              linkWindow = window.open(linkUrl, "wy-link");
+            }
+          }
+        } else {
+          console.log("Custom notification without link property?");
         }
       });
     </script>

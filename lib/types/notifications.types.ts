@@ -1,4 +1,4 @@
-import { EntityType, LinkType } from "./app.types";
+import { EntityType } from "./app.types";
 import { MetadataType } from "./lists.types";
 import { InfiniteQueryResultType } from "./query.types";
 import { UserOrAgentType, UserType } from "./users.types";
@@ -23,9 +23,7 @@ export type NotificationType = {
   /** The notification text as plain text. */
   plain: string;
   /** The entity the notification regards. */
-  link: EntityType;
-  /** An url to open when clicking on the notification. */
-  url: string;
+  link?: EntityType;
   /** The notification recipient. */
   user: UserType;
   /** Additional metadata. */
@@ -38,8 +36,7 @@ export type NotificationType = {
   is_unread?: boolean;
 };
 
-export type FormattedNotificationType = NotificationType & {
-  link: LinkType;
+export type FormattedNotificationType = NotificationType & {  
   title: string;
   detail?: string;
   lang: NotificationOptions["lang"];
@@ -55,6 +52,4 @@ export enum NotificationTypes {
 
 export type NotificationsResultType = InfiniteQueryResultType<NotificationType>;
 
-export type NotificationsAppearanceType = "button-list" | "none";
-export type NotificationsBadgeType = "count" | "dot" | "none";
 export type NotificationsToastsType = "browser" | "none";

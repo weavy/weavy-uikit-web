@@ -1,0 +1,37 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/breakpoints";
+
+// Modals
+
+[part~="wy-modal"] {
+  // Base full size
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+[part~="wy-modal-centered"] {
+  @include breakpoints.container-size-up(md) {
+    border-radius: var.default(--wy-border-radius);
+    box-shadow: var.default(--wy-shadow-level4);
+    margin-left: var.wy-rem(4);
+    margin-top: auto;
+    margin-right: var.wy-rem(4);
+    margin-bottom: auto;
+    width: var.wy-rem(32);
+    max-height: var.wy-rem(32);
+  }
+
+  &[part~="wy-maximized"] {
+    @include breakpoints.container-size-up(md) {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      max-width: calc(100% - var.wy-rem(2));
+      max-height: calc(100% - var.wy-rem(2));
+    }
+  }
+}
+

@@ -1,12 +1,12 @@
-@use "base/var";
-@use "base/color";
-@use "base/svg";
-@use "base/const";
+@use "../base/var";
+@use "../base/color";
+@use "../base/svg";
+@use "../base/const";
 
 // basic unstyled button with support for icon and text
 [part~="wy-button"] {
   --wy-component-color: #{color.token(--wy-primary)};
-  //--wy-component-background-color: var(--wy-component-background-color, transparent); // #{color.token(--wy-surface-3});
+  //--wy-component-background-color: var(--wy-component-background-color, transparent);
 
   color: var(--wy-component-color);
   background: var(--wy-component-background-color, transparent);
@@ -36,9 +36,9 @@
   &[part~="wy-button-sm"] {
     height: calc(var.default(--wy-button-size) * .8); // 2.5rem * 0.8 = 32px
     padding: calc(var.default(--wy-button-padding-y) * .25) calc(var.default(--wy-button-padding-x) * .5);
-    
   }
 
+  &[part~="wy-disabled"],
   &:disabled {
     opacity: var.default(--wy-opacity-disabled);
     cursor: unset;
@@ -131,8 +131,13 @@
 
 [part~="wy-button-inline"] {
   border-radius: var.default(--wy-border-radius-pill);
-  padding: var.wy-rem(0.5) var.wy-rem(0.75);
-  margin-inline: var.wy-rem(-.25);
+  padding: var.default(--wy-button-padding-y);
+  margin-inline: calc(-1 * #{var.default(--wy-button-padding-y)});
+  
+  &[part~="wy-button-sm"] {
+    padding: calc(.5 * var.default(--wy-button-padding-y));
+    margin-inline: calc(-.5 * #{var.default(--wy-button-padding-y)});
+  }
 }
 
 // primary button
@@ -156,11 +161,12 @@
 }
 
 [part~="wy-button-no-color"] {
+  --wy-component-background-color: transparent;
   --wy-component-color: unset;
 }
 
 // button that looks and behaves like a link
-[part="wy-button-link"] {
+[part~="wy-button-link"] {
   //--wy-component-background-color: transparent;
   padding: 0;
   color: var(--wy-link-color, #{color.token(--wy-primary)});
@@ -198,9 +204,9 @@
 
 [part~="wy-buttons-sticky"] {
   position: sticky;
-  padding: var.default(--wy-padding);
-  top: 0;
-  z-index: const.$zindex-fixed;
+  padding: var.default(--wy-padding-sm);
+  top: var(--wy-component-offset-top, 0px);
+  z-index: #{const.$zindex-sticky + 1};
   --wy-component-background-color: #{color.token(--wy-surface-variant)};
   --wy-component-color: #{color.token(--wy-on-surface-variant)};
 }

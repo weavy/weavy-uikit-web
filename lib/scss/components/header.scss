@@ -1,0 +1,26 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/position";
+
+[part~="wy-header"] {
+  --wy-component-background-color: #{color.token(--wy-surface-container)};
+  background-color: var(--wy-component-background-color);
+
+  box-sizing: border-box;
+
+  //box-shadow: #{color.token(--wy-outline-variant)} 0px calc(-1 * #{var.default(--wy-border)}) 0px 0px inset;
+
+  @include position.sticky-top;
+  z-index: #{const.$zindex-sticky + 2}
+}
+
+[part~="wy-header-floating"] {
+  --wy-component-border-radius: #{var.default(--wy-border-radius)};
+  border-radius: var(--wy-component-border-radius);
+}
+
+[part~="wy-header-outer"] {
+  --wy-component-border-radius: #{var.default(--wy-border-radius-outer)};
+  border-radius: var(--wy-component-border-radius);
+}

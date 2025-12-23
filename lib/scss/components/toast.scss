@@ -1,14 +1,15 @@
 @use "sass:map";
-@use "base/var";
-@use "base/const";
-@use "base/color";
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
 
-.wy-toasts {
+[part~="wy-toasts"] {
   background: none;
   border: none;
   padding: var.default(--wy-padding-lg);
 
   margin: 0;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
 
@@ -34,8 +35,8 @@
   }
 }
 
-.wy-toast {
-  --wy-component-background-color: #{color.token(--wy-surface-2)};
+[part~="wy-toast"] {
+  --wy-component-background-color: #{color.token(--wy-surface-container-low)};
   --wy-color: #{color.token(--wy-on-surface)};
   background: var(--wy-component-background-color);
   color: var(--wy-component-color);
@@ -50,15 +51,15 @@
   box-shadow: var.default(--wy-shadow-level2);
   position: relative;
   overflow: hidden;
-  min-height: var.wy-rem(4.5);
+  min-height: var.wy-rem(3);
   max-width: var.wy-rem(32);
 
-  &.wy-fade {
+  &[part~=wy-fade] {
     transition-property: opacity, min-height, padding-top, padding-bottom, margin-top, margin-bottom, height;
     transition-duration: var.default(--wy-transition-duration);
     transition-timing-function: var.default(--wy-transition-curve);
 
-    &:not(.wy-show) {
+    &:not([part~=wy-show]) {
       opacity: 0;
       min-height: 0;
       height: 0;
@@ -71,7 +72,7 @@
   }
 }
 
-.wy-toast-action {
+[part~=wy-toast-action] {
   position: sticky;
   top: var.wy-rem(4.5);
   bottom: var.wy-rem(4.5);
@@ -95,7 +96,7 @@
   box-shadow: none;
 }
 
-.wy-toast-primary {
+[part~=wy-toast-primary] {
   background: color.token(--wy-on-primary-container);
   color: color.token(--wy-primary-container);
 }

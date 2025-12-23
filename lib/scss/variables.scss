@@ -1,6 +1,7 @@
-@use "components/base/reboot";
-@use "components/base/scroll";
-@use "components/base/var";
+@use "reboot";
+@use "base/var";
+
+/* This will print out all variables. Not used more than in debugging. */
 
 :where(:root, :host > * ) {
     @include var.custom-properties;

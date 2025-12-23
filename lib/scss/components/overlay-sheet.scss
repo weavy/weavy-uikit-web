@@ -1,0 +1,35 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+
+[part~="wy-sheet"] {
+  --wy-component-background-color: #{color.token(--wy-surface-container-low)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
+
+  position: fixed;
+  z-index: const.$zindex-modal;
+
+  bottom: var.wy-rem(0.5);
+  left: var.wy-rem(0.5);
+  right: var.wy-rem(0.5);
+  max-height: max(50vh, 50%);
+  min-height: var.wy-rem(3);
+  margin: var.wy-rem(0.5) auto;
+  max-width: var.wy-rem(32);
+
+  border-radius: var.default(--wy-border-radius);
+  box-shadow: var.default(--wy-shadow-level1);
+}
+
+// Transitions (extending wy-overlay transition)
+[part~="wy-sheet"] {
+  &:not([part~="wy-open"]) {
+    transform: translateY(var.wy-rem(32));
+  }
+
+  &[part~="wy-open"] {
+    @starting-style {
+      transform: translateY(var.wy-rem(32));
+    }
+  }
+}

@@ -1,0 +1,30 @@
+@use "../base/var";
+@use "../base/color";
+
+[part~="wy-title"] {
+  font-family: var.default(--wy-headings-font-family);
+  font-size: var.default(--wy-headings-font-size);
+  font-style: var.default(--wy-headings-font-style);
+  font-weight: var.default(--wy-headings-font-weight);
+  line-height: var.default(--wy-headings-line-height);
+  margin-block: var.default(--wy-padding);
+}
+
+// A component for item metadata such as dates, times etc.
+[part~="wy-meta"] {
+  color: color.token(--wy-outline);
+  font-size: var.default(--wy-font-size-sm);
+}
+
+[part~="wy-meta-sm"] {
+  color: color.token(--wy-outline);
+  font-size: var.default(--wy-font-size-xs);
+}
+
+[part~="wy-quote"] {
+  color: color.token(--wy-outline);
+  &::before,
+  &::after {
+    content: '"';
+  }
+}

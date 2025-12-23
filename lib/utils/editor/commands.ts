@@ -17,7 +17,6 @@ export const weavyKeymap: KeyBinding[] = [
 
 function softSubmit(target: EditorView) {
   // dispatch event on the outer codemirror dom element
-  const event = new Event("Weavy-SoftSubmit");
-  target.dom.dispatchEvent(event);
-  return true;
+  const event = new CustomEvent("wy-submit", { bubbles: true });
+  return target.dom.dispatchEvent(event);
 }

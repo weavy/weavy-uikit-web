@@ -1,13 +1,13 @@
-@use "base/color";
-@use "base/text";
-@use "base/var";
-@use "base/highlight";
+@use "../base/color";
+@use "../base/text";
+@use "../base/var";
+@use "../base/highlight";
 
-[part~=wy-card] {
-  --wy-component-background-color: #{color.token(--wy-surface-1)};
+[part~="wy-card"] {
+  --wy-component-background-color: #{color.token(--wy-surface-layer-high)};
   --wy-component-color: #{color.token(--wy-on-surface)};
   --wy-component-border-radius: #{var.default(--wy-border-radius)};
-  
+
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
   border-radius: var(--wy-component-border-radius);
@@ -19,15 +19,23 @@
   word-wrap: break-word;
   background-clip: border-box;
 
+  padding: var.default(--wy-padding-sm);
   @include highlight.flash;
 }
 
-[part~=wy-card-primary] {
+[part~="wy-card-primary"] {
   --wy-component-background-color: #{color.token(--wy-primary-container)};
   --wy-component-color: #{color.token(--wy-on-primary-container)};
 }
 
-[part~=wy-card-hover] {
+// trashed modifier
+[part~="wy-trashed"] {
+  text-decoration: line-through;
+  opacity: var.default(--wy-opacity-disabled);
+}
+
+// hover modifier
+[part~="wy-card-hover"] {
   cursor: pointer;
   user-select: none;
 
@@ -54,41 +62,23 @@
       opacity: var.default(--wy-opacity-state-focus); //12%;
     }
   }
-  &:active, &[part~=wy-active] {
+  &:active,
+  &[part~="wy-active"] {
     &::before {
       opacity: var.default(--wy-opacity-state-active); //12%;
     }
   }
 }
 
-[part~=wy-card-actions] {
+[part~="wy-card-actions"] {
   position: absolute;
-  top: calc(var.default(--wy-padding) + .5 * var.default(--wy-gap));
-  right: calc(var.default(--wy-padding) + .5 * var.default(--wy-gap));
+  top: var.default(--wy-padding);
+  right: var.default(--wy-padding);
   align-items: center;
   display: flex;
 }
 
-[part~=wy-card-content] {
-  flex: 1 0 auto;
-  padding-block-end: var.default(--wy-padding);
-  padding-inline-start: var.default(--wy-padding);
-  padding-inline-end: var.default(--wy-padding);
-
-  &[part~=wy-card-top] {
-    padding-block-start: var.default(--wy-padding);
-  }
-}
-
-[part~=wy-card-top] {
-  border-radius: var(--wy-component-border-radius);
-  object-fit: cover;
-  object-position: top center;
-  flex: 1 1 100%;
-  max-height: var.wy-rem(10);
-}
-
-[part~=wy-card-icon] {
+[part~="wy-card-icon"] {
   --wy-component-icon-width: #{var.wy-rem(6)};
   --wy-component-icon-height: #{var.wy-rem(6)};
   display: flex;
@@ -96,39 +86,60 @@
   justify-content: center;
   flex-direction: column;
   text-align: center;
-  padding: var.wy-rem(1) var.wy-rem(2);
   margin: auto;
 }
 
-[part~=wy-card-image] {
+[part~="wy-card-image"] {
   width: auto;
   height: auto;
 
-  &[part~=wy-loading] {
+  border-radius: var(--wy-component-border-radius);
+
+  object-fit: cover;
+  object-position: center;
+  flex: 1 1 100%;
+  max-height: var.wy-rem(10);
+
+  &[part~="wy-loading"] {
     transition: opacity 0.15s ease-out;
     opacity: 0;
-   
-    &[part~=wy-loaded] {
+
+    &[part~="wy-loaded"] {
       opacity: 1;
       transition: opacity 0.15s ease-out;
-   
-      /*
-      ~ img {
-        // hide any previous images/thumbs, wait for loaded image transition
-        transition-delay: 0.15s;
-        opacity: 0;
-      }
-        */
     }
-   }
+  }
 }
 
-[part~=wy-card-top-image] {
-  object-position: 50% 38%;
+[part~="wy-card-image-top"] {
+  object-position: top center;
 }
 
-[part~=wy-trashed] {
-  opacity: var.default(--wy-opacity-disabled);
-  text-decoration: line-through;
+[part~="wy-card-title"] {
+  padding: 0 var.default(--wy-padding-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var.default(--wy-gap-sm);
+  height: 2.25rem;
+  box-sizing: border-box;
 }
 
+[part~="wy-input"] {
+  height: 2.25rem;
+  box-sizing: border-box;
+  flex: 0 1 auto;
+}
+
+[part~="wy-card-text"] {
+  line-height: var.default(--wy-line-height);
+  flex: 0 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[part~="wy-card-action"] {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

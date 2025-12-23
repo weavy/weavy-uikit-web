@@ -2,11 +2,13 @@
 
 // Themes generated from VS Code using https://prism.dotenv.dev/
 
-.wy-code, %wy-code {
+[part~="wy-code"],
+.wy-code,
+%wy-code {
   & pre {
     text-wrap: pretty;
   }
-  
+
   @include code-vscode.theme;
 }
 

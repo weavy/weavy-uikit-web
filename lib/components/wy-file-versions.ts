@@ -4,7 +4,6 @@ import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import type { FileType, FilesResultType } from "../types/files.types";
 import { getExtension, getIcon } from "../utils/files";
-import { classMap } from "lit/directives/class-map.js";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { repeat } from "lit/directives/repeat.js";
@@ -18,55 +17,118 @@ import {
 import { openUrl } from "../utils/urls";
 import { relativeTime } from "../utils/datetime";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-
-import filesCss from "../scss/all.scss";
-
-import "./base/wy-icon";
-import "./base/wy-dropdown";
-import "./wy-empty";
-import "./wy-file-menu";
-import "./base/wy-spinner";
 import { FileVersionSelectEventType } from "../types/files.events";
 import { NamedEvent } from "../types/generic.types";
 
+import "./ui/wy-dropdown";
+import "./ui/wy-icon";
+import "./ui/wy-item";
+import "./ui/wy-progress-circular";
+import "./wy-empty";
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wy-file-versions": WyFileVersions;
+  }
+}
+
 /**
- * @fires {FileVersionSelectEventType} file-version-select
+ * File versions list for a file — displays available versions and actions (download, revert, remove).
+ *
+ * **Used sub components:**
+ *
+ * - [`<wy-item-list>`](./ui/wy-item.ts)
+ * - [`<wy-item>`](./ui/wy-item.ts)
+ * - [`<wy-dropdown>`](./ui/wy-dropdown.ts)
+ * - [`<wy-dropdown-divider>`](./ui/wy-dropdown.ts)
+ * - [`<wy-dropdown-item>`](./ui/wy-dropdown.ts)
+ * - [`<wy-icon>`](./ui/wy-icon.ts)
+ * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
+ * - [`<wy-empty>`](./wy-empty.ts)
+ *
+ * @csspart wy-versions - Wrapper for the versions list.
+ *
+ * @fires {FileVersionSelectEventType} file-version-select - Emitted when a file version is selected.
  */
 @customElement("wy-file-versions")
 @localized()
-export class WyFileVersions extends WeavySubComponent {
-  static override styles = filesCss;
-
+export class WyFileVersions extends WeavySubAppComponent {
+  /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
+  /**
+   * Source file whose version timeline should be displayed.
+   */
   @property({ attribute: false })
   file!: FileType;
 
+  /**
+   * Currently selected version. Falls back to the latest when unset.
+   */
   @property({ attribute: false })
   activeVersion?: FileType;
 
+  /**
+   * Query controller fetching the file versions list.
+   * @internal
+   */
   private fileVersionsQuery = new QueryController<FilesResultType>(this);
 
+  /**
+   * Mutation used when reverting to an older version.
+   * @internal
+   */
   private fileVersionRestoreMutation?: FileVersionMutationType;
+
+  /**
+   * Mutation used when removing a version.
+   * @internal
+   */
   private fileVersionDeleteMutation?: FileVersionDeleteMutationType;
 
+  /**
+   * Selects the provided version and emits `file-version-select`.
+   *
+   * @param versionFile - Version to select.
+   */
   selectVersion(versionFile: FileType) {
     this.activeVersion = versionFile;
     this.dispatchFileVersionSelect(versionFile);
   }
 
+  /**
+   * Emit a `file-version-select` event with the chosen version.
+   *
+   * @internal
+   * @param versionFile - Version to announce.
+   * @returns Whether the event was not canceled.
+   */
   dispatchFileVersionSelect(versionFile: FileType) {
-    const event: FileVersionSelectEventType = new (CustomEvent as NamedEvent)("file-version-select", { detail: { versionFile } });
+    const event: FileVersionSelectEventType = new (CustomEvent as NamedEvent)("file-version-select", {
+      detail: { versionFile },
+    });
     return this.dispatchEvent(event);
   }
 
+  /**
+   * Revert the file to the supplied version.
+   *
+   * @internal
+   * @param versionFile - Version to restore.
+   */
   handleRevert(versionFile: FileType) {
     void this.fileVersionRestoreMutation?.mutate({ versionFile });
     this.selectVersion(versionFile);
   }
 
+  /**
+   * Remove the supplied version and adjust the active selection if needed.
+   *
+   * @internal
+   * @param versionFile - Version to delete.
+   */
   handleRemove(versionFile: FileType) {
     void this.fileVersionDeleteMutation?.mutate({ versionFile });
 
@@ -75,6 +137,12 @@ export class WyFileVersions extends WeavySubComponent {
     }
   }
 
+  /**
+   * Download the provided version via the browser.
+   *
+   * @internal
+   * @param file - Version file to download.
+   */
   triggerDownload(file: FileType) {
     openUrl(file.download_url, "_top", file.name, true);
   }
@@ -105,12 +173,12 @@ export class WyFileVersions extends WeavySubComponent {
     const { data, isPending } = this.fileVersionsQuery.result ?? { isPending: true };
 
     if (isPending) {
-      return html`<wy-spinner overlay></wy-spinner>`;
+      return html`<wy-progress-circular indeterminate overlay></wy-progress-circular>`;
     }
 
     return data?.data
       ? html`
-          <div class="wy-list wy-versions">
+          <wy-item-list part="wy-versions">
             ${repeat(
               data.data,
               (versionFile) => versionFile.id,
@@ -134,31 +202,35 @@ export class WyFileVersions extends WeavySubComponent {
                       </wy-empty>
                     `
                   : html`
-                      <div
-                        class="wy-item wy-list-item-lg wy-item-hover ${classMap({
-                          "wy-active": versionFile.rev == this.activeVersion?.rev,
-                        })}"
+                      <wy-item
+                        size="lg"
+                        interactive
+                        ?selected=${versionFile.rev == this.activeVersion?.rev}
                         tabindex="0"
                         @click=${() => this.selectVersion(versionFile)}
                         @keydown=${clickOnEnterAndConsumeOnSpace}
                         @keyup=${clickOnSpace}
                       >
-                        <wy-icon name=${versionIcon} size="48" kind=${versionFile.kind} ext=${ext}></wy-icon>
-                        <div class="wy-item-body">
-                          <div class="wy-item-title">${num}. ${versionFile.name}</div>
-                          <div class="wy-item-text">
-                            <time datetime=${versionFile.updated_at || versionFile.created_at} title=${dateFull}
-                              >${dateFromNow}</time
-                            >
-                            · ${versionFile.updated_by?.name}</div
+                        <wy-icon
+                          slot="image"
+                          name=${versionIcon}
+                          size="48"
+                          kind=${versionFile.kind}
+                          ext=${ext}
+                        ></wy-icon>
+                        <span slot="title">${num}. ${versionFile.name}</span>
+                        <span slot="text">
+                          <time datetime=${versionFile.updated_at || versionFile.created_at} title=${dateFull}
+                            >${dateFromNow}</time
                           >
-                        </div>
+                          ${versionFile.updated_by ? html`· ${versionFile.updated_by?.name}` : nothing}
+                        </span>
 
-                        <wy-dropdown directionX="left">
+                        <wy-dropdown slot="actions" directionX="left">
                           <wy-dropdown-item @click=${() => this.triggerDownload(versionFile)}>
                             <wy-icon name="download"></wy-icon>
                             ${msg("Download")}
-                          </wy-dropdown-item>                          
+                          </wy-dropdown-item>
 
                           ${index !== 0
                             ? html`
@@ -174,11 +246,11 @@ export class WyFileVersions extends WeavySubComponent {
                               `
                             : nothing}
                         </wy-dropdown>
-                      </div>
+                      </wy-item>
                     `;
               }
             )}
-          </div>
+          </wy-item-list>
         `
       : nothing;
   }

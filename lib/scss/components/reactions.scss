@@ -1,6 +1,6 @@
-@use "base/color";
-@use "base/var";
-@use "base/const";
+@use "../base/color";
+@use "../base/var";
+@use "../base/const";
 
 [part~=wy-reaction] {
   font-size: var.wy-rem(1.125);
@@ -32,7 +32,7 @@
   z-index: const.$zindex-dropdown;
   border: none;
 
-  --wy-component-background-color: #{color.token(--wy-surface-2)};
+  --wy-component-background-color: #{color.token(--wy-surface-container-lowest)};
   --wy-component-color: #{color.token(--wy-on-surface)};
 
   background-color: var(--wy-component-background-color);
@@ -58,8 +58,8 @@
 [part~="wy-reactions-line"] {
   display: flex;
   align-items: center;
-  padding-left: var.wy-rem(0.1875);
-  padding-right: var.wy-rem(0.1875);
+  //padding-left: var.wy-rem(0.1875);
+  //padding-right: var.wy-rem(0.1875);
   gap: var.wy-rem(0.1875);
   justify-content: end;
 }
@@ -82,8 +82,8 @@
   min-height: 0;
   max-height: 0;
   margin: calc(var.default(--wy-message-padding) - var.default(--wy-gap)) calc(-1 * var.default(--wy-message-padding)) calc(-1 * var.default(--wy-message-padding));
-  padding-left: var.wy-rem(0.125);
-  padding-right: var.wy-rem(0.125);
+  padding-left: var.wy-rem(0.1875);
+  padding-right: var.wy-rem(0.1875);
   gap: var.wy-rem(0.125);
   flex: 1 0 auto;
   justify-content: flex-end;

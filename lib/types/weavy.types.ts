@@ -1,6 +1,6 @@
 import { LocaleModule } from "@lit/localize";
 import { Nullable } from "./generic.types";
-import { WeavyComponentSettingProps } from "../classes/weavy-component";
+import { WeavyComponentSettingProps } from "./component.types";
 /**
  * Async function returning an `access_token` string for _your_ authenticated user. A boolean `refresh` parameter is provided to let you now if a fresh token is needed from Weavy.
  */
@@ -21,13 +21,12 @@ export interface StrictWeavyOptions {
   cloudFilePickerUrl: string | URL;
 
   /**
-   * The time allowed to pass before configuration is considered to have timed out.
-   * `Infinity` disables the timeout.
+   * Timeout (ms) before configuration is considered to have failed. `Infinity` disables the timeout.
    */
   configurationTimeout: number;
 
   /**
-   * Should the dynamic import of modules from the environment be disabled?
+   * Disables dynamic import of modules from the environment.
    */
   disableEnvironmentImports: boolean;
 
@@ -47,11 +46,6 @@ export interface StrictWeavyOptions {
    * If set to `Infinity`, the cache will never be considered old.
    */
   gcTime: number;
-
-  /**
-   * Enable the realtime `wy-notifications` event.
-   */
-  notificationEvents: boolean;
 
   /**
    * Which scroll behavior to use (where applicable).

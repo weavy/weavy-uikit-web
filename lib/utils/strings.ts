@@ -152,3 +152,15 @@ export function truncateText(text: string, maxLength: number = 256) {
   }
   return text;
 }
+
+
+export const emojisOnlyRegExp = /^[\p{Extended_Pictographic}\p{Emoji_Presentation}]+$/u;
+
+/**
+ * Check if a text contains only emojis.
+ * @param text The text to check.
+ */
+export function checkOnlyEmojis(text?: string) {
+  const matchedEmojis = text?.match(emojisOnlyRegExp)
+  return Boolean(matchedEmojis?.length);
+}

@@ -1,142 +1,167 @@
-@use "base/var";
-@use "base/color";
-@use "base/text";
+@use "../base/var";
+@use "../base/color";
+@use "../base/text";
 
 // An individual (list) item with support for icon/img, content and actions.
-.wy-item {
+:host(wy-item),
+[part~="wy-item"] {
   --wy-component-color: #{color.token(--wy-on-background)};
-  position: relative;
   display: flex;
-  align-items: center;
-  gap: var.default(--wy-gap);
-  padding: var.default(--wy-padding);
-  text-decoration: none;
+  clip-path: border-box;
+  box-sizing: border-box;
 }
 
-.wy-list-item {
+[part~="wy-item-rounded"] {
+  border-radius: var.default(--wy-border-radius);
+}
+
+[part~="wy-item-rounded-outer"] {
+  border-radius: var.default(--wy-border-radius-outer);
+}
+
+// Item nesting
+[part~="wy-item-inner"] {
+  display: flex;
+  position: relative;
+  align-items: center;
+  text-decoration: none;
+  gap: var.default(--wy-gap);
+  padding: var.default(--wy-padding);
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+[part~="wy-item-inner-no-padding"] {
+  padding: 0;
+}
+
+
+// fixed height item
+[part~="wy-item-sm"] {
+  min-height: var.wy-rem(2);
+  padding: 0 var.default(--wy-padding);  
+}
+
+// fixed height item
+[part~="wy-item-md"] {
   min-height: var.wy-rem(3);
 }
 
-// Item with room for larger icon and two rows of content
-.wy-list-item-lg {
+// Fixed height item with room for larger icon and two rows of content
+[part~="wy-item-lg"] {
   min-height: var.wy-rem(4.5);
 }
 
+// Alignment for inner items
+[part~="wy-item-top"] {
+  align-items: flex-start;
+}
 
-.wy-item-inner {
+// Item content
+[part~="wy-item-body"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
   display: flex;
-  align-items: center;
-  gap: var.default(--wy-gap);
+}
+
+// Multi row layout for content
+[part~="wy-item-rows"] {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  justify-content: space-evenly;
   flex: 1 1 100%;
 }
 
-.wy-item-body {
-  width: 100%;
-  min-width: 0;
-}
-
-.wy-item-rows {
+// A row when using multi rows
+[part~="wy-item-row"] {
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  row-gap: var.default(--wy-gap-sm);
-  min-width: 0;
+  align-items: center;
+  column-gap: var.default(--wy-gap);
+  min-height: calc(var.default(--wy-button-line-height) * var.default(--wy-size));
+}
 
-  &:only-child {
-    margin-inline-start: var.default(--wy-gap-sm);
+[part~="wy-item-title"] {
+  a {
+    @include text.stretched-link;
+    color: inherit;
+    text-decoration: none;
   }
-}
 
-.wy-item-rows-compact {
-  row-gap: 0;
-}
-
-.wy-item-rows-single {
-  margin-inline-start: var.default(--wy-gap-sm);
-}
-
-.wy-item-title {
   color: var(--wy-component-color);
   font-size: var.default(--wy-item-title-font-size);
   font-weight: var.default(--wy-item-title-font-weight);
   @include text.truncate;
 }
 
-.wy-item-title-lg {
-  color: var(--wy-component-color);
-  font-size: var.default(--wy-item-title-font-size);
-  font-weight: var.default(--wy-item-title-font-weight);
-  @include text.truncate-lines(3);
+[part~="wy-item-image"] {
+  display: contents;
 }
 
-.wy-item-text {
+// Normal content text
+[part~="wy-item-text"] {
   color: color.token(--wy-outline);
   font-size: var.default(--wy-font-size-sm);
-  
-  @include text.truncate;
 
-  .wy-icon {
-    width: var.wy-rem(1.25);
-    height: var.wy-rem(1.25);
-    vertical-align: var.wy-rem(-0.3125);
-  }
+  @include text.truncate;
 }
 
-.wy-item-quote {
-  color: color.token(--wy-outline);
-  &::before,
-  &::after {
-    content: '"';
-  }
+[part~="wy-item-text-sm"] {
+  font-size: var.default(--wy-font-size-xs);
+}
+
+[part~="wy-item-meta"] {
+  white-space: nowrap;
 }
 
 // For items with more than one action, and items with top/bottom positioned actions
-.wy-item-actions {
+[part~="wy-item-actions"] {
   --wy-component-background-color: transparent;
   display: flex;
   align-items: center;
   justify-items: flex-end;
   flex: 0 0 auto;
+  gap: var.default(--wy-gap-sm);
+}
+
+// Alignment for actions
+[part~="wy-item-actions-top"] {
+  align-self: flex-start;
   margin: var.wy-rem(-0.25);
 }
 
-.wy-item-top {
+[part~="wy-item-actions-bottom"] {
   align-self: flex-start;
+  margin: var.wy-rem(-0.125) 0 var.wy-rem(-0.625);
 }
 
-.wy-item-actions-bottom {
-  align-self: flex-start;
-  margin-block: var.wy-rem(-0.5);
+[part~="wy-item-left"] {
+  margin-right: auto;
 }
 
-.wy-item-row {
-  display: flex;
-  align-items: center;
-  column-gap: var.default(--wy-gap);
-
-  .wy-item-title {
-    margin-right: auto;
-  }
-
-  .wy-item-text {
-    margin-right: auto;
-  }
-
-  .wy-meta {
-    white-space: nowrap;
-  }
-}
-
-.wy-item-right {
+[part~="wy-item-right"] {
   margin-left: auto;
 }
 
+[part~="wy-read"] {
+  opacity: var.default(--wy-opacity-muted);
+  --wy-component-color: #{color.token(--wy-outline)};
+}
+
+[part~="wy-unread"] {
+  --wy-component-color: color.token(--wy-on-background);
+  [part~="wy-item-title"],
+  [part~="wy-item-text"] {
+    font-weight: var.default(--wy-font-weight-bold);
+    color: var(--wy-component-color);
+  }
+}
+
 // An actionable item with hover, disabled, and active states.
-.wy-item-hover {
-  //--wy-component-background-color: #{color.token(--wy-surface-1)};
-  //--wy-component-color: #{color.token(--wy-on-surface)};
-  //background-color: var(--wy-component-background-color);
-  //color: var(--wy-component-color);
+[part~="wy-item-interactive"] {
+  background-color: var(--wy-component-background-color);
+  color: var(--wy-component-color);
 
   user-select: none;
   cursor: pointer;
@@ -144,42 +169,80 @@
   // Hover state
   &:hover,
   &:focus {
-    --wy-component-background-color: #{color.token(--wy-surface-2)};
-    --wy-component-color: #{color.token(--wy-on-surface)};
-    background-color: var(--wy-component-background-color);
-    color: var(--wy-component-color);
+    --wy-component-background-color: var(--wy-component-background-color-hover, #{color.token(--wy-surface-layer-high)});
     text-decoration: none;
   }
 
   &:active {
-    --wy-component-background-color: #{color.token(--wy-surface-variant)};
-    --wy-component-color: #{color.token(--wy-on-surface-variant)};
-    background-color: var(--wy-component-background-color);
-    color: var(--wy-component-color);
+    --wy-component-background-color: var(--wy-component-background-color-active, #{color.token(--wy-surface-layer-highest)});
   }
 
-  &.wy-disabled,
+  &[part~="wy-disabled"],
   &:disabled {
-    //--wy-component-background-color: #{color.token(--wy-surface-1)};
-    //background-color: var(--wy-component-background-color);
     opacity: var.default(--wy-opacity-disabled);
     pointer-events: none;
   }
-  // Include both here for `<a>`s and `<button>`s
-  &.wy-active {
-    --wy-component-background-color: #{color.token(--wy-primary-container)};
-    --wy-component-color: #{color.token(--wy-on-primary-container)};
+
+  &[part~="wy-selected"] {
+    // selected?
+    --wy-component-background-color: var(--wy-component-background-color-selected, #{color.token(--wy-primary-container)});
+    --wy-component-color: var(--wy-component-color-selected, #{color.token(--wy-on-primary-container)});
     background-color: var(--wy-component-background-color);
     color: var(--wy-component-color);
     border-color: var(--wy-component-background-color);
   }
 }
 
-.wy-item-trashed {
+[part~="wy-item-trashed"] {
   text-decoration: line-through;
   opacity: var.default(--wy-opacity-disabled);
 
-  &.wy-item-hover:hover {
+  &[part~="wy-item-interactive"]:hover {
     opacity: 1;
+  }
+}
+
+// A list of items with rounded corners and spacing to visually group them together
+[part~="wy-item-list"] {
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-border);
+  min-width: 0;
+}
+
+[part~="wy-item-list-filled"] {
+  --wy-component-color: #{color.token(--wy-on-surface)};
+  
+  --wy-component-background-color: #{color.token(--wy-surface-layer-low)};
+  --wy-component-background-color-hover: #{color.token(--wy-surface-layer-lowest)};
+  --wy-component-background-color-active: #{color.token(--wy-surface-layer-lowest)};
+}
+
+// A list of items with rounded corners and spacing to visually group them together
+[part~="wy-item-list-rounded"] {
+  border-radius: var.default(--wy-border-radius-sm);
+  clip-path: content-box;
+}
+
+// A list of items with rounded corners and spacing to visually group them together
+[part~="wy-item-list-rounded-outer"] {
+  border-radius: var.default(--wy-border-radius-outer);
+  clip-path: content-box;
+}
+
+// A list of items with rounded corners and borders to visually group them together
+[part~="wy-item-list-bordered"] {
+  border: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
+  gap: 0;
+
+  > :not(slot),
+  ::slotted(*) {
+    border-left: none;
+    border-right: none;
+  }
+
+  > :not(slot):not(:first-child),
+  ::slotted(*:not(:first-child)) {
+    border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
   }
 }

@@ -1,6 +1,6 @@
-import { ReactiveController, ReactiveControllerHost } from "lit";
+import { PropertyValueMap, ReactiveController, ReactiveControllerHost } from "lit";
 import { type PersistProp, PersistStorageCache } from "../utils/persist-properties";
-import { WeavyComponentContextProps } from "../classes/weavy-component";
+import { WeavyComponentContextProps } from "../types/component.types";
 
 export class PersistStateController<T extends ReactiveControllerHost & WeavyComponentContextProps> implements ReactiveController {
   host: T;
@@ -8,6 +8,7 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
   #cachePrefix?: string;
   properties: Array<PersistProp<T>> = [];
   initialProperties: Map<keyof T, unknown> = new Map()
+  callback?: (changedProperties: PropertyValueMap<T>) => void
 
   persistStorageCache = new PersistStorageCache();
 
@@ -40,8 +41,9 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
     this.host = host;
   }
 
-  public observe(properties: Array<PersistProp<T>>, prefixKey?: string, cachePrefix?: string) {
+  public observe(properties: Array<PersistProp<T>>, prefixKey?: string, cachePrefix?: string, callback?: (changedProperties: PropertyValueMap<T>) => void) {
     this.properties = properties;
+    this.callback = callback
 
     const prefixHasChanged = Boolean(this.prefixKey && this.prefixKey !== prefixKey || this.cachePrefix && this.cachePrefix !== cachePrefix);
 
@@ -65,7 +67,7 @@ export class PersistStateController<T extends ReactiveControllerHost & WeavyComp
 
   hostUpdate() {
     if (this.prefixKey && this.properties && this.host.weavy) {
-      this.persistStorageCache.persistProperties<T>(this.host, this.prefixKey, this.properties, this.cachePrefix ? `${this.host.weavy.cachePrefix}:${this.cachePrefix}` : this.host.weavy.cachePrefix);
+      this.persistStorageCache.persistProperties<T>(this.host, this.prefixKey, this.properties, this.cachePrefix ? `${this.host.weavy.cachePrefix}:${this.cachePrefix}` : this.host.weavy.cachePrefix, this.callback);
     }
   }
 }

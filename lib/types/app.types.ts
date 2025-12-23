@@ -52,10 +52,7 @@ export enum AgentAppTypeStringMapping {
   "agent_chat" = "2352a1c6-abc6-420e-8b85-ca7d5aed8779",
 }
 
-export enum ComponentType {
-  /** Unknown componentType will enable optional uid. */
-  Unknown = "unknown"
-}
+export type UnknownAppType = "unknown";
 
 export type AppType = {
   id: number;
@@ -141,7 +138,7 @@ export type EntityType = {
 };
 
 export type LinkType = EntityType & {
-  /** Any agent used for the entity */ 
+  /** Any agent used for the entity */   
   agent?: string;
 };
 

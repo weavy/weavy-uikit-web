@@ -32,8 +32,10 @@ export type ProviderType = "box" | "dropbox" | "google-drive" | "onedrive";
 export type BlobType = {
   id: number;
   name: string;
-  size?: number;
-  media_type?: string;
+  width?: number;
+  height?: number;
+  size: number;
+  media_type: string;
   thumbnail_url?: string;
   raw?: string;
 };
@@ -58,7 +60,7 @@ export type FileType = {
   media_type: string;
   width?: number;
   height?: number;
-  size?: number;
+  size: number;
   metadata?: MetadataType;
   tags?: string[];
   provider?: FileProviderType; // string
@@ -85,8 +87,11 @@ export type FilesResultType = InfiniteQueryResultType<FileType>;
 export type FileStatusStateType = "error" | "conflict" | "pending" | "ok";
 
 export type FileStatusType = {
+  /** State of file status.  */
   state: FileStatusStateType;
+  /** Progress of upload provided as 0-100 percent.  */
   progress?: number;
+  /** Any additional status text to display. */
   text?: string;
 };
 
@@ -118,6 +123,7 @@ export type CreateFileProps = {
 };
 
 export type UploadProgressProps = {
+  /** The upload progress provided as 0-100 percent. */
   progress: number;
 };
 
@@ -132,3 +138,9 @@ export type FileMutationType = Mutation<
   MutateFileProps,
   FileMutationContextType | undefined
 >;
+
+export type FileLoadingState = {
+  file: FileType;
+  loading?: boolean;
+  loaded?: boolean;
+};

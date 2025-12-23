@@ -1,0 +1,110 @@
+// LIGHT MODE
+
+$tokens: (
+  // theme colors
+  --wy-primary: --wy-primary-light,
+  --wy-on-primary: --wy-on-primary-light,
+  --wy-primary-container: --wy-primary-container-light,
+  --wy-on-primary-container: --wy-on-primary-container-light, 
+
+  --wy-secondary: --wy-secondary-light,
+  --wy-on-secondary: --wy-on-secondary-light, 
+  --wy-secondary-container: --wy-secondary-container-light,
+  --wy-on-secondary-container: --wy-on-secondary-container-light,
+
+  --wy-tertiary: --wy-tertiary-light,
+  --wy-on-tertiary: --wy-on-tertiary-light, 
+  --wy-tertiary-container: --wy-tertiary-container-light,
+  --wy-on-tertiary-container: --wy-on-tertiary-container-light,
+
+  --wy-error: --wy-error-light, 
+  --wy-on-error: --wy-on-error-light, 
+  --wy-error-container: --wy-error-container-light, 
+  --wy-on-error-container: --wy-on-error-container-light, 
+
+  --wy-background: --wy-background-light,
+  --wy-on-background: --wy-on-background-light,
+
+  --wy-surface: --wy-surface-light,
+  --wy-on-surface: --wy-on-surface-light,
+
+  --wy-surface-variant: --wy-surface-variant-light,
+  --wy-on-surface-variant: --wy-on-surface-variant-light, 
+
+  --wy-outline: --wy-outline-light,
+  --wy-outline-variant: --wy-outline-variant-light,
+
+  --wy-surface-container-highest: --wy-surface-container-highest-light,
+  --wy-surface-container-high: --wy-surface-container-high-light,
+  --wy-surface-container: --wy-surface-container-light,
+  --wy-surface-container-low: --wy-surface-container-low-light, 
+  --wy-surface-container-lowest: --wy-surface-container-lowest-light, 
+
+  // Custom surface layer
+
+  --wy-surface-layer-highest: --wy-surface-layer-highest-light,
+  --wy-surface-layer-high: --wy-surface-layer-high-light,
+  --wy-surface-layer: --wy-surface-layer-light,
+  --wy-surface-layer-low: --wy-surface-layer-low-light, 
+  --wy-surface-layer-lowest: --wy-surface-layer-lowest-light, 
+
+  // Custom additions
+  --wy-warning: --wy-warning-light, 
+  --wy-on-warning: --wy-on-warning-light, 
+  --wy-warning-container: --wy-warning-container-light, 
+  --wy-on-warning-container: --wy-on-warning-container-light, 
+
+  --wy-highlight: --wy-highlight-light,
+  --wy-on-highlight: --wy-on-highlight-light,
+
+  --wy-link: --wy-primary-light,
+  --wy-presence-active: --wy-green-light,
+
+  --wy-shade: --wy-shade-light,
+  --wy-shade-invert: --wy-shade-invert-light,
+  --wy-shade-opaque: --wy-shade-opaque-light,
+
+  // custom colors
+  --wy-blue: --wy-blue-light,
+  --wy-indigo: --wy-indigo-light,
+  --wy-purple: --wy-purple-light,
+  --wy-pink: --wy-pink-light,
+  --wy-red: --wy-red-light,
+  --wy-orange: --wy-orange-light,
+  --wy-yellow: --wy-yellow-light,
+  --wy-green: --wy-green-light,
+  --wy-teal: --wy-teal-light,
+  --wy-cyan: --wy-cyan-light,
+  --wy-gray: --wy-gray-light,
+
+  // syntax highlight
+  --wy-code-text: --wy-code-text-light,
+  --wy-code-variable: --wy-code-variable-light,
+  --wy-code-operator: --wy-code-operator-light,
+  --wy-code-prolog: --wy-code-prolog-light,
+  --wy-code-comment: --wy-code-comment-light,
+  --wy-code-builtin: --wy-code-builtin-light,
+  --wy-code-number: --wy-code-number-light,
+  --wy-code-inserted: --wy-code-inserted-light,
+  --wy-code-constant: --wy-code-constant-light,
+  --wy-code-hexcode: --wy-code-hexcode-light,
+  --wy-code-regex: --wy-code-regex-light,
+  --wy-code-char: --wy-code-char-light,
+  --wy-code-tag: --wy-code-tag-light,
+  --wy-code-attr-name: --wy-code-attr-name-light,
+  --wy-code-selector: --wy-code-selector-light,
+  --wy-code-property: --wy-code-property-light,
+  --wy-code-deleted: --wy-code-deleted-light,
+  --wy-code-string: --wy-code-string-light,
+  --wy-code-changed: --wy-code-changed-light,
+  --wy-code-punctuation: --wy-code-punctuation-light,
+  --wy-code-function: --wy-code-function-light,
+  --wy-code-keyword: --wy-code-keyword-light,
+  --wy-code-class-name: --wy-code-class-name-light,
+);
+
+@mixin styles() {
+    // light mode
+    color-scheme: light;
+}
+

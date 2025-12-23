@@ -1,6 +1,6 @@
 import { createContext } from "@lit/context";
-import { WeavyComponentSettingProps } from "../classes/weavy-component";
 import { WeavyClient } from "../client/weavy";
+import { WeavyComponentSettingProps } from "../types/component.types";
 
 export class WeavyComponentSettings implements WeavyComponentSettingProps {
   
@@ -15,8 +15,6 @@ export class WeavyComponentSettings implements WeavyComponentSettingProps {
 
   // SETTINGS
   enterToSend = WeavyClient.defaults.enterToSend;
-  notifications = WeavyClient.defaults.notifications;
-  notificationsBadge = WeavyClient.defaults.notificationsBadge;
   reactions = WeavyClient.defaults.reactions;
   annotations = WeavyClient.defaults.annotations;
 

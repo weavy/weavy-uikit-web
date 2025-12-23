@@ -1,3 +1,4 @@
+import { PropertyValueMap } from "lit";
 import { throwOnDomNotAvailable } from "./dom";
 
 export interface Storage {
@@ -50,19 +51,24 @@ export class PersistStorageCache {
     }
   }
 
-  persistProperties<T extends object = object>(parent: T, key: string, properties: Array<PersistProp<T>>, cachePrefix?: string) {
+  persistProperties<T extends object = object>(parent: T, key: string, properties: Array<PersistProp<T>>, cachePrefix?: string, callback?: (changedProperties: PropertyValueMap<T>) => void) {
     const prefix = `${this.keyPrefix}:${cachePrefix ? `${cachePrefix}:` : ''}${typeof parent}:${key}`;
   
+    const changedProperties: PropertyValueMap<T> = new Map()
+
     for (const property of properties) {
       // Try to initialize property from storage
       if (!this.#cache.has(property.name)) {
         const item = this.getStorageItem<T[keyof T]>(prefix, property.name);
         if (item && (property.override || !parent[property.name])) {
           //console.log("Restoring property", property, item)
+          changedProperties.set(property.name, parent[property.name]);
           parent[property.name] = item;
         }
         this.#cache.set(property.name, item);
       }
+
+      callback?.(changedProperties);
   
       // Update cache and storage
       if (parent[property.name] !== this.#cache.get(property.name)) {

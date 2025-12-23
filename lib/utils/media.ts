@@ -1,8 +1,10 @@
 export function mediaFallback(media: HTMLVideoElement | HTMLAudioElement) {
-  if (media.classList.contains("wy-loading")) {
+  if (media.classList.contains("wy-loading") || media.part.contains("wy-loading")) {
     media.classList.add("wy-loaded");
+    media.part.add("wy-loaded");
   }
   media.classList.add("wy-error");
+  media.part.add("wy-error");
   // TODO: replace with react way
   media.outerHTML = media.outerHTML.replace(/<(video|audio)/, "<div").replace(/(video|audio)>/, "div>");
 }
@@ -10,9 +12,10 @@ export function mediaFallback(media: HTMLVideoElement | HTMLAudioElement) {
 export function mediaLoaded(event: Event) {
   const src = event.target as HTMLMediaElement;
   if (src.tagName === "VIDEO" || src.tagName === "AUDIO") {
-    if (src.classList.contains("wy-loading")) {
+    if (src.classList.contains("wy-loading") || src.part.contains("wy-loading")) {
       //console.log("loaded")
       src.classList.add("wy-loaded");
+      src.part.add("wy-loaded");
     }
   }
 }

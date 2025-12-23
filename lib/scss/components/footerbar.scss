@@ -1,11 +1,11 @@
-@use "base/var";
-@use "base/const";
-@use "base/color";
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
 
-[part~=wy-footerbar] {
-  --wy-component-background-color: #{color.token(--wy-surface-1)};
+[part~="wy-footerbar"] {
+  --wy-component-background-color: #{color.token(--wy-surface-container)};
   --wy-component-color: #{color.token(--wy-on-surface)};
-  
+
   position: absolute;
   bottom: 0;
   left: 0;
@@ -16,7 +16,7 @@
     content: "";
     background-color: var(--wy-component-background-color);
     color: var(--wy-component-color);
-    box-shadow: #{color.token(--wy-outline-variant)} 0px #{var.default(--wy-border)} 0px 0px inset;
+    //box-shadow: #{color.token(--wy-outline-variant)} 0px #{var.default(--wy-border)} 0px 0px inset;
     position: absolute;
     width: 100%;
     left: 0;
@@ -28,6 +28,14 @@
   }
 }
 
-[part~=wy-footerbar-sticky] {
+[part~="wy-footerbar-sticky"] {
   position: sticky;
+}
+
+[part~="wy-footerbar-floating"] {
+  --wy-component-border-radius: #{var.default(--wy-border-radius-outer)};
+  border-radius: var(--wy-component-border-radius);
+  &::after {
+    border-radius: var(--wy-component-border-radius);
+  }
 }

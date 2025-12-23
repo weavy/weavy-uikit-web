@@ -1,0 +1,7 @@
+@use "./base/var";
+
+// Padded styling for blocks
+:host {
+  padding: var.default(--wy-padding-outer);
+  border-radius: var.default(--wy-border-radius-outer);
+}

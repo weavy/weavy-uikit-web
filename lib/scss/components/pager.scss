@@ -1,4 +1,4 @@
-//@use "base/var";
+//@use "../base/var";
 [part~="wy-pager"] {
   position: relative;
   align-self: center;
@@ -24,29 +24,3 @@
   margin-inline: auto;
   pointer-events: none;
 }
-
-/* NOT USED 
-tr.wy-pager {
-  pointer-events: none;
-}
-
-:not(tr).wy-pager:not(:empty) {
-  display: block;
-  text-align: center;
-  margin: var.wy-rem(1) auto;
-}
-
-tr.wy-pager td {
-  text-align: center;
-  border: 0;
-
-  .wy-spinner {
-    display: inline;
-    margin: var.wy-rem(1) auto;
-  }
-}
-
-.wy-grid .wy-pager {
-    display: flex;
-}
-*/

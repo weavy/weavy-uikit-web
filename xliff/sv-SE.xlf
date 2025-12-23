@@ -11,9 +11,8 @@
         <target state="">Radera</target>
       </trans-unit>
       <trans-unit id="s9fb1c9e781c38ec2">
-        <source>Open in <x id="0" equiv-text="${fileProvider}"/></source>
-        <target state=""> Öppna i <x id="0" equiv-text="${fileProvider}"/>
-        </target>
+        <source>Open in <x id="0" equiv-text="${this.provider}"/></source>
+        <target state="">Öppna i <x id="0" equiv-text="${this.provider}"/></target>
       </trans-unit>
       <trans-unit id="s60320a18282b2b33">
         <source>Rename</source>
@@ -115,10 +114,6 @@
         <source>Kind</source>
         <target state="">Typ</target>
       </trans-unit>
-      <trans-unit id="s1ea911617f4bf7e7">
-        <source>Open in <x id="0" equiv-text="${this.provider}"/>?</source>
-        <target state="">Öppna i <x id="0" equiv-text="${this.provider}"/>?</target>
-      </trans-unit>
       <trans-unit id="s737d13effc0cee9d">
         <source>No preview available :(</source>
         <target state="">Ingen förhandsvisning tillgänglig :(</target>
@@ -175,10 +170,6 @@
         <source>Edit</source>
         <target state="">Redigera</target>
       </trans-unit>
-      <trans-unit id="se9beb5e1e43f9764">
-        <source>Edit comment</source>
-        <target state="">Redigera kommentar</target>
-      </trans-unit>
       <trans-unit id="sed073ac6112070e7">
         <source>Create a comment...</source>
         <target state="">Skriv en kommentar...</target>
@@ -223,10 +214,6 @@
         <source>1 comment</source>
         <target state="">1 kommentar</target>
       </trans-unit>
-      <trans-unit id="s8b4c8439803b5b65">
-        <source>Edit post</source>
-        <target state="">Redigera inlägg</target>
-      </trans-unit>
       <trans-unit id="s4e53b5a018b324d9">
         <source>Edit post...</source>
         <target state="">Redigera inlägg...</target>
@@ -269,10 +256,6 @@
         <source>Post</source>
         <target>Publicera</target>
       </trans-unit>
-      <trans-unit id="s251a18781c6a3625">
-        <source>+ add an option</source>
-        <target>+ lägg till alternativ</target>
-      </trans-unit>
       <trans-unit id="sf60480d4fe3a8e08">
         <source><x id="0" equiv-text="${name}"/> is typing<x id="1" equiv-text="${ellipsis}"/></source>
         <target><x id="0" equiv-text="${name}"/> skriver<x id="1" equiv-text="${ellipsis}"/></target>
@@ -286,10 +269,6 @@
       <trans-unit id="s16430e1864d70df9">
         <source>Type a message...</source>
         <target>Skriv ett meddelande...</target>
-      </trans-unit>
-      <trans-unit id="sfaacc9c26728c711">
-        <source>Drop files here to upload.</source>
-        <target>Släpp filer här för att ladda upp.</target>
       </trans-unit>
       <trans-unit id="sbe2dba1939d68a7a">
         <source>Edit comment...</source>
@@ -386,11 +365,6 @@
       <trans-unit id="sa667dd9e4a8a6750">
         <source>Add some files to get started!</source>
         <target>Lägg till filer för att komma igång!</target>
-      </trans-unit>
-      <trans-unit id="sf59f359396914fa2">
-        <source>Remove all</source>
-        <target>Ta bort alla</target>
-        <note from="lit-localize">Button action to remove all</note>
       </trans-unit>
       <trans-unit id="s527d43090df3bdb7">
         <source>You are currently offline.</source>
@@ -699,6 +673,22 @@
       <trans-unit id="s56ab6bbd1efee1da">
         <source>Ask anything...</source>
         <target>Fråga något...</target>
+      </trans-unit>
+      <trans-unit id="scb9da282dc6a8c06">
+        <source>Option <x id="0" equiv-text="${optionNumber}"/></source>
+        <target>Alternativ <x id="0" equiv-text="${optionNumber}"/></target>
+      </trans-unit>
+      <trans-unit id="sf5eaa1a29802dfaf">
+        <source>Drop files here</source>
+        <target>Släpp filer här</target>
+      </trans-unit>
+      <trans-unit id="s12ae2efccc49d4af">
+        <source>Conversations</source>
+        <target>Konversationer</target>
+      </trans-unit>
+      <trans-unit id="sd348deccf67960bf">
+        <source>No pending uploads</source>
+        <target>Inga pågående uppladdningar</target>
       </trans-unit>
     </body>
   </file>

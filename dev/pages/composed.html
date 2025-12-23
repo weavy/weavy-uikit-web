@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html style="--wy-theme-color: #61afef">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content" />
     <!--script src="./weavy.js"></script-->
     <link rel="modulepreload" href="/locales/sv-SE.ts" />
     <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
@@ -7,6 +9,7 @@
       :root {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
           "Open Sans", "Helvetica Neue", sans-serif;
+        --wy-theme-color: #156b93;
       }
 
       html,
@@ -22,19 +25,20 @@
         grid-auto-flow: column;
         grid-auto-columns: 1fr;
         gap: 0.5rem;
-        
+        box-sizing: border-box;
+        padding: .5rem;
       }
     </style>
     <script type="module">
-      import * as svSE from "/locales/sv-SE.ts";
-      import { Weavy } from "/lib";
+      const svSE = await import("/locales/sv-SE.ts");
+      const { Weavy } = await import("/lib");
 
       const weavy = new Weavy({
         url: "%WEAVY_URL%",
         reactions: "👍 ❤️"
       });
 
-      weavy.locales = [["sv-SE", svSE]];
+      weavy.locales = [["sv-SE", svSE], ["en-GB", {}]];
       weavy.locale = "sv-SE";
       weavy.tokenFactory = async (refresh) => {
         let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);

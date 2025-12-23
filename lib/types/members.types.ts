@@ -13,3 +13,5 @@ export type MemberType = UserOrAgentType & {
 };
 
 export type MembersResultType = QueryResultType<MemberType>;
+
+export type MemberIdType = string | number;

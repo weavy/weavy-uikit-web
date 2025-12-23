@@ -1,4 +1,4 @@
-import { WeavyComponent } from "../classes/weavy-component";
+import { WeavyAppComponent } from "../classes/weavy-app-component";
 import { NamedEvent } from "../types/generic.types";
 import { WyMessageEventDetailType, WyMessageEventType } from "../types/messages.events";
 import { RealtimeMessageEventType } from "../types/realtime.types";
@@ -10,7 +10,7 @@ import { RealtimeMessageEventType } from "../types/realtime.types";
  * @param {RealtimeMessageEventType} realtimeEvent 
  * @returns 
  */
-export function handleRealtimeMessage (this: WeavyComponent, realtimeEvent: RealtimeMessageEventType) {
+export function triggerMessageEvent (this: WeavyAppComponent, realtimeEvent: RealtimeMessageEventType) {
     if (!this.weavy || !this.app) {
       return;
     }

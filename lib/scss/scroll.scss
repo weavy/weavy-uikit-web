@@ -1,0 +1,22 @@
+@use "base/scroll";
+
+[part~="wy-scroll-y"] {
+  @include scroll.scroll-y;
+}
+
+[part~="wy-scroll-x"] {
+  @include scroll.scroll-x;
+}
+
+[part~="wy-scroll-x-y"] {
+  @include scroll.scroll-x-y;
+}
+
+[part~="wy-scroll-x-always"] {
+  overflow-y: scroll;
+}
+
+[part~="wy-scroll-y-always"] {
+  overflow-y: scroll;
+}
+

@@ -1,0 +1,112 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../scroll";
+@use "code";
+
+/* BASE STYLES FOR CODEMIRROR */
+
+[part~="wy-editor"] {
+  box-sizing: border-box;
+
+  /*.ͼ1*/
+  .cm-scroller {
+    font-family: unset;
+    line-height: 1.5;
+  }
+
+  /*.ͼ1*/
+  .cm-widgetBuffer {
+    vertical-align: unset;
+  }
+
+  /*.ͼ1*/
+  .cm-placeholder {
+    pointer-events: none;
+    color: #{color.token(--wy-outline)};
+  }
+
+  /*.ͼ2*/
+  .cm-content {
+    caret-color: #{color.token(--wy-on-background)};
+
+    // TODO: Code color might not work (use shadow parts)
+    @include code.themes;
+
+    ::part(wy-link) {
+      text-decoration: var.default(--wy-link-decoration);
+      color: color.token(--wy-link);
+    }
+  }
+
+  .wy-mention {
+    font-weight: bold;
+  }
+
+  /*.ͼ1*/
+  .cm-editor {
+    // Base styles from codemirror
+    box-sizing: border-box;
+    flex-direction: column;
+    position: relative !important;
+    display: flex !important;
+
+    &.cm-focused {
+      /* default theme in codemirror seems difficult to override */
+      --wy-component-color: #{color.token(--wy-on-background)};
+      color: var(--wy-component-color);
+      border-color: #{color.token(--wy-primary)};
+      outline: 0;
+    }
+
+    .cm-scroller {
+      overflow: auto;
+    }
+
+    .cm-line {
+      display: block;
+      padding: 0px var.default(--wy-padding-sm) 0px var.default(--wy-padding-sm);
+    }
+  }
+
+  // autocomplete dropdown menu
+  //.ͼ1 {
+  .cm-tooltip.cm-tooltip-autocomplete > ul {
+    font-family: unset;
+    max-height: var.wy-rem(15); // room for 5 items
+
+    > li {
+      padding: 0;
+    }
+  }
+  //}
+
+  //.ͼ2 {
+  .cm-tooltip {
+    border: none;
+    background-clip: padding-box;
+    background-color: #{color.token(--wy-surface-container-low)};
+    color: #{color.token(--wy-on-surface)};
+    border-radius: var.default(--wy-border-radius);
+    box-shadow: var.default(--wy-shadow-level1);
+    overflow: hidden;
+    z-index: const.$zindex-dropdown;
+  }
+
+  .cm-tooltip-autocomplete ul li[aria-selected] wy-item {
+    background: #{color.token(--wy-primary-container)};
+    color: unset;
+  }
+  //}
+
+  .cm-tooltip-autocomplete {
+    .cm-completionLabel {
+      display: none;
+    }
+
+    ::part(wy-item-interactive):hover,
+    ::part(wy-item-interactive):focus {
+      background: #{color.token(--wy-surface-variant)};
+    }
+  }
+}

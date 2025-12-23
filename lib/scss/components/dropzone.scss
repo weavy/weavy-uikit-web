@@ -1,20 +1,22 @@
-@use "base/color";
-@use "base/var";
+@use "../base/color";
+@use "../base/var";
 
-.wy-dragging {
-    &::after {
-        content: attr(data-drag-title);
-        background-color: rgba(255, 255, 255, .5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: var.wy-rem(.125) dashed color.token(--wy-primary);
-        font-weight: var.default(--wy-font-weight-bold);
-        z-index: 10000;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-    }
+[part~="wy-dragging"] {
+  &::after {
+    content: attr(data-drag-title);
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: var.wy-rem(0.125) dashed color.token(--wy-outline);
+    color: #{color.token(--wy-on-surface)};
+    font-size: var.wy-rem(1.5);
+    font-weight: var.default(--wy-font-weight-bold);
+    z-index: 10000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
 }
