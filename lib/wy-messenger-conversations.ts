@@ -45,6 +45,22 @@ declare global {
 /**
  * Weavy messenger component to render multiple one-to-one conversations, group chats or agent conversations.
  *
+ * **Component Layout**
+ *
+ * The component is [block-level](https://developer.mozilla.org/en-US/docs/Glossary/Block-level_content) with pre-defined CSS styling to adapt to flex- and grid-layouts as well as traditional flow-layouts.
+ * It's usually recommended to use a proper flex-layout for the container you are placing the component in for a smooth layout integration.
+ *
+ * The height grows with the content per default. Content is automatically loaded during scrolling when the last content becomes visible (aka infinite scrolling).
+ * If placed in a flex- or grid-layout or if an explicit height is set, the component becomes scrollable.
+ *
+ * The content within the components is per default aligned to the edges of it's own _box_ and designed to not be placed next to a edge or border. 
+ * It's recommended to adjust the layout with your default padding. Setting the `--wy-padding-outer` to your default padding will allow the component to still fill the are where it's placed, 
+ * but with proper padding within the scrollable area of the component. 
+ * If you want to make the component go all the way to the edges without padding or any outermost roundness instead, 
+ * set `--wy-padding-outer: 0;` and `--wy-border-radius-outer: 0;` to make the component fit nicely with the edge. 
+ *
+ * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
+ *
  * **Used sub components:**
  *
  * - [`<wy-conversation-list>`](./components/wy-conversation-list.ts)

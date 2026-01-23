@@ -56,8 +56,50 @@ declare global {
  */
 
 /**
- * Weavy messenger component to render a button with badge that opens multiple one-to-one conversations, group chats or agent conversations in an overlay.
+ * The Weavy Messenger button component renders a Messenger button complete with a realtime badge for the number of unread conversations. When clicked, the button opens a built in overlay displaying the full [`<wy-messenger>`](./wy-messenger.ts) component for multiple one-to-one conversations, group chats or agent conversations.
  *
+ * The Messenger displays a list of all conversations with possibility to pin, star and mark conversations as read.
+ * Each conversation item displays an avatar, the participants or the room name as title, a line with the latest message.
+ * It also indicates if the conversation is read/unread and if anyone in the conversation is typing.
+ *
+ * The list has a search in the top and can open a modal for creating new conversations where the user can search for other people or agents to create private chats or chat rooms.
+ *
+ * When a user clicks a conversation item, the conversation is loaded.
+ * The conversation can show rich messages with markdown formatting including code syntax highlight.
+ * Messages can have uploaded images, attached files and cloud files with full browser preview of 100+ formats.
+ * Polls, video meetings, rich link embeds, tags and mentions can be used in messages.
+ * Users can react with predefined emojis to each message.
+ *
+ * Read receipts indicate which messages that has been sent and read.
+ * The online presence for users is indicated both in the conversation list as well as in the conversation.
+ *
+ * Typing indicators are shown when other users are typing in a conversation.
+ *
+ * New messages are indicated as new when received.
+ *
+ * For chat rooms, the name and avatar for the chat room can be edited. Members can be added or removed from the chat room.
+ *
+ * The editor features markdown preview, including code syntax highlighting.
+ * It has buttons for adding polls, video meetings, images, files and cloud files.
+ * Mentions brings up a user selector.
+ * Drafts are automatically saved for each conversation.
+ *
+ * The Messenger button component can optionally be configured in _agent mode_, by defining the `agent` property, to only show conversations with a given [AI agent](https://www.weavy.com/docs/learn/integrations/agents).
+ * In agent mode, the create conversation button instantly creates a new conversation with the agent when clicked, instead of opening a create conversation modal.
+ *
+ * > Complement this with the [`<wy-notification-toasts>`](./wy-notification-toasts.ts) component to also get realtime _in-app notifications_ or _browser notifications_ when new messages arrive.
+ *
+ * ** Component layout **
+ *
+ * The button is displayed as a clickable icon that acts as a button.
+ * The default size of the button is the icon size `1.5rem`/`24px` together with the set `--wy-padding` (which defaults to `0.5rem`/`8px`) on every side of the icon, which makes a total of `2.5rem`/`40px` per default.
+ *
+ * The openable Messenger renders in a drawer overlay on the right side in the [top layer](https://developer.mozilla.org/en-US/docs/Glossary/Top_layer).
+ * That means that the Messenger does not occupy any visual layout space where it's placed in the DOM, it only renders in the top layer.
+ * The drawer can be maximized by the user to get more visual space for the Messenger.
+ *
+ * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
+ * 
  * **Used sub components:**
  *
  * - [`<wy-badge>`](./components/ui/wy-badge.ts)
@@ -90,6 +132,22 @@ declare global {
  * @csspart wy-messenger-conversation-list - Container for conversation list.
  * @csspart wy-messenger-conversation - Container for the active conversation.
  * @csspart wy-close-conversation - Wrapper for the close-conversation icon and badge.
+ * 
+ * @example <caption>Messenger button with openable Messenger overlay</caption>
+ * 
+ * Displays a button with a badge that tracks unread conversations and can open a side drawer overlay with the Messenger on click.
+ * 
+ * ```html
+ * <wy-messenger-button></wy-messenger-button>
+ * ```
+ * 
+ * @example <caption>Messenger button component in agent mode</caption>
+ * 
+ * Display a button that opens a Messenger in agent mode. Also, show a dot instead of a count when there are unread notifications.
+ * 
+ * ```html
+ * <wy-messenger-button agent="assistant" badge="dot"></wy-messenger-button>
+ * ```
  */
 @customElement("wy-messenger-button")
 @localized()
@@ -115,7 +173,7 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
    * @default "drawer"
    */
   @property({ type: String })
-  list: OverlayAppearanceType = "drawer";
+  overlay: OverlayAppearanceType = "drawer";
 
   /**
    * Badge appearance variant.
@@ -169,6 +227,12 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
   get unread(): number {
     return this.unreadConversationsController.unread;
   }
+
+  /**
+   * Optional agent instructions appended to submitted messages.
+   */
+  @property()
+  instructions?: string;
 
   /**
    * Placeholder text for the message editor.
@@ -293,9 +357,9 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
         </wy-icon>
       </wy-button>
 
-      ${this.list !== "none"
+      ${this.overlay !== "none"
         ? html`<wy-overlay
-            type=${this.list}
+            type=${this.overlay}
             .show=${this.show}
             .maximized=${this.maximized}
             @close=${() => (this.show = false)}
@@ -381,6 +445,7 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
                   ? html`<wy-conversation
                       .conversationId=${this.conversationId}
                       .conversation=${conversation}
+                      .agentInstructions=${this.instructions}
                       .placeholder=${this.placeholder ?? (this.agent ? msg("Ask anything...") : undefined)}
                       .header=${!this.agent}
                     ></wy-conversation>`

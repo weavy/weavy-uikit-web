@@ -8,15 +8,15 @@ import { addAlphaToArgb } from "./colors";
  * colors corresponding to the theme.
  */
 export enum Variant {
-  MONOCHROME,
-  NEUTRAL,
-  TONAL_SPOT,
-  VIBRANT,
-  EXPRESSIVE,
-  FIDELITY,
-  CONTENT,
-  RAINBOW,
-  FRUIT_SALAD,
+  MONOCHROME = 0,
+  NEUTRAL = 1,
+  TONAL_SPOT = 2,
+  VIBRANT = 3,
+  EXPRESSIVE = 4,
+  FIDELITY = 5,
+  CONTENT = 6,
+  RAINBOW = 7,
+  FRUIT_SALAD = 8,
 }
 
 export enum ColorPaletteName {
@@ -97,7 +97,7 @@ export class SchemeWeavy extends DynamicScheme {
 
   constructor(sourceColorHct: Hct, isDark: boolean, contrastLevel: number) {
     super({
-      sourceColorArgb: sourceColorHct.toInt(),
+      sourceColorHct,
       variant: Variant.TONAL_SPOT,
       contrastLevel,
       isDark,
@@ -156,11 +156,11 @@ export class SchemeWeavy extends DynamicScheme {
   }
 
   get white() {
-    return 0xFFFFFF;
+    return 0xffffff;
   }
-  
+
   // Custom transparency based surface container colors
-  
+
   get surfaceLayerLowest() {
     return this.isDark ? addAlphaToArgb(this.black, 0.5) : addAlphaToArgb(this.white, 0.75);
   }
@@ -174,11 +174,11 @@ export class SchemeWeavy extends DynamicScheme {
   }
 
   get surfaceLayerHigh() {
-    return this.isDark ? addAlphaToArgb(this.white, 0.10) : addAlphaToArgb(this.black, 0.075);
+    return this.isDark ? addAlphaToArgb(this.white, 0.1) : addAlphaToArgb(this.black, 0.075);
   }
 
   get surfaceLayerHighest() {
-    return this.isDark ? addAlphaToArgb(this.white, 0.15) : addAlphaToArgb(this.black, 0.10);
+    return this.isDark ? addAlphaToArgb(this.white, 0.15) : addAlphaToArgb(this.black, 0.1);
   }
 
   // Custom Tokens

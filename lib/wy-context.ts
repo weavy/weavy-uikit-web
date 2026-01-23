@@ -20,13 +20,53 @@ declare global {
 }
 
 /**
- * Weavy context provider component for configuration of authentication and common settings for Weavy components.
+ * The Weavy context component provides a declarative way of [initializing the Weavy UIKit](https://www.weavy.com/docs/reference/uikit) that does not require creating an instance of the `Weavy` class. 
+ * This can be useful in some scenarios, for instance in low-code and no-code platforms with limited javascript functionality.
  *
- * May be used globally on document level if no child nodes are present. When child nodes are present it is limited to the scope of the child nodes.
+ * When used with child nodes, the Weavy context acts a regular [context provider](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md), which makes the configuration available to it's child nodes only. 
+ * If no child nodes are present, the configuration is instead available globally in the DOM.
  *
+ * To use the context component in the UIKit you need initialize it with the `url` to your [environment](https://www.weavy.com/docs/learn/environment) and `tokenFactory`/`tokenUrl` for [authentication](https://www.weavy.com/docs/learn/authentication).
+ * 
+ * > For use with React, you can instead use the standard React context provider or the `useWeavy` configuration hook, available in the `@weavy/uikit-react` package. See [Getting started with Weavy using React](https://www.weavy.com/docs/get-started/react) on how to configure Weavy in React. 
+ * 
+ * **Component layout**
+ * 
+ * This component does not render or occupy any visual space in the rendering.
+ * 
+ * You can add additional styling for _other_ child Weavy components using [CSS Custom Properties](https://www.weavy.com/docs/learn/styling).
+ * 
  * @tagname wy-context
- * @class WyContext
  * @slot - Default slot for any elements that will have access to the Weavy context provider.
+ * 
+ * @example <caption>Globally available Weavy context</caption>
+ * 
+ * The context component is place by itself without any children and becomes available to the entire DOM.
+ * 
+ * It's configured with a `tokenUrl` endpoint that needs to be implemented and provided at your server.
+ * 
+ * ```html
+ * <wy-context
+ *   url="{WEAVY-URL}"
+ *   tokenUrl="https://example.com/myapp/token"
+ * ></wy-context>
+ * ...
+ * <h1>Messenger with standard weavy configuration</h1>
+ * <wy-messenger></wy-messenger>
+ * ```
+ * 
+ * @example <caption>Scoped Weavy context provider</caption>
+ * 
+ * Placing components as children to the context makes the configuration only available to it's children.
+ * 
+ * It's configured with a `tokenUrl` endpoint that needs to be implemented and provided at your server.
+ * 
+ * ```html
+ * <wy-context url="{WEAVY-URL}" tokenUrl="https://example.com/myapp/token">
+ *   <h1>Messenger inside a weavy context provider</h1>
+ *   <wy-messenger></wy-messenger>
+ * </wy-context>
+ * ```
  */
 @customElement("wy-context")
 export class WyContext extends LitElement implements StrictWeavyOptions, WeavySettingsProps {
@@ -47,7 +87,7 @@ export class WyContext extends LitElement implements StrictWeavyOptions, WeavySe
   annotations = Weavy.defaults.annotations;
 
   /**
-   * URL to the hosted cloud file picker.
+   * URL to the hosted cloud file picker. This usually does not need to be provided unless you intend to host your own Weavy cloud file picker.
    *
    * @type {string | URL}
    */

@@ -11,7 +11,7 @@
         <target state="">Radera</target>
       </trans-unit>
       <trans-unit id="s9fb1c9e781c38ec2">
-        <source>Open in <x id="0" equiv-text="${this.provider}"/></source>
+        <source>Open in <x id="0" equiv-text="${fileProvider}"/></source>
         <target state="">Öppna i <x id="0" equiv-text="${this.provider}"/></target>
       </trans-unit>
       <trans-unit id="s60320a18282b2b33">

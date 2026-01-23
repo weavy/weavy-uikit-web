@@ -42,12 +42,43 @@ declare global {
  */
 
 /**
- * Weavy component to render a single contextual personal copilot.
+ * Weavy copilot component to render single, contextual and personal chats with an AI agent.
  *
- * The copilot component renders a complete and functional user interface for a contextual AI agent chat. It needs to be configured with an AI agent and can have instructions and use any contextual data you provide (as long as it's a string).
+ * It needs to be [configured with an AI agent](https://www.weavy.com/docs/learn/integrations/agent) and can have custom _instructions_ and use any _contextual data_ you provide (as long as it's a string). 
+ * To get started, you can use Weavy's built-in `"assistant"` agent.
  *
- * The copilot chat is agent-to-user which means each user has their own chat with the agent. Each time the chat is loaded a fresh chat is started. It can optionally be configured with a `uid` to persist the conversation. The `uid` needs to be unique to each _user_ and each _agent_ (if you intend to use several agents). You can make a _uid_ with automatically appended _user_ and _agent_ by using the `generateUid` property instead, which generates a value for the `uid` property.
+ * The copilot chat is agent-to-user which means each user has their own chat with the agent. 
+ * Each time the copilot component is loaded a fresh chat is started.
+ * A fresh conversation can be started at any time by using the `.reset()` method.
+ * The component can optionally be configured with a `uid` to persist the conversation. 
  * 
+ * > If you specify a `uid` it needs to be unique per _user_ and _agent_ (if you intend to use several agents).
+ * > For ease-of-use, you can do this automatically by specifying the `generateUid` property instead of the `uid` property.
+ * > It's optional to provide a uid and in many cases not needed. 
+ * > When using a uid it's often useful to base the uid on something that identifies the location where the component is rendered. 
+ * > Typically you would use something like a product id, page id or path.
+ *
+ * Predefined elements with the `suggestion` class can be placed in the `suggestion-list` slot to create text hints for the user on what to do.
+ * When clicked, the suggestion text gets automatically placed in the message editor.
+ * 
+ * > Complement this with the [`<wy-notification-toasts>`](./wy-notification-toasts.ts) component to also get realtime _in-app notifications_ or _browser notifications_ when new messages arrive.
+ * 
+ * **Component Layout**
+ *
+ * The component is [block-level](https://developer.mozilla.org/en-US/docs/Glossary/Block-level_content) with pre-defined CSS styling to adapt to flex- and grid-layouts as well as traditional flow-layouts.
+ * It's usually recommended to use a proper flex-layout for the container you are placing the component in for a smooth layout integration.
+ *
+ * The height grows with the content per default. Content is automatically loaded during scrolling when the last content becomes visible (aka infinite scrolling).
+ * If placed in a flex- or grid-layout or if an explicit height is set, the component becomes scrollable.
+ *
+ * The content within the components is per default aligned to the edges of it's own _box_ and designed to not be placed next to a edge or border. 
+ * It's recommended to adjust the layout with your default padding. Setting the `--wy-padding-outer` to your default padding will allow the component to still fill the are where it's placed, 
+ * but with proper padding within the scrollable area of the component. 
+ * If you want to make the component go all the way to the edges without padding or any outermost roundness instead, 
+ * set `--wy-padding-outer: 0;` and `--wy-border-radius-outer: 0;` to make the component fit nicely with the edge. 
+ *
+ * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
+ *
  * **Used sub components:**
  *
  * - [`<wy-comment-list>`](./components/wy-comment-list.ts)
@@ -73,18 +104,27 @@ declare global {
  * @slot suggestion-list - Items for the list in the `suggestion` content.
  * @slot footer - Footer for the `empty` state.
  *
- * @example <caption>Generic Copilot</caption>
- * The agent name is required and should correspond to any configured AI agent you have. You may switch between different agents whenever you like, but remember that the conversation also changes.
+ * @example <caption>Generic AI copilot chat</caption>
+ * 
+ * Displays a chat based AI copilot, placed in a container using a flex layout which the component adapts to. 
+ * 
+ * The `agent` property is required and should correspond to [agent](https://www.weavy.com/docs/learn/integrations/agents) in your environment. 
+ * You may switch between agents whenever you like, but remember that the conversation also changes.
  *
- * Here we use the built-in *assistant* chat agent.
+ * Here we use the built-in agent with uid `assistant`.
  *
  * ```html
- * <wy-copilot agent="assistant"></wy-copilot>
+ * <div style="display: flex; height: 100%;">
+ *   <wy-copilot agent="assistant"></wy-copilot>
+ * </div>
  * ```
  *
- * > It's optional to provide a uid and in many cases not needed. When using a uid it's often useful to base the uid on something that identifies the location where the component is rendered. Typically you would use something like a product id, page id, path or URL.
- *
  * @example <caption>Copilot with instructions and contextual data</caption>
+ * 
+ * The copilot gets much more useful if it knows about the data and content on your page. 
+ * You can update this anytime you like to keep it up-to-date.
+ * Here we provide data from the DOM to the agent using the `contextualData` property.
+ * 
  * ```html
  * <div id="my-sample-content">
  *  <h1>ACME</h1>
@@ -167,7 +207,7 @@ export class WyCopilot extends WeavyAppComponent implements WeavyComponentAgentP
 
   /** @internal */
   protected handleRealtimeMessage = triggerMessageEvent.bind(this);
-  
+
   /** @internal */
   protected unsubscribeToRealtime?: () => void;
 

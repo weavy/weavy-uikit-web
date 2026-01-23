@@ -53,8 +53,57 @@ declare global {
  */
 
 /**
- * Weavy messenger component to render multiple one-to-one conversations, group chats or agent conversations.
+ * The Weavy Messenger component renders a full featured chat interface for private messaging, chat rooms, or AI agent conversations.
  *
+ * It displays a list of all conversations with possibility to pin, star and mark conversations as read.
+ * Each conversation item displays an avatar, the participants or the room name as title, a line with the latest message.
+ * It also indicates if the conversation is read/unread and if anyone in the conversation is typing.
+ *
+ * The list has a search in the top and can open a modal for creating new conversations where the user can search for other people or agents to create private chats or chat rooms.
+ *
+ * When a user clicks a conversation item, the conversation is loaded.
+ * The conversation can show rich messages with markdown formatting including code syntax highlight.
+ * Messages can have uploaded images, attached files and cloud files with full browser preview of 100+ formats.
+ * Polls, video meetings, rich link embeds, tags and mentions can be used in messages.
+ * Users can react with predefined emojis to each message.
+ *
+ * Read receipts indicate which messages that has been sent and read.
+ * The online presence for users is indicated both in the conversation list as well as in the conversation.
+ *
+ * Typing indicators are shown when other users are typing in a conversation.
+ *
+ * New messages are indicated as new when received.
+ *
+ * For chat rooms, the name and avatar for the chat room can be edited. Members can be added or removed from the chat room.
+ *
+ * The editor features markdown preview, including code syntax highlighting.
+ * It has buttons for adding polls, video meetings, images, files and cloud files.
+ * Mentions brings up a user selector.
+ * Drafts are automatically saved for each conversation.
+ *
+ * The Messenger can optionally be configured in _agent mode_, by defining the `agent` property, to only show conversations with a given [AI agent](https://www.weavy.com/docs/learn/integrations/agents).
+ * In agent mode, the create conversation button instantly creates a new conversation with the agent when clicked, instead of opening a create conversation modal.
+ *
+ * > Complement this with the [`<wy-notification-toasts>`](./wy-notification-toasts.ts) component to also get realtime _in-app notifications_ or _browser notifications_ when new messages arrive.
+ * 
+ * ** Component layout **
+ *
+ * The layout depends on the width of its container, which has a breakpoint at `768px`.
+ * 
+ * - In narrow layouts, the conversation list and chat will be stacked and clicking on a conversation in the list will navigate to the chat.
+ * - In wider layouts, the component has a side-by-side layout with the conversation list on the left hand side and the chat window on the right hand side.
+ *
+ * The component is [block-level](https://developer.mozilla.org/en-US/docs/Glossary/Block-level_content) with pre-defined CSS styling to adapt to flex- and grid-layouts as well as traditional flow-layouts.
+ * It's usually recommended to use a proper flex-layout for the container you are placing the component in for a smooth layout integration.
+ *
+ * The content within the components is per default aligned to the edges of it's own _box_ and designed to not be placed next to a edge or border.
+ * It's recommended to adjust the layout with your default padding. Setting the `--wy-padding-outer` to your default padding will allow the component to still fill the are where it's placed,
+ * but with proper padding within the scrollable area of the component.
+ * If you want to make the component go all the way to the edges without padding or any outermost roundness instead,
+ * set `--wy-padding-outer: 0;` and `--wy-border-radius-outer: 0;` to make the component fit nicely with the edge.
+ *
+ * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
+ * 
  * **Used sub components:**
  *
  * - [`<wy-badge>`](./components/ui/wy-badge.ts)
@@ -66,7 +115,7 @@ declare global {
  * - [`<wy-conversation-new>`](./components/wy-conversation-new.ts)
  * - [`<wy-context-data-progress>`](./components/wy-context-data.ts)
  * - [`<wy-empty>`](./components/wy-empty.ts)
- * - [`<wy-icon>`](./components/ui/wy-icon.ts) *
+ * - [`<wy-icon>`](./components/ui/wy-icon.ts)
  *
  * @tagname wy-messenger
  * @fires {WyActionEventType} wy-action - Emitted when a conversation is created or an action is performed on a conversation.
@@ -82,6 +131,50 @@ declare global {
  * @csspart wy-messenger-conversation-list - Container for the conversation list.
  * @csspart wy-messenger-conversation - Container for the active conversation.
  * @csspart wy-close-conversation - Wrapper around the close button and unread badge.
+ *
+ * @example <caption>Standard Messenger</caption>
+ *
+ * A messenger placed in a container using a flex layout.
+ *
+ * ```html
+ * <div style="display: flex; height: 100%;">
+ *  <wy-messenger></wy-messenger>
+ * </div>
+ * ```
+ *
+ * @example <caption>Agent Messenger</caption>
+ *
+ * Messenger in _agent mode_ only using the built-in "assistant" agent. Using optional `contextualData` to connect content from the page with the agent.
+ *
+ * ```html
+ * <div id="my-content">Lorem ipsum</div>
+ * <wy-messenger agent="assistant"></wy-messenger>
+ * <script>
+ * const myContent = document.querySelector("#my-content");
+ * const messenger = document.querySelector("wy-messenger");
+ * messenger.contextualData = myContent.innerHTML;
+ * </script>
+ * ```
+ *
+ * @example <caption>Messenger adapting to edges</caption>
+ *
+ * Messenger that adapts to fit nicely with the edges of a panel.
+ *
+ * ```html
+ * <style>
+ *   .messenger-panel {
+ *     display: flex;
+ *     height: 100%;
+ *     width: 32rem;
+ *     border: 1px solid gray;
+ *     --wy-padding-outer: 0;
+ *     --wy-border-radius-outer: 0;
+ *   }
+ * </style>
+ * <div class="messenger-panel">
+ *  <wy-messenger></wy-messenger>
+ * </div>
+ * ```
  */
 @customElement("wy-messenger")
 @localized()
@@ -134,6 +227,12 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
   get unread(): number {
     return this.unreadConversationsController.unread;
   }
+
+  /**
+   * Optional agent instructions appended to submitted messages.
+   */
+  @property()
+  instructions?: string;
 
   /**
    * Placeholder text for the message editor.
@@ -307,6 +406,7 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
             ? html`<wy-conversation
                 .conversationId=${this.conversationId}
                 .conversation=${conversation}
+                .agentInstructions=${this.instructions}
                 .placeholder=${this.placeholder ?? (this.agent ? msg("Ask anything...") : undefined)}
                 .header=${!this.agent}
               ></wy-conversation>`

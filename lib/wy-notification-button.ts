@@ -5,7 +5,7 @@ import { ShadowPartsController } from "./controllers/shadow-parts-controller";
 import { localized, msg } from "@lit/localize";
 import type { OverlayAppearanceType, BadgeAppearanceType, PositionType } from "./types/ui.types";
 import { NotificationTypes } from "./types/notifications.types";
-import {  } from "./types/app.types";
+import {} from "./types/app.types";
 import {
   UnreadNotificationsController,
   NotificationFilterProps,
@@ -40,7 +40,27 @@ declare global {
  */
 
 /**
- *  Weavy component that displays a notifications button that opens a sheet showing the notification list.
+ * Weavy notification button component to render a button complete with a realtime badge for the number of unread notifications. When clicking the button, it opens a built in overlay displaying the full list of notifications.
+ *
+ * Weavy automatically creates notifications for reactions, mentions and other activities.
+ *
+ * The notifications can be clicked or marked as read or unread. When clicked the notification fires a `"wy-link"` event with information about the originating Weavy component for the notification.
+ * This can be used to [handle navigation](https://www.weavy.com/docs/learn/notifications) in the app, back to where the originating Weavy component is placed.
+ *
+ * The notification button component can optionally be tailored to only show notifications for a specific app or notifications of a specific type, such as _mentions_ or _reactions_. 
+ * When setting a predefined notification type, it removes the possibility for the user to filter the list by type in the UI.
+ *
+ * > Complement this with the [`<wy-notification-toasts>`](./wy-notification-toasts.ts) component to also get realtime _in-app notifications_ or _browser notifications_.
+ *
+ * **Component Layout**
+ *
+ * The button is displayed as a clickable icon that acts as a button.
+ * The default size of the button is the icon size `1.5rem`/`24px` together with the set `--wy-padding` (which defaults to `0.5rem`/`8px`) on every side of the icon, which makes a total of `2.5rem`/`40px` per default.
+ *
+ * The openable notification list renders in an overlay in the [top layer](https://developer.mozilla.org/en-US/docs/Glossary/Top_layer).
+ * That means that the notification list does not occupy any visual layout space where it's placed in the DOM, it only renders in the top layer.
+ *
+ * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
  *
  * **Used sub components:**
  *
@@ -62,10 +82,39 @@ declare global {
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
  * @fires {WyLinkEventType} wy-link - Fired when a notification is clicked.
  * @fires {WyUnreadEventType} wy-unread - Fired when the number of unread notifications change.
+ *
+ * @example <caption>Notification button with notification list overlay</caption>
+ *
+ * Display notification button with a badge that tracks notifications for the authenticated user and can open an overlay with a notification list on click.
+ *
+ * ```html
+ * <wy-notification-button></wy-notification-button>
+ * ```
+ *
+ * @example <caption>Filter notifications by app</caption>
+ * 
+ * Display notifications for the authenticated user that originated from app with the specified `uid`. Also, show a dot instead of a count when there are unread notifications.
+ *
+ * ```html
+ * <wy-notification-button uid="test-chat" badge="dot"></wy-notification-button>
+ * ```
+ *
+ * @example <caption>Styling the badge</caption>
+ *
+ * Changes the styles of the badge in the notification button.  Set the background color of the `wy-badge` CSS shadow part.
+ *
+ * ```css
+ * wy-notification-button::part(wy-badge) {
+ *   background-color: violet;
+ * }
+ * ```
  */
 @customElement("wy-notification-button")
 @localized()
-export class WyNotificationButton extends WeavyOptionalAppComponent implements UnreadNotificationsProps, NotificationFilterProps {
+export class WyNotificationButton
+  extends WeavyOptionalAppComponent
+  implements UnreadNotificationsProps, NotificationFilterProps
+{
   static override styles = [hostContentsCss, colorModesCss, hostFontCss];
 
   /** @internal */
@@ -81,7 +130,24 @@ export class WyNotificationButton extends WeavyOptionalAppComponent implements U
    * @default "sheet"
    */
   @property({ type: String })
-  list: OverlayAppearanceType = "sheet";
+  overlay: OverlayAppearanceType = "sheet";
+
+  /**
+   * Overlay appearance used for the notification list.
+   *
+   * @deprecated
+   * @internal
+   * @type {"modal" | "sheet" | "drawer" | "full" | "none"}
+   * @default "sheet"
+   */
+  @property({ type: String })
+  set list(list: OverlayAppearanceType) {
+    console.warn(`.list is deprecated. Use .overlay = "${list}"; instead`);
+    this.overlay = list;
+  }
+  get list() {
+    return this.overlay;
+  }
 
   /**
    * Notification badge appearance variant.
@@ -162,9 +228,9 @@ export class WyNotificationButton extends WeavyOptionalAppComponent implements U
         </wy-icon>
       </wy-button>
 
-      ${this.list !== "none"
+      ${this.overlay !== "none"
         ? html`<wy-overlay
-            type=${this.list}
+            type=${this.overlay}
             .show=${this.showNotificationList}
             @close=${() => (this.showNotificationList = false)}
           >

@@ -30,7 +30,18 @@ declare global {
  */
 
 /**
- * Weavy component to show notification toast in realtime. May show rendered notifications, native browser notifications or just provide notification events.
+ * Weavy notification toast component to show overlay toasts in realtime when notifications are received. It shows in-app rendered notifications, native [browser notifications](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API) or just provide notification events without rendering.
+ *
+ * When in-app notifications are used, each notification is displayed with an avatar, a title, and additional summary/details with formatted text. 
+ * When clicked the notification fires a `"wy-link"` event with information about the originating Weavy component for the notification. 
+ * This can be used to [handle navigation](https://www.weavy.com/docs/learn/notifications) in the app, and navigate back to where the originating Weavy component is placed.
+ * 
+ * **Component Layout**
+ * 
+ * When used with _in-app_ notifications, the notifications renders as overlays in the lower right corner of the [top layer](https://developer.mozilla.org/en-US/docs/Glossary/Top_layer). 
+ * That means that the component does not occupy any visual layout space where it's placed in the DOM, it only renders in the top layer. 
+ * 
+ * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
  *
  * **Used sub components:**
  *
@@ -41,6 +52,22 @@ declare global {
  * @tagname wy-notification-toasts
  * @fires {WyLinkEventType} wy-link  - Fired when a notification is clicked.
  * @fires {WyNotificationEventType} wy-notification - Fired when a notification should be shown.
+ * 
+ * @example <caption>In-app notifications</caption>
+ * 
+ * Display rich html notification toasts on your page.
+ * 
+ * ```html
+ * <wy-notification-toasts></wy-notification-toasts>
+ * ```
+ * 
+ * @example <caption>Browser notifications</caption>
+ * 
+ * Display notifications using the native browser notification API.
+ * 
+ * ```html
+ * <wy-notification-toasts appearance="native"></wy-notification-toasts>
+ * ```
  */
 @customElement("wy-notification-toasts")
 @localized()

@@ -60,10 +60,20 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
           // Get existing app
           weavy.fetch(`/api/apps/${uid}`)
         );
+      } else if (members?.length) {
+        // Get the succeeding one of GET and POST
+        appsRequests.push(
+          // Get existing app
+          weavy.fetch(`/api/apps/${uid}`)
+        );
+        appsRequests.push(
+          // Create app with members
+          weavy.fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ type, members, uid, ...appData }) })
+        );
       } else {
         appsRequests.push(
-          // Get, update or create app using app uid
-          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ type, members, ...appData }) })
+          // Get, update or create app (upsert) using app uid
+          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ type, ...appData }) })
         );
       }
 

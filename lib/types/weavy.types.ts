@@ -16,7 +16,7 @@ export type WeavyAccessTokenResponseType = {
 
 export interface StrictWeavyOptions {
   /**
-   * The url to the cloud file picker.
+   * The url to the cloud file picker. This usually does not need to be provided unless you intend to host your own Weavy cloud file picker.
    */
   cloudFilePickerUrl: string | URL;
 

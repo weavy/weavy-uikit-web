@@ -63,7 +63,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var.default(--wy-padding) var.default(--wy-padding-lg) var.default(--wy-padding) var.default(--wy-padding);
+  padding: var.default(--wy-padding) var.default(--wy-padding-lg);
 }
 
 [part~="wy-post-content"] {
