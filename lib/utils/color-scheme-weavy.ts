@@ -1,23 +1,5 @@
-import { DynamicScheme, Hct, sanitizeDegreesDouble, TonalPalette } from "@material/material-color-utilities";
+import { DynamicScheme, Hct, sanitizeDegreesDouble, TonalPalette, Variant } from "@material/material-color-utilities";
 import { addAlphaToArgb } from "./colors";
-
-//import {Variant} from '../dynamiccolor/variant.js';
-/**
- * Set of themes supported by Dynamic Color.
- * Instantiate the corresponding subclass, ex. SchemeTonalSpot, to create
- * colors corresponding to the theme.
- */
-export enum Variant {
-  MONOCHROME,
-  NEUTRAL,
-  TONAL_SPOT,
-  VIBRANT,
-  EXPRESSIVE,
-  FIDELITY,
-  CONTENT,
-  RAINBOW,
-  FRUIT_SALAD,
-}
 
 export enum ColorPaletteName {
   Red = "red",
@@ -95,17 +77,23 @@ export class SchemeWeavy extends DynamicScheme {
     gray: { light: 50, dark: 60 },
   };
 
-  constructor(sourceColorHct: Hct, isDark: boolean, contrastLevel: number) {
+  constructor(sourceColorHct: Hct, isDark: boolean, contrastLevel: number, variant: Variant = Variant.FIDELITY) {
+    const primaryChroma = sourceColorHct.chroma;
+    const secondaryChroma = Math.min(36.0, sourceColorHct.chroma * 16.0 / 36.0);
+    const tertiaryChroma = secondaryChroma;
+    const neutralChroma = Math.min(6.0, sourceColorHct.chroma * 6.0 / 36.0);
+    const neutralVariantChroma = Math.min(8.0, sourceColorHct.chroma * 8.0 / 36.0);
+
     super({
-      sourceColorArgb: sourceColorHct.toInt(),
-      variant: Variant.TONAL_SPOT,
+      sourceColorHct,
+      variant,
       contrastLevel,
       isDark,
-      primaryPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, 36.0),
-      secondaryPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, 16.0),
-      tertiaryPalette: TonalPalette.fromHueAndChroma(sanitizeDegreesDouble(sourceColorHct.hue - 6 * 22.5), 16.0),
-      neutralPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, 6.0),
-      neutralVariantPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, 8.0),
+      primaryPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, primaryChroma),
+      secondaryPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, secondaryChroma),
+      tertiaryPalette: TonalPalette.fromHueAndChroma(sanitizeDegreesDouble(sourceColorHct.hue - 6 * 22.5), tertiaryChroma),
+      neutralPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, neutralChroma),
+      neutralVariantPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, neutralVariantChroma),
     });
 
     const hue = sourceColorHct.hue;
@@ -156,11 +144,11 @@ export class SchemeWeavy extends DynamicScheme {
   }
 
   get white() {
-    return 0xFFFFFF;
+    return 0xffffff;
   }
-  
+
   // Custom transparency based surface container colors
-  
+
   get surfaceLayerLowest() {
     return this.isDark ? addAlphaToArgb(this.black, 0.5) : addAlphaToArgb(this.white, 0.75);
   }
@@ -174,11 +162,11 @@ export class SchemeWeavy extends DynamicScheme {
   }
 
   get surfaceLayerHigh() {
-    return this.isDark ? addAlphaToArgb(this.white, 0.10) : addAlphaToArgb(this.black, 0.075);
+    return this.isDark ? addAlphaToArgb(this.white, 0.1) : addAlphaToArgb(this.black, 0.075);
   }
 
   get surfaceLayerHighest() {
-    return this.isDark ? addAlphaToArgb(this.white, 0.15) : addAlphaToArgb(this.black, 0.10);
+    return this.isDark ? addAlphaToArgb(this.white, 0.15) : addAlphaToArgb(this.black, 0.1);
   }
 
   // Custom Tokens

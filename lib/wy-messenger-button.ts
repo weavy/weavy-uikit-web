@@ -197,6 +197,11 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
   @property({ attribute: false })
   override componentTypes: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
 
+  /** Check visibility on the Messenger */
+  protected override get visibilityElement() {
+    return this.messengerRef.value;
+  }
+
   /**
    * Agent uid filter. When set, conversations are limited to the agent chat.
    */
@@ -257,6 +262,9 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
 
   /** @internal */
   protected persistState = new PersistStateController(this);
+
+  /** @internal */
+  private messengerRef = createRef<HTMLElement>();
 
   /** @internal */
   private conversationListRef = createRef<WyConversationList>();
@@ -365,7 +373,7 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
             @close=${() => (this.show = false)}
             noHeader
           >
-            <div part="wy-messenger-layout wy-messenger-overlay-container">
+            <div ${ref(this.messengerRef)} part="wy-messenger-layout wy-messenger-overlay-container">
               <div
                 part="wy-messenger-conversation-list wy-scroll-y"
                 data-conversation-id=${this.conversationId !== null && this.conversationId !== undefined

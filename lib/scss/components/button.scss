@@ -142,8 +142,8 @@
 
 // primary button
 [part~="wy-button-primary"] {
-  --wy-component-background-color: #{color.token(--wy-primary)};
-  --wy-component-color: #{color.token(--wy-on-primary)};
+  --wy-component-background-color: #{color.token(--wy-primary-container)};
+  --wy-component-color: #{color.token(--wy-on-primary-container)};
 }
 
 [part~="wy-button-variant"] {

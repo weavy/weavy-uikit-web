@@ -6,6 +6,9 @@
 [part~="wy-content"] {
   @include code.themes;
 
+  text-align: initial;
+  font-size: var.default(--wy-font-size);
+  
   overflow-wrap: break-word;
   min-width: 0;
 
@@ -19,6 +22,28 @@
 
   > :last-child {
     margin-bottom: 0;
+  }
+
+  a {
+    text-decoration: var.default(--wy-link-decoration);
+    color: color.token(--wy-link);
+
+    &:hover {
+      text-decoration: var.default(--wy-link-hover-decoration);
+    }
+
+    &:where(:not([href]):not([class])) {
+      &,
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+
+  // P
+  p {
+    margin-top: 0;
+    margin-bottom: var.wy-rem(1);
   }
 
   b,
@@ -113,7 +138,7 @@
     display: block; /* This is needed for scrollbar */
     width: 100%;
     max-width: -moz-max-content;
-    max-width: max-content; 
+    max-width: max-content;
     overflow-x: auto; /* This is needed for scrollbar */
     white-space: nowrap; /* Keeps each cell on one line */
 
@@ -216,10 +241,9 @@
   // mentions
   .wy-mention {
     font-weight: var.default(--wy-font-weight-bold);
-    &::before{
+    &::before {
       content: "@";
     }
-
   }
 }
 

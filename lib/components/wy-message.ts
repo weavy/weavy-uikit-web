@@ -23,7 +23,6 @@ import { PollVoteEventType } from "../types/polls.events";
 import { NamedEvent } from "../types/generic.types";
 import { checkOnlyEmojis } from "../utils/strings";
 
-import rebootCss from "../scss/reboot.scss";
 import messagesCss from "../scss/components/messages.scss";
 import contentCss from "../scss/components/content.scss";
 import hostContentsCss from "../scss/host-contents.scss";
@@ -97,7 +96,7 @@ declare global {
 @customElement("wy-message")
 @localized()
 export class WyMessage extends WeavySubAppComponent {
-  static override styles = [rebootCss, messagesCss, contentCss, hostContentsCss];
+  static override styles = [messagesCss, contentCss, hostContentsCss];
 
   protected exportParts = new ShadowPartsController(this);
 

@@ -85,7 +85,7 @@ export class WeavyAppComponent
       this.appType !== UnknownApp &&
       ((typeof this.uid === "string" && link.app?.uid === this.uid) || // Normal app with app uid
         (typeof this.uid === "number" && link.app?.id === this.uid) || // Normal app with app id
-        (this.agent && link.app.type === this.appType && link.agent === this.agent)) // Agent app
+        (!this.uid && this.app && link.app.id === this.app.id)) // App without uid
     ) {
       return true;
     } else {

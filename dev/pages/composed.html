@@ -19,6 +19,18 @@
         height: 100vh;
       }
 
+      .wyx-header {
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        padding-inline: 1rem;
+        gap: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: lightgoldenrodyellow;
+      }
+
       .grid {
         height: 100vh;
         display: grid;
@@ -72,7 +84,10 @@
       globalThis.weavy = weavy;
     </script>
   </head>
-  <body>    
+  <body>
+    <header class="wyx-header">
+      <wy-messenger-button></wy-messenger-button>
+    </header>
     <div class="grid">
       <wy-chat uid="acme-chat"></wy-chat>
       <wy-posts uid="acme-posts" style="max-width: 33vw"></wy-posts>

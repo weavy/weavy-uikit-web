@@ -1,6 +1,4 @@
-//import { TonalPalette } from "@material/material-color-utilities/dist/palettes/tonal_palette";
-import { Hct } from "@material/material-color-utilities";
-import { argbFromHex } from "@material/material-color-utilities";
+import { Hct, Variant, argbFromHex } from "@material/material-color-utilities";
 import { argbFromRgba, getComputedColor, hexWithAlphaFromArgb } from "./colors";
 import { type CSSResult, type CSSResultOrNative, supportsAdoptingStyleSheets } from "lit";
 import { throwOnDomNotAvailable } from "./dom";
@@ -130,8 +128,8 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
 
   const hct = Hct.fromInt(argb);
   const weavySchemes = {
-    light: new SchemeWeavy(hct, false, 0.0),
-    dark: new SchemeWeavy(hct, true, 0.0),
+    light: new SchemeWeavy(hct, false, 0.0, Variant.FIDELITY),
+    dark: new SchemeWeavy(hct, true, 0.0, Variant.FIDELITY),
   };
 
   const colorTokenMap = {

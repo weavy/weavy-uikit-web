@@ -231,6 +231,13 @@ export class WeavyTypeComponent
   };
 
   /**
+   * Element to match visibility on.
+   */
+  protected get visibilityElement(): Element | undefined { 
+    return this; 
+  }
+
+  /**
    * Handler for reacting to the `wy-notification` event. Consumes the event when the related component is visible.
    *
    * @param e - `wy-notification` event.
@@ -240,7 +247,7 @@ export class WeavyTypeComponent
     e.stopPropagation();
     if (!e.defaultPrevented) {
       // Check if notification belongs to this component and if it can be ignored
-      if (this.isConnected && this.checkVisibility(defaultVisibilityCheckOptions) && this.matchesLink(e.detail.link)) {
+      if (this.visibilityElement && this.visibilityElement.isConnected && this.visibilityElement.checkVisibility(defaultVisibilityCheckOptions) && this.matchesLink(e.detail.link)) {
         // Prevent the notification from showing
         e.preventDefault();
       }
