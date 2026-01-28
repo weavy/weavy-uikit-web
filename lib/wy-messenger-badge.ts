@@ -7,15 +7,15 @@ import {
   UnreadConversationsController,
   UnreadConversationsProps,
 } from "./controllers/unread-conversations-controller";
-import { ShadowPartsController } from "./controllers/shadow-parts-controller";
 import type { BadgeAppearanceType, PositionType } from "./types/ui.types";
+import { WeavyTypeComponent } from "./classes/weavy-type-component";
+import { ThemeController } from "./controllers/theme-controller";
 
 import hostFlexCss from "./scss/host-flex.scss";
 import colorModesCss from "./scss/color-modes.scss";
 import hostFontCss from "./scss/host-font.scss";
 
 import "./components/ui/wy-badge";
-import { WeavyTypeComponent } from "./classes/weavy-type-component";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -89,7 +89,7 @@ export class WyMessengerBadge extends WeavyTypeComponent implements UnreadConver
   static override styles = [hostFlexCss, colorModesCss, hostFontCss];
 
   /** @internal */
-  protected exportParts = new ShadowPartsController(this);
+  protected theme = new ThemeController(this, WyMessengerBadge.styles);
 
   /** @internal */
   protected unreadConversations: UnreadConversationsController = new UnreadConversationsController(this);

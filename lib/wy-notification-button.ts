@@ -1,7 +1,6 @@
 import { type PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
-import { ShadowPartsController } from "./controllers/shadow-parts-controller";
 import { localized, msg } from "@lit/localize";
 import type { OverlayAppearanceType, BadgeAppearanceType, PositionType } from "./types/ui.types";
 import { NotificationTypes } from "./types/notifications.types";
@@ -13,6 +12,7 @@ import {
 } from "./controllers/unread-notifications-controller";
 import { NotificationFilterEventType } from "./types/notifications.events";
 import { WeavyOptionalAppComponent } from "./classes/weavy-optional-app-component";
+import { ThemeController } from "./controllers/theme-controller";
 
 import hostContentsCss from "./scss/host-contents.scss";
 import colorModesCss from "./scss/color-modes.scss";
@@ -118,7 +118,7 @@ export class WyNotificationButton
   static override styles = [hostContentsCss, colorModesCss, hostFontCss];
 
   /** @internal */
-  protected exportParts = new ShadowPartsController(this);
+  protected theme = new ThemeController(this, WyNotificationButton.styles);
 
   /** @internal */
   protected unreadNotifications: UnreadNotificationsController = new UnreadNotificationsController(this);
