@@ -47,15 +47,15 @@
    
   /* Padding */
   --wy-padding:                   wy-rem(.5),
-  --wy-padding-sm:                calc(.5  * var(--wy-padding, wy-rem(.5))), // .25rem
+  --wy-padding-sm:                calc(.75  * var(--wy-padding, wy-rem(.5))), // .25rem
   --wy-padding-lg:                calc(1.5 * var(--wy-padding, wy-rem(.5))), // .75rem
-  --wy-padding-outer:             var(--wy-padding, 0),
+  --wy-padding-outer:             0,
    
   /* Gap */
-  --wy-gap:                       wy-rem(.5),
-  --wy-gap-sm:                    calc(.5  * var(--wy-gap, wy-rem(.5))), // .25rem
-  --wy-gap-lg:                    calc(1.5 * var(--wy-gap, wy-rem(.5))), // .75rem
-  --wy-gap-xl:                    calc(2 * var(--wy-gap, wy-rem(.5))), // 1rem
+  --wy-gap:                       var(--wy-padding, wy-rem(.5)),
+  --wy-gap-sm:                    calc(.5  * var(--wy-gap, var(--wy-padding, wy-rem(.5)))), // .25rem
+  --wy-gap-lg:                    calc(1.5 * var(--wy-gap, var(--wy-padding, wy-rem(.5)))), // .75rem
+  --wy-gap-xl:                    calc(2 * var(--wy-gap, var(--wy-padding, wy-rem(.5)))), // 1rem
 
   /* Border */
   --wy-border:                    1px,
@@ -187,7 +187,7 @@
 
   /* Buttons */
   --wy-button-size:               calc(wy-rem(var(--wy-button-line-height, 1.5)) + 2 * var(--wy-button-padding-y, var(--wy-padding, wy-rem(.5)))), // wy-rem(2.5) 
-  --wy-button-padding-x:          calc(var(--wy-padding, wy-rem(.5)) + 2 * var(--wy-button-padding-y, var(--wy-padding, wy-rem(.5)))),//wy-rem(1.5),
+  --wy-button-padding-x:          calc(var(--wy-padding, wy-rem(.5)) + var(--wy-button-padding-y, var(--wy-padding, wy-rem(.5)))),//wy-rem(1.5),
   --wy-button-padding-y:          var(--wy-padding, wy-rem(.5)),
   --wy-button-gap:                var(--wy-gap-sm, calc(.5  * var(--wy-gap, wy-rem(.5)))),
   --wy-button-font-family:        var(--wy-font-family, unset),

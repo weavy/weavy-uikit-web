@@ -25,11 +25,11 @@ import { NamedEvent } from "./types/generic.types";
 import { ActionType } from "./types/action.types";
 import type { BadgeAppearanceType, OverlayAppearanceType, PositionType } from "./types/ui.types";
 
-import messengerStyles from "./scss/components/messenger.scss";
+import messengerCss from "./scss/components/messenger.scss";
 import scrollCss from "./scss/scroll.scss";
-import colorModesStyles from "./scss/color-modes.scss";
-import hostBlockStyles from "./scss/host-block.scss";
-import hostFontStyles from "./scss/host-font.scss";
+import colorModesCss from "./scss/color-modes.scss";
+import hostContentsCss from "./scss/host-contents.scss";
+import hostFontCss from "./scss/host-font.scss";
 
 import "./components/ui/wy-button";
 import "./components/ui/wy-icon";
@@ -152,7 +152,7 @@ declare global {
 @customElement("wy-messenger-button")
 @localized()
 export class WyMessengerButton extends WeavyTypeComponent implements UnreadConversationsProps, ConversationFilterProps {
-  static override styles = [colorModesStyles, scrollCss, messengerStyles, hostBlockStyles, hostFontStyles];
+  static override styles = [hostContentsCss, colorModesCss, hostFontCss, scrollCss, messengerCss];
 
   /** @internal */
   override componentFeatures = new ComponentFeatures(DefaultMessengerFeatures);
@@ -289,6 +289,7 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
    * @returns Any selected member ids or uids.
    */
   async selectMembers() {
+    this.conversationId = null;
     return await this.conversationNewRef.value?.selectMembers();
   }
 

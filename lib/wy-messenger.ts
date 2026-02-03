@@ -85,11 +85,11 @@ declare global {
  * In agent mode, the create conversation button instantly creates a new conversation with the agent when clicked, instead of opening a create conversation modal.
  *
  * > Complement this with the [`<wy-notification-toasts>`](./wy-notification-toasts.ts) component to also get realtime _in-app notifications_ or _browser notifications_ when new messages arrive.
- * 
+ *
  * ** Component layout **
  *
  * The layout depends on the width of its container, which has a breakpoint at `768px`.
- * 
+ *
  * - In narrow layouts, the conversation list and chat will be stacked and clicking on a conversation in the list will navigate to the chat.
  * - In wider layouts, the component has a side-by-side layout with the conversation list on the left hand side and the chat window on the right hand side.
  *
@@ -103,7 +103,7 @@ declare global {
  * set `--wy-padding-outer: 0;` and `--wy-border-radius-outer: 0;` to make the component fit nicely with the edge.
  *
  * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
- * 
+ *
  * **Used sub components:**
  *
  * - [`<wy-badge>`](./components/ui/wy-badge.ts)
@@ -207,13 +207,13 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
       this.componentTypes = [AppTypeGuid.AgentChat];
       this.componentFeatures = new ComponentFeatures(
         DefaultMessengerAgentFeatures,
-        this.componentFeatures.allowedFeatures()
+        this.componentFeatures.allowedFeatures(),
       );
     } else {
       this.componentTypes = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
       this.componentFeatures = new ComponentFeatures(
         DefaultMessengerFeatures,
-        this.componentFeatures.allowedFeatures()
+        this.componentFeatures.allowedFeatures(),
       );
     }
     this.conversationId = null;
@@ -273,6 +273,7 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
    * @returns Promise resolving to any selected member ids or uids.
    */
   async selectMembers() {
+    this.conversationId = null;
     return await this.conversationNewRef.value?.selectMembers();
   }
 
@@ -301,7 +302,7 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
             });
             this.dispatchEvent(event);
           }
-        }
+        },
       );
     }
 
@@ -312,7 +313,7 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
     if ((changedProperties.has("conversationId") || changedProperties.has("weavy")) && this.weavy) {
       if (this.conversationId) {
         void this.conversationQuery.trackQuery(
-          getConversationOptions(this.weavy, this.conversationId, this.componentTypes)
+          getConversationOptions(this.weavy, this.conversationId, this.componentTypes),
         );
       } else {
         this.conversationQuery.untrackQuery();
@@ -337,40 +338,38 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
     return html`
       <div part="wy-messenger-layout">
         <div
-          part="wy-messenger-conversation-list"
+          part="wy-messenger-conversation-list wy-scroll-y"
           data-conversation-id=${this.conversationId !== null && this.conversationId !== undefined
             ? this.conversationId
             : ""}
         >
-          <wy-container padded outer scrollY>
-            <slot name="header"></slot>
-            <wy-conversation-list
-              ${ref(this.conversationListRef)}
-              .conversationTypes=${this.componentTypes}
+          <slot name="header"></slot>
+          <wy-conversation-list
+            ${ref(this.conversationListRef)}
+            .conversationTypes=${this.componentTypes}
+            .agent=${this.agent}
+            conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
+            @wy-action=${(e: WyActionEventType) => {
+              if (!e.defaultPrevented && e.detail.action === ActionType.Select && e.detail.app !== undefined) {
+                this.conversationId = e.detail.app?.id;
+              }
+            }}
+          >
+            <wy-conversation-new
+              slot="actions"
               .agent=${this.agent}
-              conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
-              @wy-action=${(e: WyActionEventType) => {
-                if (!e.defaultPrevented && e.detail.action === ActionType.Select && e.detail.app !== undefined) {
-                  this.conversationId = e.detail.app?.id;
+              @create=${async (e: CreateConversationEventType) => {
+                const newApp = await this.createConversationController.create(e.detail.members);
+                if (newApp) {
+                  this.conversationId = newApp.id;
                 }
               }}
+              ${ref(this.conversationNewRef)}
             >
-              <wy-conversation-new
-                slot="actions"
-                .agent=${this.agent}
-                @create=${async (e: CreateConversationEventType) => {
-                  const newApp = await this.createConversationController.create(e.detail.members);
-                  if (newApp) {
-                    this.conversationId = newApp.id;
-                  }
-                }}
-                ${ref(this.conversationNewRef)}
-              >
-                <slot name="conversation-new"></slot>
-              </wy-conversation-new>
-              <slot name="actions" slot="actions"></slot>
-            </wy-conversation-list>
-          </wy-container>
+              <slot name="conversation-new"></slot>
+            </wy-conversation-new>
+            <slot name="actions" slot="actions"></slot>
+          </wy-conversation-list>
         </div>
 
         <div
@@ -390,15 +389,16 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
             ?hidden=${Boolean(!this.conversationId)}
           >
             <span slot="icon" part="wy-close-conversation">
-              <wy-button kind="icon" @click=${() => (this.conversationId = null)}>
-                <wy-icon name="back"></wy-icon>
+              <wy-button kind="inline" @click=${() => (this.conversationId = null)}>
+                <wy-icon name="back">
+                  <wy-badge
+                    reveal
+                    .count=${this.unreadConversationsController.isUnreadPending
+                      ? NaN
+                      : this.unreadConversationsController.unread}
+                  ></wy-badge>
+                </wy-icon>
               </wy-button>
-              <wy-badge
-                reveal
-                .count=${this.unreadConversationsController.isUnreadPending
-                  ? NaN
-                  : this.unreadConversationsController.unread}
-              ></wy-badge>
             </span>
           </wy-conversation-header>
 
@@ -411,8 +411,8 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
                 .header=${!this.agent}
               ></wy-conversation>`
             : conversationListLength
-            ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
-            : nothing}
+              ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
+              : nothing}
         </div>
 
         <wy-context-data-progress></wy-context-data-progress>

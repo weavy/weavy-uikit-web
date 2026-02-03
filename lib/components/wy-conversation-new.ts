@@ -61,7 +61,7 @@ export class WyConversationNew extends WeavySubComponent {
    *
    * @internal
    */
-  protected _rejectMembers?: () => void;
+  protected _rejectMembers?: (reason?: string) => void;
 
   /**
    * Promise resolved when members are selected via the dialog.
@@ -92,7 +92,7 @@ export class WyConversationNew extends WeavySubComponent {
       this._rejectMembers = reject;
     });
     this._whenMembers = whenMembers;
-    return whenMembers
+    return whenMembers;
   }
 
   /**
@@ -141,8 +141,10 @@ export class WyConversationNew extends WeavySubComponent {
     if (members) {
       this._resolveMembers?.(members);
     } else {
-      this._rejectMembers?.();
+      this._rejectMembers?.("Selection aborted by user; no members selected");
     }
+
+    void this.createMembersPromise();
   }
 
   /**
@@ -176,7 +178,17 @@ export class WyConversationNew extends WeavySubComponent {
             <wy-button
               part="wy-conversation-new-button"
               kind="icon"
-              @click=${() => (this.agent ? this.submit() : this.selectMembers())}
+              @click=${async () => {
+                if (this.agent) {
+                  await this.submit();
+                } else {
+                  try {
+                    await this.selectMembers();
+                  } catch {
+                    /* No members selected, no worries */
+                  }
+                }
+              }}
             >
               <wy-icon name="plus"></wy-icon>
             </wy-button>

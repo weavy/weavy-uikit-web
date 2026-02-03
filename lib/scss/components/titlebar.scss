@@ -18,7 +18,7 @@
   padding: calc(var.default(--wy-padding-sm));
   flex: 0 0 var.default(--wy-titlebar-height);
   grid-template-columns: #{var.default(--wy-button-size)} minmax(0, max-content) #{var.default(--wy-button-size)};
-  column-gap: calc(2 * var.default(--wy-gap) + var.default(--wy-button-size));
+  column-gap: var.default(--wy-gap);
   line-height: var.default(--wy-line-height);
 
   color: var(--wy-component-color);

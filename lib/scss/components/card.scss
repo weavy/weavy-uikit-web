@@ -6,11 +6,11 @@
 [part~="wy-card"] {
   --wy-component-background-color: #{color.token(--wy-surface-layer-high)};
   --wy-component-color: #{color.token(--wy-on-surface)};
-  --wy-component-border-radius: #{var.default(--wy-border-radius)};
+  --wy-component-border-radius: #{var.default(--wy-border-radius-sm)};
 
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
-  border-radius: var(--wy-component-border-radius);
+  border-radius: var.default(--wy-border-radius);
 
   position: relative;
   display: flex;

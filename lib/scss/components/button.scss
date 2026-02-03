@@ -132,11 +132,12 @@
 [part~="wy-button-inline"] {
   border-radius: var.default(--wy-border-radius-pill);
   padding: var.default(--wy-button-padding-y);
-  margin-inline: calc(-1 * #{var.default(--wy-button-padding-y)});
   
   &[part~="wy-button-sm"] {
-    padding: calc(.5 * var.default(--wy-button-padding-y));
-    margin-inline: calc(-.5 * #{var.default(--wy-button-padding-y)});
+    height: calc(var.default(--wy-button-size) * .8); // 2.5rem * 0.8 = 32px
+    min-width: calc(var.default(--wy-button-size) * .8);
+    padding: calc(var.default(--wy-button-padding-y) * .75);
+    margin-inline: calc(-.75 * #{var.default(--wy-button-padding-y)});
   }
 }
 

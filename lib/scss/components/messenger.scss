@@ -2,7 +2,7 @@
 @use "../base/var";
 @use "../base/breakpoints";
 
-$messenger-default-padding: var.wy-rem(0.5); // corresponds to browser default 8px margin for body element
+//$messenger-default-padding: var.wy-rem(0.5); // corresponds to browser default 8px margin for body element
 $messenger-conversation-list-max-width: var.wy-rem(24);
 $messenger-conversation-min-width: var.wy-rem(16);
 
@@ -65,13 +65,13 @@ $messenger-conversation-min-width: var.wy-rem(16);
   [part~="wy-messenger-conversation-list"] {
     flex: 0 1 50%;
     max-width: $messenger-conversation-list-max-width;
-    padding-right: var(--wy-padding-outer, #{$messenger-default-padding});
+    padding-right: var.default(--wy-padding);
     border-right: var.default(--wy-border) solid color.token(--wy-outline-variant);
   }
 
   [part~="wy-messenger-conversation"] {
     min-width: max(50%, #{$messenger-conversation-min-width});
-    padding-left: var(--wy-padding-outer, #{$messenger-default-padding});
+    padding-left: var.default(--wy-padding);
   }
 
   [part~="wy-close-conversation"] {

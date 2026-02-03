@@ -15,7 +15,7 @@ $badge-padding: 0.333333em !default;
   
   font-weight: var.default(--wy-font-weight-bold);
   font-size: var.default(--wy-font-size-xs);
-  line-height: normal;
+  line-height: 1.333333;
  
   color: color.token(--wy-on-primary-container);
   border-radius: var.default(--wy-border-radius-pill);
@@ -60,15 +60,17 @@ $badge-padding: 0.333333em !default;
 }
 
 [part~="wy-badge-compact"] {
-  padding: calc(var.default(--wy-padding-sm) * 0.25);
-  max-width: calc(var.default(--wy-font-size-xs) * 3 + var.default(--wy-padding-sm));
-  height: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
-  line-height: calc(var.default(--wy-font-size-xs) + var.default(--wy-padding-sm));
+  $badge-padding: 0.25em;
+
+  padding: #{$badge-padding};
+  max-width: calc(var.default(--wy-font-size-xs) * 3 + #{$badge-padding});
+  height: calc(var.default(--wy-font-size-xs) + #{$badge-padding});
+  line-height: calc(var.default(--wy-font-size-xs) + #{$badge-padding});
 
   @include text.truncate;
 
   &[part~="wy-badge-positioned"] {
-    margin: calc(-0.5 * (var.default(--wy-font-size-xs) + var.default(--wy-padding-sm) * .5));
+    margin: calc(-0.5 * (var.default(--wy-font-size-xs) + #{$badge-padding} * 2));
   }
 }
 

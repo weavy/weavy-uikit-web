@@ -16,7 +16,7 @@
       body {
         margin: 0;
         padding: 0;
-        height: 100vh;
+        height: 100dvh;
       }
 
       .wyx-header {
@@ -32,13 +32,13 @@
       }
 
       .grid {
-        height: 100vh;
+        height: calc(100dvh - 3rem);
         display: grid;
         grid-auto-flow: column;
         grid-auto-columns: 1fr;
         gap: 0.5rem;
         box-sizing: border-box;
-        padding: .5rem;
+        --wy-padding-outer: .5rem;
       }
     </style>
     <script type="module">
@@ -63,6 +63,8 @@
         }
       };
 
+      weavy.checkVersion().catch((e) => console.log("version fail", e.cause))
+      
       let linkWindow;
 
       document.addEventListener("wy-link", (e) => {

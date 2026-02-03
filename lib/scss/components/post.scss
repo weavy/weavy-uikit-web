@@ -72,7 +72,6 @@
 
 [part~="wy-post-comments"] {
   background-color: #{color.token(--wy-surface-container-low)};
-  border-top: var.default(--wy-border) solid #{color.token(--wy-outline-variant)};
 
   interpolate-size: allow-keywords;
 
