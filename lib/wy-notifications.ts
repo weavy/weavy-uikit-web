@@ -121,6 +121,14 @@ export class WyNotifications
   /** @internal */
   protected theme = new ThemeController(this, WyNotifications.styles);
 
+  /** 
+   * Disabled link matching/consuming.
+   * @internal 
+   */
+  override matchesLink(): boolean {
+    return false;
+  }
+
   /** @internal */
   @state()
   currentTypeFilter: NotificationTypes = NotificationTypes.All;

@@ -38,6 +38,14 @@ export class WyMessengerNew extends WeavyTypeComponent implements CreateConversa
   /** @internal */
   protected theme = new ThemeController(this, WyMessengerNew.styles);
 
+  /** 
+   * Disabled link matching/consuming.
+   * @internal 
+   */
+  override matchesLink(): boolean {
+    return false;
+  }
+
   /** @internal */
   protected createConversationController: CreateConversationController = new CreateConversationController(this);
 

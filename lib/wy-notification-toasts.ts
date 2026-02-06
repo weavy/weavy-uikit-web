@@ -77,6 +77,14 @@ export class WyNotificationToasts extends WeavyOptionalAppComponent {
   /** @internal */
   protected theme = new ThemeController(this, WyNotificationToasts.styles);
 
+  /** 
+   * Disabled link matching/consuming.
+   * @internal 
+   */
+  override matchesLink(): boolean {
+    return false;
+  }
+
   /**
    * Notification types to display.
    *

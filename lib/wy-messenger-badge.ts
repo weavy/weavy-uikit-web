@@ -94,6 +94,14 @@ export class WyMessengerBadge extends WeavyTypeComponent implements UnreadConver
   /** @internal */
   protected unreadConversations: UnreadConversationsController = new UnreadConversationsController(this);
 
+  /** 
+   * Disabled link matching/consuming.
+   * @internal 
+   */
+  override matchesLink(): boolean {
+    return false;
+  }
+
   /**
    * Conversation types included in the unread count.
    */

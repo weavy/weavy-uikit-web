@@ -123,6 +123,14 @@ export class WyNotificationButton
   /** @internal */
   protected unreadNotifications: UnreadNotificationsController = new UnreadNotificationsController(this);
 
+  /** 
+   * Disabled link matching/consuming.
+   * @internal 
+   */
+  override matchesLink(): boolean {
+    return false;
+  }
+
   /**
    * Overlay appearance used for the notification list.
    *

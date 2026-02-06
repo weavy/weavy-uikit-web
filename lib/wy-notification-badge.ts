@@ -98,6 +98,14 @@ export class WyNotificationBadge
   /** @internal */
   protected unreadNotifications: UnreadNotificationsController = new UnreadNotificationsController(this);
 
+  /** 
+   * Disabled link matching/consuming.
+   * @internal 
+   */
+  override matchesLink(): boolean {
+    return false;
+  }
+
   /**
    * Display size of the badge.
    *
