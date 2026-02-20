@@ -59,12 +59,17 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   /**
    * The semver version of the package.
    */
-  static readonly version = WEAVY_VERSION ?? "";
+  static readonly version = WEAVY_VERSION;
 
   /**
    * The Weavy source name; package name.
    */
-  static readonly sourceName = WEAVY_SOURCE_NAME ?? "Weavy";
+  static readonly sourceName = WEAVY_SOURCE_NAME;
+
+  /**
+   * The Weavy source format; file format.
+   */
+  static readonly sourceFormat = WEAVY_SOURCE_FORMAT ?? "typescript";
 
   // CONFIG
 
@@ -175,7 +180,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   // CONSTRUCTOR
 
   constructor(options?: WeavyClientOptionsType) {
-    console.info(`${WeavyClient.sourceName}@${WeavyClient.version} #${this.weavySid}`);
+    console.info(`${WeavyClient.sourceName}@${WeavyClient.version} (${WeavyClient.sourceFormat}) #${this.weavySid}`);
 
     throwOnDomNotAvailable();
 

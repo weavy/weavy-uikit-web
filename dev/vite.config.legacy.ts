@@ -20,6 +20,11 @@ export default defineConfig(({ mode }) => {
 
   const env = loadEnv(mode, process.cwd(), "");
 
+  const define: Record<string, unknown> = {
+    WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
+    WEAVY_VERSION: JSON.stringify(version),
+    "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
+  };
   let httpsConfig;
 
   if (env.HTTPS_PEM_CERT_PATH && env.HTTPS_PEM_KEY_PATH) {
@@ -45,11 +50,7 @@ export default defineConfig(({ mode }) => {
       removeImportMetaUrl(),
       //weavyImportUrlPlugin(),
     ],
-    define: {
-      WEAVY_SOURCE_NAME: JSON.stringify(sourceName),
-      WEAVY_VERSION: JSON.stringify(version),
-      "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
-    },
+    define,
     /*optimizeDeps: {
       esbuildOptions: {
         target: "esnext",
@@ -106,7 +107,6 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: "modern-compiler", // or "modern"
           style: "compressed"
         },
       },
@@ -137,13 +137,15 @@ export default defineConfig(({ mode }) => {
             format: "esm",
             //dir: "dist/build",
             entryFileNames: "weavy.esm.bundle.js",
+            intro: `const WEAVY_SOURCE_FORMAT = "esm/bundle";`,
             minifyInternalExports: false,
             preserveModules: false,
             inlineDynamicImports: true,
           },
           {
             format: "umd",
-            entryFileNames: "weavy.js",
+            entryFileNames: "weavy.js",            
+            intro: `const WEAVY_SOURCE_FORMAT = "umd/bundle";`,
             minifyInternalExports: false,
             preserveModules: false,
             inlineDynamicImports: true,

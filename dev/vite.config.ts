@@ -31,9 +31,10 @@ export default defineConfig(({ command, mode }) => {
     WEAVY_VERSION: JSON.stringify(version),
     "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
   };
-
+  
   if (command === "serve") {
-    define.WEAVY_IMPORT_URL = "/dist/"
+    define.WEAVY_SOURCE_FORMAT = `undefined`
+    define.WEAVY_IMPORT_URL = `"/dist/"`
   }
 
   let httpsConfig;
@@ -77,7 +78,7 @@ export default defineConfig(({ command, mode }) => {
         targets: [
           {
             src: 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
-            dest: 'pdfjs'
+            dest: 'pdfjs',
           },
           {
             src: 'node_modules/pdfjs-dist/cmaps/*.bcmap',
@@ -131,14 +132,6 @@ export default defineConfig(({ command, mode }) => {
       //banner: "\ufeff", // UTF-8 BOM
       keepNames: true,
     },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          api: "modern-compiler", // or "modern"
-          style: "compressed"
-        },
-      },
-    },
     build: {
       outDir: "dist",
       lib: {
@@ -165,6 +158,7 @@ export default defineConfig(({ command, mode }) => {
             dir: "dist/build",
             minifyInternalExports: false,
             preserveModules: false,
+            intro: `const WEAVY_SOURCE_FORMAT = "esm/dynamic";`,
             manualChunks: {
               editor: [
                 "./lib/utils/editor/editor",

@@ -48,11 +48,20 @@ export function openUrl(url: string = "", target: string = "", name: string = ""
 
 /** Provides an url that is served from the current environment and from source when in dev/serve mode */
 export function environmentUrl(url: URL | string, importMetaUrl?: URL | string) {
+  let hasNoValidImportURL: boolean = true
+  const importURL = (globalThis as typeof globalThis & { WEAVY_IMPORT_URL: string }).WEAVY_IMPORT_URL;
+
+  try {
+    hasNoValidImportURL = !importMetaUrl || Boolean(importMetaUrl && importURL) && !new URL(importMetaUrl).href.startsWith(importURL)
+  } catch (e) {
+    console.warn("Could not parse import url", e);
+  }
+
   return new URL(
     url,
-    typeof WEAVY_IMPORT_URL === "string" &&
-    (!importMetaUrl || !new URL(importMetaUrl).href.startsWith(WEAVY_IMPORT_URL))
-      ? WEAVY_IMPORT_URL
+    typeof importURL === "string" &&
+    hasNoValidImportURL
+      ? new URL(importURL, globalThis.location.href)
       : importMetaUrl
   );
 }

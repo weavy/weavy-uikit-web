@@ -11,12 +11,7 @@ export type MutatePostSubscribeVariables = {
   subscribe: boolean;
 };
 
-export type SubscribePostMutationType = MutationObserver<
-  PostType,
-  Error,
-  MutatePostSubscribeVariables,
-  void
->;
+export type SubscribePostMutationType = MutationObserver<void, Error, MutatePostSubscribeVariables, void>;
 
 export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) {
   const queryClient = weavy.queryClient;
@@ -25,25 +20,21 @@ export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) 
   const options = {
     mutationKey: postsKey,
     mutationFn: async ({ id, subscribe }: MutatePostSubscribeVariables) => {
-      const response = await weavy.fetch(
-        `/api/posts/${id}/${subscribe ? "subscribe" : "unsubscribe"}`,
-        { method: "POST" }
-      );
+      const response = await weavy.fetch(`/api/posts/${id}/${subscribe ? "subscribe" : "unsubscribe"}`, {
+        method: "POST",
+      });
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
       }
-      return await response.json() as PostType;
     },
     onMutate: (variables: MutatePostSubscribeVariables) => {
       updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) =>
-        Object.assign(existingPost, { is_subscribed: variables.subscribe })
+        Object.assign(existingPost, { is_subscribed: variables.subscribe }),
       );
     },
-    onSuccess: (data: PostType, variables: MutatePostSubscribeVariables) => {
-      updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.id, (existingPost: PostType) =>
-        Object.assign(existingPost, data)
-      );
+    onError: async () => {
+      await queryClient.invalidateQueries({ queryKey: postsKey, exact: false })
     }
   };
 

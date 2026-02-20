@@ -17,7 +17,7 @@ export function weavyImportUrlPlugin() {
       } else {
         return {
           left: `import(/* webpackIgnore: true */ /* @vite-ignore */ new URL(`,
-          right: `, typeof WEAVY_IMPORT_URL === "string" && (!import.meta.url || !(new URL(import.meta.url).href.startsWith(WEAVY_IMPORT_URL))) ? WEAVY_IMPORT_URL : import.meta.url).href)`,
+          right: `, typeof WEAVY_IMPORT_URL === "string" && (!import.meta.url || !(new URL(import.meta.url).href.startsWith(WEAVY_IMPORT_URL))) ? new URL(WEAVY_IMPORT_URL, globalThis.location.href) : import.meta.url).href)`,
         };
       }
     },
@@ -119,12 +119,12 @@ export function weavyAuthServer(command = "serve") {
 
 /**
  * Explicitly sets `isNodeJS = true` in pdf.mjs, which enables treeshaking of all node specific stuff.
+ * @type 
  */
 export function excludeNodeInPdfJS() {
   const fileRegex = /pdfjs-dist\/.*\/pdf\.mjs$/;
   return {
     name: "fix-pdfjs",
-
     transform(src, id) {
       if (fileRegex.test(id)) {
         const isNodeRegex = /const isNodeJS = (.*);/;

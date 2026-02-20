@@ -218,7 +218,7 @@ export class WyPdfViewer extends LitElement {
   protected pdfLoadingTask?: PDFDocumentLoadingTask;
 
   protected delayedResize?: number
-  protected resizer: ResizeObserver = new ResizeObserver(() => {
+  protected resizer: ResizeObserver = new ResizeObserver(() => { 
     if (this.pdfViewer) {
       if (this.delayedResize) {
         clearTimeout(this.delayedResize)
@@ -518,14 +518,22 @@ export class WyPdfViewer extends LitElement {
         })
       }
       if (this.pdfjsLib && !this.WORKER_URL) {
-        this.WORKER_URL = environmentUrl(this.DEFAULT_WORKER_URL, import.meta.url);
-        this.WORKER_URL.searchParams.append("v", this.weavy.version);
-        // Setting worker path to worker bundle.
-        this.pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
+        try {
+          this.WORKER_URL = environmentUrl(this.DEFAULT_WORKER_URL, import.meta.url);
+          this.WORKER_URL.searchParams.append("v", this.weavy.version);
+          // Setting worker path to worker bundle.
+          this.pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
+        } catch {
+          console.warn("Invalid PDF worker source, using fake worker instead.")
+        }
       }
 
       if (!this.CMAP_URL) {
-        this.CMAP_URL = environmentUrl(this.DEFAULT_CMAPS_URL, import.meta.url);
+        try {
+          this.CMAP_URL = environmentUrl(this.DEFAULT_CMAPS_URL, import.meta.url);
+        } catch {
+          console.warn("Invalid PDF CMAPS source, skipping CMAPS.")
+        }
       }
     }
   }

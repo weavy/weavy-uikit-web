@@ -20,12 +20,16 @@ export default defineConfig([
       globals: {
         ...globals.browser,
         WEAVY_SOURCE_NAME: "readonly",
+        WEAVY_SOURCE_FORMAT: "readonly",
         WEAVY_VERSION: "readonly",
       },
       ecmaVersion: "latest",
       sourceType: "module",
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["eslint.config.mjs", "dev/*.mjs", "dev/*.ts", "utils/*.js", "*.ts"],
+          defaultProject: "tsconfig.json",
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -70,9 +74,9 @@ export default defineConfig([
         {
           checksVoidReturn: {
             arguments: false,
-            inheritedMethods: false
-          }
-        }
+            inheritedMethods: false,
+          },
+        },
       ],
 
       "@tanstack/query/exhaustive-deps": "warn",
@@ -89,6 +93,10 @@ export default defineConfig([
         ...globals.node,
       },
     },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+    },
   },
   {
     files: ["lib/**/*.cjs", "utils/**/*.{mj,cj,j,t}s"],
@@ -98,6 +106,10 @@ export default defineConfig([
         ...globals.browser,
         ...globals.node,
       },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
     },
   },
   {

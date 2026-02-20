@@ -220,6 +220,11 @@ export class WyContext extends LitElement implements StrictWeavyOptions, WeavySe
     return Weavy.sourceName;
   }
 
+  /** The Weavy source format; file format. */
+  get sourceFormat() {
+    return Weavy.sourceFormat;
+  }
+
   constructor() {
     super();
     if (this.childElementCount) {
