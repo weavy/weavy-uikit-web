@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "30.4.0",
+  "version": "30.4.1",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -128,7 +128,7 @@
   "overrides": {
     "vite": "$vite",
     "@custom-elements-manifest/analyzer": "0.10.10",
-    "@microsoft/api-extractor": "7.56.3"
+    "immutable": "5.1.5"
   },
   "engines": {
     "node": "^20.19.0 || >=22.13.0 || >=24",

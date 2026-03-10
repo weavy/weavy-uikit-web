@@ -47,8 +47,28 @@
   }
 }
 
+// Note: Safari < 18.3.2 cannot use documentElement (html) as container, which causes a crash, so selector must be children of html
+// See https://bugs.webkit.org/show_bug.cgi?id=271040
 @container style(--wy-color-scheme: dark) {
-  :not(.wy-light):not([part~="wy-light"]) {
-    @include color-mode(dark);
+  html :where(wy-chat),
+  html :where(wy-comments),
+  html :where(wy-component),
+  html :where(wy-copilot),
+  html :where(wy-feed),
+  html :where(wy-files),
+  html :where(wy-messenger-badge),
+  html :where(wy-messenger-button),
+  html :where(wy-messenger-conversation),
+  html :where(wy-messenger-new),
+  html :where(wy-messenger),
+  html :where(wy-notification-badge),
+  html :where(wy-notification-button),
+  html :where(wy-notification-toasts),
+  html :where(wy-notifications),
+  html :where(wy-post-editor),
+  html :where(wy-posts) {
+      @include colormode-dark.styles();
+      @include color.custom-properties-tokens(colormode-dark.$tokens);
   }
+    
 }

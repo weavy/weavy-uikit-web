@@ -9,19 +9,14 @@ export function toUpperCaseFirst(str: string) {
 }
 
 export const wordBoundary = '\\s,.:;"';
-export const wordBoundaryWithHyphens = '\\s\\-,.:;"_';
+//export const wordBoundaryWithHyphens = '\\s\\-,.:;"_';
 export const separateByWordBoundaryRegExp = new RegExp(`^|[${wordBoundary}]|$`, "g");
-export const separateByWordBoundaryWithHyphensRegExp = new RegExp(`^|[${wordBoundaryWithHyphens}]|$`, "g");
-export const selectByWordBoundaryRegExp = new RegExp(
-  `(?<=[${wordBoundary}]|^)[^${wordBoundary}]+(?=[${wordBoundary}]|$)`,
-  "g"
-);
-export const selectByWordBoundaryWithHyphensRegExp = new RegExp(
-  `(?<=[${wordBoundaryWithHyphens}]|^)[^${wordBoundaryWithHyphens}]+(?=[${wordBoundaryWithHyphens}]|$)`,
-  "g"
-);
+//export const separateByWordBoundaryWithHyphensRegExp = new RegExp(`^|[${wordBoundaryWithHyphens}]|$`, "g");
+//export const selectByWordBoundaryRegExp = new RegExp(`(?<=[${wordBoundary}]|^)[^${wordBoundary}]+(?=[${wordBoundary}]|$)`, "g");
+//export const selectByWordBoundaryWithHyphensRegExp = new RegExp(`(?<=[${wordBoundaryWithHyphens}]|^)[^${wordBoundaryWithHyphens}]+(?=[${wordBoundaryWithHyphens}]|$)`, "g");
 export const sentenceBoundary = ".!?";
-export const separateBySentenceBoundaryRegExp = new RegExp(`^|(?<=[${sentenceBoundary}])|$`);
+//export const separateBySentenceBoundaryRegExp = new RegExp(`^|(?<=[${sentenceBoundary}])|$`); // <- Not compatible with Safari <16.4 
+export const sentenceRegex = new RegExp(`[^${sentenceBoundary}]+[${sentenceBoundary}]?`, "g");
 
 /**
  *  Converts Initial Letters To Uppercase.
@@ -30,11 +25,11 @@ export const separateBySentenceBoundaryRegExp = new RegExp(`^|(?<=[${sentenceBou
  * @param str {string}
  * @returns {string}
  */
-export function toTitleCase(str: string) {
+/*export function toTitleCase(str: string) {
   // Replacement for \b and \w that respects åäö etc
 
   return str.replace(selectByWordBoundaryWithHyphensRegExp, toUpperCaseFirst);
-}
+}*/
 
 /**
  * Changes a string to snake_case from camelCase, PascalCase and spinal-case.
@@ -126,16 +121,13 @@ export function getInitials(name: string, length: number = 2) {
  * @returns The first sentence as a title
  */
 export function getTitleFromText(text: string) {
-  let title: string;
-  const sentences = text.split(separateBySentenceBoundaryRegExp).filter((w) => w);
+  const sentences = text.match(sentenceRegex);
 
-  if (sentences.length) {
-    title = sentences[0];
-  } else {
-    title = text;
+  if (sentences && sentences.length) {
+    return sentences[0].trim();
   }
 
-  return title;
+  return text;
 }
 
 /**
