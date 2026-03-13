@@ -123,7 +123,7 @@ export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, a
           if (context) {
             (context as FileMutationContextType).status.state = "error";
             (context as FileMutationContextType).status.progress = undefined;
-            (context as FileMutationContextType).status.text = serverError.detail || serverError.title;
+            (context as FileMutationContextType).status.text = serverError ? serverError.detail || serverError.title : error.message;
           }
         });
       }

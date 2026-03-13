@@ -13,9 +13,9 @@ export type MutatePostSubscribeVariables = {
 
 export type SubscribePostMutationType = MutationObserver<void, Error, MutatePostSubscribeVariables, void>;
 
-export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) {
+export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType | "feed") {
   const queryClient = weavy.queryClient;
-  const postsKey: MutationKey = ["posts", app.id];
+  const postsKey: MutationKey = ["posts", app === "feed" ? "feed" : app.id];
 
   const options = {
     mutationKey: postsKey,
@@ -41,6 +41,6 @@ export function getSubscribePostMutationOptions(weavy: WeavyType, app: AppType) 
   return options;
 }
 
-export function getSubscribePostMutation(weavy: WeavyType, app: AppType): SubscribePostMutationType {
+export function getSubscribePostMutation(weavy: WeavyType, app: AppType | "feed"): SubscribePostMutationType {
   return new MutationObserver(weavy.queryClient, getSubscribePostMutationOptions(weavy, app));
 }

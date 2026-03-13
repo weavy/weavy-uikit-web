@@ -156,3 +156,14 @@ export function checkOnlyEmojis(text?: string) {
   const matchedEmojis = text?.match(emojisOnlyRegExp)
   return Boolean(matchedEmojis?.length);
 }
+
+
+/**
+ * Delimiter for splitting strings by space, comma or semicolon.
+ */
+export const byStringDelimiters = /[\s;,]+/;
+
+/**
+ * Delimiter for splitting strings by space.
+ */
+export const byWhitespace = /[\s]+/;

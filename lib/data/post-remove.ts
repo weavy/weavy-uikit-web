@@ -12,9 +12,9 @@ export type MutatePostVariables = {
 export type RemovePostMutationType = MutationObserver<void, Error, MutatePostVariables, void>;
 export type DeleteForeverPostMutationType = MutationObserver<void, Error, MutatePostVariables>;
 
-export function getTrashPostMutationOptions(weavy: WeavyType, app: AppType) {
+export function getTrashPostMutationOptions(weavy: WeavyType, app: AppType | "feed") {
   const queryClient = weavy.queryClient;
-  const postsKey: MutationKey = ["posts", app.id];
+  const postsKey: MutationKey = ["posts", app === "feed" ? "feed" : app.id];
 
   const options = {
     mutationKey: postsKey,
@@ -45,13 +45,13 @@ export function getTrashPostMutationOptions(weavy: WeavyType, app: AppType) {
   return options;
 }
 
-export function getTrashPostMutation(weavy: WeavyType, app: AppType): RemovePostMutationType {
+export function getTrashPostMutation(weavy: WeavyType, app: AppType | "feed"): RemovePostMutationType {
   return new MutationObserver(weavy.queryClient, getTrashPostMutationOptions(weavy, app));
 }
 
-export function getRestorePostMutationOptions(weavy: WeavyType, app: AppType) {
+export function getRestorePostMutationOptions(weavy: WeavyType, app: AppType | "feed") {
   const queryClient = weavy.queryClient;
-  const postsKey: MutationKey = ["posts", app.id];
+  const postsKey: MutationKey = ["posts", app === "feed" ? "feed" : app.id];
 
   const options = {
     mutationKey: postsKey,
@@ -83,6 +83,6 @@ export function getRestorePostMutationOptions(weavy: WeavyType, app: AppType) {
   return options;
 }
 
-export function getRestorePostMutation(weavy: WeavyType, app: AppType): RemovePostMutationType {
+export function getRestorePostMutation(weavy: WeavyType, app: AppType | "feed"): RemovePostMutationType {
   return new MutationObserver(weavy.queryClient, getRestorePostMutationOptions(weavy, app));
 }

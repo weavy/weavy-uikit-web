@@ -14,6 +14,7 @@ import { WeavyOptionalAppComponent } from "./classes/weavy-optional-app-componen
 
 import colorModesCss from "./scss/color-modes.scss";
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostPaddedCss from "./scss/host-padded.scss";
 import hostScrollYCss from "./scss/host-scroll-y.scss";
 import hostFontCss from "./scss/host-font.scss";
@@ -113,7 +114,7 @@ export class WyNotifications
   extends WeavyOptionalAppComponent
   implements UnreadNotificationsProps, NotificationFilterProps
 {
-  static override styles = [colorModesCss, hostBlockCss, hostPaddedCss, hostScrollYCss, hostFontCss];
+  static override styles = [colorModesCss, hostBlockCss, hostFillCss, hostPaddedCss, hostScrollYCss, hostFontCss];
 
   /** @internal */
   protected unreadNotifications = new UnreadNotificationsController(this);

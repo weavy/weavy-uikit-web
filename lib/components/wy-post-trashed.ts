@@ -3,9 +3,9 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import type { MemberType } from "../types/members.types";
 import type { NamedEvent } from "../types/generic.types";
 import type { PostRestoreEventType } from "../types/posts.events";
+import type { PostType } from "../types/posts.types";
 
 import hostContentsCss from "../scss/host-contents.scss";
 import postCss from "../scss/components/post.scss";
@@ -39,14 +39,11 @@ export class WyPostTrashed extends LitElement {
 
   protected exportParts = new ShadowPartsController(this);
 
-  @property({ type: Number })
-  postId!: number;
-
   /**
-   * Author metadata for the trashed post.
+   * Post data.
    */
   @property({ attribute: false })
-  createdBy!: MemberType;
+  post!: PostType;
 
   /**
    * Emit a `restore` event requesting restoration of the trashed post.
@@ -54,7 +51,7 @@ export class WyPostTrashed extends LitElement {
    * @returns {boolean} True if the event was not canceled.
    */
   private dispatchRestore() {
-    const event: PostRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { id: this.postId } });
+    const event: PostRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { id: this.post.id } });
     return this.dispatchEvent(event);
   }
 
@@ -64,10 +61,10 @@ export class WyPostTrashed extends LitElement {
         <wy-item part="wy-post-header" size="md" noPadding>
           <wy-avatar
             slot="image"
-            .src="${this.createdBy.avatar_url}"
-            .isAgent=${this.createdBy.is_agent}
+            .src="${this.post.created_by.avatar_url}"
+            .isAgent=${this.post.created_by.is_agent}
             .size=${48}
-            .name=${this.createdBy.name}
+            .name=${this.post.created_by.name}
           ></wy-avatar>
           <span part="wy-trashed" slot="title">${msg("Post was trashed.")}</span>
           <wy-button small slot="actions" @click=${() => this.dispatchRestore()} color="variant"

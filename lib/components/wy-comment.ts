@@ -16,11 +16,12 @@ import { Feature } from "../types/features.types";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { isEntityChainMatch } from "../utils/notifications";
 import { EntityTypeString } from "../types/app.types";
-import { EditorSubmitEventType } from "../types/editor.events";
+import { MsgEditorSubmitEventType } from "../types/editor.events";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdateCommentMutationOptions } from "../data/comments";
 import { partMap } from "../utils/directives/shadow-part-map";
 import type { WyPreview } from "./wy-preview";
+import { dispatchUserAction } from "../utils/users";
 
 import rebootCss from "../scss/reboot.scss";
 import commentCss from "../scss/components/comments.scss";
@@ -43,6 +44,7 @@ import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-preview";
 import "./wy-reactions";
+import { WyEditorMsg } from "./wy-editor-msg";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -195,12 +197,14 @@ export class WyComment extends WeavySubAppComponent {
     return this.dispatchEvent(event);
   }
 
+  private dispatchUserAction = dispatchUserAction.bind(this);
+
   /**
    * Submit updated comment content via mutation and exit edit mode.
    *
    * @internal
    */
-  private updateComment(e: EditorSubmitEventType) {
+  private updateComment(e: MsgEditorSubmitEventType) {
     void this.updateCommentMutation.mutate({
       id: this.comment.id,
       type: this.location,
@@ -221,13 +225,13 @@ export class WyComment extends WeavySubAppComponent {
 
     if ((changedProperties.has("parentId") || changedProperties.has("weavy")) && this.parentId && this.weavy) {
       await this.updateCommentMutation.trackMutation(
-        getUpdateCommentMutationOptions(this.weavy, [this.location, this.parentId, "comments"])
+        getUpdateCommentMutationOptions(this.weavy, [this.location, this.parentId, "comments"]),
       );
     }
 
     if (changedProperties.has("link")) {
       this.highlight = Boolean(
-        this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.comment.id })
+        this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.comment.id }),
       );
     }
 
@@ -282,189 +286,219 @@ export class WyComment extends WeavySubAppComponent {
               </wy-item>
             `
           : this.comment.is_trashed
-          ? html`
-              <wy-item part="wy-comment-header">
-                <wy-avatar
-                  slot="image"
-                  .src="${this.comment.created_by.avatar_url}"
-                  .size=${32}
-                  .name=${this.comment.created_by.name}
-                  .isAgent=${this.comment.created_by.is_agent}
-                ></wy-avatar>
-                <span part="wy-trashed" slot="title">${msg("Comment was trashed.")}</span>
-                <wy-button small slot="actions" @click=${() => this.dispatchRestore()} color="variant"
-                  >${msg("Undo")}</wy-button
-                >
-              </wy-item>
-            `
-          : this.editing
-          ? html`
-              <wy-item align="top" part="wy-comment-header">
-                <wy-avatar
-                  slot="image"
-                  .src="${this.comment.created_by.avatar_url}"
-                  .size=${32}
-                  .name=${this.comment.created_by.name}
-                  .isAgent=${this.comment.created_by.is_agent}
-                ></wy-avatar>
-                <wy-button small slot="actions" @click=${() => (this.editing = false)} kind="icon">
-                  <wy-icon name="close"></wy-icon>
-                </wy-button>
-                <div slot="content" part="wy-comment-body">
-                  <div part="wy-comment-title">
-                    ${this.comment.created_by.name}
+            ? html`
+                <wy-item part="wy-comment-header">
+                  <wy-avatar
+                    slot="image"
+                    .src="${this.comment.created_by.avatar_url}"
+                    .size=${32}
+                    .name=${this.comment.created_by.name}
+                    .isAgent=${this.comment.created_by.is_agent}
+                  ></wy-avatar>
+                  <span part="wy-trashed" slot="title">${msg("Comment was trashed.")}</span>
+                  <wy-button small slot="actions" @click=${() => this.dispatchRestore()} color="variant"
+                    >${msg("Undo")}</wy-button
+                  >
+                </wy-item>
+              `
+            : this.editing
+              ? html`
+                  <wy-item align="top" part="wy-comment-header">
+                    <wy-avatar
+                      slot="image"
+                      .src="${this.comment.created_by.avatar_url}"
+                      .size=${32}
+                      .name=${this.comment.created_by.name}
+                      .isAgent=${this.comment.created_by.is_agent}
+                    ></wy-avatar>
+                    <wy-button small slot="actions" @click=${() => (this.editing = false)} kind="icon">
+                      <wy-icon name="close"></wy-icon>
+                    </wy-button>
+                    <div slot="content" part="wy-comment-body">
+                      <div part="wy-comment-title">
+                        ${this.comment.created_by.name}
 
-                    <small part="wy-meta">
-                      ·
-                      <time datetime=${this.comment.created_at} title=${dateFull}>${dateFromNow}</time>
-                    </small>
-                  </div>
-                  <wy-editor
-                    editorLocation=${this.location}
-                    .text=${this.comment.text}
-                    .embed=${this.comment.embed}
-                    .options=${this.comment.options?.data}
-                    .attachments=${this.comment.attachments?.data ?? []}
-                    .parentId=${this.comment.id}
-                    .typing=${false}
-                    .draft=${false}
-                    placeholder=${msg("Edit comment...")}
-                    buttonText=${msg("Update", { desc: "Button action to update" })}
-                    @submit=${(e: EditorSubmitEventType) => this.updateComment(e)}
-                  ></wy-editor>
-                </div>
-              </wy-item>
-            `
-          : html`
-              <wy-item align="top" part="wy-comment-header">
-                <wy-avatar
-                  slot="image"
-                  .src=${this.comment.created_by.avatar_url}
-                  .size=${32}
-                  .name=${this.comment.created_by.name}
-                  .isAgent=${this.comment.created_by.is_agent}
-                ></wy-avatar>
+                        <small part="wy-meta">
+                          ·
+                          <time datetime=${this.comment.created_at} title=${dateFull}>${dateFromNow}</time>
+                        </small>
+                      </div>
+                      <wy-editor-msg
+                        editorLocation=${this.location}
+                        .text=${this.comment.text}
+                        .embed=${this.comment.embed}
+                        .pollOptions=${this.comment.options?.data ?? []}
+                        .attachments=${this.comment.attachments?.data ?? []}
+                        .parentId=${this.comment.id}
+                        .typing=${false}
+                        .draft=${false}
+                        placeholder=${msg("Edit comment...")}
+                        buttonText=${msg("Update", { desc: "Button action to update" })}
+                        @submit=${(e: MsgEditorSubmitEventType) => this.updateComment(e)}
+                        @ready=${async (e: CustomEvent) => {
+                          const editor = e.target as WyEditorMsg;
+                          await editor.focusInput();
+                          await editor.selectAllContent();
+                        }}
+                      ></wy-editor-msg>
+                    </div>
+                  </wy-item>
+                `
+              : html`
+                  <wy-item align="top" part="wy-comment-header">
+                    <wy-avatar
+                      slot="image"
+                      .src=${this.comment.created_by.avatar_url}
+                      .size=${32}
+                      .name=${this.comment.created_by.name}
+                      .isAgent=${this.comment.created_by.is_agent}
+                      @click=${() => this.dispatchUserAction(this.comment.created_by)}
+                      role="button"
+                      title=${this.comment.created_by.name}
+                    ></wy-avatar>
 
-                ${this.user && this.user.id === this.comment.created_by.id
-                  ? html`
-                      <wy-dropdown small slot="actions">
-                        ${this.user.id === this.comment.created_by.id
-                          ? html`
-                              <wy-dropdown-item @click=${() => (this.editing = true)}>
-                                <wy-icon name="pencil"></wy-icon>
-                                ${msg("Edit")}
-                              </wy-dropdown-item>
-                            `
-                          : nothing}
-                        ${this.user.id === this.comment.created_by.id
-                          ? html`
-                              <wy-dropdown-item @click=${() => this.dispatchTrash()}>
-                                <wy-icon name="trashcan"></wy-icon>
-                                ${msg("Trash")}
-                              </wy-dropdown-item>
-                            `
-                          : nothing}
-                      </wy-dropdown>
-                    `
-                  : nothing}
+                    ${this.user && this.user.id === this.comment.created_by.id
+                      ? html`
+                          <wy-dropdown small slot="actions">
+                            ${this.user.id === this.comment.created_by.id
+                              ? html`
+                                  <wy-dropdown-item @click=${() => (this.editing = true)}>
+                                    <wy-icon name="pencil"></wy-icon>
+                                    ${msg("Edit")}
+                                  </wy-dropdown-item>
+                                `
+                              : nothing}
+                            ${this.user.id === this.comment.created_by.id
+                              ? html`
+                                  <wy-dropdown-item @click=${() => this.dispatchTrash()}>
+                                    <wy-icon name="trashcan"></wy-icon>
+                                    ${msg("Trash")}
+                                  </wy-dropdown-item>
+                                `
+                              : nothing}
+                          </wy-dropdown>
+                        `
+                      : nothing}
 
-                <div slot="content" part="wy-comment-body">
-                  <div part="wy-comment-title">
-                    ${this.comment.created_by.name}
-                    <small part="wy-meta">
-                      ·
-                      <time datetime=${this.comment.created_at} title=${dateFull}>${dateFromNow}</time>
-                      ${this.comment.updated_at
-                        ? html`<time datetime=${this.comment.updated_at}> · ${msg("edited")}</time>`
+                    <div slot="content" part="wy-comment-body">
+                      <div part="wy-comment-title">
+                        <wy-button kind="link" @click=${() => this.dispatchUserAction(this.comment.created_by)}
+                          >${this.comment.created_by.name}</wy-button
+                        >
+                        <small part="wy-meta">
+                          ·
+                          <time datetime=${this.comment.created_at} title=${dateFull}>${dateFromNow}</time>
+                          ${this.comment.updated_at
+                            ? html`<time datetime=${this.comment.updated_at}> · ${msg("edited")}</time>`
+                            : nothing}
+                        </small>
+                      </div>
+
+                      <!-- image grid -->
+                      ${images && Boolean(images.length)
+                        ? html`<wy-image-grid
+                            part="wy-comment-images"
+                            .images=${images}
+                            @file-open=${(e: FileOpenEventType) => {
+                              void this.previewAttachmentsRef.value?.open(e.detail.fileId);
+                            }}
+                          ></wy-image-grid>`
+                        : ``}
+
+                      <!-- text content -->
+                      ${this.comment.html
+                        ? html`<div
+                            part="wy-content"
+                            @click=${(e: MouseEvent) => {
+                              if (
+                                e.target instanceof HTMLElement &&
+                                e.target.matches('.wy-mention, [part~="wy-mention"]')
+                              ) {
+                                const uid =
+                                  e.target.dataset.eid?.startsWith("u") && parseInt(e.target.dataset.eid.substring(1));
+                                if (uid) {
+                                  this.dispatchUserAction({ id: uid, name: e.target.innerText });
+                                }
+                              }
+                            }}
+                            >${
+                              // eslint-disable-next-line lit-a11y/click-events-have-key-events
+                              unsafeHTML(this.comment.html)
+                            }</div
+                          >`
+                        : ``}
+
+                      <!-- annotations -->
+                      ${this.comment.annotations?.data?.length
+                        ? html`<wy-annotation-list
+                            .files=${this.comment.annotations.data}
+                            @file-open=${(e: FileOpenEventType) => {
+                              void this.previewAnnotationsRef.value?.open(e.detail.fileId);
+                            }}
+                          ></wy-annotation-list>`
                         : nothing}
-                    </small>
-                  </div>
 
-                  <!-- image grid -->
-                  ${images && Boolean(images.length)
-                    ? html`<wy-image-grid
-                        part="wy-comment-images"
-                        .images=${images}
-                        @file-open=${(e: FileOpenEventType) => {
-                          void this.previewAttachmentsRef.value?.open(e.detail.fileId);
-                        }}
-                      ></wy-image-grid>`
-                    : ``}
+                      <!-- poll -->
+                      ${this.comment.options?.data?.length
+                        ? html`
+                            <wy-poll
+                              .pollOptions=${this.comment.options.data}
+                              @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
+                            ></wy-poll>
+                          `
+                        : nothing}
 
-                  <!-- text content -->
-                  ${this.comment.html ? html`<div part="wy-content">${unsafeHTML(this.comment.html)}</div>` : ``}
+                      <!-- embeds -->
+                      ${this.comment.embed && this.componentFeatures?.allowsFeature(Feature.Embeds)
+                        ? html` <wy-embed .embed=${this.comment.embed}></wy-embed> `
+                        : nothing}
 
-                  <!-- annotations -->
-                  ${this.comment.annotations?.data?.length
-                    ? html`<wy-annotation-list
-                        .files=${this.comment.annotations.data}
-                        @file-open=${(e: FileOpenEventType) => {
-                          void this.previewAnnotationsRef.value?.open(e.detail.fileId);
-                        }}
-                      ></wy-annotation-list>`
-                    : nothing}
+                      <!-- files -->
+                      ${files.length
+                        ? html`<wy-attachment-list
+                            filled
+                            .files=${files ?? []}
+                            @file-open=${(e: FileOpenEventType) => {
+                              void this.previewAttachmentsRef.value?.open(e.detail.fileId);
+                            }}
+                          ></wy-attachment-list>`
+                        : ``}
 
-                  <!-- poll -->
-                  ${this.comment.options?.data?.length
-                    ? html`
-                        <wy-poll
-                          .pollOptions=${this.comment.options.data}
-                          @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
-                        ></wy-poll>
-                      `
-                    : nothing}
+                      <!-- meeting -->
+                      ${this.comment.meeting
+                        ? html`<wy-meeting-card .meeting=${this.comment.meeting}></wy-meeting-card>`
+                        : ``}
 
-                  <!-- embeds -->
-                  ${this.comment.embed && this.componentFeatures?.allowsFeature(Feature.Embeds)
-                    ? html` <wy-embed .embed=${this.comment.embed}></wy-embed> `
-                    : nothing}
-
-                  <!-- files -->
-                  ${files.length
-                    ? html`<wy-attachment-list
-                        filled
-                        .files=${files ?? []}
-                        @file-open=${(e: FileOpenEventType) => {
-                          void this.previewAttachmentsRef.value?.open(e.detail.fileId);
-                        }}
-                      ></wy-attachment-list>`
-                    : ``}
-
-                  <!-- meeting -->
-                  ${this.comment.meeting
-                    ? html`<wy-meeting-card .meeting=${this.comment.meeting}></wy-meeting-card>`
-                    : ``}
-
-                  <div part="wy-comment-footer">
-                    ${this.componentFeatures?.allowsFeature(Feature.Reactions)
-                      ? html` <wy-reactions
-                          lineReverse
-                          small
-                          .reactions=${this.comment.reactions?.data}
-                          parentType=${this.location}
-                          parentId=${this.parentId}
-                          entityId=${this.comment.id}
-                          entityType="comments"
-                        ></wy-reactions>`
-                      : nothing}
-                    ${this.comment.annotations?.data?.length
-                      ? html`<wy-preview
-                          ${ref(this.previewAnnotationsRef)}
-                          .files=${this.comment.annotations.data}
-                          .isAttachment=${true}
-                        ></wy-preview> `
-                      : nothing}
-                    ${this.comment.attachments?.data?.length
-                      ? html`<wy-preview
-                          ${ref(this.previewAttachmentsRef)}
-                          .files=${[...images, ...files]}
-                          .isAttachment=${true}
-                        ></wy-preview> `
-                      : nothing}
-                  </div>
-                </div>
-              </wy-item>
-            `}
+                      <div part="wy-comment-footer">
+                        ${this.componentFeatures?.allowsFeature(Feature.Reactions)
+                          ? html` <wy-reactions
+                              lineReverse
+                              small
+                              .reactions=${this.comment.reactions?.data}
+                              parentType=${this.location}
+                              parentId=${this.parentId}
+                              entityId=${this.comment.id}
+                              entityType="comments"
+                            ></wy-reactions>`
+                          : nothing}
+                        ${this.comment.annotations?.data?.length
+                          ? html`<wy-preview
+                              ${ref(this.previewAnnotationsRef)}
+                              .files=${this.comment.annotations.data}
+                              .isAttachment=${true}
+                            ></wy-preview> `
+                          : nothing}
+                        ${this.comment.attachments?.data?.length
+                          ? html`<wy-preview
+                              ${ref(this.previewAttachmentsRef)}
+                              .files=${[...images, ...files]}
+                              .isAttachment=${true}
+                            ></wy-preview> `
+                          : nothing}
+                      </div>
+                    </div>
+                  </wy-item>
+                `}
       </div>
     `;
   }

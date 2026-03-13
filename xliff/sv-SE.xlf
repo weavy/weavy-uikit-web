@@ -207,7 +207,7 @@
         <target state="">Inlägget togs bort.</target>
       </trans-unit>
       <trans-unit id="s6acd68c5d25381a5">
-        <source><x id="0" equiv-text="${file.comments.count}"/> comments</source>
+        <source><x id="0" equiv-text="${commentCount}"/> comments</source>
         <target state=""><x id="0" equiv-text="${file.comments.count}"/> kommentarer</target>
       </trans-unit>
       <trans-unit id="s343f95633406dc81">
@@ -689,6 +689,26 @@
       <trans-unit id="sd348deccf67960bf">
         <source>No pending uploads</source>
         <target>Inga pågående uppladdningar</target>
+      </trans-unit>
+      <trans-unit id="s7f6c9aa6ca96b7c7">
+        <source>Unfollow</source>
+        <target>Avfölj</target>
+      </trans-unit>
+      <trans-unit id="s4fd78d90908a11f0">
+        <source>Follow</source>
+        <target>Följ</target>
+      </trans-unit>
+      <trans-unit id="s8e7258c871aaa410">
+        <source>E-mail</source>
+        <target>E-post</target>
+      </trans-unit>
+      <trans-unit id="sf1bc83d2509bafcf">
+        <source>Phone</source>
+        <target>Telefon</target>
+      </trans-unit>
+      <trans-unit id="s029e56f66373d7a2">
+        <source>New posts</source>
+        <target>Nya inlägg</target>
       </trans-unit>
     </body>
   </file>

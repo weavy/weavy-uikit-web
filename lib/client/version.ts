@@ -23,7 +23,7 @@ export type WeavyVersionType = {
     /** The hostname of the Weavy environment */
     name: string;
     /** Semver version */
-    version: string;
+    version: string | undefined;
   };
 };
 
@@ -71,7 +71,17 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
           } catch (e) {
             this.networkStateIsPending = false;
             this.serverState = "unreachable";
-            throw new Error("Error checking Weavy version: " + (e as Error).toString(), { cause: (e as Error).cause });
+            console.warn("Could not check Weavy version: " + (e as Error).toString());
+            return {
+              client: {
+                name: WeavyClient.sourceName,
+                version: this.version,
+              },
+              environment: {
+                name: (this.url as URL)?.hostname,
+                version: undefined,
+              },
+          };
           }
 
           const environmentVersion = await response.text();

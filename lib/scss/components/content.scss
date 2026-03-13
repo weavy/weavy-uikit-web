@@ -235,14 +235,22 @@
 
   // hashtags
   .wy-hashtag {
-    color: #{color.token(--wy-primary)};
+    color: #{color.token(--wy-link)};
   }
 
   // mentions
   .wy-mention {
     font-weight: var.default(--wy-font-weight-bold);
+    cursor: pointer;
+    color: #{color.token(--wy-link)};
+    text-decoration: var.default(--wy-link-decoration);
+
     &::before {
       content: "@";
+    }
+
+    &:hover, &:focus {
+      text-decoration: var.default(--wy-link-hover-decoration);
     }
   }
 }

@@ -1,0 +1,6 @@
+@use "./base/var";
+
+// Makes the block fill in flex layouts
+:host {
+  flex: 1;
+}

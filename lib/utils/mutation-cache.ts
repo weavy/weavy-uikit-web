@@ -1,10 +1,10 @@
 import type { Mutation, MutationKey, MutationState, QueryClient } from "@tanstack/query-core";
 
-export function updateMutationContext(
+export function updateMutationContext<TContext extends MutationState["context"]>(
   queryClient: QueryClient,
   mutationKey: MutationKey,
   variables: unknown,
-  contextMutation: (context: object) => void
+  contextMutation: (context: TContext) => void
 ) {
   const mutationCache = queryClient.getMutationCache();
 
@@ -16,7 +16,7 @@ export function updateMutationContext(
   });
 
   if (mutation && mutation.state.context) {
-    const newContext = { ...mutation.state.context };
+    const newContext = { ...mutation.state.context } as TContext;
     contextMutation(newContext);
     const newState = { ...mutation.state, context: newContext };
     //mutation.state.context = newContext;

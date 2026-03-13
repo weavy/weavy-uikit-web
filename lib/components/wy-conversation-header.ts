@@ -549,7 +549,7 @@ export class WyConversationHeader extends WeavySubComponent {
                                     ? html`
                                         <wy-item-list>
                                           ${membersData.data?.map(
-                                            (member: MemberType) => html`
+                                            (member) => html`
                                               <wy-item>
                                                 <wy-avatar
                                                   slot="image"

@@ -10,6 +10,8 @@ import { UserContext } from "../../contexts/user-context";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 import { partMap } from "../../utils/directives/shadow-part-map";
 import { S4 } from "../../utils/data";
+import { checkImageLoad, imageLoaded } from "../../utils/images";
+import { ref } from "lit/directives/ref.js";
 
 import rebootCss from "../../scss/reboot.scss";
 import avatarCss from "../../scss/components/avatar.scss";
@@ -91,14 +93,12 @@ export class WyAvatar extends LitElement {
 
     let initials;
 
-    if (!this.src && this.name) {
+    if (this.name) {
       initials = getInitials(this.name);
     }
 
     const avatarParts = {
       "wy-avatar-shape": true,
-      "wy-avatar-img": Boolean(this.src),
-      "wy-avatar-initials": !this.src,
       "wy-presence-mask": this.presence === Presence.Active,
     };
 
@@ -108,24 +108,28 @@ export class WyAvatar extends LitElement {
             <img
               alt=""
               title="${this.name}${this.description ? ` • ${this.description}` : ""}"
-              part=${partMap(avatarParts)}
+              part="wy-avatar-img ${partMap(avatarParts)}"
               style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
               height="${this.size}"
               width="${this.size}"
               src="${this.src}"
               decoding="async"
               loading="lazy"
+              ${ref(checkImageLoad)}
+              @load=${(e: Event) => {
+                imageLoaded(e);
+              }}
             />
           `
         : html`
-            <div
-              part=${partMap(avatarParts)}
-              style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
-              title="${this.name}${this.description ? ` • ${this.description}` : ""}"
-            >
-              <span part="wy-avatar-initials-text">${initials}</span>
-            </div>
           `}
+          <div
+            part="wy-avatar-initials ${partMap(avatarParts)}"
+            style="--wy-component-avatar-size: calc(${remSize} * var(--wy-size, 1rem));"
+            title="${this.name}${this.description ? ` • ${this.description}` : ""}"
+          >
+            <span part="wy-avatar-initials-text">${initials}</span>
+          </div>
       ${this.isAgent
         ? html`<wy-icon part="wy-avatar-type-icon" name="agent" size="${(this.size / 3) * 1.25}"></wy-icon>`
         : nothing}

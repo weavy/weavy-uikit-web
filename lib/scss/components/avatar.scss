@@ -14,6 +14,26 @@
   width: var(--wy-component-avatar-size, var.wy-rem(2));
   height: var(--wy-component-avatar-size, var.wy-rem(2));
   object-fit: cover;
+
+  &[part~="wy-loading"] {
+    transition: opacity 0.15s ease-out;
+    opacity: 0;
+
+    &[part~="wy-loaded"] {
+      opacity: 1;
+      transition: opacity 0.15s ease-out;
+
+      ~ [part~="wy-avatar-initials"] {
+        transition: opacity 0.15s 0.15s ease-out;
+        opacity: 0;
+      }
+    }
+  }
+
+  ~ [part~="wy-avatar-initials"] {
+    opacity: 1;
+    position: absolute;
+  }
 }
 
 [part~="wy-avatar-initials"] {

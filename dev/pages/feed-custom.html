@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+    />
+    <link rel="modulepreload" href="/locales/sv-SE.ts" />
+    <script type="module" src="/lib"></script>
+    <script type="module" src="/utils/tanstack-dev-tools.ts"></script>
+    <style>
+      :root {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          "Open Sans",
+          "Helvetica Neue",
+          sans-serif;
+      }
+
+      html.wy-dark {
+        color-scheme: dark;
+      }
+
+      html {
+        display: flex;
+        height: 100dvh;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: .5rem;
+      }
+
+      .header {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 20px;
+
+        > * {
+          background: lightcyan;
+          border-radius: 0.5rem;
+          padding: 0.5rem;
+          display: flex;
+          gap: 0.5rem;
+          justify-content: center;
+          align-items: center;
+          min-height: 2.5rem;
+        }
+
+        button {
+          height: 100%;
+          position: relative;
+        }
+      }
+
+      wy-feed, wy-feed-editor {
+        --wy-padding-outer: 0 calc((100% - 600px) / 2); /* => 600px max-width*/
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">
+      <div id="color-menu">
+        <button class="color" value="red">Red</button>
+        <button class="color" value="green">Green</button>
+        <button class="color" value="blue">Blue</button>
+      </div>
+      <div id="color-scheme">
+        <button class="mode" value="light">Light</button>
+        <button class="mode" value="dark">Dark</button>
+      </div>
+      <div>
+        <input type="checkbox" id="following" checked><label for="following">Following</label>
+      </div>
+    </div>
+    <wy-context url="%WEAVY_URL%" tokenUrl="/api/token">
+      <wy-post-editor uid="acme-posts"></wy-post-editor>
+      <wy-posts following search></wy-posts>
+      <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
+    </wy-context>
+    <script>
+      const searchParams = new URLSearchParams(window.location.search);
+      const feed = document.querySelector("wy-feed");
+      const data = [
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      ];
+      feed.contextualData = data;
+
+      feed.addEventListener("wy-preview-open", (e) => {
+        if (window.top !== window.self) {
+          console.log("requesting external preview", e.detail.fileId, e.detail.tab, e.detail.app);
+          window.top.postMessage({
+            name: "wy-preview-open",
+            ...e.detail,
+          });
+          e.preventDefault();
+        }
+      });
+
+      feed.addEventListener("wy-app", (e) => {
+        console.log("wy-app", e.detail);
+      });
+
+      feed.addEventListener("wy-link", (e) => {
+        console.log("wy-link", e.detail);
+      });
+
+      feed.addEventListener("wy-action", (e) => {
+        if (e.detail.action) {
+          alert("You selected: " + e.detail.action);
+        } else {
+          alert(`Selected embed ${e.detail.embed.id} (and prevented navigation to ${e.detail.embed.url})`);
+          e.preventDefault();
+        }
+      });
+
+      document.getElementById("color-menu").addEventListener("click", (event) => {
+        document.documentElement.style.setProperty("--wy-theme-color", event.target.value);
+      });
+
+      document.getElementById("color-scheme").addEventListener("click", (event) => {
+        document.documentElement.className = event.target.value === "dark" ? "wy-dark" : "";
+      });
+      
+      document.getElementById("following").addEventListener("input", (event) => {
+        if (event.target.checked) {
+          feed.setAttribute("following", "");
+        } else {
+          feed.removeAttribute("following");
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,12 +1,6 @@
-import { LitElement, html, nothing } from "lit";
+import { PropertyValueMap, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
-import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "../types/members.types";
-import type { MeetingType } from "../types/meetings.types";
-import type { FileType } from "../types/files.types";
-import type { EmbedType } from "../types/embeds.types";
-import { PollOptionType } from "../types/polls.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import {
   PostEditEventType,
@@ -16,6 +10,15 @@ import {
 } from "../types/posts.events";
 import { PollVoteEventType } from "../types/polls.events";
 import { NamedEvent } from "../types/generic.types";
+import type { PostType } from "../types/posts.types";
+import { AppContext, type AppType } from "../contexts/apps-context";
+import { provide } from "@lit/context";
+import { toIntOrString } from "../converters/string";
+import { WeavySubTypeComponent } from "../classes/weavy-sub-type-component";
+import { QueryController } from "../controllers/query-controller";
+import { getAppOptions } from "../data/app";
+import { RealtimeController } from "../controllers/realtime-controller";
+import { getRealtimePostOptions } from "../data/posts";
 
 import rebootCss from "../scss/reboot.scss";
 
@@ -47,113 +50,52 @@ declare global {
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  */
 @customElement("wy-post")
-export class WyPost extends LitElement {
+export class WyPost extends WeavySubTypeComponent {
   static override styles = [rebootCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * Identifier of the wrapped post.
+   * Realtime controller, used when post is out of app context.
+   *
+   * @internal
    */
-  @property({ type: Number })
-  postId!: number;
+  protected postRealtime = new RealtimeController(this);
 
   /**
-   * Author metadata for the post.
+   * Post data
    */
   @property({ attribute: false })
-  createdBy!: MemberType;
+  post!: PostType;
 
   /**
-   * ISO timestamp when the post was created.
+   * The app data. Must be directly specified or by using the `uid` property.
+   *
+   * @type {AppType | undefined}
    */
-  @property()
-  createdAt: string = "";
+  @provide({ context: AppContext })
+  @state()
+  app: AppType | undefined;
+
+  /** Optional appId to specify post specific app context */
+  @property({ converter: toIntOrString })
+  uid?: number | string | null;
 
   /**
-   * ISO timestamp for the last post modification.
+   * Resolves when app data is available.
+   *
+   * @returns {Promise<AppType>}
    */
-  @property()
-  modifiedAt: string | undefined = undefined;
+  async whenApp() {
+    return await this.#whenApp;
+  }
+  #resolveApp?: (app: AppType) => void;
+  #whenApp = new Promise<AppType>((r) => {
+    this.#resolveApp = r;
+  });
 
-  /**
-   * True when the current user subscribes to the post.
-   */
-  @property({ type: Boolean })
-  isSubscribed: boolean = false;
-
-  /**
-   * True when the post resides in trash.
-   */
-  @property({ type: Boolean })
-  isTrashed: boolean = false;
-
-  /**
-   * HTML formatted post content.
-   */
-  @property()
-  html: string = "";
-
-  /**
-   * Plain-text post content.
-   */
-  @property()
-  text: string = "";
-
-  /**
-   * Normalized plain-text body used when rendering.
-   */
-  @property()
-  plain: string = "";
-
-  /**
-   * Annotation files attached to the post.
-   */
-  @property({ attribute: false })
-  annotations?: FileType[] = [];
-
-  /**
-   * Attachment files linked to the post.
-   */
-  @property({ attribute: false })
-  attachments?: FileType[] = [];
-
-  /**
-   * Poll options configured for the post.
-   */
-  @property({ type: Array })
-  pollOptions: PollOptionType[] | undefined = [];
-
-  /**
-   * Meeting details attached to the post.
-   */
-  @property({ attribute: false })
-  meeting?: MeetingType;
-
-  /**
-   * Embed metadata rendered with the post.
-   */
-  @property({ attribute: false })
-  embed?: EmbedType;
-
-  /**
-   * Reactions associated with the post.
-   */
-  @property({ type: Array })
-  reactions?: ReactableType[] = [];
-
-  /**
-   * Number of comments on the post.
-   */
-  @property({ attribute: false })
-  commentCount: number = 0;
-
-  /**
-   * Members who have seen the post.
-   */
-  @property({ type: Array })
-  seenBy: MemberType[] = [];
+  #appQuery = new QueryController<AppType>(this);
 
   /**
    * True while the post is displayed in edit mode.
@@ -172,7 +114,7 @@ export class WyPost extends LitElement {
    */
   private dispatchVote(optionId: number) {
     const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", {
-      detail: { optionId, parentId: this.postId, parentType: "posts" },
+      detail: { optionId, parentId: this.post.id, parentType: "posts" },
     });
     return this.dispatchEvent(event);
   }
@@ -186,7 +128,7 @@ export class WyPost extends LitElement {
    */
   private dispatchSubscribe(subscribe: boolean) {
     const event: PostSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", {
-      detail: { id: this.postId, subscribe },
+      detail: { id: this.post.id, subscribe },
     });
     return this.dispatchEvent(event);
   }
@@ -198,7 +140,7 @@ export class WyPost extends LitElement {
    * @returns {boolean} True if the event was not canceled.
    */
   private dispatchTrash() {
-    const event: PostTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.postId } });
+    const event: PostTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.post.id } });
     return this.dispatchEvent(event);
   }
 
@@ -209,53 +151,58 @@ export class WyPost extends LitElement {
    * @returns {boolean} True if the event was not canceled.
    */
   private dispatchRestore() {
-    const event: PostRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { id: this.postId } });
+    const event: PostRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { id: this.post.id } });
     return this.dispatchEvent(event);
+  }
+
+  protected override willUpdate(changedProperties: PropertyValueMap<this>) {
+    if (changedProperties.has("uid") || changedProperties.has("weavy")) {
+      if (this.uid && this.weavy) {
+        void this.#appQuery.trackQuery(getAppOptions(this.weavy, this.uid));
+      } else {
+        this.#appQuery.untrackQuery();
+      }
+    }
+
+    if (!this.#appQuery.result?.isPending) {
+      this.app = this.#appQuery.result?.data;
+    }
+
+    if (changedProperties.has("app") && this.app) {
+      if (changedProperties.get("app")) {
+        // reset promise
+        this.#whenApp = new Promise<AppType>((r) => {
+          this.#resolveApp = r;
+        });
+      }
+      this.#resolveApp?.(this.app);
+    }
   }
 
   override render() {
     return html`
-      ${this.isTrashed
+      ${this.post.is_trashed
         ? html`<wy-post-trashed
-            postId=${this.postId}
-            .createdBy=${this.createdBy}
+            id=${`post-trashed-${this.post.id}`}
+            .post=${this.post}
             @restore=${() => {
               this.dispatchRestore();
             }}
           ></wy-post-trashed> `
         : nothing}
-      ${!this.isTrashed && this.editing
+      ${!this.post.is_trashed && this.editing
         ? html`<wy-post-edit
-            .postId=${this.postId}
-            .createdBy=${this.createdBy}
-            .createdAt=${this.createdAt}
-            .text=${this.text}
-            .embed=${this.embed}
-            .pollOptions=${this.pollOptions}
-            .attachments=${this.attachments}
+            id=${`post-edit-${this.post.id}`}
+            .post=${this.post}
             @edit=${(e: PostEditEventType) => {
               this.editing = e.detail.edit;
             }}
           ></wy-post-edit> `
         : nothing}
-      ${!this.isTrashed && !this.editing
+      ${!this.post.is_trashed && !this.editing
         ? html`<wy-post-view
-            id="${this.id}"
-            .postId=${this.postId}
-            .createdBy=${this.createdBy}
-            .createdAt=${this.createdAt}
-            .modifiedAt=${this.modifiedAt}
-            .isSubscribed=${this.isSubscribed}
-            .isTrashed=${this.isTrashed}
-            .html=${this.html}
-            .text=${this.plain}
-            .annotations=${this.annotations ?? []}
-            .attachments=${this.attachments ?? []}
-            .meeting=${this.meeting}
-            .pollOptions=${this.pollOptions}
-            .embed=${this.embed}
-            .reactions=${this.reactions}
-            .commentCount=${this.commentCount}
+            id=${`post-view-${this.post.id}`}
+            .post=${this.post}
             @edit=${(e: PostEditEventType) => {
               this.editing = e.detail.edit;
             }}
@@ -271,5 +218,26 @@ export class WyPost extends LitElement {
           ></wy-post-view> `
         : nothing}
     `;
+  }
+
+  protected override updated(changedProperties: PropertyValueMap<this>): void {
+    // Only enabled when `uid` is set
+    if (
+      (changedProperties.has("weavy") ||
+        changedProperties.has("app") ||
+        changedProperties.has("uid") ||
+        changedProperties.has("componentFeatures") ||
+        changedProperties.has("user")) &&
+      this.weavy &&
+      this.uid &&
+      this.app &&
+      this.app?.id !== changedProperties.get("app")?.id &&
+      this.componentFeatures &&
+      this.user
+    ) {
+      void this.postRealtime.track(
+        getRealtimePostOptions(this.weavy, this.componentFeatures, this.app, this.user, this.post),
+      );
+    }
   }
 }

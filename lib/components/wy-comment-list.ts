@@ -17,10 +17,10 @@ import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMu
 import { PollMutationType, getPollMutation } from "../data/poll";
 import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
-import type { RealtimeReactionEventType } from "../types/realtime.types";
+import type { RealtimeGroupType, RealtimeReactionEventType } from "../types/realtime.types";
 import type { MsgType } from "../types/msg.types";
 import { Feature } from "../types/features.types";
-import type { EditorSubmitEventType } from "../types/editor.events";
+import type { MsgEditorSubmitEventType } from "../types/editor.events";
 import type { CommentRestoreEventType, CommentTrashEventType } from "../types/comments.events";
 import type { PollVoteEventType } from "../types/polls.events";
 
@@ -44,7 +44,7 @@ declare global {
  * **Used sub components:**
  *
  * - [`<wy-comment>`](./wy-comment.ts)
- * - [`<wy-comment-editor>`](./wy-editor-comment.ts)
+ * - [`<wy-editor-comment>`](./wy-editor-comment.ts)
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  * - [`<wy-empty>`](./wy-empty.ts)
  *
@@ -138,7 +138,7 @@ export class WyCommentList extends WeavySubAppComponent {
    * @internal
    */
   private removeCommentMutation?: RemoveCommentMutationType;
-  
+
   /**
    * Mutation controller used to restore a comment.
    *
@@ -194,17 +194,18 @@ export class WyCommentList extends WeavySubAppComponent {
     }
 
     if (
-      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("componentFeatures")) &&
+      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("componentFeatures") || changedProperties.has("parentId")) &&
       this.weavy &&
-      this.app
+      this.app &&
+      this.parentId
     ) {
-      this.pollMutation = getPollMutation(this.weavy, this.app.id, [this.location, this.parentId, "comments"]);
+      this.pollMutation = getPollMutation(this.weavy, this.app.id, [this.location, "comments", this.parentId]);
 
       // realtime
 
       this.#unsubscribeToRealtime?.();
 
-      const subscribeGroup = `a${this.app.id}`;
+      const subscribeGroup: RealtimeGroupType = `a${this.app.id}`;
 
       void this.weavy.subscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
 
@@ -233,7 +234,7 @@ export class WyCommentList extends WeavySubAppComponent {
    * @internal
    */
   handleRealtimeCommentCreated = () => {
-    void this.weavy?.queryClient.invalidateQueries({ queryKey: [this.location, this.parentId, "comments"] });
+    void this.weavy?.queryClient.invalidateQueries({ queryKey: [this.location, "comments", this.parentId] });
   };
 
   /**
@@ -248,13 +249,11 @@ export class WyCommentList extends WeavySubAppComponent {
       return;
     }
 
-    updateCacheItem(
+    updateCacheItem<MsgType>(
       this.weavy.queryClient,
-      [this.location, this.parentId, "comments"],
+      [this.location, "comments", this.parentId],
       realtimeEvent.entity.id,
-      (item: MsgType) => {
-        updateReaction(item, realtimeEvent.reaction, realtimeEvent.actor);
-      }
+      (item) => updateReaction(item, realtimeEvent.reaction, realtimeEvent.actor),
     );
   };
 
@@ -269,13 +268,11 @@ export class WyCommentList extends WeavySubAppComponent {
     if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
       return;
     }
-    updateCacheItem(
+    updateCacheItem<MsgType>(
       this.weavy.queryClient,
-      [this.location, this.parentId, "comments"],
+      [this.location, "comments", this.parentId],
       realtimeEvent.entity.id,
-      (item: MsgType) => {
-        updateReaction(item, undefined, realtimeEvent.actor);
-      }
+      (item) => updateReaction(item, undefined, realtimeEvent.actor),
     );
   };
 
@@ -284,7 +281,7 @@ export class WyCommentList extends WeavySubAppComponent {
    *
    * @internal
    */
-  private async handleSubmit(e: EditorSubmitEventType) {
+  private async handleSubmit(e: MsgEditorSubmitEventType) {
     if (this.app && this.parentId && this.user) {
       await this.addCommentMutation.mutate({
         app_id: this.app.id,
@@ -341,6 +338,7 @@ export class WyCommentList extends WeavySubAppComponent {
                 }}
                 @vote=${(e: PollVoteEventType) => {
                   if (e.detail.parentId && e.detail.parentType) {
+                    console.log("Voting on option", e.detail.optionId, "for comment", e.detail.parentId);
                     void this.pollMutation?.mutate({
                       optionId: e.detail.optionId,
                       parentType: e.detail.parentType,
@@ -350,7 +348,7 @@ export class WyCommentList extends WeavySubAppComponent {
                 }}
               ></wy-comment>`
             : nothing;
-        }
+        },
       );
     }
     return nothing;
@@ -374,7 +372,7 @@ export class WyCommentList extends WeavySubAppComponent {
             ></wy-empty>
           `}
 
-      <wy-comment-editor
+      <wy-editor-comment
         editorLocation=${this.location}
         .parentId=${this.parentId}
         .typing=${false}
@@ -382,8 +380,8 @@ export class WyCommentList extends WeavySubAppComponent {
         ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
         placeholder=${this.placeholder ?? msg("Create a comment...")}
         buttonText=${msg("Comment", { desc: "Button action to comment" })}
-        @submit=${(e: EditorSubmitEventType) => this.handleSubmit(e)}
-      ></wy-comment-editor>
+        @submit=${(e: MsgEditorSubmitEventType) => this.handleSubmit(e)}
+      ></wy-editor-comment>
     `;
   }
 

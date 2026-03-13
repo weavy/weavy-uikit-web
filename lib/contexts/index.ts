@@ -1,4 +1,4 @@
-export * from "./app-context";
+export * from "./apps-context";
 export * from "./context-id-context";
 export * from "./data-context";
 export * from "./features-context";
@@ -7,7 +7,7 @@ export * from "./settings-context";
 export * from "./user-context";
 export * from "./weavy-context";
 export type { Context, ContextConsumer, ContextType } from "@lit/context";
-export type * from "./app-context";
+export type * from "./apps-context";
 export type * from "./context-id-context";
 export type * from "./data-context";
 export type * from "./features-context";

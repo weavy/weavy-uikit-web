@@ -9,6 +9,7 @@ import { partMap } from "../utils/directives/shadow-part-map";
 import { MemberType } from "../types/members.types";
 import { TypingUserType } from "../types/users.types";
 import { ifDefined } from "lit/directives/if-defined.js";
+import { onlyValues } from "../utils/data";
 
 import rebootCss from "../scss/reboot.scss";
 import messagesCss from "../scss/components/messages.scss";
@@ -142,7 +143,7 @@ export class WyMessageTyping extends LitElement {
   override render() {
     const members = this.typingMembers.map((typingMember) =>
       this.members.find((member) => member.id === typingMember.id)
-    ).filter((x) => x);
+    ).filter(onlyValues);
 
     // Make a readable list
     const typingNames = new Intl.ListFormat(this.weavy?.locale, { style: "long", type: "conjunction" }).format(

@@ -5,7 +5,7 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { localized, msg, str } from "@lit/localize";
 import { keyed } from "lit/directives/keyed.js";
 import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "../types/members.types";
+import type { MemberDetailType } from "../types/members.types";
 import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { FileOpenEventType } from "../types/files.events";
@@ -22,10 +22,13 @@ import { Feature } from "../types/features.types";
 import { PollVoteEventType } from "../types/polls.events";
 import { NamedEvent } from "../types/generic.types";
 import { checkOnlyEmojis } from "../utils/strings";
+import { dispatchUserAction } from "../utils/users";
+import type { UserOrAgentType } from "../types/users.types";
 
 import messagesCss from "../scss/components/messages.scss";
 import contentCss from "../scss/components/content.scss";
 import hostContentsCss from "../scss/host-contents.scss";
+import rebootCss from "../scss/reboot.scss";
 
 import "./ui/wy-avatar";
 import "./ui/wy-item";
@@ -41,7 +44,6 @@ import "./wy-meeting-card";
 import "./wy-poll";
 import "./wy-reactions";
 import "./wy-preview";
-
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -96,14 +98,14 @@ declare global {
 @customElement("wy-message")
 @localized()
 export class WyMessage extends WeavySubAppComponent {
-  static override styles = [messagesCss, contentCss, hostContentsCss];
+  static override styles = [rebootCss, messagesCss, contentCss, hostContentsCss];
 
   protected exportParts = new ShadowPartsController(this);
 
   /**
    * App context owning the message.
    */
-  @property({ attribute: false })
+  @property({ attribute: false, type: Object })
   conversation?: AppType;
 
   /**
@@ -113,40 +115,23 @@ export class WyMessage extends WeavySubAppComponent {
   messageId!: number;
 
   /**
-   * True when the message was authored by the current user.
+   * The author of the message.
    */
-  @property({ type: Boolean })
-  me: boolean = false;
+  @property({ type: Object })
+  author!: UserOrAgentType;
 
   /**
-   * True when the message was authored by an agent.
+   * True when the message was authored by the current user.
    */
-  @property({ type: Boolean })
-  isAgent: boolean = false;
+  get me() {
+    return this.author.id === this.user?.id;
+  }
 
   /**
    * Render the message using private-conversation layout.
    */
   @property({ type: Boolean })
   isPrivateChat: boolean = false;
-
-  /**
-   * Display name for the message author.
-   */
-  @property()
-  name: string = "";
-
-  /**
-   * Additional author info shown as tooltip text.
-   */
-  @property()
-  comment?: string = "";
-
-  /**
-   * Avatar URL for the message author.
-   */
-  @property()
-  avatar?: string = "";
 
   /**
    * ISO timestamp when the message was created.
@@ -206,7 +191,7 @@ export class WyMessage extends WeavySubAppComponent {
    * Members who have seen the message.
    */
   @property({ type: Array })
-  seenBy: MemberType[] = [];
+  seenBy: MemberDetailType[] = [];
 
   /**
    * Highlight the message bubble when true.
@@ -241,17 +226,19 @@ export class WyMessage extends WeavySubAppComponent {
    */
   private dispatchVote(optionId: number) {
     const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", {
-      detail: { optionId, parentId: this.messageId },
+      detail: { optionId, parentId: this.messageId, parentType: "messages" },
     });
     return this.dispatchEvent(event);
   }
+
+  private dispatchUserAction = dispatchUserAction.bind(this);
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("link")) {
       this.highlight = Boolean(
-        this.link && isEntityChainMatch(this.link, EntityTypeString.Message, { id: this.messageId })
+        this.link && isEntityChainMatch(this.link, EntityTypeString.Message, { id: this.messageId }),
       );
     }
   }
@@ -262,29 +249,43 @@ export class WyMessage extends WeavySubAppComponent {
 
     const dateFull = this.createdAt
       ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
-          new Date(this.createdAt)
+          new Date(this.createdAt),
         )
       : "";
     const timeShort = this.createdAt
       ? new Intl.DateTimeFormat(this.weavy?.locale, { timeStyle: "short" }).format(new Date(this.createdAt))
       : "";
 
-    const isOnlyEmojis = !this.annotations?.length && !this.attachments?.length && !this.embed && !this.meeting && !this.pollOptions?.length  && checkOnlyEmojis(this.text)
+    const isOnlyEmojis =
+      !this.annotations?.length &&
+      !this.attachments?.length &&
+      !this.embed &&
+      !this.meeting &&
+      !this.pollOptions?.length &&
+      checkOnlyEmojis(this.text);
 
     return html`
       <div
-        part=${partMap({ "wy-message": true, "wy-message-me": this.me, "wy-message-agent": this.isAgent, "wy-highlight": this.highlight })}
+        part=${partMap({
+          "wy-message": true,
+          "wy-message-me": this.me,
+          "wy-message-agent": Boolean(this.author.is_agent),
+          "wy-highlight": this.highlight,
+        })}
         ${ref(this.highlightRef)}
       >
         ${!this.me
           ? html`
               <div part="wy-message-author">
                 <wy-avatar
-                  .src=${this.avatar}
+                  .src=${this.author.avatar_url}
                   .size=${32}
-                  .name=${this.name}
-                  .description=${this.comment}
-                  .isAgent=${this.isAgent}
+                  .name=${this.author.name}
+                  .description=${this.author.comment}
+                  .isAgent=${this.author.is_agent}
+                  @click=${() => this.dispatchUserAction(this.author)}
+                  role="button"
+                  title="${this.author.name} ${this.author.comment}"
                 ></wy-avatar>
               </div>
             `
@@ -292,11 +293,18 @@ export class WyMessage extends WeavySubAppComponent {
 
         <div part="wy-message-content">
           <div part="wy-message-meta">
-            ${!this.isPrivateChat && !this.me ? html` <span>${this.name} · </span> ` : ""}
+            ${!this.isPrivateChat && !this.me
+              ? html`<span
+                  ><wy-button kind="link" @click=${() => this.dispatchUserAction(this.author)}
+                    >${this.author.name}</wy-button
+                  >
+                  ·
+                </span> `
+              : ""}
             <time datetime=${this.createdAt} title=${dateFull}>${timeShort}</time>
           </div>
 
-          <div part=${partMap({"wy-message-bubble": true, "wy-message-bubble-emoji": isOnlyEmojis})}>
+          <div part=${partMap({ "wy-message-bubble": true, "wy-message-bubble-emoji": isOnlyEmojis })}>
             ${this.messageId < 0
               ? html`<wy-skeleton .text=${this.text}></wy-skeleton>`
               : html`
@@ -310,10 +318,32 @@ export class WyMessage extends WeavySubAppComponent {
                       ></wy-image-grid>`
                     : nothing}
 
-
                   <!-- text -->
-                  ${this.html ? html`<div part=${partMap({"wy-content": true, "wy-message-bubble-section": true, "wy-content-emoji": isOnlyEmojis})}>${unsafeHTML(this.html)}</div>` : nothing}
-
+                  ${this.html
+                    ? html`<div
+                        part=${partMap({
+                          "wy-content": true,
+                          "wy-message-bubble-section": true,
+                          "wy-content-emoji": isOnlyEmojis,
+                        })}
+                        @click=${(e: MouseEvent) => {
+                          if (
+                            e.target instanceof HTMLElement &&
+                            e.target.matches('.wy-mention, [part~="wy-mention"]')
+                          ) {
+                            const uid =
+                              e.target.dataset.eid?.startsWith("u") && parseInt(e.target.dataset.eid.substring(1));
+                            if (uid) {
+                              this.dispatchUserAction({ id: uid, name: e.target.innerText });
+                            }
+                          }
+                        }}
+                        >${
+                          // eslint-disable-next-line lit-a11y/click-events-have-key-events
+                          unsafeHTML(this.html)
+                        }</div
+                      >`
+                    : nothing}
                   ${this.annotations && Boolean(this.annotations.length)
                     ? html`<wy-annotation-list
                         part="wy-message-bubble-section"
@@ -323,18 +353,15 @@ export class WyMessage extends WeavySubAppComponent {
                         }}
                       ></wy-annotation-list>`
                     : nothing}
-
                   ${this.pollOptions && Boolean(this.pollOptions.length)
                     ? html`<wy-poll
                         .pollOptions=${this.pollOptions}
                         @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
                       ></wy-poll>`
                     : nothing}
-
                   ${this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embed
                     ? html` <wy-embed .embed=${this.embed}></wy-embed> `
                     : nothing}
-
                   ${files && Boolean(files.length)
                     ? html`<wy-attachment-list
                         filled
@@ -345,9 +372,7 @@ export class WyMessage extends WeavySubAppComponent {
                         }}
                       ></wy-attachment-list>`
                     : nothing}
-
                   ${this.meeting ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>` : nothing}
-
                   ${this.componentFeatures?.allowsFeature(Feature.Reactions) && this.conversation
                     ? html`
                         ${keyed(
@@ -362,7 +387,7 @@ export class WyMessage extends WeavySubAppComponent {
                             parentType="apps"
                             entityId=${this.messageId}
                             entityType="messages"
-                          ></wy-reactions>`
+                          ></wy-reactions>`,
                         )}
                       `
                     : nothing}
@@ -374,7 +399,7 @@ export class WyMessage extends WeavySubAppComponent {
         ? html`<div part="wy-message-seenby">
             ${this.seenBy && this.seenBy.length
               ? html`
-                  ${this.seenBy.map((member: MemberType) => {
+                  ${this.seenBy.map((member: MemberDetailType) => {
                     const dateSeenFull = member.marked_at
                       ? new Intl.DateTimeFormat(this.weavy?.locale, {
                           dateStyle: "full",
@@ -401,7 +426,7 @@ export class WyMessage extends WeavySubAppComponent {
                 .files=${this.annotations}
                 .isAttachment=${true}
               ></wy-preview>
-            `
+            `,
           )
         : nothing}
       ${this.attachments
@@ -413,7 +438,7 @@ export class WyMessage extends WeavySubAppComponent {
                 .files=${[...images, ...files]}
                 .isAttachment=${true}
               ></wy-preview>
-            `
+            `,
           )
         : nothing}
     `;

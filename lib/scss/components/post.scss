@@ -2,11 +2,11 @@
 @use "../base/var";
 @use "../base/highlight";
 
-[part~="wy-posts"] {
+/*[part~="wy-posts"] {
   display: flex;
   flex-direction: column;
   gap: var.default(--wy-gap-xl);
-}
+}*/
 
 // post form
 [part~="wy-posts-header"] {

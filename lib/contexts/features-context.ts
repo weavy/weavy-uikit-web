@@ -32,7 +32,7 @@ export class ComponentFeatures implements ComponentFeaturePolicy {
         }
         return features;
       },
-      [] as FeatureListType
+      [] as FeatureListType,
     );
     this.#allowedFeatures = allowedFeatures ?? this.#defaultFeatures;
   }
@@ -76,36 +76,52 @@ export class ComponentFeatures implements ComponentFeaturePolicy {
   setAllowedFeatures(allowedFeatures?: string | null): FeatureListType {
     this.#allowedFeatures =
       typeof allowedFeatures === "string"
-        ? featureListFromString(allowedFeatures, this.#componentFeatures)
+        ? featureListFromString(allowedFeatures, this.#componentFeatures, this.#defaultFeatures)
         : this.#defaultFeatures;
 
     return this.#allowedFeatures;
   }
 
-  immutable() {
+  immutableCopy() {
     const componentFeaturesConfig = featureConfigFromList(this.#componentFeatures, this.#defaultFeatures);
     return new ComponentFeatures(componentFeaturesConfig, this.#allowedFeatures);
   }
 }
 
-export function featureListFromString(features: string, featureList: FeatureListType) {
-  return features.split(" ").filter((feature) => {
+/**
+ * Creates a list of allowed features based on the featureList as default.
+ * 
+ * @param features 
+ * @param availableFeatureList - An array of allowed features.
+ * @param defaultFeatureList - An array of default features.
+ * @returns An array of allowed features
+ */
+export function featureListFromString(features: string, availableFeatureList: FeatureListType, defaultFeatureList: FeatureListType) {
+  let includedFeatures: FeatureListType = [...defaultFeatureList];
+
+  features.split(" ").forEach((feature) => {
     if (feature) {
-      if (featureList.includes(feature as Feature)) {
-        return true;
+      if (feature.startsWith("-")) {
+        // Remove minus-feature
+        const removeFeature = feature.substring(1) as Feature;
+        includedFeatures = includedFeatures.filter((feature) => feature !== removeFeature);
+      } else if (availableFeatureList.includes(feature as Feature)) {
+        // Add feature if not present
+        if (!includedFeatures.includes(feature as Feature)) {
+          includedFeatures.push(feature as Feature);
+        }
       } else {
         console.warn("Unknown feature provided:", feature);
       }
     }
-    return false;
-  }) as FeatureListType;
+  });
+
+  return includedFeatures;
 }
 
 export function featureConfigFromList(featureList: FeatureListType, defaultFeatures?: FeatureListType) {
   defaultFeatures ??= featureList;
-  return Object.fromEntries(
-    featureList.map((feature) => [feature, defaultFeatures.includes(feature)])
-  )
+  return Object.fromEntries(featureList.map((feature) => [feature, defaultFeatures.includes(feature)]));
 }
 
 /** A list of all available features */

@@ -91,8 +91,8 @@ test("comment on a post", async ({ page }) => {
   await expect(post!.getByPlaceholder("Create a comment...")).toBeVisible();
 
   const commentTxt = uuidv4() + " - A comment by Playwright";
-  await post!.locator(".wy-comment-editor").getByRole("textbox").fill(commentTxt);
-  await post!.locator(".wy-comment-editor").getByTitle("Comment").getByRole("button").click();
+  await post!.locator(".wy-editor-comment").getByRole("textbox").fill(commentTxt);
+  await post!.locator(".wy-editor-comment").getByTitle("Comment").getByRole("button").click();
   await page.waitForTimeout(timeout);
 
   await expect(post!.locator("wy-comment-list")).toHaveCount(1);

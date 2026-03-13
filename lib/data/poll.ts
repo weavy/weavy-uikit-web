@@ -14,9 +14,10 @@ export type MutatePollVariables = {
 
 export type PollMutationType = MutationObserver<MsgType, Error, MutatePollVariables, PollMutationContextType>;
 
-export function getPollMutationOptions(weavy: WeavyType, appId: number, cacheKey: QueryKey) {
+export function getPollMutationOptions(weavy: WeavyType, appId: number | "feed", cacheKey: QueryKey) {
   const queryClient = weavy.queryClient;
-  const key: MutationKey = ["apps", appId, "polls"];
+
+  const key: MutationKey = ["polls", appId === "feed" ? "feed" : appId];
 
   const options = {
     mutationKey: key,
@@ -29,7 +30,7 @@ export function getPollMutationOptions(weavy: WeavyType, appId: number, cacheKey
       return await response.json() as MsgType;
     },
     onMutate: (variables: MutatePollVariables) => {    
-      updateCacheItems(queryClient, { queryKey: cacheKey }, variables.parentId, (item: PostType) => {                
+      updateCacheItems<PostType>(queryClient, { queryKey: cacheKey }, variables.parentId, (item) => {                
         if (item.options?.data) {
           item.options.data = item.options.data?.map((o: PollOptionType) => {            
             if (o.has_voted) {
@@ -53,6 +54,7 @@ export function getPollMutationOptions(weavy: WeavyType, appId: number, cacheKey
             return o;
           });
         }
+        return item
       });
       //updateCacheItems(queryClient, { queryKey: postsKey, exact: false }, variables.appId, (existingPost: PostType) => Object.assign(existingPost, { is_subscribed: variables.subscribe }));
       return <PollMutationContextType>{ id: variables.optionId };
@@ -73,7 +75,7 @@ export function getPollMutationOptions(weavy: WeavyType, appId: number, cacheKey
   return options;
 }
 
-export function getPollMutation(weavy: WeavyType, appId: number, cacheKey: QueryKey): PollMutationType {
+export function getPollMutation(weavy: WeavyType, appId: number | "feed", cacheKey: QueryKey): PollMutationType {
   return new MutationObserver(weavy.queryClient, getPollMutationOptions(weavy, appId, cacheKey));
 }
 

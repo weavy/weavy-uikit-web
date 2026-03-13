@@ -9,7 +9,7 @@
   pre[class*="language-"] {
     color: #{color.token(--wy-code-text)};
     font-family: var.default(--wy-font-monospace);
-    text-align: left;
+    text-align: start;
     white-space: pre-wrap;
     word-spacing: normal;
     word-break: normal;

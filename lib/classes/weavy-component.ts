@@ -13,9 +13,10 @@ import type { WeavyComponentContextProps } from "../types/component.types";
 
 /**
  * Base class for exposed/public weavy components. This class provides common external properties and internal data provided as contexts for sub components.
+ *
+ * @fires ready - When the component has rendered.
  */
 export class WeavyComponent extends LitElement implements WeavyComponentContextProps {
-
   // CONTEXT CONSUMERS
   /** @internal */
   protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyType }, this>;
@@ -90,6 +91,19 @@ export class WeavyComponent extends LitElement implements WeavyComponentContextP
   #resolveWeavy?: (weavy: WeavyType) => void;
   #whenWeavy = new Promise<WeavyType>((r) => {
     this.#resolveWeavy = r;
+  });
+
+  /**
+   * Resolves when the component has rendered first time.
+   *
+   * @returns {Promise<WeavyComponent>}
+   */
+  async whenReady() {
+    return await this.#whenReady;
+  }
+  #resolveReady?: (component: WeavyComponent) => void;
+  #whenReady = new Promise<WeavyComponent>((r) => {
+    this.#resolveReady = r;
   });
 
   // INTERNAL PROPERTIES
@@ -174,5 +188,16 @@ export class WeavyComponent extends LitElement implements WeavyComponentContextP
       }
       this.#resolveWeavy?.(this.weavy);
     }
+  }
+
+  protected override firstUpdated(changedProperties: PropertyValues): void {
+    super.firstUpdated(changedProperties);
+    this.#resolveReady?.(this);
+    this.dispatchEvent(
+      new CustomEvent("ready", {
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 }

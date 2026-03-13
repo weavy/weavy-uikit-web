@@ -46,3 +46,13 @@ export type NamedEvent = new <
     cancelable: TCancelable;
     composed: TComposed;
   };
+
+
+type CreateUnion<Max extends number, Accumulator extends number[] = []> = Accumulator["length"] extends Max
+  ? Accumulator[number]
+  : CreateUnion<Max, [...Accumulator, Accumulator["length"]]>;
+
+/**
+ * Defines an int number range.
+ */
+export type IntRange<Min extends number, Max extends number> = Exclude<CreateUnion<Max>, CreateUnion<Min>>;

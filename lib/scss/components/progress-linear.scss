@@ -33,7 +33,7 @@ $_indeterminate-duration: 2s;
   height: var(--_track-height);
   content-visibility: auto;
   contain: strict;
-  flex: 1;
+  flex: 1 0 auto;
 
   // Animations need to be in LTR. We support RTL by flipping the indicator
   // with scale(-1).

@@ -17,7 +17,7 @@ export function getNextPositionedChild(el: Element | null, includeSelf: boolean 
     }
 
     const computedStyle = getComputedStyle(el);
-    
+
     if (computedStyle.display === "none") {
       continue;
     }
@@ -39,12 +39,12 @@ export function getNextPositionedChild(el: Element | null, includeSelf: boolean 
         }
       }
     }
-   
+
     if (/absolute|sticky|fixed/.test(computedStyle.position) === false) {
       return el;
     }
 
-    // next    
+    // next
     el = el.nextElementSibling;
   }
   return null;
@@ -59,7 +59,7 @@ export function getNextPositionedChild(el: Element | null, includeSelf: boolean 
  */
 export function getScrollParent(element: HTMLElement, includeHidden: boolean = false): HTMLElement {
   throwOnDomNotAvailable();
-  
+
   if (element) {
     let style = getComputedStyle(element);
     const excludeStaticParent = style.position === "absolute";
@@ -71,8 +71,11 @@ export function getScrollParent(element: HTMLElement, includeHidden: boolean = f
 
     // Check parentElement for normal DOM traversing
     // Check parentNode and/or host to get passed a shadow DOM
-    for (let parent: Element | ParentNode | null = element; (parent = (parent.parentElement || parent.parentNode || (parent as unknown as ShadowRoot).host)); ) {
-      if(!(parent instanceof Element)) {
+    for (
+      let parent: Element | ParentNode | null = element;
+      (parent = parent.parentElement || parent.parentNode || (parent as unknown as ShadowRoot).host);
+    ) {
+      if (!(parent instanceof Element)) {
         continue;
       }
 
@@ -122,49 +125,74 @@ export function isParentAtBottom(element: HTMLElement, bottomThreshold: number =
 /**
  * Scrolls a parent scroll container to the bottom using a reference element in the scrollable area.
  *
+ * @param {string} direction - Scrolling towards "top" or "bottom".
  * @param {HTMLElement?} element - Element in the scroll area
  * @param {boolean} [smooth] - Use smooth scrolling instead of instant scrolling
  */
-export async function scrollParentToBottom(element?: HTMLElement, smooth: boolean = false) {
+export async function scrollParentTo(direction: "top" | "bottom", element?: HTMLElement, smooth: boolean = false) {
   if (element) {
     const area = getScrollParent(element);
-    //console.log("scrolling to bottom", {scrollTop: area.scrollTop, clientHeight: area.clientHeight, scrollHeight: area.scrollHeight}, (area.scrollTop + area.clientHeight) - area.scrollHeight);
+    //console.log("scrolling to", direction, {area, scrollTop: area.scrollTop, clientHeight: area.clientHeight, scrollHeight: area.scrollHeight}, (area.scrollTop + area.clientHeight) - area.scrollHeight);
 
     // Don't bother if the scroll already is correct
     // We need to account for scrollTop being a float by using 1px diff
-    if (Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) > 1) {
+    const needsScroll = direction === "top" ? area.scrollTop >= 1 : Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) > 1
+
+    if (needsScroll) {
+      const targetTop = direction === "top" ? 0 : area.scrollHeight;
+
       if (smooth) {
+        // Wait for other things to finish rendering before attempting to scroll smoothly
+        await new Promise((r) => requestAnimationFrame(r));
         area.scrollTo({
-          top: area.scrollHeight,
+          top: targetTop,
           left: 0,
           behavior: "smooth",
         });
       } else {
-        area.scrollTop = area.scrollHeight;
+        area.scrollTop = targetTop;
       }
     }
 
     // Check when the scroll is done
-    await new Promise((resolve) => {
-      let lastScrollTop = area.scrollTop;
-      const scrollCheck = () => {
-        if (smooth && area.scrollTop === lastScrollTop) {
-          //console.log("smooth scroll interrupted, performing unsmooth scroll instead");
-          area.scrollTop = area.scrollHeight;
-        }
-
-        lastScrollTop = area.scrollTop;
-
-        // We need to account for scrollTop being a float by using 1px diff
-        if (Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) > 1) {
-          requestAnimationFrame(scrollCheck);
-        } else {
-          resolve(undefined);
-        }
-      };
-
-      requestAnimationFrame(scrollCheck);
-    });
-    //console.log("scrolltoBottom done")
+    await whenScrolledTo(direction, area, smooth);
+    //console.log("scrollto", direction, "done")
   }
+}
+
+
+/**
+ * Waits for scroll to top/bottom to finish.
+ * @param direction - Scrolling towards "top" or "bottom".
+ * @param area - The area to check scroll on.
+ * @param smooth - If the scroll is expected to be smooth. Includes fixing for interrupted smooth scrolls.
+ */
+export async function whenScrolledTo(direction: "top" | "bottom", area: HTMLElement, smooth: boolean = false) {
+  await new Promise((resolve) => {
+    let lastScrollTop = area.scrollTop;
+    let failedAttempts = 0;
+    const scrollCheck = () => {
+      // We allow 1 failed attempts, which often is consumed on scroll start.
+      if (smooth && area.scrollTop === lastScrollTop && failedAttempts++ === 1) {
+        //console.log("smooth scroll interrupted, performing unsmooth scroll instead", failedAttempts);
+        area.scrollTop = direction === "bottom" ? area.scrollHeight : 0;
+      }
+
+      lastScrollTop = area.scrollTop;
+
+      // We need to account for scrollTop being a float by using 1px diff
+      const isScrolling =
+        direction === "top"
+          ? area.scrollTop >= 1
+          : Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) >= 1;
+
+      if (isScrolling) {
+        requestAnimationFrame(scrollCheck);
+      } else {
+        resolve(undefined);
+      }
+    };
+
+    requestAnimationFrame(scrollCheck);
+  });
 }

@@ -14,7 +14,7 @@ import {
   updateCacheItem,
   updateCacheItems,
 } from "../utils/query-cache";
-import { MemberType } from "../types/members.types";
+import { MemberDetailType } from "../types/members.types";
 
 export function getMessagesOptions(
   weavy: WeavyType,
@@ -94,14 +94,15 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
     },
     onSuccess: (data: MessageType) => {
       // update members and set marked_id for current user
-      updateCacheItems(
+      updateCacheItems<MemberDetailType>(
         weavy.queryClient,
         { queryKey: ["members", data.app.id] },
         data.created_by.id,
-        (item: MemberType) => {
-          item.marked_id = data.id;
-          item.marked_at = data.created_at;
-        }
+        (item) => ({
+          ...item,
+          marked_id: data.id,
+          marked_at: data.created_at,
+        })
       );
 
       const queryKey = ["messages", data.app.id];
@@ -111,31 +112,11 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
       const existing = getCacheItem<MessageType>(queryClient, queryKey, data.id);
       const pending = existing ? null : getPendingCacheItem<MessageType>(queryClient, queryKey, true);
 
-      // helper to replace or update a message
-      const replaceCacheItem = (id: number, data: MessageType) => {
-        updateCacheItem(queryClient, queryKey, id, (item: MessageType) => {
-          // REVIEW: Ändra updateCacheItem så man kan sätta ett "helt" objekt?
-          item.id = data.id;
-          item.app = data.app;
-          item.text = data.text;
-          item.plain = data.plain;
-          item.html = data.html;
-          item.embed = data.embed;
-          item.meeting = data.meeting;
-          item.attachments = data.attachments;
-          item.options = data.options;
-          item.created_at = data.created_at;
-          item.created_by = data.created_by;
-          item.updated_at = data.updated_at;
-          item.updated_by = data.updated_by;
-        });
-      };
-
       // update existing or pending message if found
       if (existing) {
-        replaceCacheItem(existing.id, data);
+        updateCacheItem<MessageType>(queryClient, queryKey, existing.id, () => data);
       } else if (pending) {
-        replaceCacheItem(pending.id, data);
+        updateCacheItem<MessageType>(queryClient, queryKey, pending.id, () => data);
       } else {
         // add message if not found
         addCacheItem(queryClient, queryKey, data);

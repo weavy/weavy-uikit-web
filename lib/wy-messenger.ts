@@ -27,6 +27,7 @@ import messengerCss from "./scss/components/messenger.scss";
 import scrollCss from "./scss/scroll.scss";
 import colorModesCss from "./scss/color-modes.scss";
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostFontCss from "./scss/host-font.scss";
 
 import "./components/ui/wy-button";
@@ -40,6 +41,7 @@ import { WyConversationNew } from "./components/wy-conversation-new";
 import "./components/wy-context-data";
 import "./components/wy-empty";
 import { WeavyTypeComponent } from "./classes/weavy-type-component";
+import "./components/wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -179,7 +181,7 @@ declare global {
 @customElement("wy-messenger")
 @localized()
 export class WyMessenger extends WeavyTypeComponent implements UnreadConversationsProps, ConversationFilterProps {
-  static override styles = [colorModesCss, scrollCss, messengerCss, hostBlockCss, hostFontCss];
+  static override styles = [colorModesCss, scrollCss, messengerCss, hostBlockCss, hostFillCss, hostFontCss];
 
   /** @internal */
   override componentFeatures = new ComponentFeatures(DefaultMessengerFeatures);
@@ -414,7 +416,7 @@ export class WyMessenger extends WeavyTypeComponent implements UnreadConversatio
               ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
               : nothing}
         </div>
-
+        <wy-user-card .listenTo=${this}></wy-user-card>
         <wy-context-data-progress></wy-context-data-progress>
       </div>
     `;

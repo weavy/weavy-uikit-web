@@ -214,9 +214,10 @@ export class WyConversationList extends WeavySubComponent {
         m.presence = data.indexOf(m.id) != -1 ? "active" : "away";
       });
       item.members.data = members;
+      return item;
     };
 
-    updateCacheItems(
+    updateCacheItems<AppType>(
       this.weavy.queryClient,
       { queryKey: ["apps", "list"], exact: false },
       undefined,

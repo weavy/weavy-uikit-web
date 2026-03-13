@@ -7,7 +7,7 @@
     content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content" />
   <link rel="modulepreload" href="/locales/sv-SE.ts" />
   <script type="module" src="/lib"></script>
-  <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
+  <script type="module" src="/utils/tanstack-dev-tools.ts"></script>
   <style>
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
@@ -18,7 +18,7 @@
       background-color: #000;
     }
 
-    wy-posts {
+    wy-feed {
       max-width: 600px;
       margin: 40px auto;
     }
@@ -27,6 +27,7 @@
 
 <body>
   <wy-context url="%WEAVY_URL%" tokenUrl="/api/token">
+    <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
     <div id="color-menu" style="display: flex; gap: 8px; justify-content: space-between;">
       <div>
         <button class="color" value="red">Red</button>
@@ -38,22 +39,21 @@
         <button class="mode" value="dark">Dark</button>
       </div>
     </div>
-    <wy-posts uid="acme-posts" notifications="none"></wy-posts>
-    <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>
+    <wy-feed uid="acme-posts" notifications="none"></wy-feed>
   </wy-context>
   <script>
     const searchParams = new URLSearchParams(window.location.search);
-    const posts = document.querySelector("wy-posts");
+    const feed = document.querySelector("wy-feed");
     const data = [
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
     ];
-    posts.contextualData = data;
+    feed.contextualData = data;
 
     const appUID = searchParams.get("appUID");
     if (appUID) {
-      posts.setAttribute("uid", appUID);
+      feed.setAttribute("uid", appUID);
     }
-    posts.addEventListener("wy-preview-open", (e) => {
+    feed.addEventListener("wy-preview-open", (e) => {
       if (window.top !== window.self) {
         console.log("requesting external preview", e.detail.fileId, e.detail.tab, e.detail.app);
         window.top.postMessage({
@@ -64,15 +64,15 @@
       }
     });
 
-    posts.addEventListener("wy-app", (e) => {
+    feed.addEventListener("wy-app", (e) => {
       console.log("wy-app", e.detail);
     });
 
-    posts.addEventListener("wy-link", (e) => {
+    feed.addEventListener("wy-link", (e) => {
       console.log("wy-link", e.detail);
     });
 
-    posts.addEventListener("wy-action", (e) => {
+    feed.addEventListener("wy-action", (e) => {
       if (e.detail.action) {
         alert("You selected: " + e.detail.action);
       } else {

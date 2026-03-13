@@ -21,6 +21,7 @@ import { getFlatInfiniteResultData } from "../utils/query-cache";
 import { NamedEvent } from "../types/generic.types";
 import { Feature } from "../types/features.types";
 import { partMap } from "../utils/directives/shadow-part-map";
+import { onlyValues } from "../utils/data";
 
 import previewCss from "../scss/components/preview.scss";
 import sidebarCss from "../scss/components/sidebar.scss";
@@ -40,6 +41,7 @@ import "./wy-preview-item";
 import "./wy-file-menu";
 import "./wy-comment-list";
 import "./wy-file-versions";
+import "./wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -703,7 +705,7 @@ export class WyPreview extends WeavySubAppComponent {
     }
 
     // Make a short list so we can use repeat
-    const previewFiles = [this.previousFile, this.currentVersionFile, this.nextFile].filter((x) => x);
+    const previewFiles = [this.previousFile, this.currentVersionFile, this.nextFile].filter(onlyValues);
 
     if (this.commentsOpen && this.versionsOpen) {
       // both can't be open
@@ -892,6 +894,7 @@ export class WyPreview extends WeavySubAppComponent {
               </div>
             </div> `
           : nothing}
+      <wy-user-card .listenTo=${this}></wy-user-card>
       </wy-overlay>
     `;
   }

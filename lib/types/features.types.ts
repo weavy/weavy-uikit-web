@@ -35,6 +35,10 @@ export enum Feature {
    */
   Embeds = "embeds",
   /**
+   * Possibility to follow or unfollow users. 
+   */
+  Follow = "follow",
+  /**
    * Google Meet video meetings.
    */
   GoogleMeet = "google_meet",

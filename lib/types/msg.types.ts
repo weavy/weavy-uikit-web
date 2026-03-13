@@ -12,7 +12,7 @@ export type MsgType = {
   /** The id of the entity */
   id: number;
   /** The app where the message is located */
-  app: AppRef;
+  app?: AppRef;
   /** The parent object of the message (if any). */
   parent?: EntityType;
   /** The message text. */

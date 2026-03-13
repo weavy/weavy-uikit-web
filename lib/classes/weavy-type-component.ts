@@ -18,7 +18,7 @@ import {
   AgentAppTypeStringMapping,
 } from "../types/app.types";
 import { LinkContext } from "../contexts/link-context";
-import { getStorage } from "../utils/data";
+import { getStorage, onlyValues } from "../utils/data";
 import type { WyLinkEventType, WyNotificationEventType } from "../types/notifications.events";
 import { asArray, findAsyncSequential, objectAsIterable } from "../utils/objects";
 import { ComponentFeatures } from "../contexts/features-context";
@@ -265,7 +265,8 @@ export class WeavyTypeComponent
   protected componentTypes?: AppTypeGuid[];
 
   /**
-   * Config for only enabling specific features in the weavy component.
+   * Config for enabling/disabling specific features in the weavy component.
+   * Prefix a feature with minus to disable it.
    */
   @property()
   features?: string;
@@ -540,7 +541,7 @@ export class WeavyTypeComponent
 
       if (this.componentFeatures instanceof ComponentFeatures) {
         // Immutable update
-        this.componentFeatures = this.componentFeatures.immutable();
+        this.componentFeatures = this.componentFeatures.immutableCopy();
       }
     }
 
@@ -622,7 +623,11 @@ export class WeavyTypeComponent
             );
 
             if (!existingUpload) {
-              await this.#uploadContextDataMutation.mutate({ file: dataRef.item });
+              try {
+                await this.#uploadContextDataMutation.mutate({ file: dataRef.item });
+              } catch {
+                console.warn("Could not upload context data.");
+              }
             }
           }
         }
@@ -635,7 +640,7 @@ export class WeavyTypeComponent
         const contextDataBlobs =
           (contextDataMutationResults
             ?.map((mutation) => mutation.data?.id)
-            .filter((x) => x)
+            .filter(onlyValues)
             .reverse() as number[] | undefined) ?? [];
 
         if (!currentlyUploadingContextData) {

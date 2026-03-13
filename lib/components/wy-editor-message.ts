@@ -6,14 +6,14 @@ import { Feature } from "../types/features.types";
 
 import messageEditorCss from "../scss/components/editor-message.scss";
 
-import { WyEditor } from "./wy-editor";
+import { WyEditorMsg } from "./wy-editor-msg";
 import "./ui/wy-dropdown";
 import "./ui/wy-icon";
 import "./ui/wy-button";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wy-message-editor": WyMessageEditor;
+    "wy-editor-message": WyEditorMessage;
   }
 }
 
@@ -27,19 +27,18 @@ declare global {
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * - [`<wy-button>`](./ui/wy-button.ts)
  *
- * @csspart wy-message-editor-inputs - Container for the editor inputs and add menu
- * @csspart wy-message-editor-text - Wrapper for the editor text area
+ * @csspart wy-editor-message-inputs - Container for the editor inputs and add menu
+ * @csspart wy-editor-message-text - Wrapper for the editor text area
  */
-@customElement("wy-message-editor")
+@customElement("wy-editor-message")
 @localized()
-export class WyMessageEditor extends WyEditor {
-
-  static override styles = [...WyEditor.styles, messageEditorCss];
+export class WyEditorMessage extends WyEditorMsg {
+  static override styles = [...WyEditorMsg.styles, messageEditorCss];
 
   constructor() {
     super();
     this.editorType = "messages";
-    this.editorClass = "wy-message-editor";
+    this.editorClass = "wy-editor-message";
   }
 
   /**
@@ -50,9 +49,7 @@ export class WyMessageEditor extends WyEditor {
    * @internal
    */
   protected override renderTopSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
-    return [
-      this.renderLists()
-    ];
+    return [this.renderLists()];
   }
 
   /**
@@ -63,7 +60,7 @@ export class WyMessageEditor extends WyEditor {
    * @internal
    */
   protected override renderMiddleSlot() {
-    return html` <div part="wy-message-editor-inputs">
+    return html` <div part="wy-editor-message-inputs">
       <!-- Add -->
       ${this.componentFeatures?.allowsAnyFeature(
         Feature.Attachments,
@@ -72,12 +69,12 @@ export class WyMessageEditor extends WyEditor {
         Feature.Meetings,
         Feature.ZoomMeetings,
         Feature.GoogleMeet,
-        Feature.MicrosoftTeams
+        Feature.MicrosoftTeams,
       )
         ? html`<wy-dropdown icon="plus" directionY="up" ?disabled=${this.disabled}>
             ${this.componentFeatures?.allowsFeature(Feature.Attachments)
               ? html`
-                  <wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
+                  <wy-dropdown-item @click=${() => this.openFileInput()} title=${msg("From device")}>
                     <wy-icon name="attachment"></wy-icon>
                     <span>${msg("From device")}</span>
                   </wy-dropdown-item>
@@ -88,7 +85,7 @@ export class WyMessageEditor extends WyEditor {
                     @change=${(e: Event) =>
                       this.handleUploadFiles(
                         Array.from((e.target as HTMLInputElement).files || []),
-                        e.target as HTMLInputElement
+                        e.target as HTMLInputElement,
                       )}
                     multiple
                     hidden
@@ -98,7 +95,7 @@ export class WyMessageEditor extends WyEditor {
               : nothing}
             ${this.componentFeatures?.allowsFeature(Feature.CloudFiles)
               ? html`
-                  <wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
+                  <wy-dropdown-item @click=${() => this.openCloudFiles()} title=${msg("From cloud")}>
                     <wy-icon name="cloud"></wy-icon>
                     <span>${msg("From cloud")}</span>
                   </wy-dropdown-item>
@@ -106,7 +103,7 @@ export class WyMessageEditor extends WyEditor {
               : nothing}
             ${this.componentFeatures?.allowsFeature(Feature.Polls)
               ? html`
-                  <wy-dropdown-item @click=${() => this.openPolls()} title=${msg("Poll")}>
+                  <wy-dropdown-item @click=${() => this.togglePolls()} title=${msg("Poll")}>
                     <wy-icon name="poll"></wy-icon>
                     <span>${msg("Poll")}</span>
                   </wy-dropdown-item>
@@ -143,7 +140,8 @@ export class WyMessageEditor extends WyEditor {
         : nothing}
 
       <!-- Input -->
-      <div part="wy-message-editor-text" ${ref(this.editorRef)}> ${this.renderEditorDummy()} </div>
+
+     ${this.renderEditor()}
 
       <!-- Button -->
       <wy-button

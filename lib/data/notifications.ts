@@ -1,8 +1,4 @@
-import {
-  InfiniteQueryObserverOptions,
-  InfiniteData,
-  MutationObserver,
-} from "@tanstack/query-core";
+import { InfiniteQueryObserverOptions, InfiniteData, MutationObserver } from "@tanstack/query-core";
 
 import { type WeavyType } from "../client/weavy";
 import { NotificationType, NotificationTypes, NotificationsResultType } from "../types/notifications.types";
@@ -25,7 +21,7 @@ export function getNotificationsOptions(
   weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
-  options: object = {}
+  options: object = {},
 ): InfiniteQueryObserverOptions<NotificationsResultType, Error, InfiniteData<NotificationsResultType>> {
   return {
     ...options,
@@ -40,7 +36,7 @@ export function getNotificationsOptions(
       const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
       const response = await weavy.fetch(url);
-      const result = await response.json() as NotificationsResultType;
+      const result = (await response.json()) as NotificationsResultType;
       result.data = result.data || [];
       return result;
     },
@@ -56,7 +52,7 @@ export function getNotificationsOptions(
 export function getLastNotification(
   weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
-  appIdOrUid?: string | number
+  appIdOrUid?: string | number,
 ) {
   const notificationsData = weavy.queryClient
     .getQueryData<InfiniteData<NotificationsResultType>>(["notifications", "list", appIdOrUid, type])
@@ -86,8 +82,8 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
         undefined,
         (item) => {
           changedNotifications.push({ id: item.id, is_unread: item.is_unread });
-          item.is_unread = false;
-        }
+          return { ...item, is_unread: false };
+        },
       );
 
       if (appIdOrUid && changedNotifications.length) {
@@ -95,9 +91,10 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
           weavy.queryClient,
           { queryKey: ["notifications", "list"], exact: false },
           (item) => Boolean(changedNotifications.find((n) => n.id === item.id && item.is_unread)),
-          (item) => {
-            item.is_unread = false;
-          }
+          (item) => ({
+            ...item,
+            is_unread: false,
+          }),
         );
       }
 
@@ -105,7 +102,7 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
         updateCacheItemsCount<NotificationsResultType>(
           weavy.queryClient,
           { queryKey: ["notifications", "unread"], exact: false },
-          () => 0
+          () => 0,
         );
       }
 
@@ -115,7 +112,7 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
           queryKey: appIdOrUid ? ["apps", "notifications", "unread", appIdOrUid] : ["apps", "notifications", "unread"],
           exact: false,
         },
-        () => 0
+        () => 0,
       );
 
       return { changedNotifications } as MutateMarkNotificationContext;
@@ -158,22 +155,23 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
           if (Boolean(item.is_unread) === variables.markAsRead) {
             itemsChanged.set(item.id, item);
           }
-          item.is_unread = !variables.markAsRead;
-        }
+          return { ...item, is_unread: !variables.markAsRead };
+        },
       );
 
       if (itemsChanged.size) {
         updateCacheItemsCount<NotificationsResultType>(
           weavy.queryClient,
-          { 
-            queryKey: ["notifications", "unread"], 
-              predicate: (query) =>{
-                  const typeMatch = query.queryKey[3] === "" || query.queryKey[3] === itemsChanged.values().next().value?.type;
-                  return typeMatch
-              },
-            exact: false
+          {
+            queryKey: ["notifications", "unread"],
+            predicate: (query) => {
+              const typeMatch =
+                query.queryKey[3] === "" || query.queryKey[3] === itemsChanged.values().next().value?.type;
+              return typeMatch;
+            },
+            exact: false,
           },
-          (count) => Math.max(0, count + (variables.markAsRead ? -1 : 1))
+          (count) => Math.max(0, count + (variables.markAsRead ? -1 : 1)),
         );
 
         itemsChanged.forEach((item) => {
@@ -182,14 +180,15 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
               weavy.queryClient,
               {
                 queryKey: ["apps", "notifications", "unread"],
-                predicate: (query) =>{
-                  const appIdOrUidMatch = query.queryKey[3] === item.link?.app?.id || query.queryKey[3] === item.link?.app?.uid;
+                predicate: (query) => {
+                  const appIdOrUidMatch =
+                    query.queryKey[3] === item.link?.app?.id || query.queryKey[3] === item.link?.app?.uid;
                   const typeMatch = query.queryKey[4] === "" || query.queryKey[4] === item.type;
-                  return appIdOrUidMatch && typeMatch
+                  return appIdOrUidMatch && typeMatch;
                 },
                 exact: false,
               },
-              (count) => Math.max(0, count + (variables.markAsRead ? -1 : 1))
+              (count) => Math.max(0, count + (variables.markAsRead ? -1 : 1)),
             );
           }
         });
@@ -200,9 +199,10 @@ export function getMarkNotificationMutationOptions(weavy: WeavyType) {
         weavy.queryClient,
         { queryKey: ["notifications", "list"], exact: false },
         variables.notificationId,
-        (item) => {
-          item.is_unread = variables.markAsRead;
-        }
+        (item) => ({
+          ...item,
+          is_unread: variables.markAsRead,
+        }),
       );
 
       await weavy.queryClient.invalidateQueries({ queryKey: ["notifications", "unread"], exact: false });
@@ -221,7 +221,7 @@ export function getUnreadOptions(
   weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
-  options: object = {}
+  options: object = {},
 ) {
   const queryParams = new URLSearchParams({
     type: type,
@@ -231,7 +231,9 @@ export function getUnreadOptions(
 
   const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
-  const queryKey = appIdOrUid ? ["apps", "notifications", "unread", appIdOrUid, type] : ["notifications", "unread", type];
+  const queryKey = appIdOrUid
+    ? ["apps", "notifications", "unread", appIdOrUid, type]
+    : ["notifications", "unread", type];
 
   return getApiOptions<NotificationsResultType>(weavy, queryKey, url, options);
 }

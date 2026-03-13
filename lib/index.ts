@@ -11,15 +11,20 @@ export * from "./classes/weavy-optional-app-component";
 export * from "./classes/weavy-sub-component";
 export * from "./classes/weavy-sub-app-component";
 
-// WyContext should be first for optimal loading when used as a provider.
+/*
+ * WyContext should be first for optimal loading when used as a provider.
+ * IMPORTANT: Don't forget to add Weavy components in ./scss/color-modes.scss
+ */ 
 export * from "./wy-context";
 export * from "./wy-component";
 
 export * from "./wy-chat";
 export * from "./wy-comments";
 export * from "./wy-copilot";
-export * from "./wy-files";
+export * from "./wy-feed";
 export * from "./wy-posts";
+export * from "./wy-post-editor";
+export * from "./wy-files";
 
 export * from "./wy-notifications";
 export * from "./wy-notification-badge";

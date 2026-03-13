@@ -1,11 +1,12 @@
 import { WeavyType } from "../contexts";
 import { WeavyComponentSettingsType } from "../contexts/settings-context";
-import { AppType, LinkType } from "./app.types";
+import { AppListType, AppType, AppUidType, LinkType } from "./app.types";
 import { ContextDataBlobsType, ContextIdType } from "./context.types";
 import { EnterToSend } from "./editor.types";
 import { ComponentFeaturePolicy } from "./features.types";
 import { AnnotationsAppearanceType } from "./msg.types";
 import { UserType } from "./users.types";
+import type { LitElement } from "lit";
 
 export interface WeavyComponentSettingProps {
   /**
@@ -70,6 +71,13 @@ export interface WeavyComponentContextProps {
    * @returns {Promise<WeavyType>}
    */
   whenWeavy(): Promise<WeavyType>;
+
+  /**
+   * Resolves when the component has rendered first time.
+   *
+   * @returns {Promise<WeavyComponent | WeavySubComponent>}
+   */
+  whenReady(): Promise<LitElement & WeavyComponentContextProps>;
 }
 
 export interface WeavyTypeComponentContextProps {
@@ -138,16 +146,45 @@ export interface WeavyTypeComponentContextProps {
   whenSettings(): Promise<WeavyComponentSettingsType>;
 }
 
+export interface WeavyAppComponentProps {
+  /**
+   * One or multiple unique app identifiers or app id:s. When a single uid is provided, the app gets automatically created on the server upon first request.  
+   */
+  uid: string | number | null | undefined;
+
+  /**
+   * An array of parsed uids from the `uid` property.
+   */
+  readonly uids: AppUidType[]
+
+  /** 
+   * The currently selected app uid when multiple `uid` is provided. Defaults to the first uid from the `uid` property.
+   */
+  currentUid: AppUidType | null | undefined;
+}
+
 export interface WeavyAppComponentContextProps {
   /**
    * The current app data.
    */
   app: AppType | undefined;
-
+  
   /**
    * Resolves when app data is available.
    *
    * @returns {Promise<AppType>}
    */
   whenApp(): Promise<AppType>;
+
+  /**
+   * A list of data for all the apps specified by the `uid` property.
+   */
+  apps: AppListType | undefined;
+
+  /**
+   * Resolves when apps data is available.
+   *
+   * @returns {Promise<AppListType>}
+   */
+  whenApps(): Promise<AppListType>;
 }

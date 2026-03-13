@@ -60,7 +60,7 @@ export class WyComponent extends WeavyAppComponent {
   @property({
     converter: {
       fromAttribute(value, _type) {
-        const featureList = typeof value === "string" ? featureListFromString(value, allFeatures) : allFeatures;
+        const featureList = typeof value === "string" ? featureListFromString(value, allFeatures, allFeatures) : allFeatures;
         return new ComponentFeatures(featureConfigFromList(featureList));
       },
     },

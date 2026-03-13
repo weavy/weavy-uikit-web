@@ -41,6 +41,7 @@ import { WyConversationList } from "./components/wy-conversation-list";
 import { WyConversationNew } from "./components/wy-conversation-new";
 import "./components/wy-context-data";
 import "./components/wy-empty";
+import "./components/wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -462,7 +463,7 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
                   ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`
                   : nothing}
               </div>
-
+              <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
               <wy-context-data-progress></wy-context-data-progress>
             </div>
           </wy-overlay> `

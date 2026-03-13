@@ -7,9 +7,9 @@ import { InfiniteScrollController } from "../controllers/infinite-scroll-control
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import type { UserType } from "../types/users.types";
 import { InfiniteData } from "@tanstack/query-core";
-import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
+import { getFlatInfiniteResultData } from "../utils/query-cache";
 import { localized, msg } from "@lit/localize";
-import type { RealtimeNotificationEventType, RealtimePresenceEventType } from "../types/realtime.types";
+import type { RealtimeNotificationEventType } from "../types/realtime.types";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { type NotificationType, NotificationTypes, type NotificationsResultType } from "../types/notifications.types";
@@ -174,28 +174,6 @@ export class WyNotificationList extends WeavySubAppComponent {
   };
 
   /**
-   * Update actor presence based on realtime status changes.
-   *
-   * @internal
-   */
-  private handlePresenceChange = (data: RealtimePresenceEventType) => {
-    if (!this.weavy) {
-      return;
-    }
-
-    // payload returns a single id as a string instead of number[]
-    if (!Array.isArray(data)) {
-      data = [parseInt(data)];
-    }
-
-    updateCacheItem<NotificationType>(this.weavy.queryClient, ["notifications", "list"], undefined, (item) => {
-      const member = item.actor;
-      member.presence = data.indexOf(member.id) != -1 ? "active" : "away";
-      item.actor = member;
-    });
-  };
-
-  /**
    * Active realtime unsubscribe callback, if any.
    *
    * @internal
@@ -220,14 +198,12 @@ export class WyNotificationList extends WeavySubAppComponent {
       this.#unsubscribeToRealtime?.();
 
       // realtime
-      void this.weavy.subscribe(null, "online", this.handlePresenceChange);
       void this.weavy.subscribe(null, "notification_created", this.handleRefresh);
       void this.weavy.subscribe(null, "notification_updated", this.handleRefresh);
       //void this.weavy.subscribe(null, "notification_deleted", this.handleRefresh);
       void this.weavy.subscribe(null, "notifications_marked", this.handleRefresh);
 
       this.#unsubscribeToRealtime = () => {
-        void this.weavy?.unsubscribe(null, "online", this.handlePresenceChange);
         void this.weavy?.unsubscribe(null, "notification_created", this.handleRefresh);
         void this.weavy?.unsubscribe(null, "notification_updated", this.handleRefresh);
         //void this.weavy?.unsubscribe(null, "notification_deleted", this.handleRefresh);
@@ -354,7 +330,7 @@ export class WyNotificationHeader extends LitElement {
   activeFilter: NotificationTypes = NotificationTypes.All;
 
   /**
-   * Any nodes assigned to the `header` slot.
+   * Any nodes assigned to the default slot.
    *
    * @internal
    */

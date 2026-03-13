@@ -148,6 +148,11 @@ export function S4() {
   return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
 }
 
+/**
+ * Gets a readable stream for text from a fetch response.
+ * 
+ * @param response - Fetch API Response
+ */
 export function getTextStreamFromResponse(response: Response) {
   if (response && response.ok && response.body) {
     const reader = response.body.getReader();
@@ -174,6 +179,11 @@ export function getTextStreamFromResponse(response: Response) {
   }
 }
 
+/**
+ * Checks tha availability of a given storage and returns it when available.
+ * 
+ * @param type - Which kind of storage to get
+ */
 export function getStorage(type: "sessionStorage" | "localStorage" | "sharedStorage") {
   let storage: Storage | undefined;
   try {
@@ -195,4 +205,11 @@ export function getStorage(type: "sessionStorage" | "localStorage" | "sharedStor
     }
   }
   return storage;
+}
+
+/**
+ * Predicate to filter out any falsy values.
+ */
+export function onlyValues<TValue = unknown>(value: unknown): value is TValue {
+  return Boolean(value);
 }

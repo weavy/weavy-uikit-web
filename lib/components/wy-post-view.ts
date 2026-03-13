@@ -4,13 +4,8 @@ import { property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import type { WyPreview } from "./wy-preview";
-import type { ReactableType } from "../types/reactions.types";
-import type { MemberType } from "../types/members.types";
-import type { MeetingType } from "../types/meetings.types";
 import type { FileType } from "../types/files.types";
 import type { FileOpenEventType } from "../types/files.events";
-import type { EmbedType } from "../types/embeds.types";
-import { PollOptionType } from "../types/polls.types";
 import { localized, msg, str } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
@@ -22,7 +17,10 @@ import { Feature } from "../types/features.types";
 import { PostEditEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
 import { NamedEvent } from "../types/generic.types";
 import { PollVoteEventType } from "../types/polls.events";
+import { dispatchUserAction } from "../utils/users";
+import type { PostType } from "../types/posts.types";
 
+import rebootCss from "../scss/reboot.scss";
 import postCss from "../scss/components/post.scss";
 import highlightCss from "../scss/base/_highlight.scss";
 import contentCss from "../scss/components/content.scss";
@@ -86,105 +84,24 @@ declare global {
 @customElement("wy-post-view")
 @localized()
 export class WyPostView extends WeavySubAppComponent {
-  static override styles = [postCss, highlightCss, contentCss, placeholderCss, messagesCss, textCss, hostContentsCss];
+  static override styles = [
+    rebootCss,
+    postCss,
+    highlightCss,
+    contentCss,
+    placeholderCss,
+    messagesCss,
+    textCss,
+    hostContentsCss,
+  ];
 
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * Identifier of the post being rendered.
-   */
-  @property({ type: Number })
-  postId!: number;
-
-  /**
-   * Author metadata for the post.
+   * Post data.
    */
   @property({ attribute: false })
-  createdBy!: MemberType;
-
-  /**
-   * ISO timestamp indicating when the post was created.
-   */
-  @property()
-  createdAt: string = "";
-
-  /**
-   * ISO timestamp for the last modification, if available.
-   */
-  @property()
-  modifiedAt: string | undefined = undefined;
-
-  /**
-   * Indicates whether the current user subscribes to the post.
-   */
-  @property({ type: Boolean })
-  isSubscribed: boolean = false;
-
-  /**
-   * True when the post has been moved to trash.
-   */
-  @property({ type: Boolean })
-  isTrashed: boolean = false;
-
-  /**
-   * HTML content of the post body.
-   */
-  @property()
-  html: string = "";
-
-  /**
-   * Plain-text representation of the post content.
-   */
-  @property()
-  text: string = "";
-
-  /**
-   * Annotation files attached to the post.
-   */
-  @property({ type: Array })
-  annotations: FileType[] = [];
-
-  /**
-   * Attachment files associated with the post.
-   */
-  @property({ type: Array })
-  attachments: FileType[] = [];
-
-  /**
-   * Poll options configured on the post.
-   */
-  @property({ type: Array })
-  pollOptions: PollOptionType[] | undefined = [];
-
-  /**
-   * Meeting information attached to the post, if any.
-   */
-  @property({ attribute: false })
-  meeting?: MeetingType;
-
-  /**
-   * Embed metadata rendered inside the post.
-   */
-  @property({ attribute: false })
-  embed?: EmbedType;
-
-  /**
-   * Reactions applied to the post.
-   */
-  @property({ type: Array })
-  reactions?: ReactableType[] = [];
-
-  /**
-   * Number of comments associated with the post.
-   */
-  @property({ attribute: false })
-  commentCount: number = 0;
-
-  /**
-   * Members who have seen the post.
-   */
-  @property({ type: Array })
-  seenBy: MemberType[] = [];
+  post!: PostType;
 
   /**
    * Highlight the post when it matches the active deep link.
@@ -245,7 +162,7 @@ export class WyPostView extends WeavySubAppComponent {
    * @returns {boolean} True if the event was not canceled.
    */
   private dispatchVote(optionId: number) {
-    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId } });
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentType: "posts" } });
     return this.dispatchEvent(event);
   }
 
@@ -258,7 +175,7 @@ export class WyPostView extends WeavySubAppComponent {
    */
   private dispatchSubscribe(subscribe: boolean) {
     const event: PostSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", {
-      detail: { id: this.postId, subscribe },
+      detail: { id: this.post.id, subscribe },
     });
     return this.dispatchEvent(event);
   }
@@ -270,7 +187,7 @@ export class WyPostView extends WeavySubAppComponent {
    * @returns {boolean} True if the event was not canceled.
    */
   private dispatchTrash() {
-    const event: PostTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.postId } });
+    const event: PostTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { id: this.post.id } });
     return this.dispatchEvent(event);
   }
 
@@ -285,6 +202,8 @@ export class WyPostView extends WeavySubAppComponent {
     const event: PostEditEventType = new (CustomEvent as NamedEvent)("edit", { detail: { edit: edit } });
     return this.dispatchEvent(event);
   }
+
+  private dispatchUserAction = dispatchUserAction.bind(this);
 
   /**
    * Toggle comment visibility and ensure comment data is loaded.
@@ -302,9 +221,10 @@ export class WyPostView extends WeavySubAppComponent {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("link")) {
-      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Post, { id: this.postId }));
+      this.highlight = Boolean(this.link && isEntityChainMatch(this.link, EntityTypeString.Post, { id: this.post.id }));
       this.isCommentLinked = Boolean(
-        this.link && hasEntityChildType(this.link, EntityTypeString.Post, { id: this.postId }, EntityTypeString.Comment)
+        this.link &&
+        hasEntityChildType(this.link, EntityTypeString.Post, { id: this.post.id }, EntityTypeString.Comment),
       );
     }
 
@@ -315,47 +235,53 @@ export class WyPostView extends WeavySubAppComponent {
   }
 
   override render() {
-    const images = this.attachments?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url);
-    const files = this.attachments?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url);
+    const images = this.post.attachments?.data?.filter((a: FileType) => a.kind === "image" && a.thumbnail_url) ?? [];
+    const files = this.post.attachments?.data?.filter((a: FileType) => a.kind !== "image" || !a.thumbnail_url) ?? [];
+    const annotations = this.post.annotations?.data;
+    const pollOptions = this.post.options?.data;
+    const commentCount = this.post.comments?.count || 0;
+    const reactions = this.post.reactions?.data;
+
+    const { embed, meeting } = this.post;
 
     const dateFull = new Intl.DateTimeFormat(this.weavy?.locale, {
       dateStyle: "full",
       timeStyle: "short",
-    }).format(new Date(this.createdAt));
-    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.createdAt));
+    }).format(new Date(this.post.created_at));
+    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.post.created_at));
     const modifiedDateFull =
-      this.modifiedAt && this.weavy
+      this.post.updated_at && this.weavy
         ? new Intl.DateTimeFormat(this.weavy.locale, { dateStyle: "full", timeStyle: "short" }).format(
-            new Date(this.modifiedAt)
+            new Date(this.post.updated_at),
           )
         : "";
 
-    const hasImages = Boolean(images && images.length);
-    const hasText = Boolean(this.html);
-    const hasAnnotations = Boolean(this.annotations && this.annotations.length);
-    const hasPoll = Boolean(this.pollOptions && this.pollOptions.length);
-    const hasEmbed = Boolean(this.componentFeatures?.allowsFeature(Feature.Embeds) && this.embed);
+    const hasImages = images && Boolean(images.length);
+    const hasText = this.post.html && Boolean(this.post.html);
+    const hasAnnotations = annotations && Boolean(annotations.length);
+    const hasPoll = pollOptions && Boolean(pollOptions.length);
+    const hasEmbed = embed && this.componentFeatures?.allowsFeature(Feature.Embeds);
     const hasFiles = files && Boolean(files.length);
-    const hasMeeting = Boolean(this.meeting);
+    const hasMeeting = meeting && Boolean(meeting);
 
     const hasBody = hasText || hasAnnotations || hasPoll || hasEmbed || hasFiles || hasMeeting;
 
-    return this.postId < 0
+    return this.post.id < 0
       ? html`
           <div part="wy-post">
-            <wy-item part="wy-post-header" align="top" size="md" noPadding>
+            <wy-item slot="button" part="wy-post-header" align="top" size="md" noPadding>
               <wy-avatar
                 slot="image"
-                .src="${this.createdBy.avatar_url}"
-                .isAgent=${this.createdBy.is_agent}
+                .src="${this.post.created_by.avatar_url}"
+                .isAgent=${this.post.created_by.is_agent}
                 .size=${48}
-                .name=${this.createdBy.name}
+                .name=${this.post.created_by.name}
               ></wy-avatar>
-              <span slot="title" part="wy-placeholder">${this.createdBy.name}</span>
+              <span slot="title" part="wy-placeholder">${this.post.created_by.name}</span>
               <time slot="text" part="wy-placeholder">${dateFromNow}</time>
             </wy-item>
             <div part="wy-post-body">
-              <div part="wy-content wy-post-content"><wy-skeleton .text=${this.text}></wy-skeleton></div>
+              <div part="wy-content wy-post-content"><wy-skeleton .text=${this.post.text}></wy-skeleton></div>
             </div>
             <div part="wy-post-footer"></div>
           </div>
@@ -365,26 +291,33 @@ export class WyPostView extends WeavySubAppComponent {
             part=${partMap({ "wy-post": true, "wy-highlight": this.highlight && !this.isCommentLinked })}
             ${ref(this.highlightRef)}
           >
-            <wy-item part="wy-post-header" align="top" size="md" noPadding>
+            <wy-item slot="toggle" part="wy-post-header" align="top" size="md" noPadding>
               <wy-avatar
                 slot="image"
-                .src="${this.createdBy.avatar_url}"
-                .isAgent=${this.createdBy.is_agent}
+                .src="${this.post.created_by.avatar_url}"
+                .isAgent=${this.post.created_by.is_agent}
                 .size=${48}
-                .name=${this.createdBy.name}
+                .name=${this.post.created_by.name}
+                title=${this.post.created_by.name}
+                role="button"
+                @click=${() => this.dispatchUserAction(this.post.created_by)}
               ></wy-avatar>
-              <span slot="title">${this.createdBy.name}</span>
+              <wy-button 
+                kind="link"
+                slot="title"
+                @click=${() => this.dispatchUserAction(this.post.created_by)}
+                >${this.post.created_by.name}</wy-button>
               <span slot="text">
-                <time datetime=${this.createdAt} title=${dateFull}>${dateFromNow}</time>
+                <time datetime=${this.post.created_at} title=${dateFull}>${dateFromNow}</time>
                 ${
-                  this.modifiedAt
-                    ? html`<time datetime="${this.modifiedAt}" title=${modifiedDateFull}> · ${msg("edited")}</time>`
+                  this.post.updated_at
+                    ? html`<time datetime="${this.post.updated_at}" title=${modifiedDateFull}> · ${msg("edited")}</time>`
                     : nothing
                 }
               </span>
               <wy-dropdown slot="actions">
                 ${
-                  this.isSubscribed
+                  this.post.is_subscribed
                     ? html`<wy-dropdown-item @click=${() => this.dispatchSubscribe(false)}>
                         <wy-icon name="bell-off"></wy-icon>
                         ${msg("Unsubscribe")}
@@ -395,7 +328,7 @@ export class WyPostView extends WeavySubAppComponent {
                       </wy-dropdown-item>`
                 }
                 ${
-                  this.user && this.user.id === this.createdBy.id
+                  this.user && this.user.id === this.post.created_by.id
                     ? html`<wy-dropdown-item @click=${() => this.dispatchEdit(true)}>
                         <wy-icon name="pencil"></wy-icon>
                         ${msg("Edit")}
@@ -403,7 +336,7 @@ export class WyPostView extends WeavySubAppComponent {
                     : nothing
                 }
                 ${
-                  this.user && this.user.id === this.createdBy.id
+                  this.user && this.user.id === this.post.created_by.id
                     ? html`<wy-dropdown-item @click=${() => this.dispatchTrash()}>
                         <wy-icon name="trashcan"></wy-icon>
                         ${msg("Trash")}
@@ -432,12 +365,32 @@ export class WyPostView extends WeavySubAppComponent {
                 ? html`
                     <div part="wy-post-body">
                       <!-- text content -->
-                      ${hasText ? html`<div part="wy-content wy-post-content">${unsafeHTML(this.html)}</div>` : ``}
+                      ${hasText
+                        ? html`<div
+                            part="wy-content wy-post-content"
+                            @click=${(e: MouseEvent) => {
+                              if (
+                                e.target instanceof HTMLElement &&
+                                e.target.matches('.wy-mention, [part~="wy-mention"]')
+                              ) {
+                                const uid =
+                                  e.target.dataset.eid?.startsWith("u") && parseInt(e.target.dataset.eid.substring(1));
+                                if (uid) {
+                                  this.dispatchUserAction({ id: uid, name: e.target.innerText });
+                                }
+                              }
+                            }}
+                            >${
+                              // eslint-disable-next-line lit-a11y/click-events-have-key-events
+                              unsafeHTML(this.post.html)
+                            }</div
+                          >`
+                        : ``}
 
                       <!-- annotations -->
                       ${hasAnnotations
                         ? html`<wy-annotation-list
-                            .files=${this.annotations}
+                            .files=${annotations}
                             @file-open=${(e: FileOpenEventType) => {
                               void this.previewAnnotationsRef.value?.open(e.detail.fileId);
                             }}
@@ -445,32 +398,32 @@ export class WyPostView extends WeavySubAppComponent {
                         : nothing}
 
                       <!-- poll -->
-                      ${hasPoll && this.pollOptions
+                      ${hasPoll
                         ? html`
                             <wy-poll
-                              .pollOptions=${this.pollOptions}
+                              .pollOptions=${pollOptions}
                               @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
                             ></wy-poll>
                           `
                         : nothing}
 
                       <!-- embeds -->
-                      ${hasEmbed && this.embed ? html` <wy-embed .embed=${this.embed}></wy-embed> ` : nothing}
+                      ${hasEmbed ? html` <wy-embed .embed=${embed}></wy-embed> ` : nothing}
 
                       <!-- files -->
                       ${hasFiles
                         ? html`<wy-attachment-list
                             filled
                             part="wy-post-attachments"
-                            .files=${files ?? []}
+                            .files=${files}
                             @file-open=${(e: FileOpenEventType) => {
                               void this.previewAttachmentsRef.value?.open(e.detail.fileId);
                             }}
                           ></wy-attachment-list>`
                         : nothing}
                       <!-- meeting -->
-                      ${hasMeeting && this.meeting
-                        ? html`<wy-meeting-card .meeting=${this.meeting}></wy-meeting-card>`
+                      ${hasMeeting
+                        ? html`<wy-meeting-card .meeting=${meeting}></wy-meeting-card>`
                         : nothing}
                     </div>
                   `
@@ -489,7 +442,7 @@ export class WyPostView extends WeavySubAppComponent {
                     color="inherit"
                     @click=${(e: Event) => this.handleCommentsClick(e)}
                   >
-                    ${this.commentCount !== 1 ? msg(str`${this.commentCount} comments`) : msg("1 comment")}
+                    ${commentCount !== 1 ? msg(str`${commentCount} comments`) : msg("1 comment")}
                   </wy-button>`
                 : nothing
             }
@@ -501,10 +454,10 @@ export class WyPostView extends WeavySubAppComponent {
                     <wy-reactions
                       line
                       small
-                      .reactions=${this.reactions}
+                      .reactions=${reactions}
                       parentId=${this.app.id}
                       parentType="apps"
-                      entityId=${this.postId}
+                      entityId=${this.post.id}
                       entityType="posts"
                     ></wy-reactions>
                   `
@@ -521,7 +474,7 @@ export class WyPostView extends WeavySubAppComponent {
                     <wy-comment-list
                       reveal
                       part="wy-post-comment-list"
-                      .parentId=${this.postId}
+                      .parentId=${this.post.id}
                       .location=${"posts"}
                     ></wy-comment-list>
                   `
@@ -531,16 +484,16 @@ export class WyPostView extends WeavySubAppComponent {
         </div>
 
             ${
-              this.annotations?.length
+              hasAnnotations
                 ? html`<wy-preview
                     ${ref(this.previewAnnotationsRef)}
-                    .files=${this.annotations}
+                    .files=${annotations}
                     .isAttachment=${true}
                   ></wy-preview> `
                 : nothing
             }
             ${
-              this.attachments?.length
+              hasImages || hasFiles
                 ? html`<wy-preview
                     ${ref(this.previewAttachmentsRef)}
                     .files=${[...images, ...files]}

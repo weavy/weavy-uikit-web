@@ -1,6 +1,7 @@
 import { ActionType } from "./action.types";
 import { AppRef } from "./app.types";
 import { EmbedType } from "./embeds.types";
+import { UserOrAgentType } from "./users.types";
 
 export type WyActionEventDetailType = {
   /* The type of action. A built-in action or a custom action. */
@@ -12,6 +13,9 @@ export type WyActionEventDetailType = {
 
   /** App data when the event origins from an app item. May be `null` to indicate that the app is *none*. */
   app?: AppRef | null;
+
+  /** App data when the event origins from a referenced user or agent, such as a message author or a mention. Contains at least `id` and `name` when set. May be `null` to indicate that the user is *none*.*/
+  user?: UserOrAgentType | null;
 
   // notification?: NotificationType;
 };
@@ -30,4 +34,9 @@ declare global {
   interface ElementEventMap {
     "wy-action": WyActionEventType;
   }
+}
+
+/** Type guard for action events */
+export function isActionEvent(e: Event | WyActionEventType): e is WyActionEventType {
+  return (e as WyActionEventType) instanceof CustomEvent && typeof (e as WyActionEventType).detail.action === "string";
 }

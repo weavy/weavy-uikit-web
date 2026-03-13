@@ -13,7 +13,7 @@ export function getApiOptions<T>(
   weavy: WeavyType,
   apiKey: QueryKey,
   apiPath?: string,
-  options?: QueryOptions<T>,
+  options?: Partial<QueryObserverOptions<T>>,
   body?: BodyInit,
   method: HttpMethodType = "GET"
 ) {

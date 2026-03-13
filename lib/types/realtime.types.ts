@@ -5,16 +5,24 @@ import { PlainObjectType } from "./generic.types";
 import { MemberType } from "./members.types";
 import { MessageType } from "./messages.types";
 import { PostType } from "./posts.types";
-import { UserType } from "./users.types";
+import { UserOrAgentMinimalType } from "./users.types";
 import { NotificationType } from "./notifications.types";
 
 export type RealtimeDataType = PlainObjectType | number | string | Array<PlainObjectType | number | string>;
 
+export type RealtimeGroupType = null | `a${string}`
+
 export type RealtimeEventType = {
   id: number;
   action: string;
-  actor: UserType;
+  actor: UserOrAgentMinimalType;
 };
+
+export type RealtimeOptionsType<TRealtimeEventType extends RealtimeEventType = RealtimeEventType> = {
+  group: RealtimeGroupType,
+  event: string,
+  onMessage: (realtimeEvent: TRealtimeEventType) => void | Promise<void>,
+}
 
 // APPS
 export type RealtimeAppEventType = RealtimeEventType & {

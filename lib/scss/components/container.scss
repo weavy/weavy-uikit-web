@@ -4,16 +4,24 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  min-height: 0;
-  height: 100%;
+  min-height: min-content;
+  height: fit-content;
   flex: 1 1 auto;
 }
 
 [part~="wy-container-padded"] {
   padding: var.default(--wy-padding);
-  gap: var.default(--wy-padding);
+  gap: var.default(--wy-gap);
 }
 
 [part~="wy-container-outer"] {
   padding: var.default(--wy-padding-outer);
+}
+
+[part~="wy-container-gap-lg"] {
+  gap: var.default(--wy-gap-lg);
+}
+
+[part~="wy-container-gap-xl"] {
+  gap: var.default(--wy-gap-xl);
 }

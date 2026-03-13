@@ -7,6 +7,11 @@ import { UserContext } from "../contexts/user-context";
 import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
 import { WeavyComponentContextProps } from "../types/component.types";
 
+/**
+ * Base class for internal weavy sub components. This class provides common properties and internal data consumed from contexts.
+ *
+ * @fires ready - When the component has rendered.
+ */
 export class WeavySubComponent extends LitElement implements WeavyComponentContextProps {
   // CONTEXT PROVIDERS
   /**
@@ -75,6 +80,19 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
     this.#resolveWeavy = r;
   });
 
+  /**
+   * Resolves when the component has rendered first time.
+   *
+   * @returns {Promise<WeavySubComponent>}
+   */
+  async whenReady() {
+    return await this.#whenReady;
+  }
+  #resolveReady?: (component: WeavySubComponent) => void;
+  #whenReady = new Promise<WeavySubComponent>((r) => {
+    this.#resolveReady = r;
+  });
+
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
@@ -133,5 +151,16 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
     if (this.weavy) {
       this.requestUpdate("weavy");
     }
+  }
+
+  protected override firstUpdated(changedProperties: PropertyValueMap<this>): void {
+    super.firstUpdated(changedProperties);
+    this.#resolveReady?.(this);
+    this.dispatchEvent(
+      new CustomEvent("ready", {
+        bubbles: false,
+        composed: false,
+      }),
+    );
   }
 }

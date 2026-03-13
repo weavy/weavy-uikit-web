@@ -1,7 +1,9 @@
 import { CommentsResultType } from "./comments.types";
 import { MsgType } from "./msg.types";
 import { PollOptionType } from "./polls.types";
+import { QueryFilterProps, QueryFilterType } from "./query.types";
 import { UserType } from "./users.types";
+import { isPlainObject } from "../utils/objects";
 
 export type PostsResultType = {
   data: PostType[];
@@ -13,7 +15,7 @@ export type PostsResultType = {
 export type MutatePostProps = {
   id?: number;
   app_id: number;
-  user?: UserType;
+  user: UserType;
   text: string;
   blobs?: number[];
   attachments?: number[];
@@ -26,3 +28,30 @@ export type MutatePostProps = {
 export type PostType = MsgType & {
   comments: CommentsResultType;
 };
+
+export type PostQueryOrderType = `id ${"desc" | "asc"}`;
+
+export type PostQueryFilterType = Omit<QueryFilterType, "order_by"> & {
+  app?: Array<string | number>;
+  following?: boolean;
+  order_by?: PostQueryOrderType;
+};
+
+export interface PostQueryFilterProps extends QueryFilterProps {
+  following: boolean | undefined;
+  orderBy?: PostQueryOrderType | null | undefined;
+}
+
+export type MutatePostTempData = {
+  tempPost: PostType;
+}
+
+export function isPostQueryFilter(filter: unknown) {
+    if (isPlainObject(filter) && (
+      typeof filter.following === "string"
+    )) {
+      return true;
+    } else {
+      return false;
+    }
+}

@@ -46,7 +46,7 @@ export function isPlainObject(maybePlainObject: unknown): maybePlainObject is Pl
 
 /**
  * Type guard to determine if an object has a `toJSON()` method
- * @param obj - The object to check 
+ * @param obj - The object to check
  * @returns boolean
  */
 export function hasToJSON(obj: unknown): obj is { toJSON: () => string } {
@@ -54,7 +54,7 @@ export function hasToJSON(obj: unknown): obj is { toJSON: () => string } {
 }
 
 /**
- * 
+ *
  * @param maybeJSON - The object to check
  * @returns boolean
  */
@@ -128,7 +128,7 @@ export function asArray<TArrayItems = unknown>(maybeArray: unknown): TArrayItems
  */
 export async function findAsyncSequential<T>(
   array: T[],
-  predicate: (t: T) => Promise<boolean>
+  predicate: (t: T) => Promise<boolean>,
 ): Promise<T | undefined> {
   for (const t of array) {
     if (await predicate(t)) {
@@ -166,7 +166,7 @@ export function eqObjects(
   a: PlainObjectType,
   b: PlainObjectType,
   skipLength: boolean = false,
-  anyObject: boolean = false
+  anyObject: boolean = false,
 ) {
   if (!anyObject && (!isPlainObject(a) || !isPlainObject(b))) {
     return false;
@@ -231,6 +231,103 @@ export function objectAsIterable<T extends PlainObjectType, TValue = T>(obj: T) 
 export function includeReversedPropertiesAsIterable<T extends PlainObjectType<PropertyKey>>(obj: T) {
   return Object.entries(obj).concat(Object.entries(obj).map(([key, value]) => [value, key]) as [string, keyof T][]) as [
     PropertyKey,
-    keyof T | T
+    keyof T | T,
   ][];
+}
+
+/**
+ * Removes all properties with falsy values.
+ * @param {Object} obj - The object to clean.
+ * @param {Boolean} recursive - Whether to clean nested objects.
+ */
+export function cleanFalsyProperties<T extends PlainObjectType>(obj: T, recursive = false): Partial<T> {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    let processedValue = value;
+
+    if (Array.isArray(processedValue)) {
+      // Remove empty values in array
+      processedValue = processedValue.filter((x) => x);
+
+      // Optional: If the resulting array is empty, we treat it as falsy
+      if (Array.isArray(processedValue) && processedValue.length === 0) {
+        return acc as T;
+      }
+    }
+
+    // If recursive is enabled, check if value is an object (and not null or an array)
+    if (recursive && isPlainObject(processedValue)) {
+      processedValue = cleanFalsyProperties<typeof processedValue>(processedValue, true);
+
+      // Optional: If the resulting object is empty, we treat it as falsy
+      if (Object.keys(processedValue as PlainObjectType).length === 0) {
+        return acc as T;
+      }
+    }
+
+    // Standard falsy check (null, undefined, 0, "", false, NaN)
+    if (processedValue) {
+      acc[key as keyof T] = processedValue as T[keyof T];
+    }
+
+    return acc;
+  }, {} as Partial<T>);
+}
+
+/**
+ * Converts values in a plain object to strings. Recursive properties are flattened with dot-notation (like `"prop.subprop"`).
+ *
+ * @param {Object} obj - The object to convert to `Record<string, string>`
+ * @param prefix
+ * @returns
+ */
+export function flattenKeysWithValuesToStrings<T extends PlainObjectType>(obj: T, prefix = ""): Record<string, string> {
+  return Object.entries(obj).reduce(
+    (acc, [k, v]) => {
+      const key = prefix ? `${prefix}.${k}` : k;
+
+      if (isPlainObject(v)) {
+        Object.assign(acc, flattenKeysWithValuesToStrings(v, key));
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        acc[key] = String(v ?? "");
+      }
+
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+}
+
+/**
+ * Converts values in a plain object to strings in a key/value-array. Recursive properties are flattened with dot-notation (like `"prop.subprop"`). Array props are supported.
+ *
+ * @param {Object} obj - The object to convert to `Record<string, string>`
+ * @param prefix
+ * @returns
+ */
+export function flattenToSearchParams(obj: Record<string, unknown>, parentKey = ""): string[][] {
+  const result: string[][] = [];
+
+  for (const [key, value] of Object.entries(obj)) {
+    const fullKey = parentKey ? `${parentKey}.${key}` : key;
+
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item !== null && item !== undefined) {
+          result.push([fullKey, String(item)]);
+        }
+      }
+    } else if (isPlainObject(value)) {
+      result.push(...flattenToSearchParams(value, fullKey));
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      result.push([fullKey, String(value ?? "")]);
+    }
+  }
+
+  return result;
 }

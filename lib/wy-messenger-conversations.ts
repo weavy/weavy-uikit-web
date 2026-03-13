@@ -24,6 +24,7 @@ import { WeavyTypeComponent } from "./classes/weavy-type-component";
 
 import colorModesCss from "./scss/color-modes.scss";
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostFontCss from "./scss/host-font.scss";
 import hostPaddedCss from "./scss/host-padded.scss";
 import hostScrollYCss from "./scss/host-scroll-y.scss";
@@ -79,7 +80,7 @@ export class WyMessengerConversations
   extends WeavyTypeComponent
   implements UnreadConversationsProps, ConversationFilterProps
 {
-  static override styles = [colorModesCss, hostBlockCss, hostFontCss, hostPaddedCss, hostScrollYCss];
+  static override styles = [colorModesCss, hostBlockCss, hostFillCss, hostFontCss, hostPaddedCss, hostScrollYCss];
 
   /** @internal */
   override componentFeatures = new ComponentFeatures(DefaultMessengerFeatures);

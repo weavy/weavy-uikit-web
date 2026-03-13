@@ -1,3 +1,4 @@
+import { AppRef } from "./app.types";
 import { MetadataType } from "./lists.types";
 import { MsgType } from "./msg.types";
 import { PollOptionType } from "./polls.types";
@@ -18,4 +19,6 @@ export type MutateMessageProps = {
   context?: number[];
 };
 
-export type MessageType = MsgType;
+export type MessageType = MsgType & {
+    app: AppRef;
+};

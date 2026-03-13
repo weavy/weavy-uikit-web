@@ -7,7 +7,7 @@
 table {
   // hide on smaller screens
   thead {
-    text-align: left;
+    text-align: start;
     display: none;
     @include breakpoints.container-size-up(sm) {
       display: table-header-group;
@@ -42,7 +42,7 @@ table {
 // kind
 [part~="wy-col-kind"] {
   width: var.wy-rem(8);
-  //text-align: right;
+  //text-align: end;
 
   display: none;
   @include breakpoints.container-size-up(md) {
@@ -55,7 +55,7 @@ table {
 // size
 [part~="wy-col-size"] {
   width: var.wy-rem(6);
-  text-align: right;
+  text-align: end;
 
   display: none;
   @include breakpoints.container-size-up(sm) {

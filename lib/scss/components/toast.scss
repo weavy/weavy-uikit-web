@@ -72,6 +72,7 @@
   }
 }
 
+/*
 [part~=wy-toast-action] {
   position: sticky;
   top: var.wy-rem(4.5);
@@ -88,15 +89,11 @@
   border-radius: var.default(--wy-border-radius-pill);
   font-size: var.default(--wy-font-size-xs);
   width: max-content;
-  min-height: 0;
+  min-height: min-content;
   max-width: calc(100% - var.wy-rem(3));
   height: auto;
   align-self: center;
   text-align: center;
   box-shadow: none;
 }
-
-[part~=wy-toast-primary] {
-  background: color.token(--wy-on-primary-container);
-  color: color.token(--wy-primary-container);
-}
+*/

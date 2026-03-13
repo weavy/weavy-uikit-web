@@ -9,6 +9,7 @@ import { WeavyAppComponent } from "./classes/weavy-app-component";
 
 import colorModesCss from "./scss/color-modes.scss";
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostPaddedCss from "./scss/host-padded.scss";
 import hostScrollYCss from "./scss/host-scroll-y.scss";
 import hostFontCss from "./scss/host-font.scss";
@@ -17,6 +18,7 @@ import commentsCss from "./scss/components/comments.scss";
 import "./components/wy-comment-list";
 import "./components/ui/wy-button";
 import "./components/wy-context-data";
+import "./components/wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -87,7 +89,7 @@ declare global {
 @customElement("wy-comments")
 @localized()
 export class WyComments extends WeavyAppComponent {
-  static override styles = [hostBlockCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss, commentsCss];
+  static override styles = [hostBlockCss, hostFillCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss, commentsCss];
 
   /** @internal */
   override appType = AppTypeGuid.Comments;
@@ -99,6 +101,7 @@ export class WyComments extends WeavyAppComponent {
     [Feature.CloudFiles]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
+    [Feature.Follow]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
     [Feature.Mentions]: true,
@@ -123,6 +126,7 @@ export class WyComments extends WeavyAppComponent {
     return html`
       <wy-buttons position="floating" reverse><slot name="actions"></slot></wy-buttons>
       <wy-comment-list .parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}></wy-comment-list>
+      <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
       <wy-context-data-progress></wy-context-data-progress>
     `;
   }

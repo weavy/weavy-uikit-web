@@ -23,9 +23,15 @@ export function reactionMutation(
     },
     onMutate: () => {
       const queryKey = parentType === "apps" && entityType === "posts" ? [entityType, parentId]: [parentType, parentId, entityType];
-      updateCacheItem(weavy.queryClient, queryKey, entityId, (item: MsgType) => {
-        updateReaction(item, content, user);
-      });
+      updateCacheItem<MsgType>(weavy.queryClient, queryKey, entityId, (item) => 
+        updateReaction(item, content, user)
+      );
+
+      if (parentType === "apps" && entityType === "posts") {
+        updateCacheItem<MsgType>(weavy.queryClient, ["posts", "feed"], entityId, (item) => 
+          updateReaction(item, content, user)
+        );
+      }
     }
   });
 }

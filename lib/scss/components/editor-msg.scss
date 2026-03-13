@@ -1,0 +1,42 @@
+@use "../base/var";
+@use "../base/const";
+@use "../base/color";
+@use "../base/backdrop";
+@use "../base/position";
+
+[part~="wy-editor-msg"] {
+  padding: var.default(--wy-padding-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap-lg);
+}
+
+[part~="wy-editor-msg-inputs"] {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var.default(--wy-gap-sm);
+}
+
+[part~="wy-editor-msg-buttons"] {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var.default(--wy-gap-sm);
+  flex: 1 0 auto;
+}
+
+[part~="wy-editor-msg-text"] {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+[part~="wy-editor-parts"] {
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap);
+  min-height: 0;
+}

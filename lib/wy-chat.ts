@@ -8,6 +8,7 @@ import { property } from "lit/decorators.js";
 import { WeavyAppComponent } from "./classes/weavy-app-component";
 
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostPaddedCss from "./scss/host-padded.scss";
 import hostScrollYCss from "./scss/host-scroll-y.scss";
 import hostFontCss from "./scss/host-font.scss";
@@ -16,6 +17,7 @@ import colorModesCss from "./scss/color-modes.scss";
 import "./components/wy-conversation";
 import "./components/ui/wy-button";
 import "./components/wy-context-data";
+import "./components/wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -119,7 +121,7 @@ declare global {
 @customElement("wy-chat")
 @localized()
 export class WyChat extends WeavyAppComponent {
-  static override styles = [hostBlockCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss];
+  static override styles = [hostBlockCss, hostFillCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss];
 
   /** @internal */
   override appType = AppTypeGuid.Chat;
@@ -131,6 +133,7 @@ export class WyChat extends WeavyAppComponent {
     [Feature.ContextData]: true,
     [Feature.CloudFiles]: true,
     [Feature.Embeds]: true,
+    [Feature.Follow]: true,
     [Feature.GoogleMeet]: true,
     [Feature.Meetings]: true,
     [Feature.Mentions]: true,
@@ -169,6 +172,7 @@ export class WyChat extends WeavyAppComponent {
       >
         <wy-context-data-progress slot="footerbar"></wy-context-data-progress>
       </wy-conversation>
+      <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
     `;
   }
 }

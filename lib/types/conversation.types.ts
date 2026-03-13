@@ -29,6 +29,7 @@ export const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
   [Feature.CloudFiles]: true,
   [Feature.ContextData]: true,
   [Feature.Embeds]: true,
+  [Feature.Follow]: true,
   [Feature.GoogleMeet]: true,
   [Feature.Meetings]: true,
   [Feature.Mentions]: true,

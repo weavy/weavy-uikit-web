@@ -1,6 +1,6 @@
 import { LitElement, PropertyValueMap, html } from "lit";
 import { customElement } from "../../utils/decorators/custom-element";
-import { property, state } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 import throttle from "lodash.throttle";
@@ -9,6 +9,7 @@ import { createRef, ref, type Ref } from "lit/directives/ref.js";
 import { SearchEventType } from "../../types/search.events";
 import { NamedEvent } from "../../types/generic.types";
 import { partMap } from "../../utils/directives/shadow-part-map";
+import { onlyValues } from "../../utils/data";
 
 import inputCss from "../../scss/components/input.scss";
 import hostContentsCss from "../../scss/host-contents.scss";
@@ -60,8 +61,31 @@ export class WySearch extends LitElement {
   @property({ type: Boolean })
   compact: boolean = false;
 
-  @state()
-  query: string = "";
+  #tags: Set<string> = new Set();
+
+  /**
+   * Query tags 
+   */
+  @property()
+  set tags(tags: string | undefined | null) {
+    this.#tags = new Set(tags ? tags.split(" ").filter(onlyValues) : undefined);
+  }
+  get tags() {
+    return Array.from(this.#tags).join(" ");
+  }
+
+  #query: string = '';
+
+  /**
+   * Query text.
+   */
+  @property()
+  set query(query: string | undefined | null) {
+    this.#query = query || '';
+  }
+  get query(): string | undefined {
+    return this.#query;
+  }
 
   /**
    * Put focus on the input field.
@@ -79,7 +103,7 @@ export class WySearch extends LitElement {
 
   private throttledSearch = throttle(
     () => {
-      this.query = this.inputRef.value?.value || "";
+      this.requestUpdate("query");
     },
     250,
     { leading: false, trailing: true }
@@ -90,7 +114,7 @@ export class WySearch extends LitElement {
       const searchEvent: SearchEventType = new (CustomEvent as NamedEvent)("search", {
         bubbles: true,
         composed: false,
-        detail: { query: this.query },
+        detail: { query: this.#query },
       });
       this.dispatchEvent(searchEvent);
     }
@@ -114,9 +138,17 @@ export class WySearch extends LitElement {
         <input
           part=${partMap(inputMap)}
           name="text"
-          .value=${this.query || ""}
+          .value=${this.#query || ""}
           ${ref(this.inputRef)}
-          @input=${() => this.throttledSearch()}
+          @input=${() => {
+            this.#query = this.inputRef.value?.value || "";
+            if (!this.#query) {
+              // Update cleared/empty value immediately
+              this.requestUpdate("query");
+            } else {
+              this.throttledSearch()
+            }
+          }}
           @keydown=${inputClearAndBlurOnEscape}
           @keyup=${inputConsume}
           placeholder=${this.placeholder || msg("Search...")}

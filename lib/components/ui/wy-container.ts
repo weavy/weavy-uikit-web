@@ -55,11 +55,16 @@ export class WyContainer extends LitElement {
   @property({ type: Boolean })
   scrollbars: boolean = false;
 
+  @property()
+  gap: "md" | "lg" | "xl" = "md";
+
   override render() {
     const containerParts = {
       "wy-container": true,
       "wy-container-padded": this.padded,
       "wy-container-outer": this.outer,
+      "wy-container-gap-lg": this.gap === "lg",
+      "wy-container-gap-xl": this.gap === "xl",
       "wy-scroll-x": this.scrollX && !this.scrollY,
       "wy-scroll-y": this.scrollY && !this.scrollX,
       "wy-scroll-x-y": this.scrollX && this.scrollY,

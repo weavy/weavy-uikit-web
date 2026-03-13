@@ -16,6 +16,7 @@ import { WeavyComponentAgentProps } from "./types/agent.types";
 import { WyConversation } from "./components/wy-conversation";
 
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostPaddedCss from "./scss/host-padded.scss";
 import hostScrollYCss from "./scss/host-scroll-y.scss";
 import hostFontCss from "./scss/host-font.scss";
@@ -27,6 +28,7 @@ import "./components/ui/wy-item";
 import "./components/wy-empty";
 import "./components/wy-context-data";
 import "./components/wy-conversation";
+import "./components/wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -81,7 +83,6 @@ declare global {
  *
  * **Used sub components:**
  *
- * - [`<wy-comment-list>`](./components/wy-comment-list.ts)
  * - [`<wy-buttons>`](./components/ui/wy-button.ts)
  * - [`<wy-item-list>`](./components/ui/wy-item.ts)
  * - [`<wy-empty>`](./components/ui/wy-empty.ts)
@@ -179,7 +180,7 @@ declare global {
 @customElement("wy-copilot")
 @localized()
 export class WyCopilot extends WeavyAppComponent implements WeavyComponentAgentProps {
-  static override styles = [hostBlockCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss];
+  static override styles = [hostBlockCss, hostFillCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss];
 
   /** @internal */
   override appType = AppTypeGuid.AgentChat;
@@ -304,7 +305,7 @@ export class WyCopilot extends WeavyAppComponent implements WeavyComponentAgentP
                   await this.setSuggestion((e.target as HTMLElement).innerText);
                   //await this.conversationRef.value?.selectAllInEditor();
                   await this.conversationRef.value?.setCursorLastInEditor();
-                  this.conversationRef.value?.focusEditor();
+                  await this.conversationRef.value?.focusEditor();
                 }
               }}
               @keydown=${clickOnEnterAndConsumeOnSpace}
@@ -328,6 +329,7 @@ export class WyCopilot extends WeavyAppComponent implements WeavyComponentAgentP
             </slot>
             <wy-context-data-progress slot="footerbar"></wy-context-data-progress>
           </wy-conversation>
+          <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
         `
       : html`
           <wy-empty>

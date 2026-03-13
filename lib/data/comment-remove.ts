@@ -13,12 +13,7 @@ export type MutateCommentVariables = {
   parentId: number;
 };
 
-export type RemoveCommentMutationType = MutationObserver<
-  void,
-  Error,
-  MutateCommentVariables,
-  void
->;
+export type RemoveCommentMutationType = MutationObserver<void, Error, MutateCommentVariables, void>;
 
 export function getTrashCommentMutationOptions(weavy: WeavyType, type: "posts" | "files" | "apps", parentId: number) {
   const queryClient = weavy.queryClient;
@@ -28,42 +23,47 @@ export function getTrashCommentMutationOptions(weavy: WeavyType, type: "posts" |
     mutationKey: commentsKey,
     mutationFn: async ({ id }: MutateCommentVariables) => {
       const response = await weavy.fetch("/api/comments/" + id + "/trash", { method: "POST" });
-      
+
       if (!response.ok) {
         throw new Error();
       }
     },
     onMutate: (variables: MutateCommentVariables) => {
-      updateCacheItems(
+      updateCacheItems<CommentType>(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.id,
-        (existingComment: CommentType) => Object.assign(existingComment, { is_trashed: true })
+        (existingComment) => ({ ...existingComment, is_trashed: true }),
       );
     },
-    onSuccess: (data: void, variables: MutateCommentVariables) => {
-      updateCacheItems(
-        queryClient,
-        { queryKey: options.mutationKey, exact: false },
-        variables.id,
-        (existingComment: CommentType) => Object.assign(existingComment, data)
-      );
-      updateCacheItem(queryClient, [variables.type, variables.appId], variables.parentId, (item: PostType) => {
+    onSuccess: (_data: void, variables: MutateCommentVariables) => {
+      updateCacheItem<PostType>(queryClient, [variables.type, variables.appId], variables.parentId, (item) => {
         item.comments.count -= 1;
+        return item;
       });
-    }
+      if (variables.type === "posts") {
+        updateCacheItem<PostType>(queryClient, ["posts", "feed"], variables.parentId, (item) => {
+          item.comments.count -= 1;
+          return item;
+        });
+      }
+    },
   };
 
   return options;
 }
 
-export function getTrashCommentMutation(weavy: WeavyType, type: "posts" | "files" | "apps",  parentId: number): RemoveCommentMutationType {
+export function getTrashCommentMutation(
+  weavy: WeavyType,
+  type: "posts" | "files" | "apps",
+  parentId: number,
+): RemoveCommentMutationType {
   return new MutationObserver(weavy.queryClient, getTrashCommentMutationOptions(weavy, type, parentId));
 }
 
 export function getRestoreCommentMutationOptions(weavy: WeavyType, type: "posts" | "files" | "apps", parentId: number) {
   const queryClient = weavy.queryClient;
-  const postsKey: MutationKey = [type, parentId, "comments" ];
+  const postsKey: MutationKey = [type, parentId, "comments"];
 
   const options = {
     mutationKey: postsKey,
@@ -72,32 +72,31 @@ export function getRestoreCommentMutationOptions(weavy: WeavyType, type: "posts"
       if (!response.ok) {
         const serverError = <ServerErrorResponseType>await response.json();
         throw new Error(serverError.detail || serverError.title, { cause: serverError });
-      }      
+      }
     },
     onMutate: (variables: MutateCommentVariables) => {
-      updateCacheItems(
+      updateCacheItems<CommentType>(
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.id,
-        (existingComment: CommentType) => Object.assign(existingComment, { is_trashed: false })
+        (existingComment) => ({ ...existingComment, is_trashed: false }),
       );
     },
     onSuccess: (data: void, variables: MutateCommentVariables) => {
-      updateCacheItems(
-        queryClient,
-        { queryKey: options.mutationKey, exact: false },
-        variables.id,
-        (existingComment: CommentType) => Object.assign(existingComment, data)
-      );
-      updateCacheItem(queryClient, [variables.type, variables.appId], variables.parentId, (item: PostType) => {
+      updateCacheItem<PostType>(queryClient, [variables.type, variables.appId], variables.parentId, (item) => {
         item.comments.count += 1;
+        return item;
       });
-    }
+    },
   };
 
   return options;
 }
 
-export function getRestoreCommentMutation(weavy: WeavyType, type: "posts" | "files" | "apps", parentId: number): RemoveCommentMutationType {
+export function getRestoreCommentMutation(
+  weavy: WeavyType,
+  type: "posts" | "files" | "apps",
+  parentId: number,
+): RemoveCommentMutationType {
   return new MutationObserver(weavy.queryClient, getRestoreCommentMutationOptions(weavy, type, parentId));
 }

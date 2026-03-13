@@ -38,8 +38,11 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
       }
     },
     onMutate: (variables: MutateFileSubscribeVariables) => {
-      updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
-        Object.assign(existingFile, { is_subscribed: variables.subscribe, status: "pending" })
+      updateCacheItems(
+        queryClient,
+        { queryKey: filesKey, exact: false },
+        variables.file.id,
+        (existingFile: FileType) => ({ ...existingFile, is_subscribed: variables.subscribe, status: "pending" }),
       );
       return <FileMutationContextType>{
         type: variables.subscribe ? "subscribe" : "unsubscribe",
@@ -48,20 +51,26 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
       };
     },
     onSuccess: (data: void, variables: MutateFileSubscribeVariables) => {
-      updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
-        Object.assign(existingFile, { status: "ok" })
+      updateCacheItems(
+        queryClient,
+        { queryKey: filesKey, exact: false },
+        variables.file.id,
+        (existingFile: FileType) => ({ ...existingFile, status: "ok" }),
       );
-      updateMutationContext(queryClient, filesKey, variables, (context) => {
-        (context as FileMutationContextType).status.state = "ok";
+      updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
+        context.status.state = "ok";
       });
     },
     onError: (error: Error, variables: MutateFileSubscribeVariables) => {
-      updateCacheItems(queryClient, { queryKey: filesKey, exact: false }, variables.file.id, (existingFile: FileType) =>
-        Object.assign(existingFile, { is_subscribed: variables.file.is_subscribed, status: "error" })
+      updateCacheItems(
+        queryClient,
+        { queryKey: filesKey, exact: false },
+        variables.file.id,
+        (existingFile: FileType) => ({ ...existingFile, is_subscribed: variables.file.is_subscribed, status: "error" }),
       );
-      updateMutationContext(queryClient, filesKey, variables, (context) => {
-        (context as FileMutationContextType).status.state = "error";
-        (context as FileMutationContextType).status.text = error.message;
+      updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
+        context.status.state = "error";
+        context.status.text = error.message;
       });
     },
   };

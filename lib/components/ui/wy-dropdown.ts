@@ -154,17 +154,16 @@ export class WyDropdown extends LitElement {
         this.directionX === "right" && this.directionY === "down"
           ? "bottom-start"
           : this.directionX === "left" && this.directionY === "down"
-          ? "bottom-end"
-          : this.directionX === "right" && this.directionY === "up"
-          ? "top-start"
-          : "top-end";
+            ? "bottom-end"
+            : this.directionX === "right" && this.directionY === "up"
+              ? "top-start"
+              : "top-end";
     }
 
     if (changedProperties.has("showMenu")) {
       if (this.showMenu && !this.computePositionCleanup && this.buttonRef.value && this.menuRef.value) {
         this.computePositionCleanup = autoUpdate(this.buttonRef.value, this.menuRef.value, () => {
           if (this.buttonRef.value && this.menuRef.value) {
-            
             // Fallback to "fixed" when Popover API is not available
             const fallback = !this.menuRef.value.popover;
 
@@ -263,7 +262,7 @@ export class WyDropdown extends LitElement {
 
   protected override firstUpdated(_changedProperties: PropertyValues<this>) {
     this.menuRef.value?.addEventListener(this.menuRef.value.popover ? "toggle" : "click", (e: Event) =>
-      this.handleClose(e as ToggleEvent)
+      this.handleClose(e as ToggleEvent),
     );
   }
 

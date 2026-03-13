@@ -5,7 +5,7 @@ import type {
 } from "@tanstack/query-core";
 
 import { type WeavyType } from "../client/weavy";
-import { addCacheItem, getCacheItem, getPendingCacheItem, updateCacheItem } from "../utils/query-cache";
+import { addCacheItem, getCacheItem, getPendingCacheItem, updateCacheItem, updateCacheItems } from "../utils/query-cache";
 import { PostType } from "../types/posts.types";
 import { PollOptionType } from "../types/polls.types";
 import { CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
@@ -20,7 +20,7 @@ export function getCommentsOptions(
   return {
     ...options,
     initialPageParam: 0,
-    queryKey: [type, parentId, "comments"],
+    queryKey: [type, "comments", parentId],
     queryFn: async (opt) => {
       const skip = opt.pageParam as number;
       const url = "/api/" + type + "/" + parentId + "/comments?order_by=id&skip=" + skip;
@@ -63,17 +63,7 @@ export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: M
     mutationKey: mutationKey,
     onSuccess: (data: CommentType, variables: MutateCommentProps) => {
       if (variables.id) {
-
-        updateCacheItem(weavy.queryClient, [variables.type, variables.parent_id, "comments"], variables.id, (item: CommentType) => {
-          item.text = data.text;
-          item.html = data.html;
-          item.attachments = data.attachments;
-          item.meeting = data.meeting;
-          item.updated_at = data.updated_at;
-          item.updated_by = data.updated_by;
-          item.options = data.options;
-          item.embed = data.embed;
-        });
+        updateCacheItem<CommentType>(weavy.queryClient, [variables.type, variables.parent_id, "comments"], variables.id, () => data);
       }
     },
   };
@@ -105,7 +95,7 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
     },
     onMutate: async (variables: MutateCommentProps) => {
       
-      const queryKey = [variables.type, variables.parent_id, "comments"];
+      const queryKey = [variables.type, "comments", variables.parent_id];
 
       await queryClient.cancelQueries({ queryKey: queryKey });
       const newest = getPendingCacheItem<CommentType>(weavy.queryClient, queryKey, false);
@@ -135,11 +125,11 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
         addCacheItem(queryClient, queryKey, tempData, { descending: false });
       }
     },
-    onSuccess: (data: CommentType, variables: MutateCommentProps) => {
-      const queryKey = [variables.type, data.parent?.id ?? data.app.id, "comments"];
+    onSuccess: (comment: CommentType, variables: MutateCommentProps) => {
+      const queryKey = [variables.type, "comments", comment.parent?.id ?? comment.app?.id];
 
       // check if comment already added
-      const existing = getCacheItem<CommentType>(weavy.queryClient, queryKey, data.id);
+      const existing = getCacheItem<CommentType>(weavy.queryClient, queryKey, comment.id);
 
       if (!existing) {
         // get oldest pending comment
@@ -147,36 +137,32 @@ export function getAddCommentMutationOptions(weavy: WeavyType) {
 
         if (pending) {
           // we found a pending comment - replace it with new data
-          updateCacheItem(weavy.queryClient, queryKey, pending.id, (item: CommentType) => {
-            // REVIEW: Ändra updateCacheItem så man kan sätta ett "helt" objekt?
-            item.id = data.id;
-            item.app = data.app;
-            item.text = data.text;
-            item.html = data.html;
-            item.embed = data.embed;
-            item.meeting = data.meeting;
-            item.attachments = data.attachments;
-            item.options = data.options;
-            item.created_at = data.created_at;
-            item.created_by = data.created_by;
-            item.updated_at = data.updated_at;
-            item.updated_by = data.updated_by;
-          });
+          updateCacheItem<CommentType>(weavy.queryClient, queryKey, pending.id, () => comment);
         } else {
           // add to cache
           // REVIEW: behövs { descending: false }?
           // addCacheItem(queryClient, ["comments", variables.parentId], data, { descending: false });
-          addCacheItem(weavy.queryClient, queryKey, data);
+          addCacheItem(weavy.queryClient, queryKey, comment);
         }
 
         // update cache with number of comments
-        if (data.parent?.type === EntityTypeString.Post) {
-          updateCacheItem(queryClient, ["posts", data.app.id], data.parent.id, (item: PostType) => {
+        if (comment.parent?.type === EntityTypeString.Post && comment.app) {
+          updateCacheItems<PostType>(queryClient, { queryKey: ["posts", comment.app.id], exact: false }, comment.parent.id, (item) => {
             if (item.comments) {
               item.comments.count += 1;
             } else {
               item.comments = { count: 1 };
             }
+            return item;
+          });
+
+          updateCacheItems<PostType>(queryClient, { queryKey: ["posts", "feed"], exact: false }, comment.parent.id, (item) => {
+            if (item.comments) {
+              item.comments.count += 1;
+            } else {
+              item.comments = { count: 1 };
+            }
+            return item;
           });
         }
       }

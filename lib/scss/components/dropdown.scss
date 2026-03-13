@@ -25,7 +25,7 @@ $dropdown-box-shadow: var.default(--wy-dropdown-shadow);
   color: var(--wy-component-color);
 
   font-size: $dropdown-font-size;
-  text-align: left; // Ensures proper alignment if parent has it changed (e.g., modal footer)
+  text-align: start; // Ensures proper alignment if parent has it changed (e.g., modal footer)
   background-clip: padding-box;
   border-radius: $dropdown-border-radius;
   box-shadow: $dropdown-box-shadow;

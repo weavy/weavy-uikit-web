@@ -114,7 +114,7 @@
   min-width: var.default(--wy-button-size);
   background: var(--wy-component-background-color);
   color: currentColor;
-  display: flex;
+  display: inline-flex;
   padding: var.default(--wy-button-padding-y);
 
   &[part~="wy-button-sm"] {    
@@ -170,9 +170,14 @@
 [part~="wy-button-link"] {
   //--wy-component-background-color: transparent;
   padding: 0;
-  color: var(--wy-link-color, #{color.token(--wy-primary)});
+  color: #{color.token(--wy-link)};
+  background: transparent;
 
   text-decoration: var.default(--wy-link-decoration);
+  height: auto;
+  line-height: inherit;
+  font-size: inherit;
+  vertical-align: baseline;
 
   &:hover,
   &:focus {

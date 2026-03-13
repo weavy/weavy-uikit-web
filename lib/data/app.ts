@@ -14,15 +14,18 @@ import {
   AppTypeString,
   type AppType,
   UnknownAppType,
+  AppUidType,
 } from "../types/app.types";
 import { getApi, getApiMutation, getApiOptions } from "./api";
 import { UnknownApp } from "../classes/weavy-app-component";
+import { QueryController } from "../controllers/query-controller";
+import { onlyValues } from "../utils/data";
 
 export function getAppOptions<T extends AppType = AppType>(
   weavy: WeavyType,
   uid: string | number,
   type: AppTypeString | UnknownAppType = UnknownApp,
-  appData?: AppUpProperties
+  appData?: AppUpProperties,
 ) {
   return type === UnknownApp || typeof uid === "number"
     ? getApiOptions<T>(weavy, ["apps", uid])
@@ -33,7 +36,7 @@ export function getApp<T extends AppType = AppType>(
   weavy: WeavyType,
   uid: string | number,
   type: AppTypeString | UnknownAppType = UnknownApp,
-  appData?: AppUpProperties
+  appData?: AppUpProperties,
 ) {
   return type === UnknownApp || typeof uid === "number"
     ? getApi<T>(weavy, ["apps", uid])
@@ -45,7 +48,7 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
   uid: string | number,
   type: AppTypeGuid | UnknownAppType = UnknownApp,
   members?: (number | string)[],
-  appData?: AppUpProperties
+  appData?: AppUpProperties,
 ) {
   return <QueryObserverOptions<T>>{
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -58,27 +61,27 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
       if (type === UnknownApp || typeof uid === "number") {
         appsRequests.push(
           // Get existing app
-          weavy.fetch(`/api/apps/${uid}`)
+          weavy.fetch(`/api/apps/${uid}`),
         );
       } else if (members?.length) {
         // Get the succeeding one of GET and POST
         appsRequests.push(
           // Get existing app
-          weavy.fetch(`/api/apps/${uid}`)
+          weavy.fetch(`/api/apps/${uid}`),
         );
         appsRequests.push(
           // Create app with members
-          weavy.fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ type, members, uid, ...appData }) })
+          weavy.fetch(`/api/apps`, { method: "POST", body: JSON.stringify({ type, members, uid, ...appData }) }),
         );
       } else {
         appsRequests.push(
           // Get, update or create app (upsert) using app uid
-          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ type, ...appData }) })
+          weavy.fetch(`/api/apps/${uid}`, { method: "PUT", body: JSON.stringify({ type, ...appData }) }),
         );
       }
 
       const result = (await Promise.allSettled(appsRequests)).findLast(
-        (result) => result.status === "fulfilled" && result.value?.ok
+        (result) => result.status === "fulfilled" && result.value?.ok,
       );
 
       const response = result?.status === "fulfilled" && result.value;
@@ -97,7 +100,7 @@ export async function getOrCreateApp<T extends AppType = AppType>(
   uid: string | number,
   type: AppTypeGuid | UnknownAppType = UnknownApp,
   members?: (number | string)[],
-  appData?: AppUpProperties
+  appData?: AppUpProperties,
 ) {
   const queryClient = weavy.queryClient;
   const appOptions = getOrCreateAppOptions(weavy, uid, type, members, appData);
@@ -197,12 +200,38 @@ export function getAppSubscribeMutationOptions(weavy: WeavyType, app: AppType) {
 }
 
 /**
+ * Gets multiple apps at once.
+ */
+export function getMultipleAppsOptions(
+  weavy: WeavyType,
+  uids: Array<string | number>,
+  types?: AppTypeGuid[],
+  member?: string,
+) {
+  const queryParams = new URLSearchParams();
+
+  uids.forEach((uid) => {
+    queryParams.append("uid", uid.toString());
+  });
+
+  if (member) {
+    queryParams.append("member", member);
+  }
+
+  types?.forEach((type) => queryParams.append("type", type));
+
+  const url = `/api/apps?${queryParams.toString()}`;
+  const queryKey = ["apps", "multiple", uids, types, member];
+  return getApiOptions<AppsResultType>(weavy, queryKey, url);
+}
+
+/**
  * Gets number of unread conversations/apps.
  */
 export function getAppsUnreadOptions(
   weavy: WeavyType,
   types: AppTypeGuid[] | null = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat],
-  member?: string
+  member?: string,
 ) {
   const queryParams = new URLSearchParams({
     count_only: "true",
@@ -227,7 +256,7 @@ export function getAppListOptions(
   member?: string,
   searchText?: () => string | undefined,
   orderBy?: string | null,
-  includeUid?: boolean | null
+  includeUid?: boolean | null,
 ): InfiniteQueryObserverOptions<AppsResultType, Error, InfiniteData<AppsResultType>> {
   return {
     ...options,
@@ -271,6 +300,38 @@ export function getAppListOptions(
         return lastPage.end;
       }
       return undefined;
+    },
+  };
+}
+
+/**
+ * Support function to use multiple controllers to get apps instead of getting a proper app list directly.
+ * 
+ * @param multipleAppsQueryMap - Map of AppType query controllers
+ * @returns 
+ */
+export function mapMultipleAppsAsAppList(multipleAppsQueryMap: Map<AppUidType, QueryController<AppType>>) {
+  const data = Array.from(multipleAppsQueryMap.values())
+    .map((query) => query.result.data)
+    .filter(onlyValues<AppType>);
+
+  const isPending = multipleAppsQueryMap.size
+    ? Array.from(multipleAppsQueryMap.values()).reduce((prevValue, query) => {
+        return prevValue || query.result.isPending;
+      }, false)
+    : false;
+
+  const resultData: AppsResultType | undefined = multipleAppsQueryMap.size
+    ? {
+        data,
+        count: data.length,
+      }
+    : undefined;
+
+  return {
+    result: {
+      data: resultData,
+      isPending,
     },
   };
 }

@@ -35,6 +35,7 @@ import { partMap } from "./utils/directives/shadow-part-map";
 
 import dropZoneCss from "./scss/components/dropzone.scss";
 import hostBlockCss from "./scss/host-block.scss";
+import hostFillCss from "./scss/host-fill.scss";
 import hostPaddedCss from "./scss/host-padded.scss";
 import hostScrollYCss from "./scss/host-scroll-y.scss";
 import hostFontCss from "./scss/host-font.scss";
@@ -42,6 +43,7 @@ import colorModesCss from "./scss/color-modes.scss";
 
 import "./components/wy-files-header";
 import "./components/wy-files-list";
+import "./components/wy-user-card";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -58,47 +60,47 @@ declare global {
 
 /**
  * Weavy files component to render a list of uploaded files and linked files from cloud providers such as Google Drive, Dropbox, Box and Microsoft OneDrive.
- * 
- * Supports upload of multiple large files at once, upload using drag'n'drop and pasting files to upload. 
+ *
+ * Supports upload of multiple large files at once, upload using drag'n'drop and pasting files to upload.
  * File upload progress can be monitored and aborted.
- * The files can be downloaded individually or as a compressed archive. 
- * 
+ * The files can be downloaded individually or as a compressed archive.
+ *
  * Includes file picker to link files from Cloud providers such as Google Drive, Dropbox, Box and Microsoft OneDrive, which are pre configured when using default weavy.io hosting for the Weavy environment.
- * 
+ *
  * Images, audio, video, documents, code, and cloud files can be previewed with the built-in previewer for 100+ formats including streamed audio/video, PDF, Office and Google Drive.
  * Files can also be listed with miniature thumbnails for visual overview.
- * 
+ *
  * The list can be displayed as a table or as a grid with sorting capabilities.
  * Files can renamed directly in the list.
- * 
+ *
  * Each file can be discussed with rich comments with support for attachments, mentions, embedded links and more.
- * 
+ *
  * File uploads are automatically versioned with possibility to preview all versions and rollback to a specific version.
- * 
+ *
  * Office documents and spreadsheets can be opened and edited directly in Office using built-in [WebDAV](https://www.weavy.com/docs/learn/integrations/webdav) integration to automatically save new version back to the app.
- * 
+ *
  * Each files component requires an app identifier (`uid`), which automatically creates a [corresponding app](https://www.weavy.com/docs/concepts#app) on your Weavy environment when the component is first initialized.
  * It's also recommended to specify a readable `name` of the files app, to get better readable notifications from the app.
- * 
+ *
  * > It's often useful to base the `uid` on something that identifies the location where the component is rendered.
  * > Typically you would use something like a product id, page id or path.
- * 
+ *
  * **Component Layout**
- * 
- * The component is [block-level](https://developer.mozilla.org/en-US/docs/Glossary/Block-level_content) with pre-defined CSS styling to adapt to flex- and grid-layouts as well as traditional flow-layouts. 
+ *
+ * The component is [block-level](https://developer.mozilla.org/en-US/docs/Glossary/Block-level_content) with pre-defined CSS styling to adapt to flex- and grid-layouts as well as traditional flow-layouts.
  * It's usually recommended to use a proper flex-layout for the container you are placing the component in for a smooth layout integration.
- * 
- * The height grows with the content per default. Content is automatically loaded during scrolling when the last content becomes visible (aka infinite scrolling). 
+ *
+ * The height grows with the content per default. Content is automatically loaded during scrolling when the last content becomes visible (aka infinite scrolling).
  * If placed in a flex- or grid-layout or if an explicit height is set, the component becomes scrollable.
- * 
- * The content within the components is per default aligned to the edges of it's own _box_ and designed to not be placed next to a edge or border. 
- * It's recommended to adjust the layout with your default padding. Setting the `--wy-padding-outer` to your default padding will allow the component to still fill the are where it's placed, 
- * but with proper padding within the scrollable area of the component. 
- * If you want to make the component go all the way to the edges without padding or any outermost roundness instead, 
- * set `--wy-padding-outer: 0;` and `--wy-border-radius-outer: 0;` to make the component fit nicely with the edge. 
- * 
+ *
+ * The content within the components is per default aligned to the edges of it's own _box_ and designed to not be placed next to a edge or border.
+ * It's recommended to adjust the layout with your default padding. Setting the `--wy-padding-outer` to your default padding will allow the component to still fill the are where it's placed,
+ * but with proper padding within the scrollable area of the component.
+ * If you want to make the component go all the way to the edges without padding or any outermost roundness instead,
+ * set `--wy-padding-outer: 0;` and `--wy-border-radius-outer: 0;` to make the component fit nicely with the edge.
+ *
  * You can add additional styling using _CSS Custom Properties_ and _CSS Shadow Parts_ and further customization using _slots_.
- *  
+ *
  * **Used sub components:**
  *
  * - [`<wy-files-header>`](./components/wy-files-header.ts)
@@ -112,22 +114,22 @@ declare global {
  * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
- * 
+ *
  * @example <caption>Standard files list with upload</caption>
- * 
+ *
  * Displays a table files list with integrated uploading, cloud picker, previews, comments and versioning.
- * 
+ *
  * Specifying the app identifier (`uid`) is required, and automatically creates a [corresponding app](https://www.weavy.com/docs/concepts#app) on your Weavy environment when the component is first initialized.
  * It's recommended to specify a readable `name` of the files app, to get better readable notifications from the app.
- * 
+ *
  * ```html
  * <wy-files uid="test-files" name="Test files"></wy-files>
  * ```
- * 
+ *
  * @example <caption>Files list with grid display sorted by date</caption>
- * 
+ *
  * Displays a `grid` view with miniature thumbnails for each file. Files ar sorted by `updated_at` in reverse order.
- * 
+ *
  * ```html
  * <wy-files
  *   uid="test-files"
@@ -135,7 +137,7 @@ declare global {
  *   view="grid"
  *   order="{ by: 'updated_at', descending: true }"
  * ></wy-files>
- * ``` 
+ * ```
  */
 @customElement("wy-files")
 @localized()
@@ -144,6 +146,7 @@ export class WyFiles extends WeavyAppComponent {
     dropZoneCss,
     colorModesCss,
     hostBlockCss,
+    hostFillCss,
     hostPaddedCss,
     hostFontCss,
     hostScrollYCss,
@@ -160,6 +163,7 @@ export class WyFiles extends WeavyAppComponent {
     [Feature.Comments]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
+    [Feature.Follow]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
     [Feature.Mentions]: true,
@@ -199,7 +203,7 @@ export class WyFiles extends WeavyAppComponent {
 
   /** @internal */
   private persistState = new PersistStateController(this);
-  
+
   /** @internal */
   private dropZone: DropZoneController = new DropZoneController(this);
 
@@ -261,7 +265,7 @@ export class WyFiles extends WeavyAppComponent {
           { name: "showTrashed", override: true },
         ],
         this.uid.toString(),
-        `u${this.user.id}`
+        `u${this.user.id}`,
       );
       //this.history.observe(['view'], this.uid.toString())
     }
@@ -282,10 +286,7 @@ export class WyFiles extends WeavyAppComponent {
     const isDragActive = this.dropZone.isDragActive;
 
     return html`
-      <div
-        part="wy-files ${partMap({ "wy-dragging": isDragActive })}"
-        data-drag-title=${msg("Drop files here")}
-      >
+      <div part="wy-files ${partMap({ "wy-dragging": isDragActive })}" data-drag-title=${msg("Drop files here")}>
         <wy-files-header
           .order=${this.order}
           .showTrashed=${this.showTrashed}
@@ -317,6 +318,8 @@ export class WyFiles extends WeavyAppComponent {
           }}
         ></wy-files-list>
       </div>
+
+      <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
     `;
   }
 }

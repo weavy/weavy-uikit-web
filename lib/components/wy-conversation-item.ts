@@ -3,7 +3,7 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
 import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
-import type { MessageType } from "../types/messages.types";
+import type { MsgType } from "../types/msg.types";
 import type { UserType } from "../types/users.types";
 import { type MembersResultType } from "../types/members.types";
 import { localized, msg } from "@lit/localize";
@@ -164,7 +164,7 @@ export class WyConversationItem extends LitElement {
    * @internal
    */
   @property({ attribute: false })
-  lastMessage?: MessageType;
+  lastMessage?: MsgType;
 
   /**
    * Realtime handler for when new messages have been created.
@@ -179,19 +179,21 @@ export class WyConversationItem extends LitElement {
       return;
     }
 
-    updateCacheItem(this.weavy.queryClient, ["apps", realtimeEvent.message.app.id], undefined, (item: AppType) => {
-      item.last_message = realtimeEvent.message;
-      item.is_unread = realtimeEvent.message.created_by.id !== this.user?.id;
-    });
+    updateCacheItem<AppType>(this.weavy.queryClient, ["apps", realtimeEvent.message.app.id], undefined, (item) => ({
+      ...item,
+      last_message: realtimeEvent.message,
+      is_unread: realtimeEvent.message.created_by.id !== this.user?.id,
+    }));
 
-    updateCacheItems(
+    updateCacheItems<AppType>(
       this.weavy.queryClient,
       { queryKey: ["apps", "list"], exact: false },
       realtimeEvent.message.app.id,
-      (item: AppType) => {
-        item.last_message = realtimeEvent.message;
-        item.is_unread = realtimeEvent.message.created_by.id !== this.user?.id;
-      }
+      (item) => ({
+        ...item,
+        last_message: realtimeEvent.message,
+        is_unread: realtimeEvent.message.created_by.id !== this.user?.id,
+      }),
     );
   };
 
@@ -381,7 +383,7 @@ export class WyConversationItem extends LitElement {
   override render() {
     const dateFull = this.lastMessage?.created_at
       ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
-          new Date(this.lastMessage.created_at)
+          new Date(this.lastMessage.created_at),
         )
       : "";
     const dateFromNow = this.lastMessage?.created_at
@@ -390,7 +392,7 @@ export class WyConversationItem extends LitElement {
 
     const otherMember =
       this.type === AppTypeGuid.PrivateChat && this.user
-        ? (this.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user
+        ? ((this.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user)
         : null;
 
     return html`
@@ -414,24 +416,24 @@ export class WyConversationItem extends LitElement {
           ? this.avatarUrl
             ? html`<wy-avatar slot="image" .size=${48} src=${this.avatarUrl}></wy-avatar>`
             : this.type == AppTypeGuid.ChatRoom
-            ? html` <wy-avatar-group
-                slot="image"
-                .members=${this.members?.data}
-                title=${this.name}
-                .size=${48}
-              ></wy-avatar-group>`
-            : html`
-                <wy-avatar
+              ? html` <wy-avatar-group
                   slot="image"
-                  src=${ifDefined(otherMember?.avatar_url)}
-                  name=${ifDefined(otherMember?.name)}
-                  description=${ifDefined(otherMember?.comment)}
-                  presence=${otherMember?.presence || "away"}
-                  ?isAgent=${otherMember?.is_agent}
-                  id=${ifDefined(otherMember?.id)}
-                  size=${48}
-                ></wy-avatar>
-              `
+                  .members=${this.members?.data}
+                  title=${this.name}
+                  .size=${48}
+                ></wy-avatar-group>`
+              : html`
+                  <wy-avatar
+                    slot="image"
+                    src=${ifDefined(otherMember?.avatar_url)}
+                    name=${ifDefined(otherMember?.name)}
+                    description=${ifDefined(otherMember?.comment)}
+                    presence=${otherMember?.presence || "away"}
+                    ?isAgent=${otherMember?.is_agent}
+                    id=${ifDefined(otherMember?.id)}
+                    size=${48}
+                  ></wy-avatar>
+                `
           : nothing}
 
         <span slot="title">${this.name || this.lastMessage?.plain || msg("Untitled conversation")}</span>
@@ -496,7 +498,7 @@ export class WyConversationItem extends LitElement {
               <wy-icon name="pin" size=${20} color=""></wy-icon>
             </wy-button>`
           : nothing}
- 
+
         <wy-dropdown small slot="actions" directionX="left">
           <wy-dropdown-item @click=${() => this.dispatchMarked(this.unread)}>
             <wy-icon name=${this.unread ? "read" : "unread"}></wy-icon>

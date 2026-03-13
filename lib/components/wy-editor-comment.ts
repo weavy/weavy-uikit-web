@@ -3,18 +3,17 @@ import { customElement } from "../utils/decorators/custom-element";
 import { localized, msg } from "@lit/localize";
 import { ref } from "lit/directives/ref.js";
 import { Feature } from "../types/features.types";
-import { partMap } from "../utils/directives/shadow-part-map";
 
 import commentEditorStyles from "../scss/components/editor-comment.scss";
 
-import { WyEditor } from "./wy-editor";
+import { WyEditorMsg } from "./wy-editor-msg";
 import "./ui/wy-dropdown";
 import "./ui/wy-icon";
 import "./ui/wy-button";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wy-comment-editor": WyCommentEditor;
+    "wy-editor-comment": WyEditorComment;
   }
 }
 
@@ -28,20 +27,19 @@ declare global {
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * - [`<wy-button>`](./ui/wy-button.ts)
  *
- * @csspart wy-comment-editor-inputs - Container for the editor inputs and add menu
- * @csspart wy-comment-editor-text - Wrapper for the editor text area
+ * @csspart wy-editor-comment-inputs - Container for the editor inputs and add menu
+ * @csspart wy-editor-comment-text - Wrapper for the editor text area
  * @csspart wy-is-invalid - Applied to the editor text wrapper when there is a validation/error state
  */
-@customElement("wy-comment-editor")
+@customElement("wy-editor-comment")
 @localized()
-export class WyCommentEditor extends WyEditor {
-
-  static override styles = [...WyEditor.styles, commentEditorStyles]
+export class WyEditorComment extends WyEditorMsg {
+  static override styles = [...WyEditorMsg.styles, commentEditorStyles];
 
   constructor() {
     super();
     this.editorType = "comments";
-    this.editorClass = "wy-comment-editor";
+    this.editorClass = "wy-editor-comment";
   }
 
   override willUpdate(changedProperties: PropertyValueMap<this>): void {
@@ -49,9 +47,9 @@ export class WyCommentEditor extends WyEditor {
 
     if (changedProperties.has("editorLocation")) {
       if (this.editorLocation === "files") {
-        this.editorClass = "wy-comment-editor wy-comment-editor-bottom";
+        this.editorClass = "wy-editor-comment wy-editor-comment-bottom";
       } else if (this.editorLocation === "apps") {
-        this.editorClass = "wy-comment-editor wy-comment-editor-bottom";
+        this.editorClass = "wy-editor-comment wy-editor-comment-bottom";
       }
     }
   }
@@ -73,7 +71,7 @@ export class WyCommentEditor extends WyEditor {
    * @internal
    */
   protected override renderMiddleSlot() {
-    return html`<div part="wy-comment-editor-inputs">
+    return html`<div part="wy-editor-comment-inputs">
       <!-- Add -->
       ${this.componentFeatures?.allowsAnyFeature(
         Feature.Attachments,
@@ -82,11 +80,11 @@ export class WyCommentEditor extends WyEditor {
         Feature.ZoomMeetings,
         Feature.GoogleMeet,
         Feature.MicrosoftTeams,
-        Feature.Polls
+        Feature.Polls,
       )
         ? html`<wy-dropdown icon="plus" directionY="up" ?disabled=${this.disabled}>
             ${this.componentFeatures?.allowsFeature(Feature.Attachments)
-              ? html`<wy-dropdown-item @click=${this.openFileInput} title=${msg("From device")}>
+              ? html`<wy-dropdown-item @click=${() => this.openFileInput()} title=${msg("From device")}>
                     <wy-icon name="attachment"></wy-icon>
                     <span>${msg("From device")}</span>
                   </wy-dropdown-item>
@@ -97,7 +95,7 @@ export class WyCommentEditor extends WyEditor {
                     @change=${(e: Event) =>
                       this.handleUploadFiles(
                         Array.from((e.target as HTMLInputElement).files || []),
-                        e.target as HTMLInputElement
+                        e.target as HTMLInputElement,
                       )}
                     multiple
                     hidden
@@ -105,7 +103,7 @@ export class WyCommentEditor extends WyEditor {
                   />`
               : nothing}
             ${this.componentFeatures?.allowsFeature(Feature.CloudFiles)
-              ? html`<wy-dropdown-item @click=${this.openCloudFiles} title=${msg("From cloud")}>
+              ? html`<wy-dropdown-item @click=${() => this.openCloudFiles()} title=${msg("From cloud")}>
                   <wy-icon name="cloud"></wy-icon>
                   <span>${msg("From cloud")}</span>
                 </wy-dropdown-item>`
@@ -138,7 +136,7 @@ export class WyCommentEditor extends WyEditor {
                 `
               : nothing}
             ${this.componentFeatures?.allowsFeature(Feature.Polls)
-              ? html`<wy-dropdown-item @click=${() => this.openPolls()} title=${msg("Poll")}>
+              ? html`<wy-dropdown-item @click=${() => this.togglePolls()} title=${msg("Poll")}>
                   <wy-icon name="poll"></wy-icon>
                   <span>${msg("Poll")}</span>
                 </wy-dropdown-item>`
@@ -147,12 +145,8 @@ export class WyCommentEditor extends WyEditor {
         : nothing}
 
       <!-- Input -->
-      <div
-        part=${partMap({ "wy-comment-editor-text": true, "wy-is-invalid": this.editorError })}
-        ${ref(this.editorRef)}
-      >
-        ${this.renderEditorDummy()}
-      </div>
+
+      ${this.renderEditor()}
 
       <!-- Button -->
       <wy-button kind="icon" @click="${() => this.submit()}" title=${this.buttonText} ?disabled=${this.disabled}>
@@ -169,8 +163,6 @@ export class WyCommentEditor extends WyEditor {
    * @internal
    */
   protected override renderBottomSlot(): (TemplateResult | typeof nothing)[] | TemplateResult | typeof nothing {
-    return [
-      this.renderLists()
-    ];
+    return [this.renderLists()];
   }
 }

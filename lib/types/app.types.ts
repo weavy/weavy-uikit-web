@@ -4,6 +4,8 @@ import { MsgType } from "./msg.types";
 import { InfiniteQueryResultType } from "./query.types";
 //import { UserType } from "./users.types";
 
+export type AppUidType = string | number;
+
 export enum AppTypeGuid {
   Chat = "d65dd4bc-418e-403c-9f56-f9cf4da931ed",
   Comments = "88f96a08-c6c1-4eac-a0bd-5bf8fba1a3fd",
@@ -153,3 +155,7 @@ export type MetadataSourceType = {
 export type AppWithSourceMetadataType = AppType & {
   metadata?: AppType["metadata"] & MetadataSourceType
 }
+
+export type AppListType = AppType[] & {
+  current?: AppType | null | undefined;
+};
