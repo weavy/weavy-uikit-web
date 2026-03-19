@@ -45,17 +45,23 @@ export class ThemeController implements ReactiveController {
 
   checkThemeUpdate() {
     const nextThemeColor = this.themeColor || getCSSThemeColor(this.host) || getMetaThemeColor();
-    if (nextThemeColor && nextThemeColor !== this._resolvedThemeColor) {
-      this._resolvedThemeColor = nextThemeColor;
-      console.info("Configuring theme", this._resolvedThemeColor);
-      const themeColors = generateThemeColors(this._resolvedThemeColor).join("");
-      const colorCSS = css`
-        :host {
-          ${unsafeCSS(themeColors)};
-        }
-      `;
-      const shadowRoot = this.host.renderRoot as ShadowRoot;
-      adoptStyles(shadowRoot, [...this.styles, colorCSS]);
+    if (nextThemeColor !== this._resolvedThemeColor) {
+      const noResolvedColor = !nextThemeColor || /initial|none|unset|undefined|null/.test(nextThemeColor);
+      this._resolvedThemeColor = noResolvedColor ? undefined : nextThemeColor;
+
+      if (this._resolvedThemeColor) {
+        console.info("Configuring theme", this._resolvedThemeColor);
+        const themeColors = generateThemeColors(this._resolvedThemeColor).join("");
+        const colorCSS = css`
+          :host {
+            ${unsafeCSS(themeColors)};
+          }
+        `;
+        adoptStyles(this.host.renderRoot as ShadowRoot, [...this.styles, colorCSS]);
+      } else {
+        console.info("Restoring theme to default");
+        adoptStyles(this.host.renderRoot as ShadowRoot, [...this.styles]);
+      }
     }
   }
 
@@ -67,8 +73,10 @@ export class ThemeController implements ReactiveController {
   }
 
   hostConnected() {
-    this.cssObserverDisconnect = observeCSSThemeColor(this.host, () => this.checkThemeUpdate());
-    this.metaObserverDisconnect = observeMetaThemeColor(() => this.checkThemeUpdate());
+    requestAnimationFrame(() => {
+      this.cssObserverDisconnect = observeCSSThemeColor(this.host, () => this.checkThemeUpdate());
+      this.metaObserverDisconnect = observeMetaThemeColor(() => this.checkThemeUpdate());
+    })
   }
 
   hostDisconnected() {

@@ -31,7 +31,7 @@ import type { WyCloudFiles } from "./wy-cloud-files";
 import { removeMutation } from "../utils/mutation-cache";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { hasPermission } from "../utils/permission";
+import { hasAnyPermission } from "../utils/permission";
 import { Feature } from "../types/features.types";
 import type { CreateFilesEventType, ExternalBlobsEventType, UploadFilesEventType } from "../types/files.events";
 import type { NamedEvent } from "../types/generic.types";
@@ -418,7 +418,7 @@ export class WyFilesHeader extends WeavySubAppComponent {
       <header part="wy-files-header wy-header wy-header-outer">
         <nav part="wy-files-header-toolbar wy-toolbar">
           <div part="wy-toolbar-buttons">
-            ${hasPermission(PermissionType.Create, this.app?.permissions)
+            ${hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions)
               ? html`
                   <wy-dropdown title=${msg("Add files")}>
                     <wy-icon slot="button-content" name="plus" first></wy-icon>

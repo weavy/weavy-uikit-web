@@ -710,6 +710,10 @@
         <source>New posts</source>
         <target>Nya inlägg</target>
       </trans-unit>
+      <trans-unit id="s12bd4a0c0ef27183">
+        <source>Commenting is not enabled for this.</source>
+        <target>Kommentering är inte tillgängligt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

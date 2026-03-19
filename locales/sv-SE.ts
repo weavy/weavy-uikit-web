@@ -43,6 +43,7 @@
 's0d7fcbf8f03c7116': `Avprenumerera`,
 's12ae2efccc49d4af': `Konversationer`,
 's12b57a05d9905236': `Din sökning hade inga träffar.`,
+'s12bd4a0c0ef27183': `Kommentering är inte tillgängligt.`,
 's1302c950c73f84cd': `Microsoft Teams`,
 's155459b88b1ea946': str`${0} svarade på ditt inlägg`,
 's15bdec250a4a55fb': `Fallande`,

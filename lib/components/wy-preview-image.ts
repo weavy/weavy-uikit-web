@@ -15,6 +15,7 @@ import contentImageCss from "../scss/components/content-image.scss";
 import hostContentsCss from "../scss/host-contents.scss";
 
 import "./ui/wy-progress-circular";
+import "./ui/wy-container";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -27,6 +28,7 @@ declare global {
  *
  * **Used sub components:**
  *
+ * - [`<wy-container>`](./ui/wy-container.ts)
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  *
  * @csspart wy-content-image - Root image wrapper.
@@ -77,6 +79,7 @@ export class WyPreviewImage extends LitElement {
     const imageStyles = hasDimensions ? { ["--width"]: this.width, ["--height"]: this.height } : {};
 
     return html`
+    <wy-container fill>
       <div part="wy-content-image ${partMap({ "wy-intrinsic-image": !hasDimensions })}" style=${styleMap(imageStyles)}>
         <img
           part="wy-content-image-img"
@@ -95,6 +98,7 @@ export class WyPreviewImage extends LitElement {
           ? html`<wy-progress-circular part="wy-content-progress" indeterminate overlay></wy-progress-circular>`
           : nothing}
       </div>
+    </wy-container>
     `;
   }
 }

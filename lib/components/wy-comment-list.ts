@@ -7,7 +7,7 @@ import { InfiniteQueryController } from "../controllers/infinite-query-controlle
 import { CommentType, CommentsResultType, MutateCommentProps } from "../types/comments.types";
 import { getAddCommentMutationOptions, getCommentsOptions } from "../data/comments";
 import { EntityTypeString, PermissionType } from "../types/app.types";
-import { hasPermission } from "../utils/permission";
+import { hasAnyPermission } from "../utils/permission";
 import { repeat } from "lit/directives/repeat.js";
 import { localized, msg } from "@lit/localize";
 import { updateReaction } from "../data/reactions";
@@ -194,7 +194,10 @@ export class WyCommentList extends WeavySubAppComponent {
     }
 
     if (
-      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("componentFeatures") || changedProperties.has("parentId")) &&
+      (changedProperties.has("weavy") ||
+        changedProperties.has("app") ||
+        changedProperties.has("componentFeatures") ||
+        changedProperties.has("parentId")) &&
       this.weavy &&
       this.app &&
       this.parentId
@@ -338,7 +341,6 @@ export class WyCommentList extends WeavySubAppComponent {
                 }}
                 @vote=${(e: PollVoteEventType) => {
                   if (e.detail.parentId && e.detail.parentType) {
-                    console.log("Voting on option", e.detail.optionId, "for comment", e.detail.parentId);
                     void this.pollMutation?.mutate({
                       optionId: e.detail.optionId,
                       parentType: e.detail.parentType,
@@ -371,17 +373,22 @@ export class WyCommentList extends WeavySubAppComponent {
               ><wy-progress-circular indeterminate padded reveal ?hidden=${!isPending}></wy-progress-circular
             ></wy-empty>
           `}
-
-      <wy-editor-comment
-        editorLocation=${this.location}
-        .parentId=${this.parentId}
-        .typing=${false}
-        .draft=${true}
-        ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
-        placeholder=${this.placeholder ?? msg("Create a comment...")}
-        buttonText=${msg("Comment", { desc: "Button action to comment" })}
-        @submit=${(e: MsgEditorSubmitEventType) => this.handleSubmit(e)}
-      ></wy-editor-comment>
+      ${this.componentFeatures?.allowsFeature(Feature.Comment)
+        ? html`
+            <wy-editor-comment
+              editorLocation=${this.location}
+              .parentId=${this.parentId}
+              .typing=${false}
+              .draft=${true}
+              ?disabled=${!hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions)}
+              placeholder=${this.placeholder ?? msg("Create a comment...")}
+              buttonText=${msg("Comment", { desc: "Button action to comment" })}
+              @submit=${(e: MsgEditorSubmitEventType) => this.handleSubmit(e)}
+            ></wy-editor-comment>
+          `
+        : !flattenedPages.length
+          ? html`<em>${msg("Commenting is not enabled for this.")}</em>`
+          : nothing}
     `;
   }
 

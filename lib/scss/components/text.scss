@@ -13,11 +13,21 @@
 // A component for item metadata such as dates, times etc.
 [part~="wy-meta"] {
   color: color.token(--wy-outline);
+
+  @supports (color: color(from var(--wy-component-color) srgb r g b / var.default(--wy-opacity-muted))) {
+    color: color(from var(--wy-component-color) srgb r g b / var.default(--wy-opacity-muted));
+  }
+
   font-size: var.default(--wy-font-size-sm);
 }
 
 [part~="wy-meta-sm"] {
   color: color.token(--wy-outline);
+
+  @supports (color: color(from var(--wy-component-color) srgb r g b / var.default(--wy-opacity-muted))) {
+    color: color(from var(--wy-component-color) srgb r g b / var.default(--wy-opacity-muted));
+  }
+  
   font-size: var.default(--wy-font-size-xs);
 }
 

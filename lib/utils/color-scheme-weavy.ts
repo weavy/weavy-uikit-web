@@ -79,10 +79,10 @@ export class SchemeWeavy extends DynamicScheme {
 
   constructor(sourceColorHct: Hct, isDark: boolean, contrastLevel: number, variant: Variant = Variant.FIDELITY) {
     const primaryChroma = sourceColorHct.chroma;
-    const secondaryChroma = Math.min(36.0, sourceColorHct.chroma * 16.0 / 36.0);
+    const secondaryChroma = Math.min(36.0, (sourceColorHct.chroma * 16.0) / 36.0);
     const tertiaryChroma = secondaryChroma;
-    const neutralChroma = Math.min(6.0, sourceColorHct.chroma * 6.0 / 36.0);
-    const neutralVariantChroma = Math.min(8.0, sourceColorHct.chroma * 8.0 / 36.0);
+    const neutralChroma = Math.min(6.0, (sourceColorHct.chroma * 6.0) / 36.0);
+    const neutralVariantChroma = Math.min(8.0, (sourceColorHct.chroma * 8.0) / 36.0);
 
     super({
       sourceColorHct,
@@ -91,9 +91,36 @@ export class SchemeWeavy extends DynamicScheme {
       isDark,
       primaryPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, primaryChroma),
       secondaryPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, secondaryChroma),
-      tertiaryPalette: TonalPalette.fromHueAndChroma(sanitizeDegreesDouble(sourceColorHct.hue - 6 * 22.5), tertiaryChroma),
+      tertiaryPalette: TonalPalette.fromHueAndChroma(
+        sanitizeDegreesDouble(sourceColorHct.hue - 6 * 22.5),
+        tertiaryChroma,
+      ),
       neutralPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, neutralChroma),
       neutralVariantPalette: TonalPalette.fromHueAndChroma(sourceColorHct.hue, neutralVariantChroma),
+    });
+
+    // Text fix for primary container
+    const schemeColors = this.colors;
+    const onPrimaryContainer = schemeColors.onPrimaryContainer();
+
+    Object.defineProperty(this.colors, "onPrimaryContainer", {
+      get() {
+        return () =>
+          Object.assign(onPrimaryContainer.clone(), {
+            name: "primary_container",
+            getTone: (s: DynamicScheme) => {
+              // get true tone and use the inverse
+              const tone = schemeColors.primaryContainer().getTone(<DynamicScheme>{ ...s });
+              const toneThreshold = s.isDark ? 67 : 75;
+
+              if (tone > toneThreshold) {
+                return 3;
+              } else {
+                return 98;
+              }
+            },
+          });
+      },
     });
 
     const hue = sourceColorHct.hue;

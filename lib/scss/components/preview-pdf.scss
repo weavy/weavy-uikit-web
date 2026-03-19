@@ -1,4 +1,5 @@
 @use "../base/var";
+@use "../base/const";
 @use "../base/color";
 @use "../base/scroll";
 @use "../base/svg";
@@ -11,10 +12,18 @@
   bottom: 0;
   left: 0;
 
+  display: flex;
+  flex-direction: column-reverse;
+
   @include scroll.scroll-x-y;
 }
 
 .wy-content-pdf {
+  /*canvas {
+      margin: auto;
+      display: block;
+    }*/
+
   @include pdf-viewer.defaults;
 
   .pdfViewer .page {
@@ -27,10 +36,46 @@
   }
 }
 
+[part~="wy-pdf-toolbar"] {
+  position: sticky;
+  order: -1;
+  z-index: const.$zindex-sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  min-height: min-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+  box-sizing: border-box;
+
+  padding: var.default(--wy-padding-lg);
+}
+
 .wy-pdf-page-number {
-  width: var.wy-rem(3);
+  min-width: 1em;
+  width: 3em;
+  max-width: var.wy-rem(3);
+  @supports (field-sizing: content) {
+    width: auto;
+    field-sizing: content;
+  }
+  font-variant-numeric: tabular-nums;
 }
 
 .wy-pdf-zoom-level {
-  width: var.wy-rem(5);
+  min-width: 1em;
+  width: 3em;
+  max-width: var.wy-rem(5);
+  @supports (field-sizing: content) {
+    width: auto;
+    field-sizing: content;
+  }
+  font-variant-numeric: tabular-nums;
+}
+
+.wy-pdf-page-number-total {
+  font-variant-numeric: tabular-nums;
+  
 }

@@ -368,13 +368,13 @@ export class WyConversationItem extends LitElement {
       void this.weavy.subscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
       void this.weavy.subscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
       void this.weavy.subscribe(subscribeGroup, "message_created", this.handleMessageCreated);
-      void this.weavy.subscribe(subscribeGroup, "app_marked", this.handleConversationMarked);
+      void this.weavy.subscribe(subscribeGroup, "app_marked", this.handleConversationMarked, true)
 
       this.#unsubscribeToRealtime = () => {
         void this.weavy?.unsubscribe(subscribeGroup, "app_updated", this.handleConversationUpdated);
         void this.weavy?.unsubscribe(subscribeGroup, "member_added", this.handleConversationUpdated);
         void this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleMessageCreated);
-        void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleConversationMarked);
+        void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleConversationMarked, true);
         this.#unsubscribeToRealtime = undefined;
       };
     }

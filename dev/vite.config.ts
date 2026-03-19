@@ -5,14 +5,19 @@ import fs from "node:fs";
 import path from "node:path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
-import { utf8BomPlugin, weavyAuthServer, weavyChunkNames, weavyImportUrlPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
+import {
+  utf8BomPlugin,
+  weavyAuthServer,
+  weavyChunkNames,
+  weavyImportUrlPlugin,
+  excludeNodeInPdfJS,
+} from "../utils/vite-plugins";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 // CEM Plugins
-import { jsdocExamplePlugin } from 'cem-plugin-jsdoc-example';
-
+import { jsdocExamplePlugin } from "cem-plugin-jsdoc-example";
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -31,10 +36,10 @@ export default defineConfig(({ command, mode }) => {
     WEAVY_VERSION: JSON.stringify(version),
     "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
   };
-  
+
   if (command === "serve") {
-    define.WEAVY_SOURCE_FORMAT = `undefined`
-    define.WEAVY_IMPORT_URL = `"/dist/"`
+    define.WEAVY_SOURCE_FORMAT = `undefined`;
+    define.WEAVY_IMPORT_URL = `"/dist/"`;
   }
 
   let httpsConfig;
@@ -72,19 +77,31 @@ export default defineConfig(({ command, mode }) => {
         plugins: [
           // https://custom-elements-manifest.open-wc.org/analyzer/plugins/intro/
           jsdocExamplePlugin(),
-        ]
+        ],
       }),
       viteStaticCopy({
         targets: [
           {
-            src: 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
-            dest: 'pdfjs',
+            src: "node_modules/pdfjs-dist/build/pdf.worker.min.mjs",
+            dest: "pdfjs",
           },
           {
-            src: 'node_modules/pdfjs-dist/cmaps/*.bcmap',
-            dest: 'pdfjs/cmaps'
-          }
-        ]
+            src: "node_modules/pdfjs-dist/cmaps/*.bcmap",
+            dest: "pdfjs/cmaps",
+          },
+          {
+            src: "node_modules/pdfjs-dist/iccs/*.icc",
+            dest: "pdfjs/iccs",
+          },
+          {
+            src: "node_modules/pdfjs-dist/standard_fonts/*.@(pfb|ttf)",
+            dest: "pdfjs/fonts",
+          },
+          {
+            src: "node_modules/pdfjs-dist/wasm/*.wasm",
+            dest: "pdfjs/wasm",
+          },
+        ],
       }),
       weavyImportUrlPlugin(),
       litCss(),

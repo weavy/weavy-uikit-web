@@ -116,7 +116,7 @@ export class TypingController implements ReactiveController {
       await Promise.all([this.whenWeavyContext, this.whenComponentFeaturesContext]);
       if (this.componentFeatures?.allowsFeature(Feature.Typing)) {
         //console.log("typing subscribe", this.appId)
-        void this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+        void this.weavy?.subscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping, true);
         void this.weavy?.subscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
       }
       this.registrationRequested = false;
@@ -126,7 +126,7 @@ export class TypingController implements ReactiveController {
   async unregisterRealtime(skipAwait: boolean = false) {
     if (!this.registrationRequested && this.appId && this.userId) {
       !skipAwait && await this.whenWeavyContext;
-      void this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping);
+      void this.weavy?.unsubscribe(`a${this.appId}`, "typing", this.handleRealtimeTyping, true);
       void this.weavy?.unsubscribe(`a${this.appId}`, "message_created", this.handleRealtimeStopTyping);
     }
   }

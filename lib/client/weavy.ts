@@ -80,6 +80,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
     disableEnvironmentImports: false,
     gcTime: 1000 * 60 * 60 * 24, // 24h,
     locale: SOURCE_LOCALE,
+    pdfHWA: "auto",
     scrollBehavior: "auto",
     staleTime: 1000 * 1, // 1s
     tokenFactoryRetryDelay: 2000,
@@ -104,6 +105,7 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   configurationTimeout = WeavyClient.defaults.configurationTimeout;
   disableEnvironmentImports = WeavyClient.defaults.disableEnvironmentImports;
   gcTime = WeavyClient.defaults.gcTime;
+  pdfHWA = WeavyClient.defaults.pdfHWA;
   scrollBehavior = WeavyClient.defaults.scrollBehavior;
   staleTime = WeavyClient.defaults.staleTime;
   tokenFactoryRetryDelay = WeavyClient.defaults.tokenFactoryRetryDelay;

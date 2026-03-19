@@ -48,6 +48,11 @@ export interface StrictWeavyOptions {
   gcTime: number;
 
   /**
+   * Whether the PDF preview should use hardware acceleration.
+   */
+  pdfHWA: "never" | "auto" | "always";
+
+  /**
    * Which scroll behavior to use (where applicable).
    * > Note that not all browsers (Chrome) have similar scroll transitions, they may be very slow.
    * See https://developer.mozilla.org/en-US/docs/Web/API/Element/scroll#behavior

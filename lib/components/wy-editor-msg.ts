@@ -875,6 +875,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
         .editorType=${this.editorType}
         .typing=${this.typing}
         .text=${this.text}
+        ?disabled=${this.disabled}
         @typing=${() => this.handleTyping()}
         @change=${(e: EditorChangeEventType) => {
           this.text = e.detail.text;

@@ -146,6 +146,7 @@ export class WyPosts extends WeavyAppComponent implements PostQueryFilterProps {
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
     [Feature.Comments]: true,
+    [Feature.Comment]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.Follow]: true,

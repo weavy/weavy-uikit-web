@@ -156,6 +156,7 @@
 
     th {
       text-align: inherit;
+      text-align: match-parent;
       text-align: -webkit-match-parent;
       border-width: var.default(--wy-border) 0 var.default(--wy-border) var.default(--wy-border);
       font-weight: var.default(--wy-headings-font-weight);

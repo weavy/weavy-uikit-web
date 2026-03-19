@@ -28,6 +28,8 @@
 
 @mixin text-layer {
   .textLayer {
+    color-scheme: only light;
+
     position: absolute;
     text-align: initial;
     inset: 0;
@@ -52,19 +54,29 @@
       transform-origin: 0% 0%;
     }
 
+    /* We multiply the font size by --min-font-size, and then scale the text
+   * elements by 1/--min-font-size. This allows us to effectively ignore the
+   * minimum font size enforced by the browser, so that the text layer <span>s
+   * can always match the size of the text in the canvas. */
+    --min-font-size: 1;
+    --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+    --min-font-size-inv: calc(1 / var(--min-font-size));
+
     > :not(.markedContent),
     .markedContent span:not(.markedContent) {
       z-index: 1;
+
+      --font-height: 0; /* set by text_layer.js */
+      font-size: calc(var(--text-scale-factor) * var(--font-height));
+
+      --scale-x: 1;
+      --rotate: 0deg;
+      transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
     }
 
-    /* Only necessary in Google Chrome, see issue 14205, and most unfortunately
-     * the problem doesn't show up in "text" reference tests. */
-    /*#if !MOZCENTRAL*/
-    span.markedContent {
-      top: 0;
-      height: 0;
+    .markedContent {
+      display: contents;
     }
-    /*#endif*/
 
     span[role="img"] {
       user-select: none;
@@ -143,10 +155,23 @@
       top: 0;
     }
   }
+
+  .textLayerImages {
+    position: absolute;
+    inset: 0;
+    user-select: none;
+
+    canvas {
+      position: absolute;
+      transform-origin: 0% 0%;
+    }
+  }
 }
 
 @mixin annotation-layer {
   .annotationLayer {
+    color-scheme: only light;
+
     --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
     --input-focus-border-color: Highlight;
     --input-focus-outline: 1px solid Canvas;
@@ -183,7 +208,7 @@
       }
 
       .popupAnnotation .popup {
-        outline: calc(1.5px * var(--scale-factor)) solid CanvasText !important;
+        outline: calc(1.5px * var(--total-scale-factor)) solid CanvasText !important;
         background-color: ButtonFace !important;
         color: ButtonText !important;
       }
@@ -200,7 +225,7 @@
       }
 
       .popupAnnotation.focused .popup {
-        outline: calc(3px * var(--scale-factor)) solid Highlight !important;
+        outline: calc(3px * var(--total-scale-factor)) solid Highlight !important;
       }
     }
 
@@ -243,7 +268,6 @@
         white-space: nowrap;
         font: 10px sans-serif;
         line-height: 1.35;
-        user-select: none;
       }
     }
 
@@ -253,11 +277,22 @@
       pointer-events: auto;
       box-sizing: border-box;
       transform-origin: 0 0;
+      user-select: none;
 
       &:has(div.annotationContent) {
         canvas.annotationContent {
           display: none;
         }
+      }
+
+      .overlaidText {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        display: inline-block;
+        overflow: hidden;
       }
     }
 
@@ -277,7 +312,6 @@
     :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder) > a:hover {
       opacity: 0.2;
       background-color: rgb(255 255 0);
-      box-shadow: 0 2px 10px rgb(255 255 0);
     }
 
     .linkAnnotation.hasBorder:hover {
@@ -303,7 +337,7 @@
       background-image: var(--annotation-unfocused-field-background);
       border: 2px solid var(--input-unfocused-border-color);
       box-sizing: border-box;
-      font: calc(9px * var(--scale-factor)) sans-serif;
+      font: calc(9px * var(--total-scale-factor)) sans-serif;
       height: 100%;
       margin: 0;
       vertical-align: top;
@@ -411,11 +445,11 @@
 
     .textWidgetAnnotation input.comb:focus {
       /*
-        * Letter spacing is placed on the right side of each character. Hence, the
-        * letter spacing of the last character may be placed outside the visible
-        * area, causing horizontal scrolling. We avoid this by extending the width
-        * when the element has focus and revert this when it loses focus.
-        */
+     * Letter spacing is placed on the right side of each character. Hence, the
+     * letter spacing of the last character may be placed outside the visible
+     * area, causing horizontal scrolling. We avoid this by extending the width
+     * when the element has focus and revert this when it loses focus.
+     */
       width: 103%;
     }
 
@@ -430,7 +464,7 @@
 
     .popupAnnotation {
       position: absolute;
-      font-size: calc(9px * var(--scale-factor));
+      font-size: calc(9px * var(--total-scale-factor));
       pointer-events: none;
       width: max-content;
       max-width: 45%;
@@ -439,15 +473,17 @@
 
     .popup {
       background-color: rgb(255 255 153);
-      box-shadow: 0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor)) rgb(136 136 136);
-      border-radius: calc(2px * var(--scale-factor));
+      color: black;
+      box-shadow: 0 calc(2px * var(--total-scale-factor)) calc(5px * var(--total-scale-factor)) rgb(136 136 136);
+      border-radius: calc(2px * var(--total-scale-factor));
       outline: 1.5px solid rgb(255 255 74);
-      padding: calc(6px * var(--scale-factor));
+      padding: calc(6px * var(--total-scale-factor));
       cursor: pointer;
       font: message-box;
       white-space: normal;
       word-wrap: break-word;
       pointer-events: auto;
+      user-select: text;
     }
 
     .popupAnnotation.focused .popup {
@@ -455,36 +491,41 @@
     }
 
     .popup * {
-      font-size: calc(9px * var(--scale-factor));
+      font-size: calc(9px * var(--total-scale-factor));
     }
 
     .popup > .header {
       display: inline-block;
     }
 
-    .popup > .header h1 {
+    .popup > .header > .title {
       display: inline;
+      font-weight: bold;
     }
 
     .popup > .header .popupDate {
       display: inline-block;
-      margin-left: calc(5px * var(--scale-factor));
+      margin-left: calc(5px * var(--total-scale-factor));
       width: fit-content;
     }
 
     .popupContent {
       border-top: 1px solid rgb(51 51 51);
-      margin-top: calc(2px * var(--scale-factor));
-      padding-top: calc(2px * var(--scale-factor));
+      margin-top: calc(2px * var(--total-scale-factor));
+      padding-top: calc(2px * var(--total-scale-factor));
     }
 
     .richText > * {
       white-space: pre-wrap;
-      font-size: calc(9px * var(--scale-factor));
+      font-size: calc(9px * var(--total-scale-factor));
     }
 
     .popupTriggerArea {
       cursor: pointer;
+
+      &:hover {
+        backdrop-filter: var(--hcm-highlight-filter);
+      }
     }
 
     section svg {
@@ -538,6 +579,8 @@
   }
 
   .xfaLayer {
+    color-scheme: only light;
+
     background-color: transparent;
   }
 
@@ -839,21 +882,17 @@
 }
 
 @mixin pdf-viewer {
-  //@import url(message_bar.css);
-  //@import url(dialog.css);
-  //@import url(text_layer_builder.css);
-  //@import url(annotation_layer_builder.css);
-  //@import url(xfa_layer_builder.css);
-  /* Ignored in GECKOVIEW builds: */
-  //@import url(annotation_editor_layer_builder.css);
-
   @at-root :host {
+    color-scheme: light dark;
+
     --viewer-container-height: 0;
     --pdfViewer-padding-bottom: 0;
     --page-margin: 1px auto -8px;
     --page-border: 9px solid transparent;
     --spreadHorizontalWrapped-margin-LR: -3.5px;
     --loading-icon-delay: 400ms;
+    --focus-ring-color: light-dark(#0060df, #0df);
+    --focus-ring-outline: 2px solid var(--focus-ring-color);
   }
 
   @media screen and (forced-colors: active) {
@@ -862,6 +901,7 @@
       --page-margin: 8px auto -1px;
       --page-border: 1px solid CanvasText;
       --spreadHorizontalWrapped-margin-LR: 3.5px;
+      --focus-ring-color: CanvasText;
     }
   }
 
@@ -887,7 +927,7 @@
 
   .pdfViewer {
     /* Define this variable here and not in :root to avoid to reflow all the UI
-      when scaling (see #15929). */
+     when scaling (see #15929). */
     --scale-factor: 1;
     --page-bg-color: unset;
 
@@ -922,11 +962,17 @@
         .structTree {
           contain: strict;
         }
+
+        &.detailView {
+          image-rendering: pixelated;
+        }
       }
     }
   }
 
   .pdfViewer .page {
+    --user-unit: 1;
+    --total-scale-factor: calc(var(--scale-factor) * var(--user-unit));
     --scale-round-x: 1px;
     --scale-round-y: 1px;
 
@@ -982,8 +1028,8 @@
 
   /*#if GENERIC*/
   .pdfViewer.removePageBorders,
- /*#endif*/
- .pdfViewer:is(.scrollHorizontal, .scrollWrapped) .spread {
+/*#endif*/
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .spread {
     margin-inline: 0;
   }
 
@@ -1015,7 +1061,7 @@
     //background: url("images/loading-icon.gif") center no-repeat;
     display: none;
     /* Using a delay with background-image doesn't work,
-      consequently we use the display. */
+     consequently we use the display. */
     transition-property: display;
     transition-delay: var(--loading-icon-delay);
     z-index: 5;

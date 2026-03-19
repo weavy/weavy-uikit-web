@@ -15,13 +15,14 @@ import { FileOpenEventType } from "../types/files.events";
 import { Feature } from "../types/features.types";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { isEntityChainMatch } from "../utils/notifications";
-import { EntityTypeString } from "../types/app.types";
+import { EntityTypeString, PermissionType } from "../types/app.types";
 import { MsgEditorSubmitEventType } from "../types/editor.events";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdateCommentMutationOptions } from "../data/comments";
 import { partMap } from "../utils/directives/shadow-part-map";
 import type { WyPreview } from "./wy-preview";
 import { dispatchUserAction } from "../utils/users";
+import { hasPermission } from "../utils/permission";
 
 import rebootCss from "../scss/reboot.scss";
 import commentCss from "../scss/components/comments.scss";
@@ -368,7 +369,7 @@ export class WyComment extends WeavySubAppComponent {
                                   </wy-dropdown-item>
                                 `
                               : nothing}
-                            ${this.user.id === this.comment.created_by.id
+                            ${this.user.id === this.comment.created_by.id || hasPermission(PermissionType.Admin, this.app?.permissions)
                               ? html`
                                   <wy-dropdown-item @click=${() => this.dispatchTrash()}>
                                     <wy-icon name="trashcan"></wy-icon>

@@ -28,7 +28,7 @@ import type {
 import { whenConnected, whenDocumentVisible, whenElementVisible } from "../utils/dom";
 import { ReactableType } from "../types/reactions.types";
 import { PollMutationType, getPollMutation } from "../data/poll";
-import { hasPermission } from "../utils/permission";
+import { hasAnyPermission } from "../utils/permission";
 import {
   MarkConversationMutationType,
   UpdateConversationMutationType,
@@ -159,8 +159,8 @@ export class WyConversation extends WeavySubAppComponent {
   @property({ type: Number })
   conversationId?: number;
 
-  /** 
-   * Any Message to edit  
+  /**
+   * Any Message to edit
    */
   @property({ attribute: false })
   editMessage?: MessageType;
@@ -433,24 +433,25 @@ export class WyConversation extends WeavySubAppComponent {
   }
 
   protected async handleEditLast(_e: CustomEvent) {
-    if(!this.user) {
-      return
+    if (!this.user) {
+      return;
     }
-      const messages = getFlatInfiniteResultData(this.messagesQuery.result.data);
-      // REVIEW: special handing of agent chat?
-      const lastTextMessage = messages.findLast((message) => this.user && message.created_by.id === this.user.id && message.text);
-      if (lastTextMessage) {
-        const lastMessageAge = Date.now() - new Date(lastTextMessage.created_at).getTime();
+    const messages = getFlatInfiniteResultData(this.messagesQuery.result.data);
+    // REVIEW: special handing of agent chat?
+    const lastTextMessage = messages.findLast(
+      (message) => this.user && message.created_by.id === this.user.id && message.text,
+    );
+    if (lastTextMessage) {
+      const lastMessageAge = Date.now() - new Date(lastTextMessage.created_at).getTime();
 
-        if (lastMessageAge < 1000 * 60 * 60 * 24) {
-          this.editMessage = lastTextMessage;
-          await this.setEditorText(lastTextMessage.text);
-          await this.selectAllInEditor();
-        } else {
-          console.warn("Last message is too old to edit.", lastMessageAge)
-        }
-
+      if (lastMessageAge < 1000 * 60 * 60 * 24) {
+        this.editMessage = lastTextMessage;
+        await this.setEditorText(lastTextMessage.text);
+        await this.selectAllInEditor();
+      } else {
+        console.warn("Last message is too old to edit.", lastMessageAge);
       }
+    }
   }
 
   /**
@@ -772,16 +773,18 @@ export class WyConversation extends WeavySubAppComponent {
         }
 
         if (this.componentFeatures?.allowsFeature(Feature.Receipts)) {
-          void this.weavy.subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked).then((showReceipts) => {
-            this.showReadReceipts = showReceipts;
-          });
+          void this.weavy
+            .subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked, true)
+            .then((showReceipts) => {
+              this.showReadReceipts = showReceipts;
+            });
         }
 
         this.#unsubscribeToRealtime = () => {
           void this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
           void this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
           void this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
-          void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked);
+          void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked, true);
           this.showReadReceipts = false;
           this.#unsubscribeToRealtime = undefined;
         };
@@ -1032,9 +1035,12 @@ export class WyConversation extends WeavySubAppComponent {
           ${ref(this.editorRef)}
           .draft=${true}
           placeholder=${this.placeholder ?? msg("Type a message...")}
-          ?disabled=${this.conversation && !hasPermission(PermissionType.Create, this.conversation?.permissions)}
+          ?disabled=${this.conversation &&
+          !hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.conversation?.permissions)}
           @submit=${(e: MsgEditorSubmitEventType) => this.handleSubmit(e)}
-          @edit-last=${(_e: CustomEvent) => {/*this.handleEditLast(e)*/}}
+          @edit-last=${(_e: CustomEvent) => {
+            /*this.handleEditLast(e)*/
+          }}
         ></wy-editor-message>
       </div>
     `;

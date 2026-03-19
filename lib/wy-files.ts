@@ -1,7 +1,7 @@
 import { html, type PropertyValues } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
-import { AppTypeGuid } from "./types/app.types";
+import { AppTypeGuid, PermissionType } from "./types/app.types";
 import type {
   FileOrderType,
   BlobType,
@@ -32,6 +32,7 @@ import { ComponentFeatures, Feature } from "./contexts/features-context";
 import { OrderEventType, ShowTrashedEventType, ViewEventType } from "./types/lists.events";
 import { SubscribeEventType } from "./types/app.events";
 import { partMap } from "./utils/directives/shadow-part-map";
+import { hasAnyPermission } from "./utils/permission";
 
 import dropZoneCss from "./scss/components/dropzone.scss";
 import hostBlockCss from "./scss/host-block.scss";
@@ -161,6 +162,7 @@ export class WyFiles extends WeavyAppComponent {
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
     [Feature.Comments]: true,
+    [Feature.Comment]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.Follow]: true,
@@ -218,10 +220,9 @@ export class WyFiles extends WeavyAppComponent {
 
   /** @internal */
   private handleBlobUpload(e: FilesEventType) {
-    const eventDetail = e.detail;
-    if (eventDetail.files) {
-      for (let i = 0; i < eventDetail.files.length; i++) {
-        const file = eventDetail.files[i];
+    if (hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions) && e.detail.files) {
+      for (let i = 0; i < e.detail.files.length; i++) {
+        const file = e.detail.files[i];
         const fileProps = { file: file };
         void this.uploadBlobMutation.mutate(fileProps).then((blob) => this.handleCreateFile(blob));
       }
@@ -230,7 +231,7 @@ export class WyFiles extends WeavyAppComponent {
 
   /** @internal */
   private handleExternalBlobs(e: ExternalBlobsEventType) {
-    if (e.detail.externalBlobs) {
+    if (hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions) && e.detail.externalBlobs) {
       for (let i = 0; i < e.detail.externalBlobs.length; i++) {
         const externalBlob = e.detail.externalBlobs[i];
         void this.externalBlobMutation?.mutate({ externalBlob }).then((blob) => this.handleCreateFile(blob));

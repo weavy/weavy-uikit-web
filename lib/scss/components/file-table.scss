@@ -55,7 +55,11 @@ table {
 // size
 [part~="wy-col-size"] {
   width: var.wy-rem(6);
-  text-align: end;
+
+  // Increase specificity
+  &, &:is(th) {
+    text-align: end;
+  }
 
   display: none;
   @include breakpoints.container-size-up(sm) {

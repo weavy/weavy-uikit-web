@@ -14,6 +14,9 @@
   }
 
   th {
+    text-align: inherit;
+    text-align: match-parent;
+    text-align: -webkit-match-parent;
     font-weight: var.default(--wy-headings-font-weight);
   }
 

@@ -131,7 +131,7 @@ export class UnreadConversationsController implements ReactiveController {
       await this.whenWeavyContext;
 
       void this.weavy?.subscribe(null, "message_created", this.handleRefresh);
-      void this.weavy?.subscribe(null, "app_marked", this.handleRefresh);
+      void this.weavy?.subscribe(null, "app_marked", this.handleRefresh, true);
 
       this.registrationRequested = false;
     }
@@ -147,7 +147,7 @@ export class UnreadConversationsController implements ReactiveController {
       !skipAwait && (await this.whenWeavyContext);
 
       void this.weavy?.unsubscribe(null, "message_created", this.handleRefresh);
-      void this.weavy?.unsubscribe(null, "app_marked", this.handleRefresh);
+      void this.weavy?.unsubscribe(null, "app_marked", this.handleRefresh, true);
     }
   }
 

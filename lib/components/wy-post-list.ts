@@ -17,7 +17,7 @@ import type { PollVoteEventType } from "../types/polls.events";
 import type { PostRestoreEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
 import { property, state } from "lit/decorators.js";
 import { UnreadPostsController } from "../controllers/unread-posts-controller";
-import { eqObjects, isPlainObject } from "../utils/objects";
+import { isPlainObject } from "../utils/objects";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { scrollParentTo } from "../utils/scroll-position";
 import { RealtimeController } from "../controllers/realtime-controller";
@@ -145,7 +145,9 @@ export class WyPostList extends WeavySubAppComponent {
    */
   @property({
     type: Object,
-    hasChanged: (value, oldValue) => isPlainObject(value) && isPlainObject(oldValue) && !eqObjects(value, oldValue),
+    hasChanged: (value, oldValue) => {
+      return isPlainObject(value) && isPlainObject(oldValue) && JSON.stringify(value) !== JSON.stringify(oldValue);
+    },
   })
   filter: PostQueryFilterType = {
     app: undefined,
@@ -169,7 +171,6 @@ export class WyPostList extends WeavySubAppComponent {
       this.filter
     ) {
       const listId = this.app && !this.feed ? this.app.id : "feed";
-
       await this.postsQuery.trackInfiniteQuery(getPostsOptions(this.weavy, listId, this.filter));
     }
 
@@ -189,7 +190,7 @@ export class WyPostList extends WeavySubAppComponent {
       (this.feed || this.app)
     ) {
       const appOrFeed = !this.feed && this.app ? this.app : "feed";
-      const appOrFeedId = !this.feed && this.app?.id || "feed";
+      const appOrFeedId = (!this.feed && this.app?.id) || "feed";
 
       this.subscribePostMutation = getSubscribePostMutation(this.weavy, appOrFeed);
       this.removePostMutation = getTrashPostMutation(this.weavy, appOrFeed);
@@ -221,7 +222,10 @@ export class WyPostList extends WeavySubAppComponent {
             @click=${async () => {
               this.shadowRoot?.firstElementChild &&
                 (await scrollParentTo("top", this.shadowRoot?.firstElementChild as HTMLElement, true));
-              void this.weavy?.queryClient.invalidateQueries({ queryKey: ["posts", this.feed ? "feed" : this.app?.id], exact: false });
+              void this.weavy?.queryClient.invalidateQueries({
+                queryKey: ["posts", this.feed ? "feed" : this.app?.id],
+                exact: false,
+              });
             }}
             @keydown=${clickOnEnterAndConsumeOnSpace}
             @keyup=${clickOnSpace}
@@ -236,9 +240,9 @@ export class WyPostList extends WeavySubAppComponent {
                 (post) => {
                   // Feeds specify uid for each post
                   const uid = this.feed && post.app ? post.app.id : undefined;
-                  
+
                   // Non-feed forwards the app
-                  const app = !this.feed ? this.app: undefined;
+                  const app = !this.feed ? this.app : undefined;
 
                   return html`<wy-post
                     id="post-${post.id}"
@@ -282,12 +286,14 @@ export class WyPostList extends WeavySubAppComponent {
       (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
         changedProperties.has("componentFeatures") ||
-        changedProperties.has("user") || changedProperties.has("feed")) &&
+        changedProperties.has("user") ||
+        changedProperties.has("feed")) &&
       this.weavy &&
       this.app &&
       this.app?.id !== changedProperties.get("app")?.id &&
       this.componentFeatures &&
-      this.user && !this.feed
+      this.user &&
+      !this.feed
     ) {
       // Only post-apps can subscribe, not feeds.
       // Feeds subscribe on each post for the originating app instead

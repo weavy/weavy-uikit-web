@@ -19,6 +19,9 @@ import {
   FileTrashEventType,
 } from "../types/files.events";
 import { NamedEvent } from "../types/generic.types";
+import { hasAnyPermission } from "../utils/permission";
+import { AppType, PermissionType } from "../types/app.types";
+import { AppContext } from "../contexts/apps-context";
 
 import "./ui/wy-icon";
 import "./ui/wy-dropdown";
@@ -60,6 +63,14 @@ export class WyFileMenu extends LitElement {
   @consume({ context: FeaturePolicyContext, subscribe: true })
   @state()
   protected componentFeatures?: ComponentFeaturePolicy | undefined;
+
+  /**
+   * The app data.
+   * @internal
+   */
+  @consume({ context: AppContext, subscribe: true })
+  @state()
+  app: AppType | undefined;
 
   /**
    * File to operate on when rendering menu actions.
@@ -200,11 +211,13 @@ export class WyFileMenu extends LitElement {
     const fileProvider = this.file.provider;
     const fileAppProvider = this.file.provider || "app";
 
+    const hasModifyPermission = hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions);
+
     return html`
       <wy-dropdown directionX="left" ?small=${this.small}>
         ${isNotTemp && this.file.is_trashed
           ? html`
-              ${this.hasEventListener["restore"]
+              ${this.hasEventListener["restore"] && hasModifyPermission
                 ? html`
                     <wy-dropdown-item @click=${() => this.dispatchRestore()}>
                       <wy-icon name="delete-restore"></wy-icon>
@@ -212,10 +225,10 @@ export class WyFileMenu extends LitElement {
                     </wy-dropdown-item>
                   `
                 : nothing}
-              ${this.hasEventListener["restore"] && this.hasEventListener["delete-forever"]
+              ${this.hasEventListener["restore"] && this.hasEventListener["delete-forever"] && hasModifyPermission
                 ? html` <wy-dropdown-divider></wy-dropdown-divider> `
                 : nothing}
-              ${this.hasEventListener["delete-forever"]
+              ${this.hasEventListener["delete-forever"] && hasModifyPermission
                 ? html`
                     <wy-dropdown-item @click=${() => this.dispatchDeleteForever()}>
                       <wy-icon name="delete-forever"></wy-icon>
@@ -235,7 +248,7 @@ export class WyFileMenu extends LitElement {
                     </wy-dropdown-item>
                   `
                 : html`
-                    ${this.componentFeatures?.allowsFeature(Feature.WebDAV) && this.file.application_url
+                    ${this.componentFeatures?.allowsFeature(Feature.WebDAV) && this.file.application_url && hasModifyPermission
                       ? html`
                           <wy-dropdown-item @click=${() => this.triggerApplication()}>
                             <wy-icon
@@ -252,7 +265,7 @@ export class WyFileMenu extends LitElement {
                   `}
               ${isNotTemp
                 ? html`
-                    ${this.hasEventListener["edit-name"]
+                    ${this.hasEventListener["edit-name"] && hasModifyPermission
                       ? html`
                           <wy-dropdown-item @click=${() => this.dispatchEditName()}>
                             <wy-icon name="textbox"></wy-icon>
@@ -275,7 +288,7 @@ export class WyFileMenu extends LitElement {
                             </wy-dropdown-item>
                           `
                       : nothing}
-                    ${this.hasEventListener["trash"]
+                    ${this.hasEventListener["trash"] && hasModifyPermission
                       ? html`
                           <wy-dropdown-divider></wy-dropdown-divider>
                           <wy-dropdown-item @click=${() => this.dispatchTrash()}>

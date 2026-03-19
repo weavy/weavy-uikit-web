@@ -33,3 +33,60 @@ export const webView =
 export const chrome = /Chrome\/[0-9]/.test(userAgent) && !/Chromium\/[0-9]/.test(userAgent) && !/Edg.*\/[0-9]/.test(userAgent);
 
 export const safari = /Safari\/[0-9]/.test(userAgent) && !/Chrome\/[0-9]/.test(userAgent) && !/Chromium\/[0-9]/.test(userAgent);
+
+/**
+ * Interface for the WebGL Debug Renderer Info extension.
+ * This is not always available in standard lib.dom definitions.
+ */
+interface WebGLDebugRendererInfo {
+  UNMASKED_VENDOR_WEBGL: number;
+  UNMASKED_RENDERER_WEBGL: number;
+}
+
+/**
+ * Determines if Hardware Acceleration (HWA) is likely stable and 
+ * performant on the current device.
+ * * @returns {boolean} - Returns true if HWA is recommended.
+ */
+export function isHWASuitable(): boolean {
+  // 1. Basic check for SSR or non-browser environments
+  if (typeof window === 'undefined' || !window.document) {
+    return false;
+  }
+
+  const canvas = document.createElement('canvas');
+  const gl = (
+    canvas.getContext('webgl') || 
+    canvas.getContext('experimental-webgl')
+  ) as WebGLRenderingContext | null;
+
+  // 2. If WebGL is missing, the GPU is likely disabled or unsupported
+  if (!gl) {
+    return false;
+  }
+
+  // 3. Identify the renderer to filter out software-based emulators
+  const debugInfo = gl.getExtension('WEBGL_debug_renderer_info') as WebGLDebugRendererInfo | null;
+  
+  if (debugInfo) {
+    const renderer: unknown = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+    
+    if (typeof renderer === 'string') {
+      const lowCaseRenderer = renderer.toLowerCase();
+      
+      // Filter out common software-renderers (slow and glitchy for PDF.js)
+      const softwareKeywords = ['swiftshader', 'software', 'llvmpipe', 'generic'];
+      if (softwareKeywords.some(keyword => lowCaseRenderer.includes(keyword))) {
+        return false;
+      }
+    }
+  }
+
+  // 4. Memory check (Optional)
+  // If the device has very low RAM, HWA might cause tab crashes during PDF tiling
+  if ('deviceMemory' in navigator && navigator.deviceMemory as number < 4) {
+    return false;
+  }
+
+  return true;
+}

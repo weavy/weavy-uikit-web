@@ -850,7 +850,7 @@ export class WyPreview extends WeavySubAppComponent {
                               <div
                                 id="preview-${previewFile.id}"
                                 ${ref(previewFileRef)}
-                                part="wy-preview-area wy-scroll-x-y"
+                                part="wy-preview-area"
                               >
                                 ${!isPending && (fileLoadingState?.loading || fileLoadingState?.loaded)
                                   ? html`

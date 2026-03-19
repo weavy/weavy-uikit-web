@@ -18,6 +18,7 @@ import hostContentsCss from "../scss/host-contents.scss";
 
 import "./wy-empty";
 import "./ui/wy-progress-circular";
+import "./ui/wy-container";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -32,6 +33,7 @@ declare global {
  *
  * - [`<wy-empty>`](./wy-empty.ts)
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
+ * - [`<wy-container>`](./ui/wy-container.ts)
  *
  * @csspart wy-content-progress - Progress indicator shown while loading.
  * @csspart wy-content-code - Container for rendered code content.
@@ -39,7 +41,7 @@ declare global {
  * @csspart wy-document - Document wrapper used for HTML/text rendering.
  * @csspart wy-content-html - Container for rendered HTML.
  * @csspart wy-content-text - Container for plain text content.
- * 
+ *
  * @fires {FilePreviewLoadedEventType} file-preview-loaded - The file preview is considered loaded.
  */
 @customElement("wy-preview-text")
@@ -106,7 +108,7 @@ export class WyPreviewText extends LitElement {
     super.updated(changedProperties);
 
     // TODO: Change the async loading into infinite scrolling
-    
+
     if ((changedProperties.has("weavy") || changedProperties.has("src")) && this.weavy) {
       this.loading = true;
       void this.weavy
@@ -126,22 +128,26 @@ export class WyPreviewText extends LitElement {
   }
 
   override render() {
-    return this.loading
-      ? html` <wy-empty><wy-progress-circular part="wy-content-progress" indeterminate></wy-progress-circular></wy-empty> `
-      : this.html
-      ? this.code
-        ? html` <div part="wy-content-code wy-code">${unsafeHTML(this.textOrHtmlContent)}</div> `
-        : html`
-            <div part="wy-document wy-light">
-              <div part="wy-content-html">${unsafeHTML(this.textOrHtmlContent)}</div>
-            </div>
+    return html` <wy-container fill scrollY>
+      ${this.loading
+        ? html`
+            <wy-empty><wy-progress-circular part="wy-content-progress" indeterminate></wy-progress-circular></wy-empty>
           `
-      : this.code
-      ? html` <div part="wy-content-code">${this.textOrHtmlContent}</div> `
-      : html`
-          <div part="wy-document wy-light">
-            <pre part="wy-content-text">${this.textOrHtmlContent}</pre>
-          </div>
-        `;
+        : this.html
+          ? this.code
+            ? html` <div part="wy-content-code wy-code">${unsafeHTML(this.textOrHtmlContent)}</div> `
+            : html`
+                <div part="wy-document wy-light">
+                  <div part="wy-content-html">${unsafeHTML(this.textOrHtmlContent)}</div>
+                </div>
+              `
+          : this.code
+            ? html` <div part="wy-content-code">${this.textOrHtmlContent}</div> `
+            : html`
+                <div part="wy-document wy-light">
+                  <pre part="wy-content-text">${this.textOrHtmlContent}</pre>
+                </div>
+              `}
+    </wy-container>`;
   }
 }

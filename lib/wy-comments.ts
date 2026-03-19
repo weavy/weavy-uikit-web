@@ -99,6 +99,7 @@ export class WyComments extends WeavyAppComponent {
     // All available features as enabled/disabled by default
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
+    [Feature.Comment]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.Follow]: true,

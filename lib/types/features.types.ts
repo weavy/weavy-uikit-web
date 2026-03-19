@@ -31,6 +31,10 @@ export enum Feature {
    */
   Comments = "comments",
   /**
+   * Possibility to create new comments.
+   */
+  Comment = "comment",
+  /**
    * Creating embeds from urls in editor text.
    */
   Embeds = "embeds",

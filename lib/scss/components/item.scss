@@ -101,7 +101,12 @@
 
 // Normal content text
 [part~="wy-item-text"] {
-  color: color.token(--wy-outline);
+  color: var(--wy-component-color);
+
+  @supports (color: color(from var(--wy-component-color) srgb r g b / var.default(--wy-opacity-muted))) {
+    color: color(from var(--wy-component-color) srgb r g b / var.default(--wy-opacity-muted));
+  }
+
   font-size: var.default(--wy-font-size-sm);
 
   @include text.truncate;
@@ -185,8 +190,8 @@
 
   &[part~="wy-selected"] {
     // selected?
-    --wy-component-background-color: var(--wy-component-background-color-selected, #{color.token(--wy-primary-container)});
-    --wy-component-color: var(--wy-component-color-selected, #{color.token(--wy-on-primary-container)});
+    --wy-component-background-color: var(--wy-component-background-color-selected, #{color.token(--wy-secondary-container)});
+    --wy-component-color: var(--wy-component-color-selected, #{color.token(--wy-on-secondary-container)});
     background-color: var(--wy-component-background-color);
     color: var(--wy-component-color);
     border-color: var(--wy-component-background-color);

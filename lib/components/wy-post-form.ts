@@ -5,7 +5,7 @@ import { MutationController } from "../controllers/mutation-controller";
 import { getAddPostMutationOptions } from "../data/posts";
 import { PermissionType } from "../types/app.types";
 import type { MutatePostProps, PostType, MutatePostTempData } from "../types/posts.types";
-import { hasPermission } from "../utils/permission";
+import { hasAnyPermission } from "../utils/permission";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import type { MsgEditorSubmitEventType } from "../types/editor.events";
@@ -103,7 +103,7 @@ export class WyPostForm extends WeavySubAppComponent {
       <div part="wy-posts-header">
         <wy-editor-msg
           editorLocation="apps"
-          ?disabled=${!hasPermission(PermissionType.Create, this.app?.permissions)}
+          ?disabled=${!hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions)}
           .typing=${false}
           .draft=${true}
           placeholder=${this.placeholder ?? msg("Create a post...")}

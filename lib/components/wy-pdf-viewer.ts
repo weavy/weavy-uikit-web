@@ -1,4 +1,4 @@
-import { LitElement, html, type PropertyValueMap } from "lit";
+import { LitElement, html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { consume } from "@lit/context";
@@ -8,6 +8,7 @@ import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { environmentUrl } from "../utils/urls";
+import { isHWASuitable } from "../utils/browser";
 import type { FilePreviewLoadedEventType } from "../types/files.events";
 import type { NamedEvent } from "../types/generic.types";
 
@@ -15,6 +16,7 @@ import type { NamedEvent } from "../types/generic.types";
 import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 //import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
+import type { DocumentInitParameters } from "pdfjs-dist/types/src/display/api";
 
 type pdfjsLibType = typeof import("pdfjs-dist");
 type pdfjsViewerType = typeof import("pdfjs-dist/web/pdf_viewer.mjs");
@@ -26,6 +28,7 @@ import hostContentsCss from "../scss/host-contents.scss";
 
 import "./ui/wy-button";
 import "./ui/wy-icon";
+import "./ui/wy-progress-circular";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -38,7 +41,7 @@ declare global {
  *
  * @see https://github.com/mozilla/pdf.js/blob/master/examples/mobile-viewer
  * @see https://github.com/mozilla/pdf.js/blob/master/examples/components/
- * 
+ *
  * **Used sub components:**
  *
  * - [`<wy-button>`](./ui/wy-button.ts)
@@ -52,19 +55,14 @@ declare global {
  * @csspart wy-toolbar-center-text - Centered text in toolbar.
  * @csspart wy-toolbar-text - Text elements in the toolbar.
  * @csspart wy-pdf-container - Viewer container for PDF pages.
- * 
+ *
  * @fires {FilePreviewLoadedEventType} file-preview-loaded - The file preview is considered loaded.
  */
 
 @customElement("wy-pdf-viewer")
 @localized()
 export class WyPdfViewer extends LitElement {
-  static override styles = [
-    pdfCss,
-    toolbarCss,
-    inputCss,
-    hostContentsCss,
-  ];
+  static override styles = [inputCss, hostContentsCss, toolbarCss, pdfCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
@@ -96,7 +94,9 @@ export class WyPdfViewer extends LitElement {
    *
    * @internal
    */
-  whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType; pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {this.whenPdfjsResolve = r});
+  whenPdfjs: Promise<{ pdfjsLib: pdfjsLibType; pdfjsViewer: pdfjsViewerType }> = new Promise((r) => {
+    this.whenPdfjsResolve = r;
+  });
 
   /**
    * Cached pdf.js core module.
@@ -134,13 +134,23 @@ export class WyPdfViewer extends LitElement {
   ENABLE_XFA = true;
   DEFAULT_WORKER_URL: string = "/pdfjs/pdf.worker.min.mjs";
   DEFAULT_CMAPS_URL: string = "/pdfjs/cmaps/";
+  DEFAULT_WASM_URL: string = "/pdfjs/wasm/";
+  DEFAULT_ICC_URL: string = "/pdfjs/iccs/";
+  DEFAULT_FONTS_URL: string = "/pdfjs/fonts/";
   WORKER_URL?: URL;
+  WASM_URL?: URL;
+  ICC_URL?: URL;
+  FONTS_URL?: URL;
 
   /**
    * Source URL for the PDF to display.
    */
   @property()
-  src!: string;
+  src?: string;
+
+  /** The length of the pdf file, used to enhance loading. */
+  @property({ type: Number })
+  size?: number;
 
   /**
    * Input reference controlling the current page number.
@@ -217,19 +227,22 @@ export class WyPdfViewer extends LitElement {
 
   protected pdfLoadingTask?: PDFDocumentLoadingTask;
 
-  protected delayedResize?: number
-  protected resizer: ResizeObserver = new ResizeObserver(() => { 
+  @state()
+  progress?: OnProgressParameters = { loaded: NaN, total: NaN, percent: NaN };
+
+  protected delayedResize?: number;
+  protected resizer: ResizeObserver = new ResizeObserver(() => {
     if (this.pdfViewer) {
       if (this.delayedResize) {
-        clearTimeout(this.delayedResize)
-        this.delayedResize = undefined
+        clearTimeout(this.delayedResize);
+        this.delayedResize = undefined;
       }
       this.delayedResize = window.setTimeout(() => {
         if (this.pdfViewer) {
           // Update/Set scale
           this.pdfViewer.currentScaleValue = this.pdfViewer._currentScaleValue as string;
-        }  
-      }, 100)
+        }
+      }, 100);
     }
   });
 
@@ -251,18 +264,24 @@ export class WyPdfViewer extends LitElement {
       await this.close();
     }
 
+    this.progress = { loaded: NaN, total: NaN, percent: NaN };
+
     // Loading document.
-    const loadingTask = pdfjsLib.getDocument({
+    const loadingTask = pdfjsLib.getDocument(<DocumentInitParameters>{
       url: this.src,
       maxImageSize: this.MAX_IMAGE_SIZE,
       enableXfa: this.ENABLE_XFA,
-      cMapUrl: this.CMAP_URL?.toString() || "",
+      cMapUrl: this.CMAP_URL?.toString(),
       cMapPacked: this.CMAP_PACKED,
+      wasmUrl: this.WASM_URL?.toString(),
+      iccUrl: this.ICC_URL?.toString(),
+      standardFontDataUrl: this.FONTS_URL?.toString(),
+      length: this.size,
     });
     this.pdfLoadingTask = loadingTask;
 
-    loadingTask.onProgress = (_progressData: OnProgressParameters) => {
-      //self.progress(progressData.loaded / progressData.total);
+    loadingTask.onProgress = (progressData: OnProgressParameters) => {
+      this.progress = { ...progressData };
     };
 
     try {
@@ -271,7 +290,7 @@ export class WyPdfViewer extends LitElement {
       // Document loaded, specifying document for the viewer.
       this.pdfDocument = pdfDocument;
       this.pdfViewer.setDocument(pdfDocument);
-      this.pdfLinkService.setDocument(pdfDocument);
+      this.pdfLinkService.setDocument(pdfDocument, null);
       this.pdfHistory.initialize({
         // @ts-expect-error Type 'string | null' is not assignable to type 'string'.
         fingerprint: pdfDocument.fingerprints[0],
@@ -283,10 +302,14 @@ export class WyPdfViewer extends LitElement {
       let key = "pdfjs-loading-error";
       if (reason instanceof pdfjsLib.InvalidPDFException) {
         key = "pdfjs-invalid-file-error";
-      } else if (reason instanceof pdfjsLib.MissingPDFException) {
-        key = "pdfjs-missing-file-error";
-      } else if (reason instanceof pdfjsLib.UnexpectedResponseException) {
-        key = "pdfjs-unexpected-response-error";
+      } else if (reason instanceof pdfjsLib.ResponseException) {
+        // In v5, ResponseException replaces MissingPDFException and UnexpectedResponseException
+        // Check the missing property to distinguish between 404 and other response errors
+        if (reason.missing) {
+          key = "pdfjs-missing-file-error";
+        } else {
+          key = "pdfjs-unexpected-response-error";
+        }
       }
       await this.l10n.get(key, undefined, undefined).then((errorMsg: string) => {
         this.pdfViewError(pdfjsLib, errorMsg, { message: (reason as Error | undefined)?.message });
@@ -294,6 +317,7 @@ export class WyPdfViewer extends LitElement {
       //this.loadingBar.hide();
     }
 
+    this.progress = undefined;
     this.dispatchLoaded();
   }
 
@@ -303,6 +327,8 @@ export class WyPdfViewer extends LitElement {
    * @internal
    */
   protected async close() {
+    this.progress = undefined;
+
     if (!this.pdfLoadingTask) {
       return Promise.resolve();
     }
@@ -333,7 +359,11 @@ export class WyPdfViewer extends LitElement {
    * @param message - Human readable error.
    * @param moreInfo - Additional error metadata.
    */
-  protected pdfViewError(pdfjsLib: pdfjsLibType, message: string, moreInfo: Partial<Error & { filename: string; lineNumber: number }>) {
+  protected pdfViewError(
+    pdfjsLib: pdfjsLibType,
+    message: string,
+    moreInfo: Partial<Error & { filename: string; lineNumber: number }>,
+  ) {
     const moreInfoText = [`PDF.js v${pdfjsLib?.version || "?"} (build: ${pdfjsLib?.build || "?"})`];
     if (moreInfo) {
       moreInfoText.push(`Message: ${moreInfo.message}`);
@@ -372,7 +402,7 @@ export class WyPdfViewer extends LitElement {
    *
    * @param ticks - Number of zoom steps to apply.
    */
-  zoomIn(ticks: number = 0) {
+  zoomIn(ticks: number = 1) {
     if (this.pdfViewer) {
       let newScale = this.pdfViewer.currentScale;
       do {
@@ -389,7 +419,7 @@ export class WyPdfViewer extends LitElement {
    *
    * @param ticks - Number of zoom steps to apply.
    */
-  zoomOut(ticks: number = 0) {
+  zoomOut(ticks: number = 1) {
     if (this.pdfViewer) {
       let newScale = this.pdfViewer.currentScale;
       do {
@@ -500,22 +530,22 @@ export class WyPdfViewer extends LitElement {
 
   override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
-    
+
     if (changedProperties.has("weavy") && this.weavy) {
       if (!this.pdfjsLib) {
         await this.weavy.whenUrl();
-        
+
         this.pdfjsLib = await import("pdfjs-dist");
         // Assign to globalThis, otherwise it breaks
         (globalThis as typeof globalThis & { pdfjsLib: pdfjsLibType }).pdfjsLib = this.pdfjsLib;
-        
+
         // Must await after globalThis.pdfjsLib, otherwise it breaks
         this.pdfjsViewer = await import("pdfjs-dist/web/pdf_viewer.mjs");
-        
-        this.whenPdfjsResolve?.({ 
-          pdfjsLib: this.pdfjsLib, 
-          pdfjsViewer: this.pdfjsViewer 
-        })
+
+        this.whenPdfjsResolve?.({
+          pdfjsLib: this.pdfjsLib,
+          pdfjsViewer: this.pdfjsViewer,
+        });
       }
       if (this.pdfjsLib && !this.WORKER_URL) {
         try {
@@ -524,7 +554,15 @@ export class WyPdfViewer extends LitElement {
           // Setting worker path to worker bundle.
           this.pdfjsLib.GlobalWorkerOptions.workerSrc = this.WORKER_URL.toString();
         } catch {
-          console.warn("Invalid PDF worker source, using fake worker instead.")
+          console.warn("Invalid PDF worker source, using fake worker instead.");
+        }
+      }
+
+      if (this.pdfjsLib && !this.WASM_URL) {
+        try {
+          this.WASM_URL = environmentUrl(this.DEFAULT_WASM_URL, import.meta.url);
+        } catch {
+          console.warn("WASM binaries not available, using JavaScript fallbacks instead.");
         }
       }
 
@@ -532,7 +570,23 @@ export class WyPdfViewer extends LitElement {
         try {
           this.CMAP_URL = environmentUrl(this.DEFAULT_CMAPS_URL, import.meta.url);
         } catch {
-          console.warn("Invalid PDF CMAPS source, skipping CMAPS.")
+          console.warn("Invalid PDF CMAPS source, skipping CMAPS.");
+        }
+      }
+
+      if (!this.ICC_URL) {
+        try {
+          this.ICC_URL = environmentUrl(this.DEFAULT_ICC_URL, import.meta.url);
+        } catch {
+          console.warn("Invalid PDF ICCs source, skipping ICC.");
+        }
+      }
+
+      if (!this.FONTS_URL) {
+        try {
+          this.FONTS_URL = environmentUrl(this.DEFAULT_FONTS_URL, import.meta.url);
+        } catch {
+          console.warn("Invalid PDF FONTS source, skipping FONTS.");
         }
       }
     }
@@ -559,15 +613,15 @@ export class WyPdfViewer extends LitElement {
       if (this.viewerContainerRef.value && !this.pdfViewer) {
         // INIT PDF VIEWER
         //console.log("new pdf viewer", this.viewerContainerRef.value);
-        
+
         this.pdfEventBus = new pdfjsViewer.EventBus();
-  
+
         this.pdfLinkService = new pdfjsViewer.PDFLinkService({
           eventBus: this.pdfEventBus,
         });
-  
+
         this.l10n = new pdfjsViewer.GenericL10n(this.weavy?.locale);
-  
+
         this.pdfViewer = new pdfjsViewer.PDFViewer({
           container: this.viewerContainerRef.value,
           eventBus: this.pdfEventBus,
@@ -577,26 +631,27 @@ export class WyPdfViewer extends LitElement {
           l10n: this.l10n,
           maxCanvasPixels: this.MAX_CANVAS_PIXELS,
           textLayerMode: this.TEXT_LAYER_MODE,
+          enableHWA: this.weavy.pdfHWA === "auto" ? isHWASuitable() : this.weavy.pdfHWA === "always",
         });
         //pdfViewer!.MAX_AUTO_SCALE = 1.0;
-  
+
         this.pdfLinkService?.setViewer(this.pdfViewer);
-  
+
         this.pdfHistory = new pdfjsViewer.PDFHistory({
           eventBus: this.pdfEventBus,
           linkService: this.pdfLinkService,
         });
         this.pdfLinkService?.setHistory(this.pdfHistory);
-  
+
         this.pdfEventBus?.on("scalechanging", () => {
           //console.debug("scalechanging")
           if (this.zoomLevelRef.value && this.pdfViewer) {
             this.zoomLevelRef.value.value = Math.round(this.pdfViewer.currentScale * 100).toFixed(0) + "%";
           } else {
-            console.warn("Could not set zoom level")
+            console.warn("Could not set zoom level");
           }
         });
-  
+
         this.pdfEventBus?.on("pagechanging", () => {
           //console.debug("pagechanging")
           if (this.pageNumberRef.value && this.pdfViewer) {
@@ -605,7 +660,7 @@ export class WyPdfViewer extends LitElement {
             console.warn("Could not set page number");
           }
         });
-  
+
         this.pdfEventBus?.on("pagesinit", () => {
           // We can use pdfViewer now, e.g. let's change default scale.
           if (this.isConnected && this.pdfViewer && this.pageNumberRef.value && this.totalPagesRef.value) {
@@ -613,9 +668,9 @@ export class WyPdfViewer extends LitElement {
             this.pdfViewer.currentScaleValue = this.DEFAULT_SCALE_VALUE; //"auto";
             this.pageNumberRef.value.value = "1";
             this.totalPagesRef.value.innerText = this.pdfViewer.pagesCount.toFixed(0);
-            this.resizer.observe(this.pdfViewer.container);        
+            this.resizer.observe(this.pdfViewer.container);
           } else {
-            console.warn("Could not init pdf page")
+            console.warn("Could not init pdf page");
           }
         });
         //console.log("new pdf viewer", this.pdfViewer);
@@ -627,60 +682,78 @@ export class WyPdfViewer extends LitElement {
     //console.log("wy-pdf-viewer render")
     return html`
       <div class="wy-content-pdf">
-        <div part="wy-toolbars-bottom">
-          <nav part="wy-toolbar wy-toolbar-center">
-            <div part="wy-toolbar-buttons">
-              <input
-                type="text"
-                part="wy-input wy-toolbar-center-text"
-                class="wy-pdf-page-number"
-                ${ref(this.pageNumberRef)}
-                @keydown=${inputBlurOnEscape}
-                @keyup=${inputConsume}
-                @change=${() => this.updatePage()}
-                @click=${(e: MouseEvent) => this.select(e)}
-              />
-              <span part="wy-toolbar-text">/</span>
-              <span part="wy-toolbar-text" ${ref(this.totalPagesRef)}>1</span>
-            </div>
-            <div part="wy-toolbar-buttons">
-              <wy-button kind="icon" class="btn-zoom-out" @click=${() => this.zoomOut()} title=${msg("Zoom out")}>
-                <wy-icon name="minus"></wy-icon>
-              </wy-button>
-              <input
-                type="text"
-                part="wy-input"
-                class="wy-pdf-zoom-level"
-                ${ref(this.zoomLevelRef)}
-                @keydown=${inputBlurOnEscape}
-                @keyup=${inputConsume}
-                @change=${() => this.updateZoom()}
-                @click=${(e: MouseEvent) => this.select(e)}
-                value="100%"
-              />
-              <wy-button kind="icon" class="btn-zoom-in" @click=${() => this.zoomIn()} title=${msg("Zoom in")}>
-                <wy-icon name="plus"></wy-icon>
-              </wy-button>
-            </div>
-            <div part="wy-toolbar-buttons">
-              <wy-button kind="icon" class="btn-fit-page" @click=${() => this.fitToWidth()} title=${msg("Fit to width")}>
-                <wy-icon name="fit-width"></wy-icon>
-              </wy-button>
-              <wy-button kind="icon" @click=${() => this.fitToPage()} title=${msg("Fit to screen")}>
-                <wy-icon name="fit-screen"></wy-icon>
-              </wy-button>
-            </div>
-          </nav>
-        </div>
+        ${this.progress
+          ? html`
+              <wy-progress-circular
+                padded
+                overlay
+                ?indeterminate=${Number.isNaN(this.progress.loaded)}
+                .value=${this.progress.loaded}
+                .max=${this.progress.total}
+              ></wy-progress-circular>
+            `
+          : nothing}
         <div ${ref(this.viewerContainerRef)} class="wy-pdf-container">
           <div class="pdfViewer"></div>
+
+          <div part="wy-pdf-toolbar">
+            <nav part="wy-toolbar wy-toolbar-center">
+              <div part="wy-toolbar-buttons">
+                <input
+                  type="text"
+                  part="wy-input wy-toolbar-center-text"
+                  class="wy-pdf-page-number"
+                  ${ref(this.pageNumberRef)}
+                  @keydown=${inputBlurOnEscape}
+                  @keyup=${inputConsume}
+                  @change=${() => this.updatePage()}
+                  @click=${(e: MouseEvent) => this.select(e)}
+                  value="1"
+                />
+                <span part="wy-toolbar-text">/</span>
+                <wy-button kind="inline" part="wy-toolbar-text" @click=${() => this.pdfViewer && this.setPage(this.pdfViewer?.pagesCount)}><span class="wy-pdf-page-number-total" ${ref(this.totalPagesRef)}>1</span></wy-button>
+              </div>
+              <div part="wy-toolbar-buttons">
+                <wy-button kind="icon" class="btn-zoom-out" @click=${() => this.zoomOut()} title=${msg("Zoom out")}>
+                  <wy-icon name="minus"></wy-icon>
+                </wy-button>
+                <input
+                  type="text"
+                  part="wy-input"
+                  class="wy-pdf-zoom-level"
+                  ${ref(this.zoomLevelRef)}
+                  @keydown=${inputBlurOnEscape}
+                  @keyup=${inputConsume}
+                  @change=${() => this.updateZoom()}
+                  @click=${(e: MouseEvent) => this.select(e)}
+                  value="100%"
+                />
+                <wy-button kind="icon" class="btn-zoom-in" @click=${() => this.zoomIn()} title=${msg("Zoom in")}>
+                  <wy-icon name="plus"></wy-icon>
+                </wy-button>
+              </div>
+              <div part="wy-toolbar-buttons">
+                <wy-button
+                  kind="icon"
+                  class="btn-fit-page"
+                  @click=${() => this.fitToWidth()}
+                  title=${msg("Fit to width")}
+                >
+                  <wy-icon name="fit-width"></wy-icon>
+                </wy-button>
+                <wy-button kind="icon" @click=${() => this.fitToPage()} title=${msg("Fit to screen")}>
+                  <wy-icon name="fit-screen"></wy-icon>
+                </wy-button>
+              </div>
+            </nav>
+          </div>
         </div>
       </div>
     `;
   }
 
   override connectedCallback(): void {
-    super.connectedCallback()
+    super.connectedCallback();
     if (this.pdfViewer) {
       this.resizer.observe(this.pdfViewer.container);
     }

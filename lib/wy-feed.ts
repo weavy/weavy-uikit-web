@@ -9,6 +9,8 @@ import type { PostQueryFilterProps, PostQueryFilterType, PostType } from "./type
 import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { SearchEventType } from "./types/search.events";
 import { WeavyAppComponent } from "./classes/weavy-app-component";
+import { cleanFalsyProperties } from "./utils/objects";
+import { getCacheItem } from "./utils/query-cache";
 
 import colorModesCss from "./scss/color-modes.scss";
 import hostBlockCss from "./scss/host-block.scss";
@@ -24,8 +26,6 @@ import "./components/wy-post-list";
 import "./components/wy-post-form";
 import "./components/wy-user-card";
 import { WyPostList } from "./components/wy-post-list";
-import { cleanFalsyProperties } from "./utils/objects";
-import { getCacheItem } from "./utils/query-cache";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -133,6 +133,7 @@ export class WyFeed extends WeavyAppComponent implements PostQueryFilterProps {
     [Feature.Attachments]: true,
     [Feature.CloudFiles]: true,
     [Feature.Comments]: true,
+    [Feature.Comment]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
     [Feature.Follow]: true,

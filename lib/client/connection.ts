@@ -15,12 +15,14 @@ export interface WeavyConnectionProps {
   subscribe: <T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
-    callback: (realTimeEvent: T) => void | Promise<void>
+    callback: (realTimeEvent: T) => void | Promise<void>,
+    silent?: boolean
   ) => Promise<boolean>;
   unsubscribe: <T extends RealtimeEventType | RealtimeDataType>(
     group: string | null,
     event: string,
-    callback: (realTimeEvent: T) => void
+    callback: (realTimeEvent: T) => void,
+    silent?: boolean
   ) => Promise<void>;
 }
 
@@ -268,7 +270,8 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
     async subscribe<T extends RealtimeEventType | RealtimeDataType>(
       group: string | null,
       event: string,
-      callback: (realtimeEvent: T) => void
+      callback: (realtimeEvent: T) => void,
+      silent: boolean = false
     ) {
       if (this.isDestroyed) {
         throw new DestroyError();
@@ -305,8 +308,8 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
 
         return true;
       } catch (e: unknown) {
-        if (!(e instanceof DestroyError)) {
-          console.error(this.weavyId, "Error in Subscribe:", e);
+        if (!silent && !(e instanceof DestroyError)) {
+          console.warn(this.weavyId, "Error in Subscribe:", e);
         }
 
         // Clean up
@@ -326,7 +329,8 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
     async unsubscribe<T extends RealtimeEventType | RealtimeDataType>(
       group: string | null,
       event: string,
-      callback: (realTimeEvent: T) => void
+      callback: (realTimeEvent: T) => void,
+      silent: boolean = false
     ) {
       if (this.isDestroyed) {
         throw new DestroyError();
@@ -353,8 +357,8 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           }
         }
       } catch (e: unknown) {
-        if (!(e instanceof DestroyError)) {
-          console.error(this.weavyId, "Error in Unsubscribe:", e);
+        if (!silent && !(e instanceof DestroyError)) {
+          console.warn(this.weavyId, "Could not unsubscribe:", e);
         }
       }
     }

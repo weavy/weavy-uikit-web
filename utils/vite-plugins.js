@@ -143,7 +143,7 @@ export function removeImportMetaUrl() {
 
     transform(src, _id) {
       return {
-        code: src.replace("import.meta.url", "undefined"),
+        code: src.replaceAll("import.meta.url", "undefined"),
         map: null, // provide source map if available
       };
     },

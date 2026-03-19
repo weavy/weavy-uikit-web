@@ -1,6 +1,5 @@
 @use "sass:math";
 @use "../base/var";
-@use "../base/const";
 @use "../base/color";
 @use "../base/backdrop";
 @use "../base/position";
@@ -19,7 +18,7 @@
   min-height: var.default(--wy-toolbar-height);
   padding: calc(0.5 * var.default(--wy-padding));
   flex: 1 0 var.default(--wy-toolbar-height);
-  column-gap: var.default(--wy-gap);
+  gap: var.default(--wy-gap);
   line-height: var.default(--wy-line-height);
 
   background-color: var(--wy-component-background-color);
@@ -31,6 +30,8 @@
 [part~=wy-toolbar-center] {
   margin: 0 auto;
   border-radius: var.default(--wy-border-radius);
+  justify-content: center;
+  min-height: min-content;
 }
 
 [part~=wy-toolbar-buttons] {
@@ -52,19 +53,4 @@
 [part~="wy-toolbar-center-text"] {
   text-align: center;
   //border-color: transparent;
-}
-
-// floating toolbars (mainly for pdf preview, but can be also be used for other things)
-[part~=wy-toolbars-bottom] {
-  position: absolute;
-  z-index: const.$zindex-fixed;
-  bottom: calc(#{var.default(--wy-footerbar-height)} / 2);
-  left: 0;
-  right: 0;
-  min-height: var.default(--wy-toolbar-height);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  justify-items: center;
-  box-sizing: border-box;
 }

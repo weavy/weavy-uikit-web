@@ -10,7 +10,7 @@ import { localized, msg, str } from "@lit/localize";
 import { relativeTime } from "../utils/datetime";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { EntityTypeString } from "../types/app.types";
+import { EntityTypeString, PermissionType } from "../types/app.types";
 import { hasEntityChildType, isEntityChainMatch } from "../utils/notifications";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { Feature } from "../types/features.types";
@@ -19,6 +19,7 @@ import { NamedEvent } from "../types/generic.types";
 import { PollVoteEventType } from "../types/polls.events";
 import { dispatchUserAction } from "../utils/users";
 import type { PostType } from "../types/posts.types";
+import { hasPermission } from "../utils/permission";
 
 import rebootCss from "../scss/reboot.scss";
 import postCss from "../scss/components/post.scss";
@@ -336,7 +337,7 @@ export class WyPostView extends WeavySubAppComponent {
                     : nothing
                 }
                 ${
-                  this.user && this.user.id === this.post.created_by.id
+                  this.user && this.user.id === this.post.created_by.id || hasPermission(PermissionType.Admin, this.app?.permissions)
                     ? html`<wy-dropdown-item @click=${() => this.dispatchTrash()}>
                         <wy-icon name="trashcan"></wy-icon>
                         ${msg("Trash")}
