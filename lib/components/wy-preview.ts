@@ -278,6 +278,15 @@ export class WyPreview extends WeavySubAppComponent {
   private disableSwipeScrollTimeout?: number;
 
   /**
+   * Disable swipe scroll while resizing.
+   * Needed by Safari.
+   * @internal
+   */
+  resizeObserver: ResizeObserver = new ResizeObserver(() => {
+    this.blockSwipeScroll();
+  });
+
+  /**
    * Moves a file to the front of the loading queue.
    *
    * @internal
@@ -531,10 +540,14 @@ export class WyPreview extends WeavySubAppComponent {
    * @internal
    */
   registerSwipeScroller() {
+    this.resizeObserver.disconnect();
+
     if (this.swipeScrollElement) {
       this.swipeScroller.whenPrev ??= () => this.setPrev();
       this.swipeScroller.whenNext ??= () => this.setNext();
       this.swipeScroller.createObserver(this.swipeScrollElement);
+      this.resizeObserver.observe(this.swipeScrollElement);
+
     }
   }
 

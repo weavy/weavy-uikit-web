@@ -93,6 +93,9 @@
   width: auto;
   height: auto;
 
+  /** Needed in Safari for object-fit: cover; to work */
+  aspect-ratio: auto;
+
   border-radius: var(--wy-component-border-radius);
 
   object-fit: cover;

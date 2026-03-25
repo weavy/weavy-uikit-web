@@ -28,12 +28,14 @@
 [part~="wy-preview-layout"] {
   width: 100%;
   height: 100%;
+  container-type: inline-size;
 }
 
 [part~="wy-preview-main"] {
   display: flex;
   height: calc(100% - #{var.default(--wy-titlebar-height)});
   min-height: 0;
+  flex-direction: row;
 
   @include breakpoints.container-size-down(md) {
     flex-direction: column;

@@ -210,21 +210,8 @@ export class WyIcon extends LitElement {
       return [
         html`
           <style>
-            .icon-mask-bg {
-              width: var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem)));
-              height: var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem)));
-              fill: white;
-            }
-
             .icon-mask {
-              width: calc(var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))));
-              height: calc(var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem))));
-              ry: calc(var(--wy-border-radius-pill, var(--wy-border-radius, 50%)));
-              x: calc(var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))) / 2);
-              y: calc(var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem))) / 2);
-              stroke: black;
-              stroke-width: 4px;
-              fill: black;
+              ry: calc(var(--wy-border-radius-pill, var(--wy-border-radius, 8px)) / 24);
             }
           </style>
         `,
@@ -239,9 +226,18 @@ export class WyIcon extends LitElement {
                 style="mask-image: url(#${this.uniqueId}-mask); -webkit-mask-image: url(#${this.uniqueId}-mask);"
               >
                 <defs>
-                  <mask id="${this.uniqueId}-mask">
-                    <rect class="icon-mask-bg" />
-                    <rect class="icon-mask" />
+                  <mask id="${this.uniqueId}-mask" maskContentUnits="objectBoundingBox">
+                    <rect class="icon-mask-bg" width="1" height="1" fill="white" />
+                    <rect
+                      class="icon-mask"
+                      x="0.5"
+                      y="0.5"
+                      width="1"
+                      height="1"
+                      fill="black"
+                      stroke="black"
+                      stroke-width="0.083333"
+                    />
                   </mask>
                 </defs>
                 ${svgContent
