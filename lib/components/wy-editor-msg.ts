@@ -353,15 +353,15 @@ export class WyEditorMsg extends WeavySubAppComponent {
   override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);
 
-    if (changedProperties.has("app")) {
+    if (changedProperties.has("app") && changedProperties.get("app")?.id !== this.app?.id) {
       // clear mutationAppId when app changes - will be assigned later
       this.mutationAppId = undefined;
     }
 
     if (
-      (changedProperties.has("weavy") ||
-        changedProperties.has("app") ||
-        changedProperties.has("user") ||
+      (changedProperties.has("weavy") && changedProperties.get("weavy") !== this.weavy ||
+        changedProperties.has("app") && changedProperties.get("app")?.id !== this.app?.id ||
+        changedProperties.has("user") && changedProperties.get("user")?.id !== this.user?.id ||
         changedProperties.has("parentId")) &&
       this.weavy &&
       this.app &&
@@ -400,6 +400,8 @@ export class WyEditorMsg extends WeavySubAppComponent {
         `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
       );
 
+
+      console.log("chack draft", !this.hasChanged(), changedProperties);
       if (
         this.draft &&
         this.storage &&

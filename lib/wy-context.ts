@@ -138,14 +138,6 @@ export class WyContext extends LitElement implements StrictWeavyOptions, WeavySe
   gcTime = Weavy.defaults.gcTime;
 
   /**
-   * Whether the PDF preview should use hardware acceleration.
-   * 
-   * @type {"never" | "auto" | "always"}
-   */
-  @property({ attribute: true })
-  pdfHWA = Weavy.defaults.pdfHWA;
-
-  /**
    * Which [scroll behavior](https://developer.mozilla.org/en-US/docs/Web/API/Element/scroll#behavior) to use (where applicable). Note that not all browsers (Chrome) have similar scroll transitions, they may be very slow. 
    *
    * @type {"smooth" | "instant" | "auto"}

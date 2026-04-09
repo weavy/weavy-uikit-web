@@ -227,8 +227,10 @@ export class WyEditorCore extends WeavySubAppComponent {
     super.willUpdate(changedProperties);
 
     if (
-      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("user")) &&
-      (changedProperties.get("weavy") || changedProperties.get("app") || changedProperties.get("user")) &&
+      !changedProperties.has("text") &&
+      ((changedProperties.has("weavy") && changedProperties.get("weavy") !== this.weavy) ||
+        (changedProperties.has("app") && changedProperties.get("app")?.id !== this.app?.id) ||
+        (changedProperties.has("user") && changedProperties.get("user")?.id !== this.user?.id)) &&
       this.weavy &&
       this.app &&
       this.user

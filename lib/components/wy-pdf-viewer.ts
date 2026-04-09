@@ -8,7 +8,6 @@ import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { environmentUrl } from "../utils/urls";
-import { isHWASuitable } from "../utils/browser";
 import type { FilePreviewLoadedEventType } from "../types/files.events";
 import type { NamedEvent } from "../types/generic.types";
 
@@ -631,7 +630,6 @@ export class WyPdfViewer extends LitElement {
           l10n: this.l10n,
           maxCanvasPixels: this.MAX_CANVAS_PIXELS,
           textLayerMode: this.TEXT_LAYER_MODE,
-          enableHWA: this.weavy.pdfHWA === "auto" ? isHWASuitable() : this.weavy.pdfHWA === "always",
         });
         //pdfViewer!.MAX_AUTO_SCALE = 1.0;
 
