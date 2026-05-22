@@ -5,9 +5,9 @@ import {
   getIconMapping,
   defaultIcon,
   nativeColors,
-  getSvgMapping,
   type iconNamesType,
-  type svgIconNamesType,
+  type IconDefinition,
+  hasIconContent,
 } from "../../utils/icons";
 import { toKebabCase } from "../../utils/strings";
 import { ifDefined } from "lit/directives/if-defined.js";
@@ -70,12 +70,6 @@ export class WyIcon extends LitElement {
   overlayName?: iconNamesType | "";
 
   /**
-   * Name of an predefined SVG icon to use.
-   */
-  @property()
-  svg?: svgIconNamesType | "";
-
-  /**
    * Color token name.
    * Set to `native` to use original colors in SVG icons.
    */
@@ -99,18 +93,6 @@ export class WyIcon extends LitElement {
    */
   @property()
   ext?: string;
-
-  /**
-   * Path string to use in SVG representation. Automatically set when using `name` property.
-   */
-  @property({ attribute: false })
-  path: string = defaultIcon;
-
-  /**
-   * Overlay path string to use in SVG representation. Automatically set when using `overlayName` property.
-   */
-  @property({ attribute: false })
-  overlayPath?: string;
 
   /**
    * Adjust rendering to fit in inline layout.
@@ -149,6 +131,20 @@ export class WyIcon extends LitElement {
   active = false;
 
   /**
+   * Path string to use in SVG representation. Automatically set when using `name` property.
+   * @internal
+   */
+  @state()
+  icon: IconDefinition = defaultIcon;
+
+  /**
+   * Overlay path string to use in SVG representation. Automatically set when using `overlayName` property.
+   * @internal
+   */
+  @state()
+  overlayIcon?: IconDefinition;
+
+  /**
    * Resolved CSS color when using `color=native`.
    * @internal
    */
@@ -168,8 +164,8 @@ export class WyIcon extends LitElement {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("name") && this.name) {
-      this.path = getIconMapping(this.name) || defaultIcon;
-      this.overlayPath = getIconMapping(this.overlayName) || this.overlayPath;
+      this.icon = getIconMapping(this.name) || defaultIcon;
+      this.overlayIcon = getIconMapping(this.overlayName) || this.overlayIcon;
 
       this.nativeIconColor = (this.color === "native" && nativeColors[this.name]) || undefined;
       this.nativeOverlayColor = (this.overlayName && nativeColors[this.overlayName]) || undefined;
@@ -204,9 +200,7 @@ export class WyIcon extends LitElement {
       ? `width: var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))); height: var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem)));`
       : "";
 
-    const svgContent = this.svg && getSvgMapping(this.svg);
-
-    if (this.overlayPath) {
+    if (this.overlayIcon) {
       return [
         html`
           <style>
@@ -220,7 +214,7 @@ export class WyIcon extends LitElement {
             <wy-icon-stack style="${sizeStyle}">
               <svg
                 part=${partMap(iconParts)}
-                viewBox="0 0 24 24"
+                viewBox="0 0 ${this.icon.width || 24} ${this.icon.height || 24}"
                 width="${this.size}"
                 height="${this.size}"
                 style="mask-image: url(#${this.uniqueId}-mask); -webkit-mask-image: url(#${this.uniqueId}-mask);"
@@ -240,15 +234,24 @@ export class WyIcon extends LitElement {
                     />
                   </mask>
                 </defs>
-                ${svgContent
-                  ? unsafeSVG(svgContent)
+                ${hasIconContent(this.icon)
+                  ? unsafeSVG(this.icon.content)
                   : svg`
-                    <path d="${this.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
+                    <path d="${this.icon.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
                   `}
                 <!--rect width="24" height="24" fill="transparent" /-->
               </svg>
-              <svg part="wy-icon-stack-overlay" viewBox="0 0 24 24" width="${this.size / 2}" height="${this.size / 2}">
-                <path d="${this.overlayPath}" style="fill: ${ifDefined(this.nativeOverlayColor)}" />
+              <svg
+                part="wy-icon-stack-overlay"
+                viewBox="0 0 ${this.overlayIcon.width || 24} ${this.overlayIcon.height || 24}"
+                width="${this.size / 2}"
+                height="${this.size / 2}"
+              >
+                ${hasIconContent(this.overlayIcon)
+                  ? unsafeSVG(this.overlayIcon.content)
+                  : svg`
+                    <path d="${this.overlayIcon.path}" style="fill: ${ifDefined(this.nativeOverlayColor)}" />
+                  `}
                 <!--rect width="24" height="24" fill="transparent" /-->
               </svg>
             </wy-icon-stack>
@@ -263,15 +266,15 @@ export class WyIcon extends LitElement {
         <svg
           part=${partMap(iconParts)}
           style="${sizeStyle}"
-          viewBox="0 0 24 24"
+          viewBox="0 0 ${this.icon.width || 24} ${this.icon.height || 24}"
           width="${this.size}"
           height="${this.size}"
         >
-          ${svgContent
-            ? unsafeSVG(svgContent)
+          ${hasIconContent(this.icon)
+            ? unsafeSVG(this.icon.content)
             : svg`
-            <path d="${this.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
-          `}
+                    <path d="${this.icon.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
+                  `}
           <!--rect width="24" height="24" fill="transparent" /-->
         </svg>
         <slot></slot>

@@ -235,14 +235,6 @@ export class WyComment extends WeavySubAppComponent {
         this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.comment.id }),
       );
     }
-
-    if (changedProperties.has("highlight")) {
-      if (this.highlight) {
-        this.part.add("wy-highlight");
-      } else {
-        this.part.remove("wy-highlight");
-      }
-    }
   }
 
   override render() {
@@ -258,7 +250,14 @@ export class WyComment extends WeavySubAppComponent {
     const isSkeleton = this.comment.id < 0;
 
     return html`
-      <div part="wy-comment ${partMap({ "wy-comment-reveal": this.reveal, "wy-comment-skeleton": isSkeleton })}">
+      <div
+        part="wy-comment ${partMap({
+          "wy-comment-reveal": this.reveal,
+          "wy-comment-skeleton": isSkeleton,
+          "wy-highlight": this.highlight,
+        })}"
+        ${ref(this.highlightRef)}
+      >
         ${isSkeleton
           ? html`
               <wy-item align="top" part="wy-comment-header">
@@ -369,7 +368,8 @@ export class WyComment extends WeavySubAppComponent {
                                   </wy-dropdown-item>
                                 `
                               : nothing}
-                            ${this.user.id === this.comment.created_by.id || hasPermission(PermissionType.Admin, this.app?.permissions)
+                            ${this.user.id === this.comment.created_by.id ||
+                            hasPermission(PermissionType.Admin, this.app?.permissions)
                               ? html`
                                   <wy-dropdown-item @click=${() => this.dispatchTrash()}>
                                     <wy-icon name="trashcan"></wy-icon>
@@ -506,7 +506,9 @@ export class WyComment extends WeavySubAppComponent {
 
   protected override updated(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("highlight") && this.highlight) {
-      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
+      requestAnimationFrame(() => {
+        this.highlightRef.value?.scrollIntoView({ block: "center" });
+      });
     }
   }
 }

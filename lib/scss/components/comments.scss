@@ -23,6 +23,7 @@
   flex-direction: column;
   gap: var.default(--wy-gap-sm);
   margin-bottom: var.default(--wy-gap-sm);
+  border-radius: var.default(--wy-border-radius);
   @include highlight.flash;
 }
 

@@ -19,6 +19,7 @@ import "./ui/wy-icon";
 import "./ui/wy-item";
 import "./ui/wy-overlay";
 import "./ui/wy-container";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -179,9 +180,14 @@ export class WyPollOption extends WeavySubComponent {
     const { data, isLoading } = this.getVotesQuery.result ?? {};
     const ratio = this.totalVotes > 0 ? Math.round(((this.option.votes?.count || 0) / this.totalVotes) * 100) : 0;
 
+    const optionParts = {
+      "wy-poll-option": true,
+      "wy-poll-option-active": Boolean(this.option.has_voted)
+    }
+
     return html`
       <div
-        part="wy-poll-option"
+        part=${partMap(optionParts)}
         tabindex="0"
         @click=${() => this.dispatchVote(this.option?.id)}
         @keydown=${clickOnEnterAndConsumeOnSpace}

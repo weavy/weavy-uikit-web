@@ -1,9 +1,9 @@
 import { msg } from "@lit/localize";
-import { svgIconNamesType } from "./icons";
+import { meetingIconNamesType } from "./icons";
 import { MeetingProviderType } from "../types/meetings.types";
 import { TemplateResult } from "lit";
 
-export function getMeetingIconName(provider: MeetingProviderType): svgIconNamesType {
+export function getMeetingIconName(provider: MeetingProviderType): meetingIconNamesType {
   switch (provider) {
     case "zoom":
       return "zoom-meetings";

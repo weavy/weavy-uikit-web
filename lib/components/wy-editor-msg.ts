@@ -400,8 +400,6 @@ export class WyEditorMsg extends WeavySubAppComponent {
         `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
       );
 
-
-      console.log("chack draft", !this.hasChanged(), changedProperties);
       if (
         this.draft &&
         this.storage &&
@@ -942,7 +940,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
                   title=${msg("Zoom meeting")}
                   ?disabled=${this.disabled}
                 >
-                  <wy-icon svg="zoom-meetings"></wy-icon>
+                  <wy-icon name="zoom-meetings"></wy-icon>
                 </wy-button>
               `
             : nothing}
@@ -954,7 +952,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
                   title=${msg("Google Meet")}
                   ?disabled=${this.disabled}
                 >
-                  <wy-icon svg="google-meet"></wy-icon>
+                  <wy-icon name="google-meet"></wy-icon>
                 </wy-button>
               `
             : nothing}
@@ -966,7 +964,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
                   title=${msg("Microsoft Teams")}
                   ?disabled=${this.disabled}
                 >
-                  <wy-icon svg="microsoft-teams"></wy-icon>
+                  <wy-icon name="microsoft-teams"></wy-icon>
                 </wy-button>
               `
             : nothing}
@@ -1052,7 +1050,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
       ${hasMeetings && this.meeting
         ? html`
             <wy-item size="sm">
-              <wy-icon slot="image" svg="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
+              <wy-icon slot="image" name="${getMeetingIconName(this.meeting.provider)}"></wy-icon>
               <span slot="title">${getMeetingTitle(this.meeting.provider)}</span>
               <wy-button slot="actions" kind="icon" @click=${() => this.handleRemoveMeeting()}>
                 <wy-icon name="close"></wy-icon>

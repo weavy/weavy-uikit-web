@@ -52,7 +52,7 @@ export class WyMeetingCard extends LitElement {
         ${meetingHasEnded
           ? html`
               <wy-item part="wy-meeting" size="lg" disabled title="${msg("Meeting ended")}">
-                <wy-icon slot="image" svg="${getMeetingIconName(this.meeting.provider)}" size="48"></wy-icon>
+                <wy-icon slot="image" name="${getMeetingIconName(this.meeting.provider)}" size="48"></wy-icon>
                 <span slot="title">${getMeetingTitle(this.meeting.provider)}</span>
                 <span slot="text">${this.meeting.code}</span>
               </wy-item>
@@ -68,7 +68,7 @@ export class WyMeetingCard extends LitElement {
               >
                 <wy-icon
                   slot="image"
-                  svg="${getMeetingIconName(this.meeting.provider)}"
+                  name="${getMeetingIconName(this.meeting.provider)}"
                   size="48"
                   color="native"
                 ></wy-icon>

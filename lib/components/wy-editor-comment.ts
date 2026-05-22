@@ -111,7 +111,7 @@ export class WyEditorComment extends WyEditorMsg {
             ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.ZoomMeetings)
               ? html`
                   <wy-dropdown-item @click=${() => this.handleMeetingClick("zoom")} title=${msg("Zoom meeting")}>
-                    <wy-icon svg="zoom-meetings"></wy-icon>
+                    <wy-icon name="zoom-meetings"></wy-icon>
                     <span>${msg("Zoom meeting")}</span>
                   </wy-dropdown-item>
                 `
@@ -119,7 +119,7 @@ export class WyEditorComment extends WyEditorMsg {
             ${this.componentFeatures?.allowsAnyFeature(Feature.Meetings, Feature.GoogleMeet)
               ? html`
                   <wy-dropdown-item @click=${() => this.handleMeetingClick("google")} title=${msg("Google Meet")}>
-                    <wy-icon svg="google-meet"></wy-icon>
+                    <wy-icon name="google-meet"></wy-icon>
                     <span>${msg("Google Meet")}</span>
                   </wy-dropdown-item>
                 `
@@ -130,7 +130,7 @@ export class WyEditorComment extends WyEditorMsg {
                     @click=${() => this.handleMeetingClick("microsoft")}
                     title=${msg("Microsoft Teams")}
                   >
-                    <wy-icon svg="microsoft-teams"></wy-icon>
+                    <wy-icon name="microsoft-teams"></wy-icon>
                     <span>${msg("Microsoft Teams")}</span>
                   </wy-dropdown-item>
                 `

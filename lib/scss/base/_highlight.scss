@@ -2,6 +2,7 @@
 
 @keyframes wy-highlight {
   from {
+    background-color: #{color.token(--wy-highlight)};
     --wy-component-background-color: #{color.token(--wy-highlight)};
     --wy-component-color: #{color.token(--wy-on-highlight)};
   }

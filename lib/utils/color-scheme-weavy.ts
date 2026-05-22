@@ -215,7 +215,7 @@ export class SchemeWeavy extends DynamicScheme {
   }
 
   get highlight() {
-    return this.primaryPalette.tone(this.isDark ? 20 : 95);
+    return this.primaryPalette.tone(this.isDark ? 20 : 85);
   }
 
   get onHighlight() {
