@@ -3,22 +3,16 @@ import * as mdi from "@mdi/js";
 
 
 export type IconPathDefinition = {
-  /* Viewbox width */
-  width: number;
-
-  /* Viewbox height */
-  height: number;
+  /* Viewbox */
+  viewBox: `${number} ${number} ${number} ${number}`;
 
   /** Single SVG path for monotone icons.  */
   path: string;
 };
 
 export type IconContentDefinition = {
-  /* Viewbox width */
-  width: number;
-
-  /* Viewbox height */
-  height: number;
+  /* Viewbox */
+  viewBox: `${number} ${number} ${number} ${number}`;
 
   /** Inner SVG content for complex icons */
   content: string;
@@ -28,30 +22,26 @@ export type IconDefinition = IconPathDefinition | IconContentDefinition;
 
 export type IconDefinitionList = { [key: string]: IconDefinition };
 
-export const defaultIcon: IconDefinition = { width: 24, height: 24, path: mdi.mdiSelect };
+export const defaultIcon: IconDefinition = { viewBox: '0 0 24 24', path: mdi.mdiSelect };
 
 export const meetingIconMapping = {
   "zoom-meetings": {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     content:
       '<path d="M21.5 12.5c0 .96-.08 1.91-.23 2.83a7.198 7.198 0 01-5.95 5.95 17.527 17.527 0 01-5.66 0 7.198 7.198 0 01-5.95-5.95 17.527 17.527 0 010-5.66c.49-3.05 2.9-5.46 5.95-5.95a17.527 17.527 0 015.66 0c3.05.49 5.46 2.9 5.95 5.95.15.92.23 1.86.23 2.83z" fill="#0b5cff"/><path d="M14.43 14.75c0 .53-.43.96-.96.96H9.29c-1.07 0-1.93-.86-1.93-1.93v-3.54c0-.53.43-.96.96-.96h4.18c1.07 0 1.93.86 1.93 1.93v3.54zM16.87 9.86l-1.41 1.06c-.24.18-.39.47-.39.77v1.61c0 .3.14.59.39.77l1.41 1.06c.32.24.77.01.77-.39v-4.5c0-.4-.45-.62-.77-.39z" fill="#fff"/>',
   },
   "google-meet": {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     content:
       '<path fill="#1e88e5" d="M3.5 9.07v5.86l2.09.42 2.1-.42V9.07l-2.1-.42-2.09.42z"/><path d="M17.73 12v5.86c0 .69-.56 1.26-1.26 1.26H7.69l-.42-2.09.42-2.09h5.86v-2.93l2.09-.42 2.09.42z" fill="#4caf50"/><path d="M17.73 6.14V12h-4.19V9.07H7.68l-.42-2.09.42-2.09h8.79c.69 0 1.26.56 1.26 1.26z" fill="#fbc02d"/><path d="M7.69 14.93v4.19H4.76c-.69 0-1.26-.56-1.26-1.26v-2.93h4.19z" fill="#1565c0"/><path fill="#e53935" d="M7.69 4.88v4.19H3.5l4.19-4.19z"/><path fill="#2e7d32" d="M18.15 12l-.42 3.54L13.55 12l4.18-3.54.42 3.54z"/><path d="M21.5 6.19v11.63c0 .35-.41.55-.68.33l-3.09-2.6V8.48l3.09-2.6c.27-.22.68-.03.68.33z" fill="#4caf50"/>',
   },
   "webex-meetings": {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     content:
       '<defs><radialGradient id="prefix__b" cx="-951.63" cy="549.04" fx="-951.63" fy="549.04" r=".05" gradientTransform="matrix(-87.16473 -146.04628 -122.52671 73.12756 -15652.44 -179117.85)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#007383"/><stop offset=".41" stop-color="#00717e" stop-opacity=".75"/><stop offset=".87" stop-color="#007281" stop-opacity="0"/></radialGradient><radialGradient id="prefix__c" cx="-952.67" cy="549.07" fx="-952.67" fy="549.07" r=".05" gradientTransform="rotate(-126.7 -53497.341 -58162.752) scale(138.69 -91.09)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#218970"/><stop offset=".46" stop-color="#267e6a"/><stop offset="1" stop-color="#026c51" stop-opacity="0"/></radialGradient><radialGradient id="prefix__d" cx="-952.61" cy="541.2" fx="-952.61" fy="541.2" r=".05" gradientTransform="matrix(-33.8827 -107.79009 -56.09397 17.63256 -1902.72 -112216.84)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#178697"/><stop offset=".41" stop-color="#17838f" stop-opacity=".79"/><stop offset=".87" stop-color="#007281" stop-opacity="0"/></radialGradient><radialGradient id="prefix__e" cx="-949.76" cy="547.24" fx="-949.76" fy="547.24" r=".05" gradientTransform="matrix(-146.98086 -246.36712 -75.94201 45.30646 -98045.43 -258761.67)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#25342f" stop-opacity=".3"/><stop offset="1" stop-color="#25342f" stop-opacity="0"/></radialGradient><radialGradient id="prefix__f" cx="-942.87" cy="563.62" fx="-942.87" fy="563.62" r=".05" gradientTransform="rotate(85.1 -69752.427 38265.017) scale(108.08 -61.22)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#056d4f"/><stop offset=".23" stop-color="#056c4e" stop-opacity=".75"/><stop offset=".6" stop-color="#056c4e" stop-opacity=".3"/><stop offset=".87" stop-color="#056c4f" stop-opacity="0"/></radialGradient><radialGradient id="prefix__g" cx="-940.36" cy="556.77" fx="-940.36" fy="556.77" r=".05" gradientTransform="matrix(68.96997 106.65216 55.9082 -36.1548 33735.1 120422.29)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22b67b"/><stop offset=".41" stop-color="#24be82"/><stop offset="1" stop-color="#24be82" stop-opacity=".07"/></radialGradient><radialGradient id="prefix__i" cx="-940.77" cy="554.96" fx="-940.77" fy="554.96" r=".05" gradientTransform="rotate(49.69 -177135.555 122596.9) scale(165.85 -165.4)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#09f8ff"/><stop offset="1" stop-color="#0bf7f9" stop-opacity="0"/></radialGradient><radialGradient id="prefix__j" cx="-944.1" cy="553.18" fx="-944.1" fy="553.18" r=".05" gradientTransform="rotate(48.05 -367132.581 263331.898) scale(336.36 -335.78)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00b8ff"/><stop offset=".75" stop-color="#00b9fc" stop-opacity="0"/></radialGradient><radialGradient id="prefix__k" cx="-951.17" cy="546.23" fx="-951.17" fy="546.23" r=".05" gradientTransform="matrix(-48.64247 -154.74493 -107.10322 33.66679 12252.88 -165563.53)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00bcff" stop-opacity=".76"/><stop offset=".57" stop-color="#00bafc" stop-opacity="0"/></radialGradient><radialGradient id="prefix__l" cx="-953.78" cy="550.07" fx="-953.78" fy="550.07" r=".05" gradientTransform="matrix(-72.9418 -88.45403 -61.91396 51.05608 -35502.54 -112443.2)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5fec50"/><stop offset="1" stop-color="#3cc08e" stop-opacity="0"/></radialGradient><radialGradient id="prefix__m" cx="-954.59" cy="523.18" fx="-954.59" fy="523.18" r=".05" gradientTransform="rotate(-79.11 -8961.313 -26349.067) scale(34.73 -23.99)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#28855b"/><stop offset="1" stop-color="#14795c" stop-opacity="0"/></radialGradient><radialGradient id="prefix__n" cx="-955.7" cy="534.72" fx="-955.7" fy="534.72" r=".05" gradientTransform="matrix(6.00138 -27.99393 -39.07222 -8.37636 26647.75 -22260.21)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#28855b"/><stop offset="1" stop-color="#14795c" stop-opacity="0"/></radialGradient><radialGradient id="prefix__o" cx="-954.99" cy="550.19" fx="-954.99" fy="550.19" r=".05" gradientTransform="matrix(-64.43177 -69.7019 -48.95728 45.25565 -34575.21 -91452.74)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5ff05b"/><stop offset=".81" stop-color="#5de955" stop-opacity="0"/></radialGradient><radialGradient id="prefix__p" cx="-938.28" cy="553.05" fx="-938.28" fy="553.05" r=".05" gradientTransform="matrix(66.96005 51.3617 71.4219 -93.11248 23342.15 99701.75)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".97" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__q" cx="-940.1" cy="550.5" fx="-940.1" fy="550.5" r=".05" gradientTransform="matrix(98.43675 14.71147 21.98813 -147.126 80455.97 94829.3)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".59" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__r" cx="-938.38" cy="551.97" fx="-938.38" fy="551.97" r=".05" gradientTransform="rotate(24.69 -231174.852 140478.806) scale(85.04 -151.66)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".76" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__s" cx="-945.2" cy="560.82" fx="-945.2" fy="560.82" r=".05" gradientTransform="rotate(95.79 -93552.04 41883.384) scale(153.04 -83.75)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".59" stop-color="#123aa8" stop-opacity="0"/><stop offset="1" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__t" cx="-945.05" cy="562.66" fx="-945.05" fy="562.66" r=".05" gradientTransform="rotate(93.66 -104350.43 63182.76) scale(184.18 -65.64)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".88" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__u" cx="-942.29" cy="567.94" fx="-942.29" fy="567.94" r=".05" gradientTransform="matrix(8.78957 97.33394 51.50044 -4.65066 -20951.98 94373.6)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".88" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__v" cx="-942.85" cy="562.23" fx="-942.85" fy="562.23" r=".05" gradientTransform="matrix(4.89377 101.88254 84.00315 -4.03496 -42611.94 98338.06)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".88" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__w" cx="-941.74" cy="549.74" fx="-941.74" fy="549.74" r=".05" gradientTransform="rotate(-23.2 244205.91 -321749.854) scale(113.62 -222.29)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#123aa8"/><stop offset=".71" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__x" cx="-959.91" cy="553.32" fx="-959.91" fy="553.32" r=".05" gradientTransform="matrix(-70.50332 -26.36011 -45.18376 120.84945 -42670.87 -92159.05)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a3da0"/><stop offset=".71" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__y" cx="-940.3" cy="551.63" fx="-940.3" fy="551.63" r=".05" gradientTransform="matrix(137.44492 41.41855 41.86 -138.90985 106154.62 115588.85)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1e3882"/><stop offset=".76" stop-color="#123aa8" stop-opacity="0"/></radialGradient><radialGradient id="prefix__A" cx="-940.77" cy="554.96" fx="-940.77" fy="554.96" r=".05" gradientTransform="rotate(49.69 -177135.55 122596.884) scale(165.85 -165.4)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#09f8ff"/><stop offset="1" stop-color="#0bf7f9" stop-opacity="0"/></radialGradient><radialGradient id="prefix__D" cx="-951.17" cy="546.23" fx="-951.17" fy="546.23" r=".05" gradientTransform="matrix(-48.64247 -154.74493 -107.10322 33.66679 12252.88 -165563.53)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00bcff" stop-opacity=".76"/><stop offset=".57" stop-color="#00bafc" stop-opacity="0"/></radialGradient><linearGradient id="prefix__a" x1="76.14" y1="-95.89" x2="64.37" y2="-99.75" gradientTransform="matrix(1 0 0 -1 -58.17 -86.5)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5cee64"/><stop offset="1" stop-color="#0bf"/></linearGradient><linearGradient id="prefix__h" x1="56.74" y1="-98.36" x2="65.09" y2="-98.43" gradientTransform="matrix(1 0 0 -1 -58.17 -86.5)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#09f8ff"/><stop offset="1" stop-color="#0bf7f9" stop-opacity="0"/></linearGradient><linearGradient id="prefix__z" x1="61.48" y1="-92.95" x2="67.9" y2="-97.04" gradientTransform="matrix(1 0 0 -1 -58.17 -86.5)" gradientUnits="userSpaceOnUse"><stop offset=".23" stop-color="#1dc4ff"/><stop offset="1" stop-color="#1cc1ff" stop-opacity="0"/></linearGradient><linearGradient id="prefix__B" x1="63.13" y1="-92.11" x2="64.93" y2="-93.74" gradientTransform="matrix(1 0 0 -1 -58.17 -86.5)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#26fbff"/><stop offset=".64" stop-color="#0bf7f9" stop-opacity="0"/></linearGradient><linearGradient id="prefix__C" x1="60.36" y1="-97.78" x2="62.85" y2="-97.95" gradientTransform="matrix(1 0 0 -1 -58.17 -86.5)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#26fbff"/><stop offset=".64" stop-color="#0bf7f9" stop-opacity="0"/></linearGradient></defs><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__a)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__b)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__c)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__d)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__e)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__f)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__g)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__h)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__i)"/><path d="M15.37 5.44c-1.34 0-2.88.45-3.9 2.4-.59 1.12-.89 2.38-1.16 3.63-.09.41-.18.83-.28 1.22v5.66c.51-.14 1.05-.42 1.57-.95 1.96-1.99 2.28-7.2 3.26-8.19.11-.11.23-.18.36-.18.39 0 .7.5.99 1.1.32.67.71 1.43 1.84 1.43.52 0 1.72-.38 1.72-1.85 0-.88-1.47-4.28-4.39-4.28z" fill="url(#prefix__j)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__k)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__l)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__m)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__n)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__o)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="#316aff"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__p)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__q)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__r)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__s)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__t)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__u)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__v)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__w)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__x)"/><path d="M19.22 7.44c-.13 0-.26.01-.39.04.62.89.93 1.83.93 2.23 0 1.47-1.2 1.85-1.72 1.85-.41 0-.71-.1-.96-.25v.03c-.07.29-.13.61-.23.92-.19.6-.45 1.28-.73 1.81-.3.57-.59.9-.94.89-.4-.02-.72-.54-1.13-1.99-.13-.47-.25-.98-.36-1.49-.28-1.25-.62-2.52-1.2-3.63-.95-1.82-2.56-2.4-3.85-2.4-1.2 0-2.09.57-2.79 1.28-.19.2-.41.46-.62.78.61.15 1.19.61 1.28 1.48.02.17.15 1.49.58 3.03.12-.38.3-.95.72-1.88.2-.42.39-.7.56-.87.15-.16.29-.22.41-.22.13 0 .59.12 1.03 1.68.55 1.93.96 5.01 2.52 6.65.69.72 1.65 1.19 2.99 1.19 1.17 0 2.15-.52 2.84-1.24 1.14-1.18 1.77-3.14 2-3.86.64-2.06.82-3.92.84-4.11.12-1.12-.83-1.91-1.77-1.91z" fill="url(#prefix__y)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__z)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__A)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__B)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__C)"/><path d="M8.59 18.51c-3.33 0-4.47-4.22-4.72-5.04-.64-2.06-.83-3.92-.85-4.11-.12-1.12.78-1.91 1.77-1.91.75 0 1.62.45 1.73 1.54.02.18.17 1.76.71 3.48.56 1.8 1.16 2.49 1.59 2.49.69 0 1.12-1.78 1.49-3.48.28-1.25.57-2.51 1.16-3.63 1.02-1.95 2.57-2.4 3.9-2.4 2.93 0 4.39 3.4 4.39 4.28 0 1.47-1.2 1.85-1.72 1.85-1.14 0-1.52-.76-1.84-1.43-.29-.6-.6-1.1-.99-1.1-.13 0-.25.07-.36.18-.98 1-1.31 6.2-3.26 8.19-1.08 1.1-2.26 1.1-3 1.1z" fill="url(#prefix__D)"/>',
   },
   "microsoft-teams": {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     content:
       '<path d="M15.56 9.91h4.65c.44 0 .8.36.8.8v4.24c0 1.61-1.31 2.92-2.92 2.92h-.01c-1.61 0-2.92-1.31-2.92-2.92v-4.62c0-.23.19-.42.42-.42z" fill="#5059c9"/><circle cx="18.7" cy="7.19" r="1.88" fill="#5059c9"/><circle cx="12.84" cy="6.35" r="2.72" fill="#7b83eb"/><path d="M16.47 9.91H8.8a.79.79 0 00-.77.8v4.83c-.06 2.6 2 4.77 4.6 4.83 2.6-.06 4.67-2.23 4.6-4.83v-4.83a.783.783 0 00-.77-.8z" fill="#7b83eb"/><path d="M3.77 7.4h7.67c.42 0 .77.34.77.77v7.67c0 .42-.34.77-.77.77H3.77a.77.77 0 01-.77-.77V8.17c0-.42.34-.77.77-.77z" fill="#5a62c3"/><path d="M9.62 10.32H8.09v4.18h-.98v-4.18H5.58v-.81h4.04v.81z" fill="#fff"/>',
   },
@@ -59,141 +49,137 @@ export const meetingIconMapping = {
 
 const logoIconMapping = {
   box: {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     path: "M15.39,14.04V14.04C15.39,12.62 14.24,11.47 12.82,11.47C11.41,11.47 10.26,12.62 10.26,14.04V14.04C10.26,15.45 11.41,16.6 12.82,16.6C14.24,16.6 15.39,15.45 15.39,14.04M17.1,14.04C17.1,16.4 15.18,18.31 12.82,18.31C11.19,18.31 9.77,17.39 9.05,16.04C8.33,17.39 6.91,18.31 5.28,18.31C2.94,18.31 1.04,16.43 1,14.11V14.11H1V7H1V7C1,6.56 1.39,6.18 1.86,6.18C2.33,6.18 2.7,6.56 2.71,7V7H2.71V10.62C3.43,10.08 4.32,9.76 5.28,9.76C6.91,9.76 8.33,10.68 9.05,12.03C9.77,10.68 11.19,9.76 12.82,9.76C15.18,9.76 17.1,11.68 17.1,14.04V14.04M7.84,14.04V14.04C7.84,12.62 6.69,11.47 5.28,11.47C3.86,11.47 2.71,12.62 2.71,14.04V14.04C2.71,15.45 3.86,16.6 5.28,16.6C6.69,16.6 7.84,15.45 7.84,14.04M22.84,16.96V16.96C22.95,17.12 23,17.3 23,17.47C23,17.73 22.88,18 22.66,18.15C22.5,18.26 22.33,18.32 22.15,18.32C21.9,18.32 21.65,18.21 21.5,18L19.59,15.47L17.7,18V18C17.53,18.21 17.28,18.32 17.03,18.32C16.85,18.32 16.67,18.26 16.5,18.15C16.29,18 16.17,17.72 16.17,17.46C16.17,17.29 16.23,17.11 16.33,16.96V16.96H16.33V16.96L18.5,14.04L16.33,11.11V11.11H16.33V11.11C16.22,10.96 16.17,10.79 16.17,10.61C16.17,10.35 16.29,10.1 16.5,9.93C16.89,9.65 17.41,9.72 17.7,10.09V10.09L19.59,12.61L21.5,10.09C21.76,9.72 22.29,9.65 22.66,9.93C22.89,10.1 23,10.36 23,10.63C23,10.8 22.95,10.97 22.84,11.11V11.11H22.84V11.11L20.66,14.04L22.84,16.96V16.96H22.84Z",
   },
   dropbox: {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     path: "M3 6.2L8 9.39L13 6.2L8 3L3 6.2M13 6.2L18 9.39L23 6.2L18 3L13 6.2M3 12.55L8 15.74L13 12.55L8 9.35L3 12.55M18 9.35L13 12.55L18 15.74L23 12.55L18 9.35M8.03 16.8L13.04 20L18.04 16.8L13.04 13.61L8.03 16.8Z",
   },
   "google-drive": {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     path: "M7.71,3.5L1.15,15L4.58,21L11.13,9.5M9.73,15L6.3,21H19.42L22.85,15M22.28,14L15.42,2H8.58L8.57,2L15.43,14H22.28Z",
   },
   onedrive: {
-    width: 24,
-    height: 24,
+    viewBox: '0 0 24 24',
     path: "M18.21 10.29Q19 10.34 19.7 10.68 20.39 11 20.9 11.57 21.41 12.12 21.71 12.83 22 13.54 22 14.34 22 15.18 21.68 15.92 21.36 16.66 20.8 17.21 20.25 17.76 19.5 18.08 18.78 18.41 17.94 18.41H7Q5.97 18.41 5.06 18 4.15 17.61 3.47 16.94 2.79 16.26 2.4 15.35 2 14.44 2 13.41 2 12.59 2.26 11.83 2.5 11.08 3 10.45 3.44 9.82 4.08 9.35 4.72 8.88 5.5 8.63 5.87 8.5 6.21 8.5 6.56 8.43 6.93 8.41H6.94Q7.37 7.75 7.95 7.23 8.5 6.71 9.2 6.34 9.87 6 10.62 5.78 11.37 5.59 12.16 5.59 13.22 5.59 14.2 5.94 15.18 6.29 16 6.91 16.8 7.53 17.37 8.39 17.95 9.26 18.21 10.29M12.16 6.84Q11.05 6.84 10.06 7.3 9.06 7.75 8.36 8.6 8.73 8.7 9.07 8.85 9.4 9 9.73 9.2L13.71 11.58L16 10.62Q16.21 10.53 16.44 10.45 16.67 10.38 16.92 10.33 16.68 9.55 16.21 8.91 15.74 8.27 15.11 7.81 14.5 7.35 13.73 7.1 13 6.84 12.16 6.84M4 15.66L12.27 12.18L9.08 10.26Q8.59 9.97 8.06 9.81 7.5 9.66 6.95 9.66 6.19 9.66 5.5 9.96 4.84 10.26 4.34 10.77 3.84 11.29 3.54 11.97 3.25 12.65 3.25 13.41 3.25 14 3.45 14.59 3.64 15.19 4 15.66M17.94 17.16Q18.41 17.16 18.84 17 19.27 16.86 19.64 16.58L13.61 13L5.03 16.59Q5.47 16.86 5.97 17 6.47 17.16 7 17.16M20.45 15.61Q20.75 15 20.75 14.34 20.75 13.7 20.5 13.17 20.26 12.65 19.85 12.28 19.43 11.91 18.88 11.71 18.32 11.5 17.7 11.5 17.35 11.5 17 11.6 16.66 11.68 16.33 11.81 16 11.93 15.67 12.08 15.35 12.23 15.04 12.37Z",
   },
 } satisfies IconDefinitionList;
 
 const fileIconMapping = {
-  email: { width: 24, height: 24, path: mdi.mdiEmail },
-  file: { width: 24, height: 24, path: mdi.mdiFile },
-  "file-upload": { width: 24, height: 24, path: mdi.mdiFileUpload },
-  "file-music": { width: 24, height: 24, path: mdi.mdiFileMusic },
-  "file-image": { width: 24, height: 24, path: mdi.mdiFileImage },
-  "file-video": { width: 24, height: 24, path: mdi.mdiFileVideo },
-  "file-code": { width: 24, height: 24, path: mdi.mdiFileCode },
-  "file-xml": { width: 24, height: 24, path: mdi.mdiFileCode },
-  "file-document": { width: 24, height: 24, path: mdi.mdiFileDocument },
-  "file-word": { width: 24, height: 24, path: mdi.mdiFileWord },
-  "file-excel": { width: 24, height: 24, path: mdi.mdiFileExcel },
-  "file-pdf": { width: 24, height: 24, path: mdi.mdiFileDocument },
-  "file-powerpoint": { width: 24, height: 24, path: mdi.mdiFilePowerpoint },
-  "file-compressed": { width: 24, height: 24, path: mdi.mdiFolderZip },
+  email: { viewBox: '0 0 24 24', path: mdi.mdiEmail },
+  file: { viewBox: '0 0 24 24', path: mdi.mdiFile },
+  "file-upload": { viewBox: '0 0 24 24', path: mdi.mdiFileUpload },
+  "file-music": { viewBox: '0 0 24 24', path: mdi.mdiFileMusic },
+  "file-image": { viewBox: '0 0 24 24', path: mdi.mdiFileImage },
+  "file-video": { viewBox: '0 0 24 24', path: mdi.mdiFileVideo },
+  "file-code": { viewBox: '0 0 24 24', path: mdi.mdiFileCode },
+  "file-xml": { viewBox: '0 0 24 24', path: mdi.mdiFileCode },
+  "file-document": { viewBox: '0 0 24 24', path: mdi.mdiFileDocument },
+  "file-word": { viewBox: '0 0 24 24', path: mdi.mdiFileWord },
+  "file-excel": { viewBox: '0 0 24 24', path: mdi.mdiFileExcel },
+  "file-pdf": { viewBox: '0 0 24 24', path: mdi.mdiFileDocument },
+  "file-powerpoint": { viewBox: '0 0 24 24', path: mdi.mdiFilePowerpoint },
+  "file-compressed": { viewBox: '0 0 24 24', path: mdi.mdiFolderZip },
 } satisfies IconDefinitionList;
 
 // Custom mapping to MDI instead of symbols
 export const iconMapping = {
-  "account-minus": { width: 24, height: 24, path: mdi.mdiAccountMinus },
-  "account-plus": { width: 24, height: 24, path: mdi.mdiAccountPlus },
-  alert: { width: 24, height: 24, path: mdi.mdiAlert },
-  "alert-circle": { width: 24, height: 24, path: mdi.mdiAlertCircle },
-  "alert-octagon": { width: 24, height: 24, path: mdi.mdiAlertOctagon },
-  "arrow-collapse": { width: 24, height: 24, path: mdi.mdiArrowCollapse },
-  "arrow-expand": { width: 24, height: 24, path: mdi.mdiArrowExpand },
-  attachment: { width: 24, height: 24, path: mdi.mdiAttachment },
-  back: { width: 24, height: 24, path: mdi.mdiArrowLeft },
-  "backup-restore": { width: 24, height: 24, path: mdi.mdiBackupRestore },
-  bell: { width: 24, height: 24, path: mdi.mdiBell },
-  "bell-off": { width: 24, height: 24, path: mdi.mdiBellOff },
-  agent: { width: 24, height: 24, path: mdi.mdiStarFourPoints },
-  check: { width: 24, height: 24, path: mdi.mdiCheck },
-  "check-all": { width: 24, height: 24, path: mdi.mdiCheckAll },
-  "check-circle-outline": { width: 24, height: 24, path: mdi.mdiCheckCircleOutline },
-  "checkbox-blank": { width: 24, height: 24, path: mdi.mdiCheckboxBlankOutline },
-  "checkbox-marked": { width: 24, height: 24, path: mdi.mdiCheckboxMarkedOutline },
-  "circle-outline": { width: 24, height: 24, path: mdi.mdiCircleOutline },
-  "check-circle": { width: 24, height: 24, path: mdi.mdiCheckCircle },
-  close: { width: 24, height: 24, path: mdi.mdiClose },
-  "close-circle": { width: 24, height: 24, path: mdi.mdiCloseCircle },
-  cloud: { width: 24, height: 24, path: mdi.mdiCloud },
-  comment: { width: 24, height: 24, path: mdi.mdiComment },
-  "comment-outline": { width: 24, height: 24, path: mdi.mdiCommentOutline },
-  "content-save": { width: 24, height: 24, path: mdi.mdiContentSave },
-  delete: { width: 24, height: 24, path: mdi.mdiDelete },
-  "delete-restore": { width: 24, height: 24, path: mdi.mdiDeleteRestore },
-  "delete-forever": { width: 24, height: 24, path: mdi.mdiDeleteForever },
-  "dots-vertical": { width: 24, height: 24, path: mdi.mdiDotsVertical },
-  download: { width: 24, height: 24, path: mdi.mdiDownload },
-  earth: { width: 24, height: 24, path: mdi.mdiEarth },
-  emoticon: { width: 24, height: 24, path: mdi.mdiEmoticonOutline },
-  "emoticon-plus": { width: 24, height: 24, path: mdi.mdiEmoticonPlusOutline },
-  "fit-screen": { width: 24, height: 24, path: mdi.mdiFitToScreen },
-  "fit-width": { width: 24, height: 24, path: mdi.mdiFitToPage },
-  fullscreen: { width: 24, height: 24, path: mdi.mdiFullscreen },
-  "fullscreen-exit": { width: 24, height: 24, path: mdi.mdiFullscreenExit },
-  "help-circle": { width: 24, height: 24, path: mdi.mdiHelpCircle },
-  information: { width: 24, height: 24, path: mdi.mdiInformationOutline },
-  magnify: { width: 24, height: 24, path: mdi.mdiMagnify },
-  meeting: { width: 24, height: 24, path: mdi.mdiMonitorAccount },
-  "menu-down": { width: 24, height: 24, path: mdi.mdiMenuDown },
-  "menu-up": { width: 24, height: 24, path: mdi.mdiMenuUp },
-  message: { width: 24, height: 24, path: mdi.mdiMessage },
-  "message-text": { width: 24, height: 24, path: mdi.mdiMessageText },
-  minus: { width: 24, height: 24, path: mdi.mdiMinus },
-  next: { width: 24, height: 24, path: mdi.mdiArrowRight },
-  "open-in-new": { width: 24, height: 24, path: mdi.mdiOpenInNew },
-  pencil: { width: 24, height: 24, path: mdi.mdiPencil },
-  pin: { width: 24, height: 24, path: mdi.mdiPin },
-  unpin: { width: 24, height: 24, path: mdi.mdiPinOff },
-  plus: { width: 24, height: 24, path: mdi.mdiPlus },
-  "plus-circle-outline": { width: 24, height: 24, path: mdi.mdiPlusCircleOutline },
-  poll: { width: 24, height: 24, path: mdi.mdiChartBox },
-  previous: { width: 24, height: 24, path: mdi.mdiArrowLeft },
-  read: { width: 24, height: 24, path: mdi.mdiCheck },
-  restore: { width: 24, height: 24, path: mdi.mdiRestore },
-  unread: { width: 24, height: 24, path: mdi.mdiCheck },
-  send: { width: 24, height: 24, path: mdi.mdiSend },
-  "server-network-off": { width: 24, height: 24, path: mdi.mdiServerNetworkOff },
-  "shield-star": { width: 24, height: 24, path: mdi.mdiShieldStar },
-  "shield-star-outline": { width: 24, height: 24, path: mdi.mdiShieldStarOutline },
-  sort: { width: 24, height: 24, path: mdi.mdiSort },
-  star: { width: 24, height: 24, path: mdi.mdiStar },
-  unstar: { width: 24, height: 24, path: mdi.mdiStarOff },
-  stars: { width: 24, height: 24, path: mdi.mdiCreation },
-  "swap-horizontal": { width: 24, height: 24, path: mdi.mdiSwapHorizontal },
-  textbox: { width: 24, height: 24, path: mdi.mdiFormTextbox },
-  "thumb-up": { width: 24, height: 24, path: mdi.mdiThumbUp },
-  "thumb-up-outline": { width: 24, height: 24, path: mdi.mdiThumbUpOutline },
-  trashcan: { width: 24, height: 24, path: mdi.mdiTrashCan },
-  video: { width: 24, height: 24, path: mdi.mdiVideo },
-  "view-list-outline": { width: 24, height: 24, path: mdi.mdiViewListOutline },
-  "view-module-outline": { width: 24, height: 24, path: mdi.mdiViewModuleOutline },
-  "wifi-off": { width: 24, height: 24, path: mdi.mdiWifiOff },
+  "account-minus": { viewBox: '0 0 24 24', path: mdi.mdiAccountMinus },
+  "account-plus": { viewBox: '0 0 24 24', path: mdi.mdiAccountPlus },
+  alert: { viewBox: '0 0 24 24', path: mdi.mdiAlert },
+  "alert-circle": { viewBox: '0 0 24 24', path: mdi.mdiAlertCircle },
+  "alert-octagon": { viewBox: '0 0 24 24', path: mdi.mdiAlertOctagon },
+  "arrow-collapse": { viewBox: '0 0 24 24', path: mdi.mdiArrowCollapse },
+  "arrow-expand": { viewBox: '0 0 24 24', path: mdi.mdiArrowExpand },
+  attachment: { viewBox: '0 0 24 24', path: mdi.mdiAttachment },
+  back: { viewBox: '0 0 24 24', path: mdi.mdiArrowLeft },
+  "backup-restore": { viewBox: '0 0 24 24', path: mdi.mdiBackupRestore },
+  bell: { viewBox: '0 0 24 24', path: mdi.mdiBell },
+  "bell-off": { viewBox: '0 0 24 24', path: mdi.mdiBellOff },
+  agent: { viewBox: '0 0 24 24', path: mdi.mdiStarFourPoints },
+  check: { viewBox: '0 0 24 24', path: mdi.mdiCheck },
+  "check-all": { viewBox: '0 0 24 24', path: mdi.mdiCheckAll },
+  "check-circle-outline": { viewBox: '0 0 24 24', path: mdi.mdiCheckCircleOutline },
+  "checkbox-blank": { viewBox: '0 0 24 24', path: mdi.mdiCheckboxBlankOutline },
+  "checkbox-marked": { viewBox: '0 0 24 24', path: mdi.mdiCheckboxMarkedOutline },
+  "circle-outline": { viewBox: '0 0 24 24', path: mdi.mdiCircleOutline },
+  "check-circle": { viewBox: '0 0 24 24', path: mdi.mdiCheckCircle },
+  close: { viewBox: '0 0 24 24', path: mdi.mdiClose },
+  "close-circle": { viewBox: '0 0 24 24', path: mdi.mdiCloseCircle },
+  cloud: { viewBox: '0 0 24 24', path: mdi.mdiCloud },
+  comment: { viewBox: '0 0 24 24', path: mdi.mdiComment },
+  "comment-outline": { viewBox: '0 0 24 24', path: mdi.mdiCommentOutline },
+  "content-save": { viewBox: '0 0 24 24', path: mdi.mdiContentSave },
+  delete: { viewBox: '0 0 24 24', path: mdi.mdiDelete },
+  "delete-restore": { viewBox: '0 0 24 24', path: mdi.mdiDeleteRestore },
+  "delete-forever": { viewBox: '0 0 24 24', path: mdi.mdiDeleteForever },
+  "dots-vertical": { viewBox: '0 0 24 24', path: mdi.mdiDotsVertical },
+  download: { viewBox: '0 0 24 24', path: mdi.mdiDownload },
+  earth: { viewBox: '0 0 24 24', path: mdi.mdiEarth },
+  emoticon: { viewBox: '0 0 24 24', path: mdi.mdiEmoticonOutline },
+  "emoticon-plus": { viewBox: '0 0 24 24', path: mdi.mdiEmoticonPlusOutline },
+  "fit-screen": { viewBox: '0 0 24 24', path: mdi.mdiFitToScreen },
+  "fit-width": { viewBox: '0 0 24 24', path: mdi.mdiFitToPage },
+  fullscreen: { viewBox: '0 0 24 24', path: mdi.mdiFullscreen },
+  "fullscreen-exit": { viewBox: '0 0 24 24', path: mdi.mdiFullscreenExit },
+  "help-circle": { viewBox: '0 0 24 24', path: mdi.mdiHelpCircle },
+  information: { viewBox: '0 0 24 24', path: mdi.mdiInformationOutline },
+  magnify: { viewBox: '0 0 24 24', path: mdi.mdiMagnify },
+  meeting: { viewBox: '0 0 24 24', path: mdi.mdiMonitorAccount },
+  "menu-down": { viewBox: '0 0 24 24', path: mdi.mdiMenuDown },
+  "menu-up": { viewBox: '0 0 24 24', path: mdi.mdiMenuUp },
+  message: { viewBox: '0 0 24 24', path: mdi.mdiMessage },
+  "message-text": { viewBox: '0 0 24 24', path: mdi.mdiMessageText },
+  minus: { viewBox: '0 0 24 24', path: mdi.mdiMinus },
+  next: { viewBox: '0 0 24 24', path: mdi.mdiArrowRight },
+  "open-in-new": { viewBox: '0 0 24 24', path: mdi.mdiOpenInNew },
+  pencil: { viewBox: '0 0 24 24', path: mdi.mdiPencil },
+  pin: { viewBox: '0 0 24 24', path: mdi.mdiPin },
+  unpin: { viewBox: '0 0 24 24', path: mdi.mdiPinOff },
+  plus: { viewBox: '0 0 24 24', path: mdi.mdiPlus },
+  "plus-circle-outline": { viewBox: '0 0 24 24', path: mdi.mdiPlusCircleOutline },
+  poll: { viewBox: '0 0 24 24', path: mdi.mdiChartBox },
+  previous: { viewBox: '0 0 24 24', path: mdi.mdiArrowLeft },
+  read: { viewBox: '0 0 24 24', path: mdi.mdiCheck },
+  restore: { viewBox: '0 0 24 24', path: mdi.mdiRestore },
+  unread: { viewBox: '0 0 24 24', path: mdi.mdiCheck },
+  send: { viewBox: '0 0 24 24', path: mdi.mdiSend },
+  "server-network-off": { viewBox: '0 0 24 24', path: mdi.mdiServerNetworkOff },
+  "shield-star": { viewBox: '0 0 24 24', path: mdi.mdiShieldStar },
+  "shield-star-outline": { viewBox: '0 0 24 24', path: mdi.mdiShieldStarOutline },
+  sort: { viewBox: '0 0 24 24', path: mdi.mdiSort },
+  star: { viewBox: '0 0 24 24', path: mdi.mdiStar },
+  unstar: { viewBox: '0 0 24 24', path: mdi.mdiStarOff },
+  stars: { viewBox: '0 0 24 24', path: mdi.mdiCreation },
+  "swap-horizontal": { viewBox: '0 0 24 24', path: mdi.mdiSwapHorizontal },
+  textbox: { viewBox: '0 0 24 24', path: mdi.mdiFormTextbox },
+  "thumb-up": { viewBox: '0 0 24 24', path: mdi.mdiThumbUp },
+  "thumb-up-outline": { viewBox: '0 0 24 24', path: mdi.mdiThumbUpOutline },
+  trashcan: { viewBox: '0 0 24 24', path: mdi.mdiTrashCan },
+  video: { viewBox: '0 0 24 24', path: mdi.mdiVideo },
+  "view-list-outline": { viewBox: '0 0 24 24', path: mdi.mdiViewListOutline },
+  "view-module-outline": { viewBox: '0 0 24 24', path: mdi.mdiViewModuleOutline },
+  "wifi-off": { viewBox: '0 0 24 24', path: mdi.mdiWifiOff },
   ...fileIconMapping,
   ...logoIconMapping,
   ...meetingIconMapping,
 } satisfies IconDefinitionList;
 
 /*export const fileActionIconMapping: { [index in FileActionType]: IconDefinition } = {
-  "attach": { width: 24, height: 24, path: mdi.mdiAttachment },
-  "create": { width: 24, height: 24, path: mdi.mdiPlus },
-  "delete-forever": { width: 24, height: 24, path: mdi.mdiDeleteForever },
-  "edit": { width: 24, height: 24, path: mdi.mdiPencil },
-  "modify": { width: 24, height: 24, path: mdi.mdiPencil },
-  "rename": { width: 24, height: 24, path: mdi.mdiCursorText },
-  "replace": { width: 24, height: 24, path: mdi.mdiSwapVertical },
-  "restore": { width: 24, height: 24, path: mdi.mdiRestore },
-  "subscribe": { width: 24, height: 24, path: mdi.mdiBell },
-  "trash": { width: 24, height: 24, path: mdi.mdiDelete },
-  "unsubscribe": { width: 24, height: 24, path: mdi.mdiBellOff },
-  "upload": { width: 24, height: 24, path: mdi.mdiUpload },
-  "version": { width: 24, height: 24, path: mdi.mdiHistory },
+  "attach": { viewBox: '0 0 24 24', path: mdi.mdiAttachment },
+  "create": { viewBox: '0 0 24 24', path: mdi.mdiPlus },
+  "delete-forever": { viewBox: '0 0 24 24', path: mdi.mdiDeleteForever },
+  "edit": { viewBox: '0 0 24 24', path: mdi.mdiPencil },
+  "modify": { viewBox: '0 0 24 24', path: mdi.mdiPencil },
+  "rename": { viewBox: '0 0 24 24', path: mdi.mdiCursorText },
+  "replace": { viewBox: '0 0 24 24', path: mdi.mdiSwapVertical },
+  "restore": { viewBox: '0 0 24 24', path: mdi.mdiRestore },
+  "subscribe": { viewBox: '0 0 24 24', path: mdi.mdiBell },
+  "trash": { viewBox: '0 0 24 24', path: mdi.mdiDelete },
+  "unsubscribe": { viewBox: '0 0 24 24', path: mdi.mdiBellOff },
+  "upload": { viewBox: '0 0 24 24', path: mdi.mdiUpload },
+  "version": { viewBox: '0 0 24 24', path: mdi.mdiHistory },
 };*/
 
 export const nativeColors: { [index: string]: string } = {

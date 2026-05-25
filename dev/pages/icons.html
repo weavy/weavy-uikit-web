@@ -65,11 +65,18 @@
     const newMapping = {};
     Object.keys(faNameMap).forEach((key) => {
       const faIcon = fa[faNameMap[key]];
+      console.log("FA icon", key, faIcon);
+
       const path = getPath(faIcon);
       const width = (faIcon?.icon && faIcon.icon[0]) || 512;
       const height = (faIcon?.icon && faIcon.icon[1]) || 512;
+
+      // Adjust viewBox for customized fitting
+      const offsetMargin = 32;
+      const viewBox = `${0 - offsetMargin} ${0 - offsetMargin} ${width + offsetMargin * 2} ${height + offsetMargin * 2}`;
+
       // Create an IconDefinition for Weavy
-      newMapping[key] = { width, height, path };
+      newMapping[key] = { viewBox, path };
     });
 
     // Replace properties on the imported iconMapping object so existing consumers pick up the change

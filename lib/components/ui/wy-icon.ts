@@ -214,7 +214,7 @@ export class WyIcon extends LitElement {
             <wy-icon-stack style="${sizeStyle}">
               <svg
                 part=${partMap(iconParts)}
-                viewBox="0 0 ${this.icon.width || 24} ${this.icon.height || 24}"
+                viewBox=${this.icon.viewBox || '0 0 24 24'}
                 width="${this.size}"
                 height="${this.size}"
                 style="mask-image: url(#${this.uniqueId}-mask); -webkit-mask-image: url(#${this.uniqueId}-mask);"
@@ -243,7 +243,7 @@ export class WyIcon extends LitElement {
               </svg>
               <svg
                 part="wy-icon-stack-overlay"
-                viewBox="0 0 ${this.overlayIcon.width || 24} ${this.overlayIcon.height || 24}"
+                viewBox=${this.overlayIcon.viewBox || '0 0 24 24'}
                 width="${this.size / 2}"
                 height="${this.size / 2}"
               >
@@ -266,7 +266,7 @@ export class WyIcon extends LitElement {
         <svg
           part=${partMap(iconParts)}
           style="${sizeStyle}"
-          viewBox="0 0 ${this.icon.width || 24} ${this.icon.height || 24}"
+          viewBox=${this.icon.viewBox || '0 0 24 24'}
           width="${this.size}"
           height="${this.size}"
         >
