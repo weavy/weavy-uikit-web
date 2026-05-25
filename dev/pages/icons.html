@@ -75,8 +75,13 @@
       const offsetMargin = 32;
       const viewBox = `${0 - offsetMargin} ${0 - offsetMargin} ${width + offsetMargin * 2} ${height + offsetMargin * 2}`;
 
+      let nativeColor;
+      if (key === "send") {
+        nativeColor = "rebeccapurple";
+      }
+
       // Create an IconDefinition for Weavy
-      newMapping[key] = { viewBox, path };
+      newMapping[key] = { viewBox, nativeColor, path };
     });
 
     // Replace properties on the imported iconMapping object so existing consumers pick up the change

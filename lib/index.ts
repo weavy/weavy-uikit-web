@@ -11,7 +11,7 @@ export * from "./classes/weavy-optional-app-component";
 export * from "./classes/weavy-sub-component";
 export * from "./classes/weavy-sub-app-component";
 
-export { iconMapping } from "./utils/icons";
+export * from "./utils/icons";
 
 /*
  * WyContext should be first for optimal loading when used as a provider.

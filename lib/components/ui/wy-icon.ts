@@ -4,7 +4,6 @@ import { property, state } from "lit/decorators.js";
 import {
   getIconMapping,
   defaultIcon,
-  nativeColors,
   type iconNamesType,
   type IconDefinition,
   hasIconContent,
@@ -144,20 +143,6 @@ export class WyIcon extends LitElement {
   @state()
   overlayIcon?: IconDefinition;
 
-  /**
-   * Resolved CSS color when using `color=native`.
-   * @internal
-   */
-  @state()
-  nativeIconColor?: string;
-
-  /**
-   * Resolved overlay CSS color when using `overlayName`.
-   * @internal
-   */
-  @state()
-  nativeOverlayColor?: string;
-
   protected uniqueId = `wy-icon-${S4()}`;
 
   override willUpdate(changedProperties: PropertyValues<this>): void {
@@ -166,9 +151,6 @@ export class WyIcon extends LitElement {
     if (changedProperties.has("name") && this.name) {
       this.icon = getIconMapping(this.name) || defaultIcon;
       this.overlayIcon = getIconMapping(this.overlayName) || this.overlayIcon;
-
-      this.nativeIconColor = (this.color === "native" && nativeColors[this.name]) || undefined;
-      this.nativeOverlayColor = (this.overlayName && nativeColors[this.overlayName]) || undefined;
     }
   }
 
@@ -214,7 +196,7 @@ export class WyIcon extends LitElement {
             <wy-icon-stack style="${sizeStyle}">
               <svg
                 part=${partMap(iconParts)}
-                viewBox=${this.icon.viewBox || '0 0 24 24'}
+                viewBox=${this.icon.viewBox || "0 0 24 24"}
                 width="${this.size}"
                 height="${this.size}"
                 style="mask-image: url(#${this.uniqueId}-mask); -webkit-mask-image: url(#${this.uniqueId}-mask);"
@@ -237,20 +219,20 @@ export class WyIcon extends LitElement {
                 ${hasIconContent(this.icon)
                   ? unsafeSVG(this.icon.content)
                   : svg`
-                    <path d="${this.icon.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
+                    <path d="${this.icon.path}" style="fill: ${ifDefined(this.icon.nativeColor)}" />
                   `}
                 <!--rect width="24" height="24" fill="transparent" /-->
               </svg>
               <svg
                 part="wy-icon-stack-overlay"
-                viewBox=${this.overlayIcon.viewBox || '0 0 24 24'}
+                viewBox=${this.overlayIcon.viewBox || "0 0 24 24"}
                 width="${this.size / 2}"
                 height="${this.size / 2}"
               >
                 ${hasIconContent(this.overlayIcon)
                   ? unsafeSVG(this.overlayIcon.content)
                   : svg`
-                    <path d="${this.overlayIcon.path}" style="fill: ${ifDefined(this.nativeOverlayColor)}" />
+                    <path d="${this.overlayIcon.path}" style="fill: ${ifDefined(this.overlayIcon.nativeColor)}" />
                   `}
                 <!--rect width="24" height="24" fill="transparent" /-->
               </svg>
@@ -266,15 +248,15 @@ export class WyIcon extends LitElement {
         <svg
           part=${partMap(iconParts)}
           style="${sizeStyle}"
-          viewBox=${this.icon.viewBox || '0 0 24 24'}
+          viewBox=${this.icon.viewBox || "0 0 24 24"}
           width="${this.size}"
           height="${this.size}"
         >
           ${hasIconContent(this.icon)
             ? unsafeSVG(this.icon.content)
             : svg`
-                    <path d="${this.icon.path}" style="fill: ${ifDefined(this.nativeIconColor)}" />
-                  `}
+              <path d="${this.icon.path}" style="fill: ${ifDefined(this.icon.nativeColor)}" />
+            `}
           <!--rect width="24" height="24" fill="transparent" /-->
         </svg>
         <slot></slot>
