@@ -18,7 +18,7 @@ import {
   AgentAppTypeStringMapping,
 } from "../types/app.types";
 import { LinkContext } from "../contexts/link-context";
-import { getStorage, onlyValues } from "../utils/data";
+import { onlyValues } from "../utils/data";
 import type { WyLinkEventType, WyNotificationEventType } from "../types/notifications.events";
 import { asArray, findAsyncSequential, objectAsIterable } from "../utils/objects";
 import { ComponentFeatures } from "../contexts/features-context";
@@ -59,9 +59,6 @@ export class WeavyTypeComponent
      */
     this.settings = new WeavyComponentSettings(this);
   }
-
-  /** @internal */
-  protected storage = getStorage("localStorage");
 
   // CONTEXT PROVIDERS
 
@@ -153,62 +150,30 @@ export class WeavyTypeComponent
   }
 
   /**
-   * Shares a link with other blocks that may consume it automatically.
-   *
-   * @param link - The entity to provide.
-   * @internal
-   */
-  protected provideStorageLink(link: LinkType) {
-    this.storage?.setItem("wy-link", btoa(JSON.stringify(link)));
-  }
-
-  /**
-   * Reads a link from storage and exposes it via the link property and context.
-   *
-   * @internal
-   */
-  protected readStorageLink() {
-    if (!this.storage) {
-      console.error("Storage not available");
-      return;
-    }
-
-    const storageLink = this.storage.getItem("wy-link");
-    if (storageLink) {
-      //console.log("found link, parsing...")
-      try {
-        const parsedLink = JSON.parse(atob(storageLink)) as LinkType;
-        if (parsedLink) {
-          //console.log("parsed Link", parsedLink)
-          this.link = parsedLink;
-        }
-      } catch (e) {
-        console.error("Error parsing link", e);
-      }
-    }
-  }
-
-  /**
-   * Consumes a link in storage. Make sure to consume it after it has been used.
-   *
-   * @internal
-   */
-  protected consumeStorageLink() {
-    this.storage?.removeItem("wy-link");
-  }
-
-  /**
    * Handles storage update events.
    *
    * @param e - `storage` event.
    * @internal
    */
   protected storageLinkHandler = (e: StorageEvent) => {
-    if (e.storageArea === this.storage && e.key === "wy-link" && e.newValue) {
+    // Note: The event is only triggered when setting storage items in _other_ windows.
+    if (e.storageArea === this.weavy?.storage && e.key === "wy-link" && e.newValue) {
       //console.log("storage updated with wy-link", e.newValue);
-      this.readStorageLink();
+      void this.setLink(this.weavy?.readStorageLink());
     }
   };
+
+  /**
+   * Sets the link value to a new link
+   * @param link
+   */
+  protected async setLink(link: LinkType | undefined) {
+    if (this.link && this.link.id === link?.id) {
+      this.link = undefined;
+      await this.updateComplete;
+    }
+    this.link = link;
+  }
 
   /**
    * Handler for reacting to the `wy-link` event.
@@ -218,14 +183,10 @@ export class WeavyTypeComponent
    */
   protected linkEventHandler = async (e: WyLinkEventType) => {
     if (!e.defaultPrevented && e.detail.link) {
-      if (this.link && this.link.id === e.detail.link.id) {
-        this.link = undefined;
-        await this.updateComplete;
-      }
-      this.link = e.detail.link;
+      await this.setLink(e.detail.link);
 
       if (!this.link) {
-        this.provideStorageLink(e.detail.link);
+        this.weavy?.provideStorageLink(e.detail.link);
       }
     }
   };
@@ -233,8 +194,8 @@ export class WeavyTypeComponent
   /**
    * Element to match visibility on.
    */
-  protected get visibilityElement(): Element | undefined { 
-    return this; 
+  protected get visibilityElement(): Element | undefined {
+    return this;
   }
 
   /**
@@ -247,7 +208,12 @@ export class WeavyTypeComponent
     e.stopPropagation();
     if (!e.defaultPrevented) {
       // Check if notification belongs to this component and if it can be ignored
-      if (this.visibilityElement && this.visibilityElement.isConnected && this.visibilityElement.checkVisibility(defaultVisibilityCheckOptions) && this.matchesLink(e.detail.link)) {
+      if (
+        this.visibilityElement &&
+        this.visibilityElement.isConnected &&
+        this.visibilityElement.checkVisibility(defaultVisibilityCheckOptions) &&
+        this.matchesLink(e.detail.link)
+      ) {
         // Prevent the notification from showing
         e.preventDefault();
       }
@@ -567,7 +533,7 @@ export class WeavyTypeComponent
       this.componentFeatures?.allowsFeature(Feature.ContextData)
     ) {
       await this.#uploadContextDataMutation.trackMutation(
-        getUploadBlobMutationOptions(this.weavy, this.user, this.contextId, undefined, "data")
+        getUploadBlobMutationOptions(this.weavy, this.user, this.contextId, undefined, "data"),
       );
 
       await this.#mutatingContextData.trackMutationState(
@@ -577,7 +543,7 @@ export class WeavyTypeComponent
             exact: true,
           },
         },
-        this.weavy.queryClient
+        this.weavy.queryClient,
       );
     }
 
@@ -619,7 +585,7 @@ export class WeavyTypeComponent
               async (fileUpload) => {
                 const existingSha256 = fileUpload.context?.sha256 ?? (await getHash(fileUpload.variables?.file));
                 return existingSha256 === sha256;
-              }
+              },
             );
 
             if (!existingUpload) {
@@ -656,12 +622,12 @@ export class WeavyTypeComponent
 
     if ((changedProperties.has("componentTypes") || changedProperties.has("agent")) && this.componentTypes) {
       //console.log("Checking for storage link", this.appTypes, this.agent);
-      this.readStorageLink();
+      this.link = this.weavy?.readStorageLink();
     }
 
     if (changedProperties.has("link") && this.link) {
       console.info(`Opening notification link`);
-      this.consumeStorageLink();
+      this.weavy?.consumeStorageLink();
     }
 
     // Promises

@@ -17,8 +17,8 @@ export function getApiOptions<T>(
   body?: BodyInit,
   method: HttpMethodType = "GET"
 ) {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return <QueryObserverOptions<T>>{
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: apiKey,
     queryFn: async () => {
       //console.log("API", method, apiPath ? apiPath : "/api/" + apiKey.join("/"));

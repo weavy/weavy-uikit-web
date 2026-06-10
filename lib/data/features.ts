@@ -8,6 +8,7 @@ export async function getFeatures<T>(weavy: WeavyType, type: string) {
 
   const queryClient = weavy.queryClient;
 
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return await queryClient.fetchQuery<T>({
     queryKey: ["features", type],
     queryFn: async () => {

@@ -17,6 +17,7 @@ export function getInfiniteFileListOptions(
 
   const filesKey = ["apps", appId, "files", filters];
 
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
     queryKey: filesKey,

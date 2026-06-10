@@ -122,6 +122,12 @@ export class WyPostList extends WeavySubAppComponent {
   /** @internal */
   protected unreadPostsController: UnreadPostsController = new UnreadPostsController(this);
 
+  /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  placeholder?: string;
+
   /** Current unread conversation count. */
   get unread(): number {
     return this.unreadPostsController.unread;
@@ -246,6 +252,7 @@ export class WyPostList extends WeavySubAppComponent {
 
                   return html`<wy-post
                     id="post-${post.id}"
+                    .placeholder=${this.placeholder}
                     .uid=${uid}
                     .app=${app}
                     .post=${post}

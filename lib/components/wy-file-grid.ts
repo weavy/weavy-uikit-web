@@ -20,7 +20,7 @@ import type {
   FileRenameEventType,
 } from "../types/files.events";
 import { customElement, property, state } from "lit/decorators.js";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { WeavySubTypeComponent } from "../classes/weavy-sub-type-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { repeat } from "lit/directives/repeat.js";
 import { NamedEvent } from "../types/generic.types";
@@ -36,6 +36,7 @@ import "./ui/wy-icon";
 import "./wy-file-menu";
 import "./ui/wy-button";
 import "./ui/wy-badge";
+import { Feature } from "../types/features.types";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -77,7 +78,7 @@ declare global {
  */
 @customElement("wy-file-grid")
 @localized()
-export class WyFileGrid extends WeavySubComponent {
+export class WyFileGrid extends WeavySubTypeComponent {
   static override styles = [inputCss, gridCss, cardCss, hostContentsCss];
 
   /** @internal */
@@ -334,7 +335,7 @@ export class WyFileGrid extends WeavySubComponent {
                         />
                       `
                     : html`<div part="wy-card-title">
-                        <div part="wy-card-text">${file.name}</div> ${file.comments?.count
+                        <div part="wy-card-text">${file.name}</div> ${this.componentFeatures?.allowsFeature(Feature.Comments) && file.comments?.count
                           ? html`<wy-button
                               part="wy-card-button-icon"
                               small

@@ -95,6 +95,12 @@ export class WyPreview extends WeavySubAppComponent {
   protected exportParts = new ShadowPartsController(this);
 
   /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  placeholder?: string;
+
+  /**
    * Files available to render inside the preview carousel.
    */
   @property({ attribute: false })
@@ -547,7 +553,6 @@ export class WyPreview extends WeavySubAppComponent {
       this.swipeScroller.whenNext ??= () => this.setNext();
       this.swipeScroller.createObserver(this.swipeScrollElement);
       this.resizeObserver.observe(this.swipeScrollElement);
-
     }
   }
 
@@ -566,7 +571,7 @@ export class WyPreview extends WeavySubAppComponent {
           { name: "versionsOpen", override: true },
         ],
         `a${this.app.id}-preview`,
-        `u${this.user.id}`
+        `u${this.user.id}`,
       );
 
       if (this.commentsOpen && this.versionsOpen) {
@@ -752,82 +757,102 @@ export class WyPreview extends WeavySubAppComponent {
               <div part="wy-preview-main">
                 ${this.isAttachment
                   ? nothing
-                  : html` <aside
-                        id="tab-comments"
-                        part="wy-sidebar ${partMap({
-                          "wy-active": this.commentsOpen,
-                          "wy-maximized": this.sidePanelMaximized,
-                        })}"
-                        ?hidden=${!this.commentsOpen}
-                      >
-                        <nav>
-                          <wy-item size="md">
-                            <span slot="title" part="wy-title">${msg("Comments")}</span>
-                            <wy-button
-                              slot="actions"
-                              kind="icon"
-                              @click=${() => this.toggleSidebarTab("comments", false)}
+                  : html`
+                      ${this.componentFeatures?.allowsFeature(Feature.Comments)
+                        ? html`
+                            <aside
+                              id="tab-comments"
+                              part="wy-sidebar ${partMap({
+                                "wy-active": this.commentsOpen,
+                                "wy-maximized": this.sidePanelMaximized,
+                              })}"
+                              ?hidden=${!this.commentsOpen}
                             >
-                              <wy-icon name="close"></wy-icon>
-                            </wy-button>
-                          </wy-item>
-                          <button
-                            @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
-                            part="wy-sidebar-handle"
-                            title=${this.sidePanelMaximized ? msg("Restore side panel") : msg("Maximize side panel")}
-                          ></button>
-                        </nav>
-                        <div part="wy-pane wy-scroll-y">
-                          ${this.commentsOpen && this.currentFile && this.currentFile.id >= 1 && this.app && this.user
-                            ? html`
-                                <wy-comment-list
-                                  reveal
-                                  .parentId=${this.currentFile.id}
-                                  .location=${"files"}
-                                ></wy-comment-list>
-                              `
-                            : nothing}
-                        </div>
-                      </aside>
-                      <aside
-                        id="tab-versions"
-                        part="wy-sidebar ${partMap({
-                          "wy-active": this.versionsOpen,
-                          "wy-maximized": this.sidePanelMaximized,
-                        })}"
-                        ?hidden=${!this.versionsOpen}
-                      >
-                        <nav>
-                          <wy-item size="md">
-                            <span slot="title" part="wy-title">${msg("Versions")}</span>
-                            <wy-button
-                              slot="actions"
-                              kind="icon"
-                              @click=${() => this.toggleSidebarTab("versions", false)}
+                              <nav>
+                                <wy-item size="md">
+                                  <span slot="title" part="wy-title">${msg("Comments")}</span>
+                                  <wy-button
+                                    slot="actions"
+                                    kind="icon"
+                                    @click=${() => this.toggleSidebarTab("comments", false)}
+                                  >
+                                    <wy-icon name="close"></wy-icon>
+                                  </wy-button>
+                                </wy-item>
+                                <button
+                                  @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
+                                  part="wy-sidebar-handle"
+                                  title=${this.sidePanelMaximized
+                                    ? msg("Restore side panel")
+                                    : msg("Maximize side panel")}
+                                ></button>
+                              </nav>
+                              <div part="wy-pane wy-scroll-y">
+                                ${this.commentsOpen &&
+                                this.currentFile &&
+                                this.currentFile.id >= 1 &&
+                                this.app &&
+                                this.user
+                                  ? html`
+                                      <wy-comment-list
+                                        reveal
+                                        .placeholder=${this.placeholder}
+                                        .parentId=${this.currentFile.id}
+                                        .location=${"files"}
+                                      ></wy-comment-list>
+                                    `
+                                  : nothing}
+                              </div>
+                            </aside>
+                          `
+                        : nothing}
+                      ${this.componentFeatures?.allowsFeature(Feature.Versions)
+                        ? html`
+                            <aside
+                              id="tab-versions"
+                              part="wy-sidebar ${partMap({
+                                "wy-active": this.versionsOpen,
+                                "wy-maximized": this.sidePanelMaximized,
+                              })}"
+                              ?hidden=${!this.versionsOpen}
                             >
-                              <wy-icon name="close"></wy-icon>
-                            </wy-button>
-                          </wy-item>
-                          <button
-                            @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
-                            part="wy-sidebar-handle"
-                            title=${this.sidePanelMaximized ? msg("Restore side panel") : msg("Maximize side panel")}
-                          ></button>
-                        </nav>
-                        <div part="wy-pane wy-scroll-y">
-                          <div part="wy-pane-body">
-                            ${this.versionsOpen && this.currentFile && this.app
-                              ? html`
-                                  <wy-file-versions
-                                    .file=${this.currentFile}
-                                    .activeVersion=${this.currentVersionFile}
-                                    @file-version-select=${(e: FileVersionSelectEventType) => this.handleVersionFile(e)}
-                                  ></wy-file-versions>
-                                `
-                              : nothing}
-                          </div>
-                        </div>
-                      </aside>`}
+                              <nav>
+                                <wy-item size="md">
+                                  <span slot="title" part="wy-title">${msg("Versions")}</span>
+                                  <wy-button
+                                    slot="actions"
+                                    kind="icon"
+                                    @click=${() => this.toggleSidebarTab("versions", false)}
+                                  >
+                                    <wy-icon name="close"></wy-icon>
+                                  </wy-button>
+                                </wy-item>
+                                <button
+                                  @click=${() => (this.sidePanelMaximized = !this.sidePanelMaximized)}
+                                  part="wy-sidebar-handle"
+                                  title=${this.sidePanelMaximized
+                                    ? msg("Restore side panel")
+                                    : msg("Maximize side panel")}
+                                ></button>
+                              </nav>
+                              <div part="wy-pane wy-scroll-y">
+                                <div part="wy-pane-body">
+                                  ${this.versionsOpen && this.currentFile && this.app
+                                    ? html`
+                                        <wy-file-versions
+                                          .file=${this.currentFile}
+                                          .activeVersion=${this.currentVersionFile}
+                                          @file-version-select=${(e: FileVersionSelectEventType) =>
+                                            this.handleVersionFile(e)}
+                                        ></wy-file-versions>
+                                      `
+                                    : nothing}
+                                </div>
+                              </div>
+                            </aside>
+                          `
+                        : nothing}
+                    `}
 
                 <div part="wy-preview">
                   <div
@@ -851,20 +876,16 @@ export class WyPreview extends WeavySubAppComponent {
                           previewFile === this.currentVersionFile
                             ? currentPreviewFileCallback
                             : previewFile === this.nextFile
-                            ? this.nextRef
-                            : previewFile === this.previousFile
-                            ? this.prevRef
-                            : undefined;
+                              ? this.nextRef
+                              : previewFile === this.previousFile
+                                ? this.prevRef
+                                : undefined;
 
                         const fileLoadingState = this.loadingQueue.find((fls) => fls.file === previewFile);
 
                         return previewFile
                           ? html`
-                              <div
-                                id="preview-${previewFile.id}"
-                                ${ref(previewFileRef)}
-                                part="wy-preview-area"
-                              >
+                              <div id="preview-${previewFile.id}" ${ref(previewFileRef)} part="wy-preview-area">
                                 ${!isPending && (fileLoadingState?.loading || fileLoadingState?.loaded)
                                   ? html`
                                       <wy-preview-item
@@ -878,7 +899,7 @@ export class WyPreview extends WeavySubAppComponent {
                               </div>
                             `
                           : nothing;
-                      }
+                      },
                     )}
                   </div>
                   ${this.currentFile
@@ -907,7 +928,7 @@ export class WyPreview extends WeavySubAppComponent {
               </div>
             </div> `
           : nothing}
-      <wy-user-card .listenTo=${this}></wy-user-card>
+        <wy-user-card .listenTo=${this}></wy-user-card>
       </wy-overlay>
     `;
   }

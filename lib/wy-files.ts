@@ -203,6 +203,12 @@ export class WyFiles extends WeavyAppComponent {
   @property({ type: Boolean })
   showTrashed: boolean = false;
 
+  /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  placeholder?: string;
+
   /** @internal */
   private persistState = new PersistStateController(this);
 
@@ -314,6 +320,7 @@ export class WyFiles extends WeavyAppComponent {
           .view=${this.view}
           .order=${this.order}
           .showTrashed=${this.showTrashed}
+          .placeholder=${this.placeholder}
           @order=${(e: OrderEventType<FileOrderType>) => {
             this.order = e.detail.order;
           }}

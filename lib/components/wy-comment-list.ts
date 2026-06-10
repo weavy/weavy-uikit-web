@@ -361,7 +361,7 @@ export class WyCommentList extends WeavySubAppComponent {
     const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
     return html`
-      ${flattenedPages && flattenedPages.length
+      ${flattenedPages && flattenedPages.length && this.componentFeatures?.allowsFeature(Feature.Comments)
         ? html`
             <div part="wy-comments">
               ${this.renderComments(flattenedPages)}
@@ -373,7 +373,7 @@ export class WyCommentList extends WeavySubAppComponent {
               ><wy-progress-circular indeterminate padded reveal ?hidden=${!isPending}></wy-progress-circular
             ></wy-empty>
           `}
-      ${this.componentFeatures?.allowsFeature(Feature.Comment)
+      ${this.componentFeatures?.allowsFeature(Feature.Comments, Feature.Comment)
         ? html`
             <wy-editor-comment
               editorLocation=${this.location}

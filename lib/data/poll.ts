@@ -80,6 +80,7 @@ export function getPollMutation(weavy: WeavyType, appId: number | "feed", cacheK
 }
 
 export function getVotesOptions(weavy: WeavyType, id: number) {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     queryKey: ["votes", id],
     enabled: false,

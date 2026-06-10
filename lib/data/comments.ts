@@ -17,6 +17,7 @@ export function getCommentsOptions(
   parentId: number | null,
   options: object = {}
 ): InfiniteQueryObserverOptions<CommentsResultType, Error, InfiniteData<CommentsResultType>> {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
     initialPageParam: 0,

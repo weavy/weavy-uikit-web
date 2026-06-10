@@ -3,6 +3,7 @@ import {
   AppWithSourceMetadataType,
   EntityType,
   EntityTypeString,
+  LinkType,
   MetadataSourceType,
 } from "../types/app.types";
 import { NotificationType } from "../types/notifications.types";
@@ -56,6 +57,23 @@ export function hasEntityChildType(
     return false;
   }
 }
+
+export function dispatchRawLinkEvent(
+  target: EventTarget,
+  link: LinkType
+) {
+  const event: WyLinkEventType = new (CustomEvent as NamedEvent)("wy-link", {
+    bubbles: true,
+    composed: true,
+    cancelable: true,
+    detail: {      
+      link,
+      app_type: (link?.app?.type && AppTypeGuids.get(link.app.type)) || UnknownApp,
+    },
+  });
+
+  return target.dispatchEvent(event);
+} 
 
 export async function dispatchLinkEvent(
   target: EventTarget,

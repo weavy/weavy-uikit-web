@@ -47,6 +47,7 @@ export function getPostsOptions(
   const cleanedFilter = cleanFalsyProperties({ ...postFilter, count_only: countOnly });
   const filterParams = new URLSearchParams(flattenToSearchParams(cleanedFilter));
 
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     initialPageParam: 0,
     queryKey: ["posts", appId, cleanedFilter],

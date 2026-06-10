@@ -104,6 +104,12 @@ export class WyFilesList extends WeavySubAppComponent {
   showTrashed: boolean = false;
 
   /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  placeholder?: string;
+
+  /**
    * File id that should be highlighted and scrolled into view.
    *
    * @internal
@@ -421,7 +427,7 @@ export class WyFilesList extends WeavySubAppComponent {
             `}
         ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
         ${data
-          ? html` <wy-preview ${ref(this.previewRef)} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
+          ? html` <wy-preview ${ref(this.previewRef)} .placeholder=${this.placeholder} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
           : nothing}
       `;
     } else {

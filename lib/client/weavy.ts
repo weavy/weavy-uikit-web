@@ -20,6 +20,7 @@ import { WeavyStylesMixin, WeavyStylesProps } from "./styles";
 import { WeavyVersionMixin, WeavyVersionProps } from "./version";
 import { WeavyContextProviderMixin, WeavyContextProviderProps } from "./context";
 import { WeavyComponentSettingProps } from "../types/component.types";
+import { WeavyLinksMixin, WeavyLinksProps } from "./links";
 
 export type { WeavyOptions, Destructable, WeavyClientOptionsType, WeavyTokenFactory, StrictWeavyOptions };
 export type * from "./authentication";
@@ -47,7 +48,8 @@ export type WeavyType = WeavyClient &
   WeavyVersionProps &
   WeavyFetchProps &
   WeavyStylesProps &
-  WeavyContextProviderProps;
+  WeavyContextProviderProps &
+  WeavyLinksProps;
 
 /**
  * Context for Weavy that handles communication with the server, data handling and common options.
@@ -236,7 +238,7 @@ export class Weavy
       WeavyConnectionMixin(
         WeavyNetworkMixin(
           WeavyAuthenticationMixin(
-            WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavySettingsMixin(WeavyClient)))))
+            WeavyQueryMixin(WeavyVersionMixin(WeavyFetchMixin(WeavyStylesMixin(WeavySettingsMixin(WeavyLinksMixin(WeavyClient))))))
           )
         )
       )

@@ -872,6 +872,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
     return html`
       <wy-editor-core
         ${ref(this.editorRef)}
+        .placeholder=${this.placeholder}
         .editorType=${this.editorType}
         .typing=${this.typing}
         .text=${this.text}

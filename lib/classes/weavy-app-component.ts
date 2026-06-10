@@ -452,7 +452,7 @@ export class WeavyAppComponent
       this.appType !== UnknownApp
     ) {
       //console.log("Checking for storage link", this.appTypes, this.agent);
-      this.readStorageLink();
+      this.link = this.weavy?.readStorageLink();
     }
 
     // Events

@@ -222,6 +222,12 @@ export class WyFeed extends WeavyAppComponent implements PostQueryFilterProps {
   placeholder?: string;
 
   /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  commentsPlaceholder?: string;
+
+  /**
    * Combined query filter.
    * @internal
    */
@@ -257,6 +263,7 @@ export class WyFeed extends WeavyAppComponent implements PostQueryFilterProps {
           ? html`
               <wy-post-list
                 ${ref(this.postListRef)}
+                .placeholder=${this.commentsPlaceholder}
                 ?feed=${this.uids.length > 1 || (this.apps && this.apps.length > 1)}
                 .filter=${this.#filter}
               ></wy-post-list>

@@ -50,8 +50,8 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
   members?: (number | string)[],
   appData?: AppUpProperties,
 ) {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return <QueryObserverOptions<T>>{
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["apps", uid],
     queryFn: async () => {
       //console.log("API", method, apiPath ? apiPath : "/api/" + apiKey.join("/"));
@@ -258,6 +258,7 @@ export function getAppListOptions(
   orderBy?: string | null,
   includeUid?: boolean | null,
 ): InfiniteQueryObserverOptions<AppsResultType, Error, InfiniteData<AppsResultType>> {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
     initialPageParam: 0,

@@ -23,6 +23,7 @@ export function getNotificationsOptions(
   appIdOrUid?: string | number,
   options: object = {},
 ): InfiniteQueryObserverOptions<NotificationsResultType, Error, InfiniteData<NotificationsResultType>> {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
     initialPageParam: 0,

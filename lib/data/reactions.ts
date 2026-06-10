@@ -37,6 +37,7 @@ export function reactionMutation(
 }
 
 export function getReactionListOptions(weavy: WeavyType, entityType: string, entityId: number) {
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     queryKey: [entityType, entityId, "reactions"],
     enabled: false,

@@ -111,6 +111,12 @@ export class WyPostView extends WeavySubAppComponent {
   highlight: boolean = false;
 
   /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  placeholder?: string;
+
+  /**
    * Toggle indicating whether comments are currently visible.
    *
    * @internal
@@ -163,7 +169,9 @@ export class WyPostView extends WeavySubAppComponent {
    * @returns {boolean} True if the event was not canceled.
    */
   private dispatchVote(optionId: number) {
-    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", { detail: { optionId, parentType: "posts" } });
+    const event: PollVoteEventType = new (CustomEvent as NamedEvent)("vote", {
+      detail: { optionId, parentType: "posts" },
+    });
     return this.dispatchEvent(event);
   }
 
@@ -312,7 +320,9 @@ export class WyPostView extends WeavySubAppComponent {
                 <time datetime=${this.post.created_at} title=${dateFull}>${dateFromNow}</time>
                 ${
                   this.post.updated_at
-                    ? html`<time datetime="${this.post.updated_at}" title=${modifiedDateFull}> · ${msg("edited")}</time>`
+                    ? html`<time datetime="${this.post.updated_at}" title=${modifiedDateFull}>
+                        · ${msg("edited")}</time
+                      >`
                     : nothing
                 }
               </span>
@@ -337,7 +347,8 @@ export class WyPostView extends WeavySubAppComponent {
                     : nothing
                 }
                 ${
-                  this.user && this.user.id === this.post.created_by.id || hasPermission(PermissionType.Admin, this.app?.permissions)
+                  (this.user && this.user.id === this.post.created_by.id) ||
+                  hasPermission(PermissionType.Admin, this.app?.permissions)
                     ? html`<wy-dropdown-item @click=${() => this.dispatchTrash()}>
                         <wy-icon name="trashcan"></wy-icon>
                         ${msg("Trash")}
@@ -423,9 +434,7 @@ export class WyPostView extends WeavySubAppComponent {
                           ></wy-attachment-list>`
                         : nothing}
                       <!-- meeting -->
-                      ${hasMeeting
-                        ? html`<wy-meeting-card .meeting=${meeting}></wy-meeting-card>`
-                        : nothing}
+                      ${hasMeeting ? html`<wy-meeting-card .meeting=${meeting}></wy-meeting-card>` : nothing}
                     </div>
                   `
                 : nothing
@@ -468,13 +477,14 @@ export class WyPostView extends WeavySubAppComponent {
           </div>
 
           <!-- comments -->
-          <div part="wy-post-comments ${partMap({ "wy-show": this.showComments })}">
+          <div part="wy-post-comments ${partMap({ "wy-show": this.showComments && Boolean(this.componentFeatures?.allowsFeature(Feature.Comments)) })}">
             ${
               this.loadComments
                 ? html`
                     <wy-comment-list
                       reveal
                       part="wy-post-comment-list"
+                      .placeholder=${this.placeholder}
                       .parentId=${this.post.id}
                       .location=${"posts"}
                     ></wy-comment-list>

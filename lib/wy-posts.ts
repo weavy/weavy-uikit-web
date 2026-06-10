@@ -9,6 +9,7 @@ import type { PostQueryFilterType, PostType, PostQueryFilterProps } from "./type
 import { SearchEventType } from "./types/search.events";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { WeavyAppComponent } from "./classes/weavy-app-component";
+import { cleanFalsyProperties } from "./utils/objects";
 
 import colorModesCss from "./scss/color-modes.scss";
 import hostBlockCss from "./scss/host-block.scss";
@@ -22,7 +23,6 @@ import "./components/wy-post-form";
 import "./components/wy-user-card";
 import "./components/ui/wy-search";
 import { WyPostList } from "./components/wy-post-list";
-import { cleanFalsyProperties } from "./utils/objects";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -268,6 +268,7 @@ export class WyPosts extends WeavyAppComponent implements PostQueryFilterProps {
             `
           : nothing}
         <wy-post-list
+          .placeholder=${this.placeholder}
           ?feed=${this.uids.length !== 1 || (this.apps && this.apps.length > 1)}
           ${ref(this.postListRef)}
           .filter=${this.#filter}

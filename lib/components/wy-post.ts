@@ -83,6 +83,12 @@ export class WyPost extends WeavySubTypeComponent {
   uid?: number | string | null;
 
   /**
+   * Placeholder text for the comment editor input.
+   */
+  @property()
+  placeholder?: string;
+
+  /**
    * Resolves when app data is available.
    *
    * @returns {Promise<AppType>}
@@ -202,6 +208,7 @@ export class WyPost extends WeavySubTypeComponent {
       ${!this.post.is_trashed && !this.editing
         ? html`<wy-post-view
             id=${`post-view-${this.post.id}`}
+            .placeholder=${this.placeholder}
             .post=${this.post}
             @edit=${(e: PostEditEventType) => {
               this.editing = e.detail.edit;

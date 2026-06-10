@@ -19,10 +19,11 @@ import { autofocusRef, isModifiedClick } from "../utils/dom";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { customElement, property, state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { WeavySubTypeComponent } from "../classes/weavy-sub-type-component";
 import { NamedEvent } from "../types/generic.types";
 import { OrderEventType } from "../types/lists.events";
 import { openUrl } from "../utils/urls";
+import { Feature } from "../types/features.types";
 
 export type FileOrderHeaderType = { by: FileOrderByType | undefined; title: string; col: string }[];
 
@@ -79,7 +80,7 @@ declare global {
  */
 @customElement("wy-file-table")
 @localized()
-export class WyFileTable extends WeavySubComponent {
+export class WyFileTable extends WeavySubTypeComponent {
   static override styles = [inputCss, tableCss, fileTableCss, hostContentsCss];
 
   /** @internal */
@@ -396,7 +397,7 @@ export class WyFileTable extends WeavySubComponent {
             : html`${file.name}`}
         </td>
         <td part="wy-td wy-col-icon"
-          >${file.comments?.count
+          >${this.componentFeatures?.allowsFeature(Feature.Comments) && file.comments?.count
             ? html`<wy-button
                 part="wy-col-icon-content"
                 kind="inline"
