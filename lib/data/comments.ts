@@ -64,7 +64,7 @@ export function getUpdateCommentMutationOptions(weavy: WeavyType, mutationKey: M
     mutationKey: mutationKey,
     onSuccess: (data: CommentType, variables: MutateCommentProps) => {
       if (variables.id) {
-        updateCacheItem<CommentType>(weavy.queryClient, [variables.type, variables.parent_id, "comments"], variables.id, () => data);
+        updateCacheItem<CommentType>(weavy.queryClient, [variables.type, "comments", variables.parent_id], variables.id, () => data);
       }
     },
   };

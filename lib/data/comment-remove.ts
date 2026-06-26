@@ -17,7 +17,7 @@ export type RemoveCommentMutationType = MutationObserver<void, Error, MutateComm
 
 export function getTrashCommentMutationOptions(weavy: WeavyType, type: "posts" | "files" | "apps", parentId: number) {
   const queryClient = weavy.queryClient;
-  const commentsKey: MutationKey = [type, parentId, "comments"];
+  const commentsKey: MutationKey = [type, "comments", parentId];
 
   const options = {
     mutationKey: commentsKey,
@@ -63,7 +63,7 @@ export function getTrashCommentMutation(
 
 export function getRestoreCommentMutationOptions(weavy: WeavyType, type: "posts" | "files" | "apps", parentId: number) {
   const queryClient = weavy.queryClient;
-  const postsKey: MutationKey = [type, parentId, "comments"];
+  const postsKey: MutationKey = [type, "comments", parentId];
 
   const options = {
     mutationKey: postsKey,
