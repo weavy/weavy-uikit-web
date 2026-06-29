@@ -23,7 +23,7 @@ export interface WeavyLinksProps {
   readStorageLink: () => LinkType | undefined;
 
   /**
-   * Shares a link with other blocks that may consume it automatically.
+   * Shares a link with other blocks that may consume it automatically in other tabs or windows or when reloading the page.
    *
    * @param link - The entity to provide.
    */

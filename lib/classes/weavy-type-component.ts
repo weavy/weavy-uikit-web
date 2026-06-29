@@ -176,6 +176,16 @@ export class WeavyTypeComponent
   }
 
   /**
+   * Shares a link with other blocks that may consume it automatically in other tabs or windows or when reloading the page.
+   *
+   * @param link - The entity to provide.
+   */
+  protected provideStorageLink(link: LinkType) {
+    console.warn(".provideStorageLink() on components is deprecated. Use .weavy.provideStorageLink() instead.");
+    return this.weavy?.provideStorageLink(link);
+  }
+
+  /**
    * Handler for reacting to the `wy-link` event.
    *
    * @param e - `wy-link` event.

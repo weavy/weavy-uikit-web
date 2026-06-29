@@ -357,10 +357,11 @@ export class WyComment extends WeavySubAppComponent {
                       title=${this.comment.created_by.name}
                     ></wy-avatar>
 
-                    ${this.user && this.user.id === this.comment.created_by.id
+                    ${this.user && this.user.id === this.comment.created_by.id ||
+                      hasPermission(PermissionType.Admin, this.app?.permissions)
                       ? html`
                           <wy-dropdown small slot="actions">
-                            ${this.user.id === this.comment.created_by.id
+                            ${this.user && this.user.id === this.comment.created_by.id
                               ? html`
                                   <wy-dropdown-item @click=${() => (this.editing = true)}>
                                     <wy-icon name="pencil"></wy-icon>
@@ -368,7 +369,7 @@ export class WyComment extends WeavySubAppComponent {
                                   </wy-dropdown-item>
                                 `
                               : nothing}
-                            ${this.user.id === this.comment.created_by.id ||
+                            ${this.user && this.user.id === this.comment.created_by.id ||
                             hasPermission(PermissionType.Admin, this.app?.permissions)
                               ? html`
                                   <wy-dropdown-item @click=${() => this.dispatchTrash()}>
