@@ -114,12 +114,22 @@ export function hasScroll(element?: HTMLElement) {
  */
 export function isParentAtBottom(element: HTMLElement, bottomThreshold: number = 32) {
   if (element) {
-    const area = getScrollParent(element);
-
-    // We need to account for scrollTop being a float
-    return Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) < bottomThreshold;
+    return isScrolledToBottom(getScrollParent(element), bottomThreshold);
   }
   return false;
+}
+
+/**
+ * Checks if a scroll container is scrolled to the bottom. Use this when the
+ * scroll container is already known, to avoid re-resolving it via
+ * {@link getScrollParent} (e.g. in a high-frequency scroll handler).
+ * @param {HTMLElement} area - The scroll container.
+ * @param {number} [bottomThreshold=32] - Nearby limit for the bottom. Needs to be at least 1 to catch float calculation errors.
+ * @returns boolean
+ */
+export function isScrolledToBottom(area: HTMLElement, bottomThreshold: number = 32) {
+  // We need to account for scrollTop being a float
+  return Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) < bottomThreshold;
 }
 
 /**
@@ -169,28 +179,57 @@ export async function scrollParentTo(direction: "top" | "bottom", element?: HTML
  */
 export async function whenScrolledTo(direction: "top" | "bottom", area: HTMLElement, smooth: boolean = false) {
   await new Promise((resolve) => {
+    const targetTop = () => (direction === "bottom" ? area.scrollHeight - area.clientHeight : 0);
+
     let lastScrollTop = area.scrollTop;
+    let lastScrollHeight = area.scrollHeight;
     let failedAttempts = 0;
+    // Safety bailouts so we never poll forever. `stalledFrames` covers content that
+    // stops progressing; `totalFrames` is an absolute ceiling that also covers a
+    // target that keeps moving away (e.g. scroll-snap or momentum fighting the
+    // re-pin, or continuously growing content).
+    let stalledFrames = 0;
+    let totalFrames = 0;
+    const maxStalledFrames = 60;
+    const maxTotalFrames = 300;
+
     const scrollCheck = () => {
-      // We allow 1 failed attempts, which often is consumed on scroll start.
-      if (smooth && area.scrollTop === lastScrollTop && failedAttempts++ === 1) {
-        //console.log("smooth scroll interrupted, performing unsmooth scroll instead", failedAttempts);
-        area.scrollTop = direction === "bottom" ? area.scrollHeight : 0;
+      const moved = area.scrollTop !== lastScrollTop;
+      const grew = area.scrollHeight !== lastScrollHeight;
+
+      // We need to account for scrollTop being a float by using 1px diff
+      const isAtTarget = direction === "top" ? area.scrollTop < 1 : isScrolledToBottom(area, 1);
+
+      if (isAtTarget) {
+        resolve(undefined);
+        return;
+      }
+
+      if (smooth) {
+        // We allow 1 failed attempt, which often is consumed on scroll start.
+        // If a smooth scroll stalls (interrupted, or the target moved because
+        // content changed height) fall back to an instant scroll to the target.
+        if (!moved && failedAttempts++ === 1) {
+          //console.log("smooth scroll interrupted, performing unsmooth scroll instead", failedAttempts);
+          area.scrollTop = targetTop();
+        }
+      } else {
+        // Non-smooth: re-pin to the target every frame so we keep following content
+        // that grows in height after the initial scroll (async images, embeds, etc.).
+        area.scrollTop = targetTop();
+      }
+
+      // Bail out once nothing is progressing anymore (target unreachable), or
+      // after an absolute ceiling regardless of progress.
+      stalledFrames = !moved && !grew ? stalledFrames + 1 : 0;
+      if (stalledFrames >= maxStalledFrames || ++totalFrames >= maxTotalFrames) {
+        resolve(undefined);
+        return;
       }
 
       lastScrollTop = area.scrollTop;
-
-      // We need to account for scrollTop being a float by using 1px diff
-      const isScrolling =
-        direction === "top"
-          ? area.scrollTop >= 1
-          : Math.abs(area.scrollTop + area.clientHeight - area.scrollHeight) >= 1;
-
-      if (isScrolling) {
-        requestAnimationFrame(scrollCheck);
-      } else {
-        resolve(undefined);
-      }
+      lastScrollHeight = area.scrollHeight;
+      requestAnimationFrame(scrollCheck);
     };
 
     requestAnimationFrame(scrollCheck);

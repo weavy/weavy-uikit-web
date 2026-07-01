@@ -68,8 +68,13 @@
       let linkWindow;
 
       document.addEventListener("wy-link", (e) => {
-        const appType = e.detail.app.type;
-        const appUid = e.detail.app.uid;
+        if (!e.detail.link) {
+          console.log("Custom notification without link property?");
+          return;
+        }
+
+        const appType = e.detail.link.app.type;
+        const appUid = e.detail.link.app.uid;
         const contextualPrefix = "acme-";
         let linkUrl;
 
@@ -80,7 +85,10 @@
           const pageName = appUid.substring(contextualPrefix.length);
           linkUrl = new URL(`./${pageName}.html`, window.location);
         }
-        window.location = linkUrl;
+
+        if (linkUrl) {
+          window.location = linkUrl;
+        }
       });
       console.log("init done")
       globalThis.weavy = weavy;

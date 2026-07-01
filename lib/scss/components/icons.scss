@@ -184,5 +184,13 @@
 [part~="wy-kind-text-icon"] {
   width: var.wy-rem(1.25);
   height: var.wy-rem(1.25);
-  vertical-align: var.wy-rem(-0.3125);
+
+  &[width="24"] {
+    width: var(--wy-component-icon-width, var.wy-rem(1.25));
+  }
+
+  &[height="24"] {
+    height: var(--wy-component-icon-height, var.wy-rem(1.25));
+  }
+
 }

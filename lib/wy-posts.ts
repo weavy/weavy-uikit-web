@@ -114,7 +114,7 @@ declare global {
  * Specifying a single app identifier (`uid`), automatically creates a [corresponding app](https://www.weavy.com/docs/concepts#app) on your Weavy environment when the component is first initialized. It's recommended to specify a readable `name` of the posts app, to get better readable notifications from the app.
  *
  * ```html
- * <wy-posts uid="test-posts" name="Test feed"></wy-feed>
+ * <wy-posts uid="test-posts" name="Test feed"></wy-posts>
  * ```
  *
  * @example <caption>Multiple post apps feed with a search field</caption>
@@ -122,7 +122,7 @@ declare global {
  * Specifying multiple app identifiers (`uid`) separated by space, shows posts from several already created post apps. Here the search field is also enabled for the user.
  *
  * ```html
- * <wy-posts uid="test-posts test-news" search></wy-feed>
+ * <wy-posts uid="test-posts test-news" search></wy-posts>
  * ```
  *
  * @example <caption>Multiple post apps feed from followed people</caption>
@@ -130,7 +130,7 @@ declare global {
  * A post feed from multiple post apps, displaying only posts made by people the user follows.
  *
  * ```html
- * <wy-posts uid="test-posts test-news" following></wy-feed>
+ * <wy-posts uid="test-posts test-news" following></wy-posts>
  * ```
  */
 @customElement("wy-posts")

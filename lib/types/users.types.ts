@@ -8,7 +8,8 @@ import { QueryResultType } from "./query.types";
 export type DirectoryType = {
   id: number;
   name: string;
-  members: UsersResultType
+  /** Only populated on directory-specific endpoints, not on user summary responses. */
+  members?: UsersResultType;
 }
 
 // Minimal
@@ -27,7 +28,7 @@ export type UserType = {
   uid?: string;
   name: string;
   avatar_url?: string;
-  directory?: DirectoryType;
+  directories?: DirectoryType[];
   created_at?: string;
   updated_at?: string;
 };

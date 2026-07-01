@@ -28,6 +28,13 @@ export interface NotificationFilterProps {
   appId?: number;
 
   /**
+   * Optional directory identifier (`id` or `name`) for unread scoping.
+   * When set, only notifications from apps belonging to this directory are counted.
+   * Has no effect when `appId` is set (app scoping takes priority).
+   */
+  directory?: string;
+
+  /**
    * Type of notifications for the scope.
    *
    * @type "" | "activity" | "mention" | "reaction"
@@ -50,6 +57,11 @@ export class UnreadNotificationsController implements ReactiveController, Unread
    * Optional app id for unread scoping.
    */
   appId?: number;
+
+  /**
+   * Optional directory identifier (`id` or `name`) for unread scoping.
+   */
+  directory?: string;
 
   /**
    * Type of notifications for the scope.
@@ -172,18 +184,20 @@ export class UnreadNotificationsController implements ReactiveController, Unread
    *
    * @param typeFilter - The notification types to track.
    * @param appId - Optional app id for the filtering scope.
+   * @param directory - Optional directory identifier for the filtering scope.
    */
-  async track(typeFilter: NotificationTypes, appId?: number) {
+  async track(typeFilter: NotificationTypes, appId?: number, directory?: string) {
     this.appId = appId;
+    this.directory = directory;
     this.typeFilter = typeFilter;
     const weavy = await this.whenWeavyContext;
-    this.markNotificationsMutation = getMarkNotificationsMutation(weavy, this.appId);
-    await this.unreadQuery.trackQuery(getUnreadOptions(weavy, this.typeFilter, this.appId), true);
+    this.markNotificationsMutation = getMarkNotificationsMutation(weavy, this.appId, this.directory);
+    await this.unreadQuery.trackQuery(getUnreadOptions(weavy, this.typeFilter, this.appId, this.directory), true);
   }
 
   async markAllAsRead() {
     const weavy = await this.whenWeavyContext;
-    const notificationId = getLastNotification(weavy, NotificationTypes.All, this.appId)?.id;
+    const notificationId = getLastNotification(weavy, NotificationTypes.All, this.appId, this.directory)?.id;
     await this.markNotificationsMutation?.mutate({ notificationId });
   }
 

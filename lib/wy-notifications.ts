@@ -143,6 +143,13 @@ export class WyNotifications
   @property()
   typeFilter: NotificationTypes = NotificationTypes.All;
 
+  /**
+   * Optional directory identifier (`id` or `name`) to scope the notification list.
+   * When set, only notifications from apps belonging to this directory are shown.
+   */
+  @property()
+  override directory?: string;
+
   /** Current unread notification count. */
   get unread(): number {
     return this.unreadNotifications.unread;
@@ -160,8 +167,8 @@ export class WyNotifications
       this.currentTypeFilter = this.typeFilter;
     }
 
-    if (changedProperties.has("typeFilter") || changedProperties.has("app")) {
-      await this.unreadNotifications.track(this.typeFilter, this.app?.id);
+    if (changedProperties.has("typeFilter") || changedProperties.has("app") || changedProperties.has("directory")) {
+      await this.unreadNotifications.track(this.typeFilter, this.app?.id, this.directory);
     }
   }
 
@@ -185,7 +192,7 @@ export class WyNotifications
           `
         : nothing}
       ${this.user
-        ? html` <wy-notification-list typeFilter=${this.currentTypeFilter}></wy-notification-list> `
+        ? html` <wy-notification-list typeFilter=${this.currentTypeFilter} .directory=${this.directory}></wy-notification-list> `
         : html`
             <wy-empty>
               <wy-progress-circular indeterminate padded reveal></wy-progress-circular>

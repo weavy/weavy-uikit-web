@@ -133,6 +133,13 @@ export class WyNotificationBadge
   @property()
   typeFilter: NotificationTypes = NotificationTypes.All;
 
+  /**
+   * Optional directory identifier (`id` or `name`) to scope the unread count.
+   * When set, only unread notifications from apps belonging to this directory are counted.
+   */
+  @property()
+  override directory?: string;
+
   /** Current unread notification count. */
   get unread(): number {
     return this.unreadNotifications.unread;
@@ -146,8 +153,8 @@ export class WyNotificationBadge
   protected override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     await super.willUpdate(changedProperties);
 
-    if (changedProperties.has("typeFilter") || changedProperties.has("app")) {
-      await this.unreadNotifications.track(this.typeFilter, this.app?.id);
+    if (changedProperties.has("typeFilter") || changedProperties.has("app") || changedProperties.has("directory")) {
+      await this.unreadNotifications.track(this.typeFilter, this.app?.id, this.directory);
     }
   }
 

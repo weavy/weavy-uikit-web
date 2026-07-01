@@ -98,6 +98,13 @@ export class WyNotificationList extends WeavySubAppComponent {
   typeFilter: NotificationTypes = NotificationTypes.All;
 
   /**
+   * Optional directory identifier (`id` or `name`) to scope the notification list.
+   * When set, only notifications from apps belonging to this directory are shown.
+   */
+  @property()
+  directory?: string;
+
+  /**
    * Infinite query controller providing paged notifications.
    *
    * @internal
@@ -184,11 +191,11 @@ export class WyNotificationList extends WeavySubAppComponent {
     super.willUpdate(changedProperties);
 
     if (
-      (changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app")) &&
+      (changedProperties.has("weavy") || changedProperties.has("typeFilter") || changedProperties.has("app") || changedProperties.has("directory")) &&
       this.weavy
     ) {
       await this.notificationsQuery.trackInfiniteQuery(
-        getNotificationsOptions(this.weavy, this.typeFilter, this.app?.id)
+        getNotificationsOptions(this.weavy, this.typeFilter, this.app?.id, this.directory)
       );
     }
 

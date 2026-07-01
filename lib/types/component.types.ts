@@ -161,6 +161,11 @@ export interface WeavyAppComponentProps {
    * The currently selected app uid when multiple `uid` is provided. Defaults to the first uid from the `uid` property.
    */
   currentUid: AppUidType | null | undefined;
+
+  /**
+   * Optional directory identifier (`id` or `name`) used when a single uid initializes an app.
+   */
+  directory?: string
 }
 
 export interface WeavyAppComponentContextProps {

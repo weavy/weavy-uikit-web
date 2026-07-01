@@ -882,7 +882,6 @@ export class WyEditorMsg extends WeavySubAppComponent {
           this.text = e.detail.text;
         }}
         @edit=${() => this.editLast()}
-        @drop-files=${(e: DropFilesEventType) => this.handleDropFiles(e)}
         @submit=${() => this.submit()}
       ></wy-editor-core>
     `;

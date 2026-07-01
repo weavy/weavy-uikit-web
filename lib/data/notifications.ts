@@ -21,18 +21,24 @@ export function getNotificationsOptions(
   weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
+  directory?: string,
   options: object = {},
 ): InfiniteQueryObserverOptions<NotificationsResultType, Error, InfiniteData<NotificationsResultType>> {
   // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
     initialPageParam: 0,
-    queryKey: ["notifications", "list", appIdOrUid, type],
+    queryKey: ["notifications", "list", appIdOrUid, type, directory],
     queryFn: async (opt) => {
       const queryParams = new URLSearchParams({
         skip: opt.pageParam?.toString() || "0",
         type: type,
       });
+
+      // directory filter only applies to the global notifications endpoint, not the app-scoped one
+      if (!appIdOrUid && directory) {
+        queryParams.set("directory", directory);
+      }
 
       const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
@@ -54,9 +60,10 @@ export function getLastNotification(
   weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
+  directory?: string,
 ) {
   const notificationsData = weavy.queryClient
-    .getQueryData<InfiniteData<NotificationsResultType>>(["notifications", "list", appIdOrUid, type])
+    .getQueryData<InfiniteData<NotificationsResultType>>(["notifications", "list", appIdOrUid, type, directory])
     ?.pages.flatMap((page) => page.data);
   let lastNotification: NotificationType | undefined;
   notificationsData?.forEach((notification) => {
@@ -66,17 +73,56 @@ export function getLastNotification(
   return lastNotification;
 }
 
-export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid?: string | number) {
+export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid?: string | number, directory?: string) {
   const options = {
     mutationFn: async ({ notificationId }: MutateMarkNotificationsVariables) => {
-      const url = new URL(`/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications/mark`, weavy.url);
+      const endpoint = appIdOrUid
+        ? `/api/apps/${appIdOrUid.toString()}/notifications/mark`
+        : directory
+          ? `/api/directories/${encodeURIComponent(directory)}/notifications/mark`
+          : "/api/notifications/mark";
+      const url = new URL(endpoint, weavy.url);
       if (notificationId) {
         url.searchParams.append("id", notificationId.toString());
       }
       await weavy.fetch(url, { method: "PUT" });
     },
-    onMutate: (_variables: MutateMarkNotificationsVariables) => {
+    onMutate: (variables: MutateMarkNotificationsVariables) => {
       const changedNotifications: Partial<NotificationType>[] = [];
+      const isDirectoryScopedMutation = !appIdOrUid && !!directory;
+
+      if (isDirectoryScopedMutation) {
+        updateCacheItems<NotificationType>(
+          weavy.queryClient,
+          {
+            queryKey: ["notifications", "list"],
+            predicate: (query) => query.queryKey[2] === undefined && query.queryKey[4] === directory,
+            exact: false,
+          },
+          undefined,
+          (item) => {
+            if (variables.notificationId && item.id > variables.notificationId) {
+              return item;
+            }
+
+            changedNotifications.push({ id: item.id, is_unread: item.is_unread });
+            return { ...item, is_unread: false };
+          },
+        );
+
+        updateCacheItemsCount<NotificationsResultType>(
+          weavy.queryClient,
+          {
+            queryKey: ["notifications", "unread"],
+            predicate: (query) => query.queryKey[3] === directory,
+            exact: false,
+          },
+          () => 0,
+        );
+
+        return { changedNotifications } as MutateMarkNotificationContext;
+      }
+
       updateCacheItems<NotificationType>(
         weavy.queryClient,
         { queryKey: appIdOrUid ? ["notifications", "list", appIdOrUid] : ["notifications", "list"], exact: false },
@@ -136,8 +182,8 @@ export function getMarkNotificationsMutationOptions(weavy: WeavyType, appIdOrUid
   return options;
 }
 
-export function getMarkNotificationsMutation(weavy: WeavyType, appIdOrUid?: string | number) {
-  return new MutationObserver(weavy.queryClient, getMarkNotificationsMutationOptions(weavy, appIdOrUid));
+export function getMarkNotificationsMutation(weavy: WeavyType, appIdOrUid?: string | number, directory?: string) {
+  return new MutationObserver(weavy.queryClient, getMarkNotificationsMutationOptions(weavy, appIdOrUid, directory));
 }
 
 export function getMarkNotificationMutationOptions(weavy: WeavyType) {
@@ -222,6 +268,7 @@ export function getUnreadOptions(
   weavy: WeavyType,
   type: NotificationTypes = NotificationTypes.All,
   appIdOrUid?: string | number,
+  directory?: string,
   options: object = {},
 ) {
   const queryParams = new URLSearchParams({
@@ -230,11 +277,16 @@ export function getUnreadOptions(
     unread: "true",
   });
 
+  // directory filter only applies to the global notifications endpoint, not the app-scoped one
+  if (!appIdOrUid && directory) {
+    queryParams.set("directory", directory);
+  }
+
   const url = `/api/${appIdOrUid ? `apps/${appIdOrUid.toString()}/` : ""}notifications?${queryParams.toString()}`;
 
   const queryKey = appIdOrUid
     ? ["apps", "notifications", "unread", appIdOrUid, type]
-    : ["notifications", "unread", type];
+    : ["notifications", "unread", type, directory];
 
   return getApiOptions<NotificationsResultType>(weavy, queryKey, url, options);
 }

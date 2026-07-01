@@ -7,7 +7,14 @@ import { getMessagesOptions, getAddMessageMutationOptions } from "../data/messag
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { ReverseInfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { MutationController } from "../controllers/mutation-controller";
-import { hasScroll, isParentAtBottom, scrollParentTo } from "../utils/scroll-position";
+import {
+  getNextPositionedChild,
+  getScrollParent,
+  hasScroll,
+  isParentAtBottom,
+  isScrolledToBottom,
+  scrollParentTo,
+} from "../utils/scroll-position";
 import {
   addCacheItem,
   getCacheItem,
@@ -245,6 +252,65 @@ export class WyConversation extends WeavySubAppComponent {
    */
   protected bottomObserver: IntersectionObserver | undefined;
 
+  /**
+   * Resize observer used to keep the viewport pinned to the bottom while
+   * message content grows asynchronously (images, embeds, attachments).
+   *
+   * @internal
+   */
+  protected contentResizeObserver: ResizeObserver | undefined;
+
+  /**
+   * The scroll area currently being tracked for user scroll, cached so we can
+   * detach the listener when it changes or the component disconnects.
+   *
+   * @internal
+   */
+  #scrollArea: HTMLElement | undefined;
+
+  /**
+   * The content element currently observed for height changes.
+   *
+   * @internal
+   */
+  #observedContent: Element | undefined;
+
+  /**
+   * The conversation id we have already settled at the bottom for. Until this
+   * matches the current {@link conversationId}, we keep forcing the viewport to
+   * the bottom and ignore the (transitional) scroll position while the new
+   * conversation's messages load and render.
+   *
+   * @internal
+   */
+  #bottomPinnedForConversation: number | undefined;
+
+  /**
+   * Whether a scroll-to-bottom is already in flight, to avoid stacking
+   * overlapping scroll loops when content resizes rapidly.
+   *
+   * @internal
+   */
+  #isScrollingToBottom = false;
+
+  /**
+   * Updates {@link shouldBeAtBottom} from the live scroll position so manual
+   * user scrolling immediately disengages the auto-pin behavior.
+   *
+   * @internal
+   */
+  #handleAreaScroll = () => {
+    // Ignore transitional scroll events fired while a freshly opened
+    // conversation is still loading/rendering, otherwise the persistent scroll
+    // element's stale position would disengage the forced scroll-to-bottom.
+    if (this.needsInitialScroll) {
+      return;
+    }
+    // Use the cached scroll area to avoid re-resolving it via getScrollParent on
+    // every scroll event (this handler runs at scroll frequency).
+    this.shouldBeAtBottom = this.#scrollArea ? isScrolledToBottom(this.#scrollArea) : this.isAtBottom;
+  };
+
   isPrivateChat(conversation?: AppType) {
     return (conversation ?? this.conversation)?.type === AppTypeGuid.PrivateChat;
   }
@@ -340,6 +406,18 @@ export class WyConversation extends WeavySubAppComponent {
   }
 
   /**
+   * Whether we still need to perform the initial scroll-to-bottom for the
+   * current conversation (i.e. we just switched conversation and haven't yet
+   * settled at the bottom). While true, the transitional scroll position must
+   * not be allowed to disengage the auto-pin.
+   *
+   * @internal
+   */
+  get needsInitialScroll() {
+    return Boolean(this.conversationId && this.conversationId > 0 && this.#bottomPinnedForConversation !== this.conversationId);
+  }
+
+  /**
    * Scroll the conversation to the bottom.
    *
    * @param smooth - Whether to perform a smooth scroll.
@@ -348,14 +426,31 @@ export class WyConversation extends WeavySubAppComponent {
    * @internal
    */
   async scrollToBottom(smooth: boolean = false) {
-    if (this.bottomRef.value) {
-      await whenElementVisible(this.bottomRef.value);
+    // A non-smooth scroll already re-pins each frame while content settles, so a
+    // single in-flight scroll follows growth without stacking overlapping loops.
+    if (this.#isScrollingToBottom && !smooth) {
+      return;
     }
-    if (hasScroll(this.bottomRef.value) && this.conversationId && this.conversationId > 0) {
-      requestAnimationFrame(() => {
-        keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
-      });
-      await scrollParentTo("bottom", this.bottomRef.value, smooth);
+    this.#isScrollingToBottom = true;
+    try {
+      if (this.bottomRef.value) {
+        await whenElementVisible(this.bottomRef.value);
+      }
+      if (hasScroll(this.bottomRef.value) && this.conversationId && this.conversationId > 0) {
+        requestAnimationFrame(() => {
+          keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
+        });
+        await scrollParentTo("bottom", this.bottomRef.value, smooth);
+      }
+
+      // Once the conversation's messages have loaded we've either scrolled to
+      // the bottom or there was nothing to scroll. Either way the initial scroll
+      // is satisfied, so stop forcing it and resume normal pin tracking.
+      if (this.conversationId && this.conversationId > 0 && this.messagesQuery.result && !this.messagesQuery.result.isPending) {
+        this.#bottomPinnedForConversation = this.conversationId;
+      }
+    } finally {
+      this.#isScrollingToBottom = false;
     }
   }
 
@@ -795,17 +890,18 @@ export class WyConversation extends WeavySubAppComponent {
       }
     }
 
-    // Keep at bottom when new messages banner appear
-    if (changedProperties.has("showNewMessages") && this.showNewMessages) {
-      this.shouldBeAtBottom = this.isAtBottom;
+    if (changedProperties.has("conversationId") && changedProperties.get("conversationId") !== this.conversationId) {
+      // New conversation: forget the previous pin so we force a scroll to the
+      // bottom, and keep forcing it until the new messages have rendered.
+      this.#bottomPinnedForConversation = undefined;
     }
 
-    if (changedProperties.has("conversationId") && changedProperties.get("conversationId") !== this.conversationId) {
-      // always try to scroll to bottom when conversationId changed
-      this.shouldBeAtBottom = Boolean(this.conversationId);
-    } else {
-      this.shouldBeAtBottom = this.isAtBottom;
-    }
+    // While we still need the initial scroll for a freshly opened conversation,
+    // always force the bottom. The scroll position is transitional while messages
+    // load (the scroll element is reused and still holds the previous
+    // conversation's scrollTop), so we must not read isAtBottom here. Otherwise
+    // keep pinned to the bottom only when the user is already there.
+    this.shouldBeAtBottom = this.needsInitialScroll ? Boolean(this.conversationId) : this.isAtBottom;
 
     // handle "new messages" and mark as read
     if (changedProperties.has("conversation")) {
@@ -940,7 +1036,12 @@ export class WyConversation extends WeavySubAppComponent {
                           if (this.lastReadMessagePosition === "below") {
                             selector += "~ wy-message";
                           }
-                          this.renderRoot.querySelector(selector)?.scrollIntoView({
+                          const message = this.renderRoot.querySelector(selector);
+                          // `wy-message` hosts use `display: contents` and have no box of
+                          // their own, so resolve the first real child box to scroll to.
+                          const scrollTarget =
+                            message instanceof HTMLElement ? getNextPositionedChild(message, true) ?? message : message;
+                          scrollTarget?.scrollIntoView({
                             block: "start",
                             inline: "nearest",
                             behavior: "smooth",
@@ -1069,6 +1170,35 @@ export class WyConversation extends WeavySubAppComponent {
       this.bottomObserver.observe(this.bottomRef.value);
     }
 
+    // Track manual user scrolling so the auto-pin disengages as soon as the user
+    // scrolls away from the bottom.
+    const scrollArea = this.bottomRef.value ? getScrollParent(this.bottomRef.value) : undefined;
+    if (scrollArea && scrollArea !== this.#scrollArea) {
+      const oldTarget = this.#scrollArea === document.scrollingElement ? document : this.#scrollArea;
+      oldTarget?.removeEventListener("scroll", this.#handleAreaScroll);
+      this.#scrollArea = scrollArea;
+      const newTarget = scrollArea === document.scrollingElement ? document : scrollArea;
+      newTarget.addEventListener("scroll", this.#handleAreaScroll, { passive: true });
+    }
+
+    // Keep the viewport pinned to the bottom while message content grows
+    // asynchronously (images/embeds/attachments resolving their height after render).
+    if (!this.contentResizeObserver) {
+      this.contentResizeObserver = new ResizeObserver(() => {
+        if (this.shouldBeAtBottom) {
+          void this.scrollToBottom();
+        }
+      });
+    }
+    const messagesContent = this.renderRoot?.querySelector('[part~="wy-messages"]') ?? undefined;
+    if (messagesContent !== this.#observedContent) {
+      this.contentResizeObserver.disconnect();
+      this.#observedContent = messagesContent;
+      if (messagesContent) {
+        this.contentResizeObserver.observe(messagesContent);
+      }
+    }
+
     this.infiniteScroll.observe(this.messagesQuery.result, this.pagerRef.value);
   }
 
@@ -1089,6 +1219,20 @@ export class WyConversation extends WeavySubAppComponent {
     if (this.bottomObserver) {
       this.bottomObserver.disconnect();
     }
+
+    if (this.contentResizeObserver) {
+      this.contentResizeObserver.disconnect();
+      this.#observedContent = undefined;
+    }
+
+    if (this.#scrollArea) {
+      const scrollTarget = this.#scrollArea === document.scrollingElement ? document : this.#scrollArea;
+      scrollTarget.removeEventListener("scroll", this.#handleAreaScroll);
+      this.#scrollArea = undefined;
+    }
+
+    // Force a fresh scroll-to-bottom if this conversation is reconnected.
+    this.#bottomPinnedForConversation = undefined;
 
     document.removeEventListener("visibilitychange", this.markAsReadHandler);
 

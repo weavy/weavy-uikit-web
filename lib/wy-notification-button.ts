@@ -184,6 +184,13 @@ export class WyNotificationButton
   @property()
   typeFilter: NotificationTypes = NotificationTypes.All;
 
+  /**
+   * Optional directory identifier (`id` or `name`) to scope the notification list.
+   * When set, only notifications from apps belonging to this directory are shown.
+   */
+  @property()
+  override directory?: string;
+
   /** @internal */
   @state()
   currentTypeFilter: NotificationTypes = NotificationTypes.All;
@@ -209,8 +216,8 @@ export class WyNotificationButton
       this.currentTypeFilter = this.typeFilter;
     }
 
-    if (changedProperties.has("typeFilter") || changedProperties.has("app")) {
-      await this.unreadNotifications.track(this.typeFilter, this.app?.id);
+    if (changedProperties.has("typeFilter") || changedProperties.has("app") || changedProperties.has("directory")) {
+      await this.unreadNotifications.track(this.typeFilter, this.app?.id, this.directory);
     }
   }
 
@@ -279,7 +286,7 @@ export class WyNotificationButton
                           ></wy-notification-header>
                         `
                       : nothing}
-                    <wy-notification-list typeFilter=${this.currentTypeFilter}>
+                    <wy-notification-list typeFilter=${this.currentTypeFilter} .directory=${this.directory}>
                       ${this.app && !this.app?.is_subscribed
                         ? html`
                             <wy-empty slot="empty">

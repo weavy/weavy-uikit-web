@@ -29,31 +29,36 @@ export function getServerConfig() {
 export function getUsers() {
   /// USERS AND AGENTS
   const users = [
+    { name: "Bugs Bunny", username: "bugs", email: "bugs@acme.corp", picture: "https://i.pravatar.cc/150?u=bugs" },
+    { name: "Daffy Duck", username: "daffy", email: "daffy@acme.corp", picture: "https://i.pravatar.cc/150?u=daffy"},
+    { name: "Foghorn Leghorn", username: "foghorn", email: "foghorn@acme.corp", picture: "https://i.pravatar.cc/150?u=foghorn" },
     {
       name: "Marvin Acme",
       username: "marvin",
       email: "marvin@acme.corp",
-      picture: "https://i.pravatar.cc/150?u=marvin",
-    },
+      picture: "https://i.pravatar.cc/150?u=marvin"
+    },    
+    { name: "Porky Pig", username: "porky", email: "porky@acme.corp", picture: "https://i.pravatar.cc/150?u=porky" },
     {
       name: "Road Runner",
       username: "meepmeep",
       email: "roadrunner@acme.corp",
-      picture: "https://i.pravatar.cc/150?u=meepmeep",
+      picture: "https://i.pravatar.cc/150?u=meepmeep"
     },
-    { name: "Bugs Bunny", username: "bugs", email: "bugs@acme.corp", picture: "https://i.pravatar.cc/150?u=bugs" },
-    { name: "Daffy Duck", username: "daffy", email: "daffy@acme.corp", picture: "https://i.pravatar.cc/150?u=daffy" },
-    { name: "Porky Pig", username: "porky", email: "porky@acme.corp", picture: "https://i.pravatar.cc/150?u=porky" },
+    { name: "Speedy Gonzales", username: "speedy", email: "speedy@acme.corp", picture: "https://i.pravatar.cc/150?u=speedy" },
+    { name: "Sylvester the Cat", username: "sylvester", email: "sylvester@acme.corp", picture: "https://i.pravatar.cc/150?u=sylvester" },
     {
       name: "Tweety Bird",
       username: "tweety",
       email: "tweety@acme.corp",
       picture: "https://i.pravatar.cc/150?u=tweety",
-    },
-    { name: "Wile E. Coyote", username: "wile", email: "wile@acme.corp", picture: "https://i.pravatar.cc/150?u=wile" },
-    { name: "Claude", username: "claude", provider: "anthropic", model: "claude-3-5-haiku-latest" },
+      provider: "weavy",
+      model: "weavy",
+      instructions: "You’re a cute cartoon character with an aggressive nature. You love to tease and torment your adversaries, especially Sylvester the Cat. You have a high-pitched voice and often end your sentences with 'I tawt I taw a puttie tat!' Your main goal is to avoid being caught by Sylvester while enjoying your life in the Looney Tunes universe.",
+    },    
+    { name: "Wile E. Coyote", username: "wile", email: "wile@acme.corp", picture: "https://i.pravatar.cc/150?u=wile"},
+    { name: "Claude", username: "claude", provider: "anthropic", model: "claude-3-5-haiku-latest", },
     { name: "Gemini", username: "gemini", provider: "gemini", model: "gemini-2.0-flash", picture: "https://i.pravatar.cc/150?u=gemini" },
-    { name: "Kapa", username: "kapa", provider: "kapa", model: "0f28991b-6732-4a77-9f77-1104f2d06a45" },
     { name: "OpenAI", username: "openai", provider: "openai", model: "gpt-4o-mini" },
   ];
 
@@ -211,27 +216,52 @@ export async function syncUsers(serverConfig, users) {
         },
         body: JSON.stringify(u),
       })
+        .then((response) => {
+          if (!response.ok) {
+            console.error(`Failed to upsert user ${u.username}: ${response.status} ${response.statusText}`);
+          }
+          return response;
+        })
+        .catch((error) => {
+          console.error(`Error upserting user ${u.username}:`, error);
+          throw error;
+        })
     );
   });
 
-  // update bots
+  // sybf agents
   users.filter((user) => user.provider).
     forEach((u) => {
     console.info("Updating", u.username);
     whenUsers.push(
       fetch(new URL("/api/agents/" + u.username, serverConfig.weavyUrl), {
         agent: serverConfig.agent,
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "content-type": "application/json",
           Authorization: `Bearer ${serverConfig.apiKey}`,
         },
         body: JSON.stringify(u),
       })
+        .then((response) => {
+          if (!response.ok) {
+            console.error(`Failed to upsert agent ${u.username}: ${response.status} ${response.statusText}`);
+          }
+          return response;
+        })
+        .catch((error) => {
+          console.error(`Error upserting agent ${u.username}:`, error);
+          throw error;
+        })
     );
   });
 
-  await Promise.all(whenUsers);
+  try {
+    await Promise.all(whenUsers);
+  } catch (error) {
+    console.error("User sync failed:", error);
+    throw error;
+  }
 }
 
 export function start() {

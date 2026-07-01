@@ -3,15 +3,21 @@
 @use "../base/var";
 
 [part~="wy-conversations"] {
-    position:relative;
+  position: relative;
 
-    display: flex;
-    flex-direction: column;
-    gap: var.default(--wy-gap-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap-sm);
 }
 
 [part~="wy-conversation-list"] {
-    display: flex;
-    flex-direction: column;
-    gap: var.default(--wy-gap-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var.default(--wy-gap-sm);
+}
+
+[part~="wy-typing"]:has(wy-icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
 }

@@ -196,8 +196,8 @@ export class WyPollOption extends WeavySubComponent {
         <div part="wy-poll-meter" style="width: ${ratio + "%"}"></div>
         <div part="wy-poll-image">
           ${this.option.has_voted
-            ? html`<wy-icon name="check-circle"></wy-icon>`
-            : html`<wy-icon name="circle-outline"></wy-icon>`}
+            ? html`<wy-icon name="checkbox-marked"></wy-icon>`
+            : html`<wy-icon name="checkbox-blank"></wy-icon>`}
         </div>
         <div part="wy-poll-title">${this.option.text}</div>
         ${ratio > 0

@@ -69,6 +69,10 @@ export class WeavyAppComponent
    * Sets the component to it's initial state and resets the app state.
    */
   reset() {
+    if (this.app) {
+      this.app = undefined;
+    }
+
     if (this.apps) {
       this.apps = undefined;
     }
@@ -193,6 +197,12 @@ export class WeavyAppComponent
   get name(): string | undefined {
     return this._appName;
   }
+
+  /**
+   * Optional directory identifier (`id` or `name`) for the app.
+   */
+  @property({ type: String })
+  directory?: string;
 
   // APP SUBSCRIBE
 
@@ -351,18 +361,29 @@ export class WeavyAppComponent
       changedProperties.has("appType") ||
       changedProperties.has("currentUid") ||
       changedProperties.has("agent") ||
+      changedProperties.has("directory") ||
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
       if (this.appType && this.currentUid && this.weavy) {
-        // Only allow specifying name of the app if exactly one uid is specified.
-        const allowNameChange = this.#uids.length === 1;
+        // Only allow single-app initialization data when exactly one uid is specified.
+        const allowAppDataChange = this.#uids.length === 1;
 
-        if (!allowNameChange && this.name) {
+        if (!allowAppDataChange && this.name) {
           console.warn("Specifying a name for the app is not possible when using multiple uid.");
         }
 
-        const appData = allowNameChange && this.name ? { name: this.name } : undefined;
+        if (!allowAppDataChange && this.directory) {
+          console.warn("Specifying a directory for the app is not possible when using multiple uid.");
+        }
+
+        const appData =
+          allowAppDataChange && (this.name || this.directory)
+            ? {
+                ...(this.name ? { name: this.name } : undefined),
+                ...(this.directory ? { directory: this.directory } : undefined),
+              }
+            : undefined;
         const appMembers = this.agent ? [this.agent] : undefined;
         await this.#appQuery.trackQuery(
           getOrCreateAppOptions(this.weavy, this.currentUid, this.appType, appMembers, appData),

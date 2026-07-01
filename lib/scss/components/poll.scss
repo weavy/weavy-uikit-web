@@ -21,7 +21,6 @@
   }
 }
 
-// .wy-item needed just for increased selector specificity
 [part~="wy-poll-option"] {
   --wy-component-color: #{color.token(--wy-on-background)};
   display: flex;
@@ -32,9 +31,7 @@
   background-color: #{color.token(--wy-surface-layer-lowest)};
   border: var.default(--wy-border-outline) solid #{color.token(--wy-outline-variant)};
   border-radius: var.default(--wy-border-radius-sm);
-  //margin-bottom: var.wy-rem(.25);
   padding: var.default(--wy-padding-sm) var.default(--wy-padding);
-  //min-height: var.wy-rem(2.5);
   cursor: pointer;
   gap: var.default(--wy-gap-sm);
 
@@ -42,6 +39,9 @@
     z-index: 1;
   }
 }
+
+// [part~="wy-poll-option-active"] {
+// }
 
 [part="wy-poll-image"] {
   display: flex;
@@ -74,5 +74,5 @@
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: #{color.token(--wy-surface-layer-highest)};
+  background-color: #{color.token(--wy-surface-container)};
 }
