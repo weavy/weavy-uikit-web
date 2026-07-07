@@ -1,4 +1,4 @@
-import { localized } from "@lit/localize";
+import { localized, msg } from "@lit/localize";
 import { html, nothing } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { ThemeController } from "./controllers/theme-controller";
@@ -89,6 +89,7 @@ declare global {
  *
  * @tagname wy-feed
  * @slot actions - Floating buttons placed in the top right.
+ * @slot empty - Content when no posts are available.
  * @csspart wy-feed - Root layout container.
  * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
@@ -266,7 +267,16 @@ export class WyFeed extends WeavyAppComponent implements PostQueryFilterProps {
                 .placeholder=${this.commentsPlaceholder}
                 ?feed=${this.uids.length > 1 || (this.apps && this.apps.length > 1)}
                 .filter=${this.#filter}
-              ></wy-post-list>
+              >
+                <slot slot="empty" name="empty">
+                  <wy-icon-display>
+                    <wy-icon name="text-box"></wy-icon>
+                    <slot slot="text" name="title">
+                      <span>${msg("No posts to show yet.")}</span>
+                    </slot>
+                  </wy-icon-display>
+                </slot>
+              </wy-post-list>
             `
           : nothing}
       </wy-container>

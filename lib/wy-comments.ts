@@ -1,6 +1,6 @@
 import { html } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
-import { localized } from "@lit/localize";
+import { localized, msg } from "@lit/localize";
 import { AppTypeGuid } from "./types/app.types";
 import { ThemeController } from "./controllers/theme-controller";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
@@ -17,6 +17,8 @@ import commentsCss from "./scss/components/comments.scss";
 
 import "./components/wy-comment-list";
 import "./components/ui/wy-button";
+import "./components/ui/wy-container";
+import "./components/wy-empty";
 import "./components/wy-context-data";
 import "./components/wy-user-card";
 
@@ -66,6 +68,7 @@ declare global {
  *
  * @tagname wy-comments
  * @slot actions - Floating buttons placed in the top right.
+ * @slot empty - Content when no comments are available.
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
  * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
@@ -127,7 +130,9 @@ export class WyComments extends WeavyAppComponent {
   override render() {
     return html`
       <wy-buttons position="floating" reverse><slot name="actions"></slot></wy-buttons>
-      <wy-comment-list .parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}></wy-comment-list>
+      <wy-comment-list .parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}>
+        <wy-empty slot="empty"><slot name="empty"><wy-container padded><em>${msg("No comments yet.")}</em></wy-container></slot></wy-empty>
+      </wy-comment-list>
       <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
       <wy-context-data-progress></wy-context-data-progress>
     `;

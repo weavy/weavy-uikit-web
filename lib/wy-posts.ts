@@ -23,6 +23,7 @@ import "./components/wy-post-form";
 import "./components/wy-user-card";
 import "./components/ui/wy-search";
 import { WyPostList } from "./components/wy-post-list";
+import { msg } from "@lit/localize";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -88,6 +89,7 @@ declare global {
  *
  * @tagname wy-posts
  * @slot actions - Floating buttons placed in the top right.
+ * @slot empty - Content when no posts are available.
  * @csspart wy-posts - Root posts container.
  * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
@@ -272,7 +274,16 @@ export class WyPosts extends WeavyAppComponent implements PostQueryFilterProps {
           ?feed=${this.uids.length !== 1 || (this.apps && this.apps.length > 1)}
           ${ref(this.postListRef)}
           .filter=${this.#filter}
-        ></wy-post-list>
+        >
+          <slot slot="empty" name="empty">
+            <wy-icon-display>
+              <wy-icon name="text-box"></wy-icon>
+              <slot slot="text" name="title">
+                <span>${msg("No posts to show yet.")}</span>
+              </slot>
+            </wy-icon-display>
+          </slot>
+        </wy-post-list>
       </wy-container>
       <wy-user-card .listenTo=${this}></wy-user-card>
     `;

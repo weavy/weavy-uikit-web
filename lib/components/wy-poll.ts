@@ -41,10 +41,7 @@ declare global {
  */
 @customElement("wy-poll")
 export class WyPoll extends LitElement {
-  static override styles = [
-    pollCss,
-    hostContentsCss
-  ];
+  static override styles = [pollCss, hostContentsCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
@@ -77,7 +74,7 @@ export class WyPoll extends LitElement {
               @vote=${(e: PollVoteEventType) => this.dispatchVote(e.detail.optionId)}
               .option=${option}
               .totalVotes=${totalVotes}
-            ></wy-poll-option>`
+            ></wy-poll-option>`,
         )}
       </div>
     `;
@@ -178,12 +175,13 @@ export class WyPollOption extends WeavySubComponent {
     }
 
     const { data, isLoading } = this.getVotesQuery.result ?? {};
-    const ratio = this.totalVotes > 0 ? Math.round(((this.option.votes?.count || 0) / this.totalVotes) * 100) : 0;
+    const voteCount = this.option.votes?.count || 0;
+    const ratio = this.totalVotes > 0 ? Math.round((voteCount / this.totalVotes) * 100) : 0;
 
     const optionParts = {
       "wy-poll-option": true,
-      "wy-poll-option-active": Boolean(this.option.has_voted)
-    }
+      "wy-poll-option-active": Boolean(this.option.has_voted),
+    };
 
     return html`
       <div
@@ -200,15 +198,16 @@ export class WyPollOption extends WeavySubComponent {
             : html`<wy-icon name="checkbox-blank"></wy-icon>`}
         </div>
         <div part="wy-poll-title">${this.option.text}</div>
-        ${ratio > 0
+        ${this.option.votes?.count
           ? html`<span
               part="wy-poll-amount"
               tabindex="0"
               @click=${(e: Event) => this.openSheet(e)}
               @keydown=${clickOnEnterAndConsumeOnSpace}
               @keyup=${clickOnSpace}
+              title=${msg(str`Votes on ${this.option.text}: ${voteCount}`)}
             >
-              ${ratio + "%"}
+               ${ratio + "%"} (${this.option.votes.count})
             </span>`
           : html`<span part="wy-poll-amount"></span>`}
       </div>
@@ -216,7 +215,7 @@ export class WyPollOption extends WeavySubComponent {
       ${this.weavy
         ? html`
             <wy-overlay type="sheet" .show=${this.showSheet} @close=${() => (this.showSheet = false)}>
-              <span slot="title">${msg(str`Votes on ${this.option.text}`)}</span>
+              <span slot="title">${msg(str`Votes on ${this.option.text}: ${voteCount}`)}</span>
               <wy-container scrollY padded>
                 ${this.showSheet && data && !isLoading
                   ? html`
@@ -232,7 +231,7 @@ export class WyPollOption extends WeavySubComponent {
                                 ></wy-avatar>
                                 <span slot="title">${vote.name}</span>
                               </wy-item>
-                            `
+                            `,
                           )
                         : nothing}
                     `

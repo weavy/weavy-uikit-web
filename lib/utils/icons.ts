@@ -160,6 +160,7 @@ export const iconMapping = {
   unstar: { viewBox: '0 0 24 24', path: mdi.mdiStarOff },
   stars: { viewBox: '0 0 24 24', path: mdi.mdiCreation },
   "swap-horizontal": { viewBox: '0 0 24 24', path: mdi.mdiSwapHorizontal },
+  "text-box": { viewBox: '0 0 24 24', path: mdi.mdiTextBox },
   textbox: { viewBox: '0 0 24 24', path: mdi.mdiFormTextbox },
   "thumb-up": { viewBox: '0 0 24 24', path: mdi.mdiThumbUp },
   "thumb-up-outline": { viewBox: '0 0 24 24', path: mdi.mdiThumbUpOutline },

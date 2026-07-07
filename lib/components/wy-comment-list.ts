@@ -51,6 +51,8 @@ declare global {
  * @csspart wy-comments - Container for the comments list
  * @csspart wy-pager - Pager container element
  * @csspart wy-pager-bottom - Bottom pager modifier
+ * 
+ * @slot empty - Content when no comments are available.
  *
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
@@ -368,11 +370,9 @@ export class WyCommentList extends WeavySubAppComponent {
               ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
             </div>
           `
-        : html`
-            <wy-empty noNetwork
-              ><wy-progress-circular indeterminate padded reveal ?hidden=${!isPending}></wy-progress-circular
-            ></wy-empty>
-          `}
+        : isPending
+          ? html`<wy-empty noNetwork><wy-progress-circular indeterminate padded reveal></wy-progress-circular></wy-empty>`
+          : html`<slot name="empty"></slot>`}
       ${this.componentFeatures?.allowsFeature(Feature.Comments, Feature.Comment)
         ? html`
             <wy-editor-comment

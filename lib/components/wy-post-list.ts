@@ -47,6 +47,8 @@ declare global {
  * - [`<wy-empty>`](./wy-empty.ts)
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  *
+ * @slot empty - Content when no posts are available.
+ * 
  * @csspart wy-post - Wrapper for each post/editor block.
  * @csspart wy-pager - Pager container.
  * @csspart wy-pager-bottom - Pager modifier for bottom placement.
@@ -239,7 +241,7 @@ export class WyPostList extends WeavySubAppComponent {
             ${msg("New posts")}
           </div>
 
-          ${flattenedPages
+          ${flattenedPages && flattenedPages.length
             ? repeat(
                 flattenedPages,
                 (post) => post.id,
@@ -280,7 +282,7 @@ export class WyPostList extends WeavySubAppComponent {
                   ></wy-post>`;
                 },
               )
-            : html`<wy-empty></wy-empty>`}
+            : html`<wy-empty><slot name="empty"></slot></wy-empty>`}
           ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
         `
       : html`<wy-empty><wy-progress-circular indeterminate padded></wy-progress-circular></wy-empty> `;

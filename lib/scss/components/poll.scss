@@ -65,8 +65,10 @@
 }
 
 [part~="wy-poll-amount"] {
+  flex: 0 0 auto;
   min-width: 3em;
   text-align: end;
+  white-space: nowrap;
 }
 
 [part~="wy-poll-meter"] {

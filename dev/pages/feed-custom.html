@@ -66,6 +66,14 @@
       wy-feed, wy-feed-editor {
         --wy-padding-outer: 0 calc((100% - 600px) / 2); /* => 600px max-width*/
       }
+
+      ::part(wy-post-header) {
+        order: -2;
+      }
+
+      ::part(wy-post-body) {
+        order: -1;
+      }
     </style>
   </head>
 
@@ -81,7 +89,7 @@
         <button class="mode" value="dark">Dark</button>
       </div>
       <div>
-        <input type="checkbox" id="following" checked><label for="following">Following</label>
+        <input type="checkbox" id="following" checked /><label for="following">Following</label>
       </div>
     </div>
     <wy-context url="%WEAVY_URL%" tokenUrl="/api/token">
@@ -91,13 +99,15 @@
     </wy-context>
     <script>
       const searchParams = new URLSearchParams(window.location.search);
-      const feed = document.querySelector("wy-feed");
+      const editor = document.querySelector("wy-post-editor");
+      const posts = document.querySelector("wy-posts");
       const data = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
       ];
-      feed.contextualData = data;
+      editor.contextualData = data;
+      posts.contextualData = data;
 
-      feed.addEventListener("wy-preview-open", (e) => {
+      posts.addEventListener("wy-preview-open", (e) => {
         if (window.top !== window.self) {
           console.log("requesting external preview", e.detail.fileId, e.detail.tab, e.detail.app);
           window.top.postMessage({
@@ -108,15 +118,15 @@
         }
       });
 
-      feed.addEventListener("wy-app", (e) => {
+      posts.addEventListener("wy-app", (e) => {
         console.log("wy-app", e.detail);
       });
 
-      feed.addEventListener("wy-link", (e) => {
+      posts.addEventListener("wy-link", (e) => {
         console.log("wy-link", e.detail);
       });
 
-      feed.addEventListener("wy-action", (e) => {
+      posts.addEventListener("wy-action", (e) => {
         if (e.detail.action) {
           alert("You selected: " + e.detail.action);
         } else {
@@ -134,10 +144,11 @@
       });
       
       document.getElementById("following").addEventListener("input", (event) => {
+        console.log("following", event.target.checked);
         if (event.target.checked) {
-          feed.setAttribute("following", "");
+          posts.setAttribute("following", "");
         } else {
-          feed.removeAttribute("following");
+          posts.removeAttribute("following");
         }
       });
     </script>
