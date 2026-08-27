@@ -1,6 +1,6 @@
 {
   "name": "@weavy/uikit-web",
-  "version": "32.1.0",
+  "version": "32.2.0",
   "author": "Weavy",
   "description": "Web components UI-kit for Weavy",
   "homepage": "https://github.com/weavy/weavy-uikit-web",
@@ -119,7 +119,7 @@
     "sass": "~1.98.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "~8.57.2",
-    "vite": "~7.1.12",
+    "vite": "~7.3.6",
     "vite-plugin-cem": "~0.8.5",
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-lit-css": "^2.2.2",

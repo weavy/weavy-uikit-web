@@ -62,6 +62,30 @@ npm start
 
 You should see a list of available component demos, choose any you like.
 
+### HTTPS (optional)
+
+By default the dev server runs on plain HTTP, which is fine for most component work. Enable TLS when you need production-like behavior: HTTP/2 (browsers only use it over TLS, and some bugs — e.g. in the realtime reconnect path — only reproduce there), `Secure`/`SameSite=None` cookies for iframe/embedding scenarios, or testing from other devices on your network (only `localhost` is a secure context over plain HTTP).
+
+If you run the Weavy backend locally you already have a trusted ASP.NET developer certificate — export it as PEM (the export directory must exist first):
+
+```bash
+mkdir dev/certs
+dotnet dev-certs https --export-path dev/certs/localhost.pem --format Pem --no-password
+```
+
+Then point the `HTTPS_PEM_*` variables in your `.env` at the exported pair:
+
+```ini
+HTTPS_PEM_KEY_PATH="dev/certs/localhost.key"
+HTTPS_PEM_CERT_PATH="dev/certs/localhost.pem"
+```
+
+Restart `npm start` and the dev server serves `https://localhost:5173`. If the certificate is not trusted yet, run `dotnet dev-certs https --trust` once. [mkcert](https://github.com/FiloSottile/mkcert) works too — it produces a trusted PEM pair for the same two variables. A PFX certificate can be used instead via `HTTPS_PFX_PATH` and `HTTPS_PFX_PASSWORD`.
+
+Keep certificates out of git: `dev/certs/` is ignored via `.gitignore`.
+
+Note that with TLS enabled, vite serves HTTP/2. The dev auth server therefore runs as a standalone HTTP server (port `3001`, override with `WEAVY_AUTH_PORT`) that vite proxies `/api` to — Express middleware cannot run inside vite's HTTP/2 pipeline.
+
 ## Documentation
 
 The main documentation can be found at the [Weavy documentation site](https://weavy.com/docs). A detailed API reference for all components in this package is provided as markdown in the `dist/docs` folder. The API reference is also available as a very detailed custom elements manifest in `dist/custom-elements.json`. 

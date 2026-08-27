@@ -51,7 +51,7 @@ export default defineConfig(({ command, mode }) => {
     };
   }
 
-  if (process.env.HTTPS_PFX_PATH) {
+  if (env.HTTPS_PFX_PATH) {
     httpsConfig = {
       pfx: fs.readFileSync(env.HTTPS_PFX_PATH),
       passphrase: env.HTTPS_PFX_PASSWORD,

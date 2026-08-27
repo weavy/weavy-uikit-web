@@ -93,8 +93,14 @@ export function utf8BomPlugin() {
 }
 
 export function weavyAuthServer(command = "serve") {
+  // The auth server runs as a standalone HTTP server that vite proxies /api to.
+  // It must NOT be mounted as vite middleware: with server.https, vite (>= 7.2) always
+  // serves HTTP/2 (see resolveHttpServer in vite/src/node/http.ts), and connect/express
+  // middlewares crash on Http2ServerRequest objects. Proxying keeps express on plain
+  // HTTP/1.1 regardless of how vite serves the pages.
+  const authPort = process.env.WEAVY_AUTH_PORT || 3001;
   const apiProxy = {
-    "/api": {}, // proxy our /api route to nowhere
+    "/api": { target: `http://localhost:${authPort}` },
   };
 
   return command === "serve"
@@ -110,7 +116,10 @@ export function weavyAuthServer(command = "serve") {
           const serverConfig = getServerConfig();
           const users = getUsers();
           const authServer = getAuthServer(serverConfig, users);
-          server.middlewares.use(authServer);
+          const listener = authServer.listen(authPort);
+          // vite restarts (config change, ctrl+c) close the http server; follow suit so
+          // the port is free for the next instance
+          server.httpServer?.on("close", () => listener.close());
           syncUsers(serverConfig, users);
         },
       }

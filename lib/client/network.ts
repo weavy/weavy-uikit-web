@@ -94,10 +94,14 @@ export const WeavyNetworkMixin = <TBase extends Constructor<WeavyClient>>(Base: 
     }
 
     get network(): NetworkStatus {
+      // serverState takes precedence over connectionState: an established connection says nothing
+      // about health on its own (an unauthorized or failing server must not read as "online"), so
+      // only an explicit ok from a succeeded request or connection counts. serverState is set back
+      // to "ok" by successful fetches, version checks and hub connects.
       return {
         state:
           this._networkState === "online"
-            ? (this._connectionState === "connected" || this._serverState === "ok") && this.configurationState !== "uninitialized"
+            ? this._serverState === "ok" && this.configurationState !== "uninitialized"
               ? "online"
               : "unreachable"
             : "offline",
