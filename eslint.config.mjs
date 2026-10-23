@@ -35,9 +35,10 @@ export default defineConfig([
     },
 
     rules: {
-      "@typescript-eslint/no-unsafe-argument": "warn",
       "no-prototype-builtins": "off",
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],
+      "no-useless-assignment": "off",
+      "@typescript-eslint/no-unsafe-argument": "warn",
       "@typescript-eslint/no-this-alias": "off",
       "@typescript-eslint/ban-types": "off",
       "@typescript-eslint/explicit-function-return-type": "off",

@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 type DevUser = {
   name: string;
@@ -27,6 +27,19 @@ export default class DevCurrentUser extends LitElement {
       font-size: 0.75rem;
     }
 
+    :host([position="top-left"]),
+    :host([position="bottom-left"]) {
+      right: auto;
+      left: 0.5rem;
+    }
+
+    /* Bottom corners are useful on pages where the top edge is taken by page chrome. */
+    :host([position="bottom-right"]),
+    :host([position="bottom-left"]) {
+      top: auto;
+      bottom: 0.5rem;
+    }
+
     a {
       display: flex;
       align-items: center;
@@ -49,6 +62,13 @@ export default class DevCurrentUser extends LitElement {
       border-radius: 50%;
     }
   `;
+
+  /**
+   * Corner of the viewport to pin the badge to. Pages that place the element manually can set this attribute;
+   * the auto-appended badge uses the default.
+   */
+  @property({ reflect: true })
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" = "top-right";
 
   @state()
   user?: DevUser;
@@ -81,7 +101,17 @@ export default class DevCurrentUser extends LitElement {
 }
 
 // Auto-append so pages don't need any markup, only the script tag. Guarded so a page
-// can also place the element manually without getting a duplicate badge.
-if (!document.querySelector("dev-current-user")) {
-  document.body.append(document.createElement("dev-current-user"));
+// can also place the element manually with a specific position without getting a duplicate badge.
+function appendBadge() {
+  if (!document.querySelector("dev-current-user")) {
+    document.body.append(document.createElement("dev-current-user"));
+  }
+}
+
+// The script tag is async, so the module can run before the body is parsed; wait for the DOM so a manually
+// placed element is found by the guard above.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", appendBadge);
+} else {
+  appendBadge();
 }

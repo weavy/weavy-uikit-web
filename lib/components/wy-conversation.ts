@@ -25,16 +25,17 @@ import {
   updateCacheItem,
   updateCacheItems,
 } from "../utils/query-cache";
-import { localized, msg } from "@lit/localize";
+import { localized, msg, str } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import type {
   RealtimeAppMarkedEventType,
   RealtimeMessageEventType,
   RealtimeReactionEventType,
+  RealtimeVoteEventType,
 } from "../types/realtime.types";
 import { whenConnected, whenDocumentVisible, whenElementVisible } from "../utils/dom";
 import { ReactableType } from "../types/reactions.types";
-import { PollMutationType, getPollMutation } from "../data/poll";
+import { PollMutationType, getPollMutation, handleRealtimeVote } from "../data/poll";
 import { hasAnyPermission } from "../utils/permission";
 import {
   MarkConversationMutationType,
@@ -53,6 +54,12 @@ import { Feature } from "../types/features.types";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { MetadataType } from "../types/lists.types";
 import { getTitleFromText, truncateText } from "../utils/strings";
+import {
+  getBlockedUserIdsOptions,
+  getUserBlockMutationOptions,
+  type MutateUserBlockContextType,
+  type MutateUserBlockProps,
+} from "../data/blocks";
 import { TypingEventType } from "../types/typing.events";
 import { MsgEditorSubmitEventType } from "../types/editor.events";
 import { PollVoteEventType } from "../types/polls.events";
@@ -78,6 +85,7 @@ import "./ui/wy-button";
 import "./ui/wy-dropdown";
 import "./ui/wy-skeleton";
 import "./wy-message";
+import { ActionType } from "../types/action.types";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -177,6 +185,13 @@ export class WyConversation extends WeavySubAppComponent {
    */
   @property({ type: Boolean })
   header: boolean = false;
+
+  /**
+   * Disables the message editor. Used by hosts such as `<wy-chat>` when no conversation is selected, since a missing
+   * conversation alone can't disable it: Messenger creates the conversation on the first submit.
+   */
+  @property({ type: Boolean })
+  disabled: boolean = false;
 
   /**
    * Optional instructions passed to an AI agent for the conversation.
@@ -315,6 +330,18 @@ export class WyConversation extends WeavySubAppComponent {
     return (conversation ?? this.conversation)?.type === AppTypeGuid.PrivateChat;
   }
 
+  /**
+   * Whether this is a private chat with a user the authenticated user has blocked.
+   *
+   * Private chats only -- blocks govern directed contact, not shared spaces, so the server never sets `is_blocked` on
+   * a group. The view has to act on it: the server still delivers realtime, so nothing quiets an open conversation
+   * unless this component does.
+   */
+  isBlocked(conversation?: AppType) {
+    const app = conversation ?? this.conversation;
+    return Boolean(app && this.isPrivateChat(app) && app.is_blocked);
+  }
+
   isChatRoom(conversation?: AppType) {
     return (conversation ?? this.conversation)?.type === AppTypeGuid.ChatRoom;
   }
@@ -331,6 +358,14 @@ export class WyConversation extends WeavySubAppComponent {
    * @internal
    */
   protected membersQuery = new QueryController<MembersResultType>(this);
+  /**
+   * Query controller for the ids of the users the viewer has blocked.
+   *
+   * Not per conversation -- the query key is shared, so every conversation and every message reads one cached answer.
+   *
+   * @internal
+   */
+  protected blockedUsersQuery = new QueryController<number[]>(this);
 
   /**
    * Mutation for marking conversation as read/unread.
@@ -356,6 +391,15 @@ export class WyConversation extends WeavySubAppComponent {
    * @internal
    */
   protected addMessageMutation = new MutationController<MessageType, Error, MutateMessageProps, unknown>(this);
+
+  /**
+   * Mutation for unblocking the other member from the blocked notice.
+   *
+   * Built per user when the notice renders, since the endpoint is keyed on the user being unblocked.
+   *
+   * @internal
+   */
+  #userBlockMutation = new MutationController<void, Error, MutateUserBlockProps, MutateUserBlockContextType>(this);
 
   /**
    * Reverse infinite scroll controller (loads newest messages at bottom).
@@ -438,7 +482,7 @@ export class WyConversation extends WeavySubAppComponent {
       }
       if (hasScroll(this.bottomRef.value) && this.conversationId && this.conversationId > 0) {
         requestAnimationFrame(() => {
-          keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
+          keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1, true);
         });
         await scrollParentTo("bottom", this.bottomRef.value, smooth);
       }
@@ -540,6 +584,7 @@ export class WyConversation extends WeavySubAppComponent {
       const lastMessageAge = Date.now() - new Date(lastTextMessage.created_at).getTime();
 
       if (lastMessageAge < 1000 * 60 * 60 * 24) {
+        //console.log("editing last message", lastTextMessage)
         this.editMessage = lastTextMessage;
         await this.setEditorText(lastTextMessage.text);
         await this.selectAllInEditor();
@@ -729,6 +774,18 @@ export class WyConversation extends WeavySubAppComponent {
   };
 
   /**
+   * Realtime handler for added and removed poll votes. Refreshes the options of the voted message.
+   *
+   * @internal
+   */
+  private handleRealtimeVote = (realtimeEvent: RealtimeVoteEventType) => {
+    if (!this.weavy || !this.conversationId) {
+      return;
+    }
+    void handleRealtimeVote(this.weavy, "messages", ["messages", this.conversationId], realtimeEvent);
+  };
+
+  /**
    * Realtime handler for removed reactions. Updates message reactions cache.
    *
    * @internal
@@ -791,6 +848,12 @@ export class WyConversation extends WeavySubAppComponent {
       return;
     }
 
+    // a read receipt is the only thing that would reach the blocked user -- signalling attention to someone you
+    // muted. Guarded here rather than at the render, so it holds however the conversation gets mounted.
+    if (this.isBlocked()) {
+      return;
+    }
+
     if (this.conversation && this.conversation.last_message) {
       await this.markConversationMutation?.mutate({
         app: this.conversation,
@@ -827,6 +890,18 @@ export class WyConversation extends WeavySubAppComponent {
       this.markConversationMutation = getMarkConversationMutation(this.weavy);
     }
 
+    // Tracked only where the host allows blocking. A component with the feature off offers no way to block or unblock
+    // anyone, so the set would only ever be the empty answer to a question nobody asked -- not worth a request, and
+    // not worth a cache entry to keep in sync. The member list still carries `is_blocked` where there is one, so a
+    // block made elsewhere is still honoured in a group conversation.
+    if ((changedProperties.has("weavy") || changedProperties.has("componentFeatures")) && this.weavy) {
+      if (this.componentFeatures?.allowsFeature(Feature.Block)) {
+        await this.blockedUsersQuery.trackQuery(getBlockedUserIdsOptions(this.weavy));
+      } else {
+        this.blockedUsersQuery.untrackQuery();
+      }
+    }
+
     // conversationId is changed
     if (
       (changedProperties.has("weavy") ||
@@ -840,7 +915,7 @@ export class WyConversation extends WeavySubAppComponent {
       const lastConversationId = changedProperties.get("conversationId");
       if (lastConversationId && lastConversationId > 0) {
         requestAnimationFrame(() => {
-          keepPages(this.weavy?.queryClient, ["messages", lastConversationId], undefined, 1);
+          keepPages(this.weavy?.queryClient, ["messages", lastConversationId], undefined, 1, true);
         });
       }
 
@@ -867,6 +942,11 @@ export class WyConversation extends WeavySubAppComponent {
           void this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
         }
 
+        if (this.componentFeatures?.allowsFeature(Feature.Polls)) {
+          void this.weavy.subscribe(subscribeGroup, "vote_added", this.handleRealtimeVote);
+          void this.weavy.subscribe(subscribeGroup, "vote_removed", this.handleRealtimeVote);
+        }
+
         if (this.componentFeatures?.allowsFeature(Feature.Receipts)) {
           void this.weavy
             .subscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked, true)
@@ -879,6 +959,8 @@ export class WyConversation extends WeavySubAppComponent {
           void this.weavy?.unsubscribe(subscribeGroup, "message_created", this.handleRealtimeMessage);
           void this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
           void this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+          void this.weavy?.unsubscribe(subscribeGroup, "vote_added", this.handleRealtimeVote);
+          void this.weavy?.unsubscribe(subscribeGroup, "vote_removed", this.handleRealtimeVote);
           void this.weavy?.unsubscribe(subscribeGroup, "app_marked", this.handleRealtimeMarked, true);
           this.showReadReceipts = false;
           this.#unsubscribeToRealtime = undefined;
@@ -954,9 +1036,9 @@ export class WyConversation extends WeavySubAppComponent {
       return html` <!-- Top of the conversation --> `;
     }
 
-    const { isPending: messagesIsPending, hasNextPage } = this.messagesQuery.result ?? {};
+    const { isPending: messagesIsPending, hasPreviousPage } = this.messagesQuery.result ?? {};
 
-    if (!this.conversation || messagesIsPending || hasNextPage) {
+    if (!this.conversation || messagesIsPending || hasPreviousPage) {
       return nothing;
     }
 
@@ -967,10 +1049,24 @@ export class WyConversation extends WeavySubAppComponent {
         ? ((this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user)
         : null;
 
+    // In a one-to-one the header avatar is a person, so it opens their profile card -- the same thing the small avatar
+    // beside a message does. A group avatar is not one person, so it stays inert; otherMember is null there anyway.
+    const profile = otherMember;
+
     return html`
       <wy-avatar-header description=${ifDefined(otherMember?.comment)}>
         ${this.conversation.avatar_url
-          ? html`<wy-avatar .size=${96} src=${this.conversation.avatar_url}></wy-avatar>`
+          ? html`<wy-avatar
+              .size=${96}
+              src=${this.conversation.avatar_url}
+              part=${ifDefined(profile ? "wy-avatar-interactive" : undefined)}
+              role=${ifDefined(profile ? "button" : undefined)}
+              tabindex=${ifDefined(profile ? 0 : undefined)}
+              title=${ifDefined(profile?.name)}
+              @click=${() => profile && this.dispatchAction({ action: ActionType.Preview, user: profile })}
+              @keydown=${clickOnEnterAndConsumeOnSpace}
+              @keyup=${clickOnSpace}
+            ></wy-avatar>`
           : this.isChatRoom()
             ? html` <wy-avatar-group
                 .members=${membersData?.data}
@@ -985,10 +1081,63 @@ export class WyConversation extends WeavySubAppComponent {
                     description=${ifDefined(otherMember?.comment)}
                     ?isAgent=${otherMember?.is_agent}
                     size=${96}
+                    part=${ifDefined(profile ? "wy-avatar-interactive" : undefined)}
+                    role=${ifDefined(profile ? "button" : undefined)}
+                    tabindex=${ifDefined(profile ? 0 : undefined)}
+                    title=${ifDefined(profile?.name)}
+                    @click=${() => profile && this.dispatchAction({ action: ActionType.Preview, user: profile })}
+                    @keydown=${clickOnEnterAndConsumeOnSpace}
+                    @keyup=${clickOnSpace}
                   ></wy-avatar>
                 `
               : nothing}
       </wy-avatar-header>
+    `;
+  }
+
+  /**
+   * Renders the notice shown in place of the messages in a blocked private chat.
+   *
+   * Carries the unblock action itself: `wy-chat` has no conversation list, so the header avatar would otherwise be the
+   * only way out. The wording promises the history back, since hiding every message otherwise reads as data loss.
+   *
+   * @internal
+   */
+  private renderBlocked() {
+    const otherMember =
+      (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? undefined;
+
+    return html`
+      <div part="wy-messages">
+        <wy-empty part="wy-pane">
+          <div part="wy-conversation-blocked">
+            <p part="wy-conversation-blocked-title">
+              ${otherMember?.name ? msg(str`You have blocked ${otherMember.name}`) : msg("You have blocked this user")}
+            </p>
+            <p part="wy-conversation-blocked-text">
+              ${msg("Messages are hidden until unblocked. Nothing has been deleted.")}
+            </p>
+            ${otherMember
+              ? html`
+                  <wy-button
+                    kind="filled"
+                    color="variant"
+                    @click=${async () => {
+                      if (!this.weavy) {
+                        return;
+                      }
+                      await this.#userBlockMutation.trackMutation(getUserBlockMutationOptions(this.weavy, otherMember.id));
+                      await this.#userBlockMutation.mutate({ block: false });
+                    }}
+                  >
+                    <wy-icon name="cancel"></wy-icon>
+                    ${msg("Unblock")}
+                  </wy-button>
+                `
+              : nothing}
+          </div>
+        </wy-empty>
+      </div>
     `;
   }
 
@@ -1000,6 +1149,7 @@ export class WyConversation extends WeavySubAppComponent {
       //hasNextPage,
     } = this.messagesQuery.result ?? { isPending: networkIsPending };
     const { data: members } = this.membersQuery.result ?? {};
+    const blockedUserIds = this.blockedUsersQuery.result?.data;
     const flattenedPages = getFlatInfiniteResultData(infiniteMessages);
 
     let lastDate: Date;
@@ -1055,7 +1205,16 @@ export class WyConversation extends WeavySubAppComponent {
                     }
 
                     // Get additional member data
-                    const createdBy = members?.data?.find((m) => m.id === message.created_by.id) || message.created_by;
+                    // The member record is the better identity -- it carries presence and the app-specific access.
+                    const member = members?.data?.find((m) => m.id === message.created_by.id);
+                    const createdBy = member || message.created_by;
+
+                    // Blocked if *either* source says so, rather than picking one. The member record carries the flag
+                    // but exists only where the app has a member list, and only once it has loaded; the block list
+                    // answers for every message however it arrived, but is tracked only where Feature.Block is on.
+                    // `message.created_by` never answers at all -- authors are mapped minimally. A union errs toward
+                    // holding a message back rather than showing one that should have been hidden.
+                    const authorIsBlocked = Boolean(blockedUserIds?.includes(createdBy.id) || member?.is_blocked);
 
                     return html`${[
                       html`${dateContent}`,
@@ -1078,7 +1237,10 @@ export class WyConversation extends WeavySubAppComponent {
                           .pollOptions=${message.options?.data}
                           .embed=${message.embed}
                           .reactions=${message.reactions?.data}
-                          .seenBy=${this.showReadReceipts && members && members.data && members.data.length > 0
+                          .authorIsBlocked=${authorIsBlocked}
+                          .reported=${Boolean(message.is_reported)}
+                          .reportedAt=${message.reported_at}
+              .seenBy=${this.showReadReceipts && members && members.data && members.data.length > 0
                             ? members.data.filter((member) => {
                                 return member.marked_id === message.id && member.id !== this.user?.id;
                               })
@@ -1127,17 +1289,23 @@ export class WyConversation extends WeavySubAppComponent {
   }
 
   override render() {
+    // keeps the header (the avatar is the route to the profile) and swaps the messages for the notice, which drops
+    // the typing indicator living inside them.
+    const blocked = this.isBlocked();
+
     return html`
-      ${this.renderConversationHeader()} ${this.renderMessages()}
+      ${this.renderConversationHeader()} ${blocked ? this.renderBlocked() : this.renderMessages()}
       <div ${ref(this.bottomRef)}></div>
       <div part="wy-footerbar wy-footerbar-sticky wy-footerbar-floating">
         <slot name="footerbar"></slot>
         <wy-editor-message
           ${ref(this.editorRef)}
-          .draft=${true}
+          .draft=${!blocked}
           placeholder=${this.placeholder ?? msg("Type a message...")}
-          ?disabled=${this.conversation &&
-          !hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.conversation?.permissions)}
+          ?disabled=${this.disabled ||
+          blocked ||
+          (this.conversation &&
+            !hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.conversation?.permissions))}
           @submit=${(e: MsgEditorSubmitEventType) => this.handleSubmit(e)}
           @edit-last=${(_e: CustomEvent) => {
             /*this.handleEditLast(e)*/
@@ -1148,8 +1316,14 @@ export class WyConversation extends WeavySubAppComponent {
   }
 
   override updated() {
+    // is_blocked arrives with the conversation, by which point the editor has already restored its draft -- so clear
+    // what is shown rather than relying on the draft flag alone. Storage is left alone, so unblocking brings it back.
+    if (this.isBlocked() && this.editorRef.value?.text) {
+      this.editorRef.value.text = "";
+    }
+
     if (this.shouldBeAtBottom) {
-      keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1);
+      keepPages(this.weavy?.queryClient, ["messages", this.conversationId], undefined, 1, true);
       requestAnimationFrame(() => {
         void this.scrollToBottom();
       });

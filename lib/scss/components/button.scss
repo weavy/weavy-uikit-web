@@ -9,7 +9,7 @@
   //--wy-component-background-color: var(--wy-component-background-color, transparent);
 
   color: var(--wy-component-color);
-  background: var(--wy-component-background-color, transparent);
+  background-color: var(--wy-component-background-color, transparent);
 
   height: var.default(--wy-button-size);
   padding: var.default(--wy-button-padding-y) var.default(--wy-button-padding-x);
@@ -32,6 +32,8 @@
   justify-content: center;
   gap: var.default(--wy-button-gap);
   position: relative;
+
+  transition: color var.default(--wy-transition), background-color var.default(--wy-transition);
 
   &[part~="wy-button-sm"] {
     height: calc(var.default(--wy-button-size) * .8); // 2.5rem * 0.8 = 32px
@@ -112,7 +114,7 @@
   height: var.default(--wy-button-size);  
   width: auto;
   min-width: var.default(--wy-button-size);
-  background: var(--wy-component-background-color);
+  background-color: var(--wy-component-background-color);
   color: currentColor;
   display: inline-flex;
   padding: var.default(--wy-button-padding-y);
@@ -171,7 +173,7 @@
   //--wy-component-background-color: transparent;
   padding: 0;
   color: #{color.token(--wy-link)};
-  background: transparent;
+  background-color: transparent;
 
   text-decoration: var.default(--wy-link-decoration);
   height: auto;

@@ -1,0 +1,11 @@
+@use "../base/var";
+@use "../base/breakpoints";
+
+$drawer-width: 24;
+
+html.wy-drawer-open {
+  @include breakpoints.media-size-up(md) {
+    padding-right: var.wy-rem($drawer-width);
+    transition: padding-right var.default(--wy-transition);
+  }
+}

@@ -1,44 +1,53 @@
 import { InfiniteQueryObserverOptions, InfiniteData } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import { FileOrderType, FilesResultType } from "../types/files.types";
+import { QueryPagingAroundType } from "../types/query.types";
+import { firstPageParam, initialPageParam, lastPageParam, queryPageParams } from "./api";
 //import { addToQueryData, findAnyExistingItem, updateQueryData } from "../utils/query-cache";
 
-/// GET all files in an app
-export function getInfiniteFileListOptions(
-  weavy: WeavyType,
-  appId: number | null,
-  filters: { order?: FileOrderType; trashed?: boolean } = {},
-  options: object = {}
-): InfiniteQueryObserverOptions<FilesResultType, Error, InfiniteData<FilesResultType>> {
+export type FilesFilterType = { around?: number; order?: FileOrderType; trashed?: boolean };
+export type FilesQueryKeyType = ["apps", number, "files", FilesFilterType];
 
+/// GET bidirectional list of files in an app
+export function getBidirectionalInfiniteFileListOptions(
+  weavy: WeavyType,
+  appId: number,
+  filters: FilesFilterType = {},
+  options: object = {},
+): InfiniteQueryObserverOptions<
+  FilesResultType,
+  Error,
+  InfiniteData<FilesResultType>  
+> {
   if (!weavy) {
-    throw new Error("useFileList must be used within a WeavyContext");
+    throw new Error("getInfiniteAroundFileListOptions must be used within a WeavyContext");
   }
 
-  const filesKey = ["apps", appId, "files", filters];
+  const filesKey: FilesQueryKeyType = ["apps", appId, "files", filters];
 
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
     queryKey: filesKey,
-    initialPageParam: 0,
+    initialPageParam: initialPageParam(filters.around),
     queryFn: async (opt) => {
-      const skip = opt.pageParam as number;
       const trashed: boolean = !!filters?.trashed;
-      const orderParam = filters.order ? filters.order.by + (filters.order.descending ? "+desc" : "") : "";
-      let url = "/api/apps/" + appId + "/files?skip=" + skip + "&order_by=" + orderParam;
-      if (trashed) {
-        url += "&trashed=null";
+
+      const queryParams = queryPageParams(opt.pageParam as QueryPagingAroundType);
+
+      if (filters.order) {
+        queryParams.set("order_by", filters.order.by + (filters.order.descending ? " desc" : ""));
       }
 
-      const response = await weavy.fetch(url);
-      return await response.json() as FilesResultType;
-    },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.end && lastPage.end < lastPage.count) {
-        return lastPage.end;
+      if (trashed) {
+        queryParams.set("trashed", "null");
       }
-      return null;
-    }
+
+      const url = `/api/apps/${appId}/files?${queryParams.toString()}`;
+
+      const response = await weavy.fetch(url);
+      return (await response.json()) as FilesResultType;
+    },
+    getPreviousPageParam: firstPageParam(),
+    getNextPageParam: lastPageParam(),
   };
 }

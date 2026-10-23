@@ -13,8 +13,8 @@ export type MutateMessageProps = {
   text: string;
   blobs?: number[];
   meeting_id?: number;
-  poll_options: PollOptionType[];
-  embed_id: number;
+  poll_options?: PollOptionType[];
+  embed_id?: number;
   metadata?: MetadataType;
   context?: number[];
 };

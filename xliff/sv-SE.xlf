@@ -58,10 +58,6 @@
         <source>Upload error</source>
         <target state="">Uppladdningsfel</target>
       </trans-unit>
-      <trans-unit id="se725f4eac532d6d0">
-        <source>All uploads finished</source>
-        <target state="">Alla uppladningar klara</target>
-      </trans-unit>
       <trans-unit id="sef49aec68fd1dc66">
         <source>Name</source>
         <target state="">Namn</target>
@@ -709,14 +705,6 @@
         <source>Follow</source>
         <target>Följ</target>
       </trans-unit>
-      <trans-unit id="s8e7258c871aaa410">
-        <source>E-mail</source>
-        <target>E-post</target>
-      </trans-unit>
-      <trans-unit id="sf1bc83d2509bafcf">
-        <source>Phone</source>
-        <target>Telefon</target>
-      </trans-unit>
       <trans-unit id="s029e56f66373d7a2">
         <source>New posts</source>
         <target>Nya inlägg</target>
@@ -733,10 +721,198 @@
         <source>No posts to show yet.</source>
         <target>Inga inlägg att visa ännu.</target>
       </trans-unit>
-      <trans-unit id="sc7b27babc0d0f37f">
-        <source>Votes on <x id="0" equiv-text="${this.option.text}"/>: <x id="1" equiv-text="${voteCount}"/></source>
-        <target>Röster på <x id="0" equiv-text="${this.option.text}"/>: <x id="1" equiv-text="${voteCount}"/></target>
+      <trans-unit id="s6bd135b5847a5a28">
+        <source>Report message</source>
+        <target state="">Anmäl meddelande</target>
       </trans-unit>
+      <trans-unit id="s975a7459c0617a61">
+        <source>Profile actions</source>
+        <target state="">Profilåtgärder</target>
+      </trans-unit>
+      <trans-unit id="s9b6b1422027158eb">
+        <source>Report</source>
+        <target state="">Anmäl</target>
+      </trans-unit>
+      <trans-unit id="s75bf1c2b30f3aa75">
+        <source>You have blocked this user</source>
+        <target state="">Du har blockerat den här användaren</target>
+      </trans-unit>
+      <trans-unit id="s865b6f4c6920e17f">
+        <source>Unblock</source>
+        <target state="">Avblockera</target>
+      </trans-unit>
+      <trans-unit id="s2b2ae20d26f78ac2">
+        <source>Block</source>
+        <target state="">Blockera</target>
+      </trans-unit>
+      <trans-unit id="sf59d9197d2e50c93">
+        <source>Blocked</source>
+        <target state="">Blockerad</target>
+      </trans-unit>
+      <trans-unit id="s6a215836b649ed00">
+        <source>You have blocked <x id="0" equiv-text="${otherMember.name}"/></source>
+        <target state="">Du har blockerat <x id="0" equiv-text="${otherMember.name}"/></target>
+      </trans-unit>
+      <trans-unit id="s450083f33371a67c">
+        <source>Block this user? You will stop seeing notifications and messages from them. They are not notified, and can still see and write to you.</source>
+        <target state="">Blockera den här användaren? Du slutar se notiser och meddelanden från personen. Användaren meddelas inte och kan fortfarande se och skriva till dig.</target>
+      </trans-unit>
+      <trans-unit id="se8adf86fc99be14f">
+        <source>Report this message for review? The author is not notified, and reporting cannot be undone.</source>
+        <target state="">Rapportera det här meddelandet för granskning? Författaren meddelas inte och rapporteringen kan inte ångras.</target>
+      </trans-unit>
+      <trans-unit id="s7f0e504a1bf43495">
+        <source>Report this profile for review? The user is not notified, and reporting cannot be undone.</source>
+        <target state="">Rapportera den här profilen för granskning? Användaren meddelas inte och rapporteringen kan inte ångras.</target>
+      </trans-unit>
+      <trans-unit id="s36de9c26ae02cb0b">
+        <source>Reported by you on <x id="0" equiv-text="${reportedAtFull}"/></source>
+        <target state="">Anmäld av dig den <x id="0" equiv-text="${reportedAtFull}"/></target>
+      </trans-unit>
+      <trans-unit id="scba90ecc699ebd2c">
+        <source>Reported by you</source>
+        <target state="">Anmäld av dig</target>
+      </trans-unit>
+      <trans-unit id="sbefe1d18e7e61dd1">
+        <source>Report this comment for review? The author is not notified, and reporting cannot be undone.</source>
+        <target state="">Rapportera den här kommentaren för granskning? Författaren meddelas inte och rapporteringen kan inte ångras.</target>
+      </trans-unit>
+      <trans-unit id="s4941397276eaac08">
+        <source>Report this post for review? The author is not notified, and reporting cannot be undone.</source>
+        <target state="">Rapportera det här inlägget för granskning? Författaren meddelas inte och rapporteringen kan inte ångras.</target>
+      </trans-unit>
+      <trans-unit id="s014cee951b8294bd">
+        <source>New file</source>
+        <target>Ny fil</target>
+      </trans-unit>
+      <trans-unit id="sbc5f2f81604bb81a">
+        <source>Heading 1</source>
+        <target>Rubrik 1</target>
+      </trans-unit>
+      <trans-unit id="sbc5f2e81604bb667">
+        <source>Heading 2</source>
+        <target>Rubrik 2</target>
+      </trans-unit>
+      <trans-unit id="sbc5f2d81604bb4b4">
+        <source>Heading 3</source>
+        <target>Rubrik 3</target>
+      </trans-unit>
+      <trans-unit id="sbc5f2c81604bb301">
+        <source>Heading 4</source>
+        <target>Rubrik 4</target>
+      </trans-unit>
+      <trans-unit id="sbc5f2b81604bb14e">
+        <source>Heading 5</source>
+        <target>Rubrik 5</target>
+      </trans-unit>
+      <trans-unit id="sbc5f2a81604baf9b">
+        <source>Heading 6</source>
+        <target>Rubrik 6</target>
+      </trans-unit>
+      <trans-unit id="s620c25bb9799375e">
+        <source>Ordered list</source>
+        <target>Numrerad lista</target>
+      </trans-unit>
+      <trans-unit id="s4fda29344ca51803">
+        <source>Bullet list</source>
+        <target>Punktlista</target>
+      </trans-unit>
+      <trans-unit id="s7e76ed070465ee49">
+        <source>Show more comments</source>
+        <target>Visa fler kommentarer</target>
+      </trans-unit>
+      <trans-unit id="s2455d1745890c7b6">
+        <source>Unsaved draft</source>
+        <target>Osparat utkast</target>
+      </trans-unit>
+      <trans-unit id="s70a5d875c5467e57">
+        <source>Quote</source>
+        <target>Citat</target>
+      </trans-unit>
+      <trans-unit id="sf7c0eba7c822e3d6">
+        <source>Bold</source>
+        <target>Fet</target>
+      </trans-unit>
+      <trans-unit id="sacf637865b8d2075">
+        <source>Code block</source>
+        <target>Kodblock</target>
+      </trans-unit>
+      <trans-unit id="s3643189d1abbb7f4">
+        <source>Code</source>
+        <target>Kod</target>
+      </trans-unit>
+      <trans-unit id="s3cf89cb47fdde7e9">
+        <source>Link</source>
+        <target>Länk</target>
+      </trans-unit>
+      <trans-unit id="s3d93f9ea0c5a13fa">
+        <source>Image</source>
+        <target>Bild</target>
+      </trans-unit>
+      <trans-unit id="s523eb9043213ff0d">
+        <source>Italic</source>
+        <target>Kursiv</target>
+      </trans-unit>
+      <trans-unit id="s2f2044f2431a32d5">
+        <source>Heading</source>
+        <target>Rubrik</target>
+      </trans-unit>
+      <trans-unit id="s3d249bb480032121">
+        <source>List</source>
+        <target>Lista</target>
+      </trans-unit>
+      <trans-unit id="s86b7b15b04339e89">
+        <source>Toggle preview</source>
+        <target>Växla förhandsvisning</target>
+      </trans-unit>
+      <trans-unit id="s2ba57c5d1026c471">
+        <source>A file with this name already exists. Choose a different name.</source>
+        <target>En fil med det namnet finns redan. Välj ett annat namn.</target>
+      </trans-unit>
+      <trans-unit id="s690714fde574c188">
+        <source>Filename</source>
+        <target>Filnamn</target>
+      </trans-unit>
+      <trans-unit id="s0843b2fcef33fcc8">
+        <source>Publish</source>
+        <target>Publicera</target>
+      </trans-unit>
+      <trans-unit id="sd600892f7fabe04c">
+        <source>Draft</source>
+        <target>Utkast</target>
+      </trans-unit>
+      <trans-unit id="sebc7b32da0a525fb">
+        <source>Back to preview</source>
+        <target>Tillbaka till förhandsvisning</target>
+      </trans-unit>
+      <trans-unit id="s83f005e5d0b72010">
+        <source>Continue editing</source>
+        <target>Fortsätt redigera</target>
+      </trans-unit>
+<trans-unit id="sd057c483b9d24194">
+  <source>Messages are hidden until unblocked. Nothing has been deleted.</source>
+  <target>Meddelanden är dolda tills blockeringen hävs. Ingenting har raderats.</target>
+</trans-unit>
+<trans-unit id="s210cb23f2e51a1ce">
+  <source>Show message from blocked user.</source>
+  <target>Visa meddelande från blockerad användare.</target>
+</trans-unit>
+<trans-unit id="s1d646f73619472a8">
+  <source>Click to vote</source>
+  <target>Klicka för att rösta</target>
+</trans-unit>
+<trans-unit id="s3236de7f96c8e92a">
+  <source>Reported</source>
+  <target>Rapporterad</target>
+</trans-unit>
+<trans-unit id="s45ba242d0acbb547">
+  <source>1 person voted for “<x id="0" equiv-text="${this.option.text}"/>”</source>
+  <target>1 person röstade på ”<x id="0" equiv-text="${this.option.text}"/>”</target>
+</trans-unit>
+<trans-unit id="sad456f053c4989e6">
+  <source><x id="0" equiv-text="${voteCount}"/> people voted for “<x id="1" equiv-text="${this.option.text}"/>”</source>
+  <target><x id="0" equiv-text="${voteCount}"/> personer röstade på ”<x id="1" equiv-text="${this.option.text}"/>”</target>
+</trans-unit>
     </body>
   </file>
 </xliff>

@@ -5,6 +5,7 @@ import "../utils/version";
 import "../../lib";
 import { type WyContext } from "../../lib";
 
+
 describe("wy-context", () => {
   it("has a shadowDom and a slot", async () => {
     const el = await fixture<WyContext>(html` <wy-context>Test</wy-context> `);
@@ -12,8 +13,8 @@ describe("wy-context", () => {
     await el.updateComplete;
 
     expect(el).shadowDom.to.exist;    
-    expect(el).shadowDom.to.equal(`<slot></slot>`);
-    expect(el).lightDom.to.equal(`Test`);
+    await expect(el).shadowDom.to.equal(`<slot></slot>`);
+    await expect(el).lightDom.to.equal(`Test`);
   });
 
   it('has an "url" attribute with unreflected property', async () => {
@@ -21,15 +22,15 @@ describe("wy-context", () => {
     await el.updateComplete;
 
     expect(el, "initial url attribute").to.have.property("url")
-    expect(el.url?.toString(), "initial url attribute as string").to.equal("http://localhost/");
-    expect(el.url, "initial url as URL").to.have.property("host").that.equals("localhost");
+    await expect(el.url?.toString(), "initial url attribute as string").to.equal("http://localhost/");
+    await expect(el.url, "initial url as URL").to.have.property("host").that.equals("localhost");
     expect(() => {
       el.url = "https://192.168.0.1/";
     }).to.change(el, "url");
     expect(() => {
       el.url = new URL("/", "https://weavy.test/");
     }).to.change(el, "url");
-    expect(el, "changed property url").to.have.attribute("url").that.equals("http://localhost/");
+    await expect(el, "changed property url").to.have.attribute("url").that.equals("http://localhost/");
   });
 
 
@@ -45,10 +46,11 @@ describe("wy-context", () => {
     const el = await fixture<WyContext>(
       html` <wy-context></wy-context> `
     );
+    // eslint-disable-next-line @typescript-eslint/require-await
     el.tokenFactory = async () => 'token-factory-result'
     await el.updateComplete;
     expect(el).to.respondTo("tokenFactory");
-    expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
+    await expect(await el.tokenFactory?.(false)).to.equal("token-factory-result");
   });
 
   it('has a "locale" attribute with unreflected property that sets locale', async () => {
@@ -56,9 +58,9 @@ describe("wy-context", () => {
     expect(() => (el.locales = [["en-PI", {} as LocaleModule]])).to.not.throw;
     await el.updateComplete;
 
-    expect(el).to.have.property("locale").that.equals("en");
+    await expect(el).to.have.property("locale").that.equals("en");
     expect(() => el.setAttribute("locale", "en-PI")).to.change(el, "locale");
-    expect(el.locale).to.equal("en-PI");
+    await expect(el.locale).to.equal("en-PI");
     expect(() => (el.locale = "xx-pirate")).to.throw;
   });
 

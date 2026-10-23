@@ -8,7 +8,6 @@ import { inputClearAndBlurOnEscape, inputConsume } from "../../utils/keyboard";
 import { createRef, ref, type Ref } from "lit/directives/ref.js";
 import { SearchEventType } from "../../types/search.events";
 import { NamedEvent } from "../../types/generic.types";
-import { partMap } from "../../utils/directives/shadow-part-map";
 import { onlyValues } from "../../utils/data";
 
 import inputCss from "../../scss/components/input.scss";
@@ -24,7 +23,7 @@ declare global {
 }
 
 /**
- * Search input component.
+ * Search input component with an integrated search/clear button.
  * 
  * **Used sub components**
  *
@@ -54,12 +53,6 @@ export class WySearch extends LitElement {
    */
   @property()
   placeholder?: string;
-
-  /**
-   * Whether the component should combine input field and button.
-   */
-  @property({ type: Boolean })
-  compact: boolean = false;
 
   #tags: Set<string> = new Set();
 
@@ -121,22 +114,10 @@ export class WySearch extends LitElement {
   }
 
   override render() {
-    const inputMap = {
-      "wy-input": true,
-      "wy-input-group-input": true,
-      "wy-input-filled": true,
-      "wy-input-group-input-with-overlay": this.compact,
-    };
-
-    const buttonMap = {
-      "wy-input-group-button-icon": true,
-      "wy-input-group-button-icon-overlay": this.compact,
-    };
-
     return html`
       <div part="wy-input-group">
         <input
-          part=${partMap(inputMap)}
+          part="wy-input wy-input-group-input wy-input-filled wy-input-group-input-with-overlay"
           name="text"
           .value=${this.#query || ""}
           ${ref(this.inputRef)}
@@ -154,10 +135,10 @@ export class WySearch extends LitElement {
           placeholder=${this.placeholder || msg("Search...")}
           size="4"
         />
-        <wy-button type="reset" @click=${() => this.clear()} kind="icon" part=${partMap(buttonMap)}>
+        <wy-button type="reset" @click=${() => this.clear()} kind="icon" part="wy-input-group-button-icon wy-input-group-button-icon-overlay">
           <wy-icon name="close-circle"></wy-icon>
         </wy-button>
-        <wy-button kind="icon" part=${partMap(buttonMap)}>
+        <wy-button kind="icon" part="wy-input-group-button-icon wy-input-group-button-icon-overlay">
           <wy-icon name="magnify"></wy-icon>
         </wy-button>
       </div>

@@ -3,8 +3,8 @@ import { property, state } from "lit/decorators.js";
 import { provide } from "@lit/context";
 import { QueryController } from "../controllers/query-controller";
 import {
+  getEnsureAppMutationOptions,
   getAppSubscribeMutationOptions,
-  getOrCreateAppOptions,
   type MutateAppSubscribeProps,
   type MutateAppSubscribeContextType,
   mapMultipleAppsAsAppList,
@@ -15,6 +15,8 @@ import { AppListType, AppType, AppTypeGuid, LinkType, UnknownAppType } from "../
 import { WyAppEventType } from "../types/app.events";
 import { NamedEvent } from "../types/generic.types";
 import { MutationController } from "../controllers/mutation-controller";
+import type { MutationAbortProps } from "../types/query.types";
+import { type WeavyType } from "../client/weavy";
 import { toIntOrString } from "../converters/string";
 import { AgentAppTypeGuids, WeavyTypeComponent } from "./weavy-type-component";
 import {
@@ -202,7 +204,21 @@ export class WeavyAppComponent
    * Optional directory identifier (`id` or `name`) for the app.
    */
   @property({ type: String })
-  directory?: string;
+  directory?: string | number;
+
+  // APP UPSERT
+
+  /**
+   * Upsert that makes sure the app exists. Kept beside the app query rather than inside it, see
+   * `getEnsureAppMutationOptions()`.
+   */
+  #appUpsert = new MutationController<AppType, Error, MutationAbortProps, void>(this);
+
+  /** The payload of the last upsert this component sent, used to avoid repeating an identical write. */
+  #lastUpsertPayload?: string;
+
+  /** The client and uid the app query is currently tracking, so identical options are not re-tracked. */
+  #trackedApp?: { weavy: WeavyType; uid: string | number };
 
   // APP SUBSCRIBE
 
@@ -365,7 +381,11 @@ export class WeavyAppComponent
       changedProperties.has("name") ||
       changedProperties.has("weavy")
     ) {
-      if (this.appType && this.currentUid && this.weavy) {
+      const weavy = this.weavy;
+      const appType = this.appType;
+      const currentUid = this.currentUid;
+
+      if (appType && currentUid && weavy) {
         // Only allow single-app initialization data when exactly one uid is specified.
         const allowAppDataChange = this.#uids.length === 1;
 
@@ -373,22 +393,77 @@ export class WeavyAppComponent
           console.warn("Specifying a name for the app is not possible when using multiple uid.");
         }
 
-        if (!allowAppDataChange && this.directory) {
+        if (!allowAppDataChange && this.directory !== undefined && this.directory !== "") {
           console.warn("Specifying a directory for the app is not possible when using multiple uid.");
         }
 
         const appData =
-          allowAppDataChange && (this.name || this.directory)
+          allowAppDataChange && (this.name || (this.directory !== undefined && this.directory !== ""))
             ? {
                 ...(this.name ? { name: this.name } : undefined),
-                ...(this.directory ? { directory: this.directory } : undefined),
+                ...(this.directory !== undefined && this.directory !== ""
+                  ? { directory: this.directory.toString() }
+                  : undefined),
               }
             : undefined;
         const appMembers = this.agent ? [this.agent] : undefined;
-        await this.#appQuery.trackQuery(
-          getOrCreateAppOptions(this.weavy, this.currentUid, this.appType, appMembers, appData),
-        );
+
+        const cachedApp =
+          typeof currentUid === "string" ? weavy.queryClient.getQueryData<AppType>(["apps", currentUid]) : undefined;
+
+        // "Ensure", not "upsert on every render". The app only needs writing when it is missing, or when what we would
+        // send differs from what it already has. Without this the upsert repeats on every pass through this block,
+        // including the one caused by `name` being reassigned from the app data below.
+        //
+        // `name` can be compared against the app itself. `directory` cannot — it is accepted when writing an app but
+        // is not part of the app returned by the API — so for that we compare against the last payload this component
+        // sent instead.
+        const upsertPayload = JSON.stringify([currentUid, appType, appMembers, appData]);
+        const appDataIsCurrent =
+          !appData ||
+          (cachedApp !== undefined &&
+            (appData.name === undefined || appData.name === cachedApp.name) &&
+            (appData.directory === undefined || upsertPayload === this.#lastUpsertPayload));
+
+        // Creating the app is a write, so it runs as a mutation beside the query and seeds it on success rather than
+        // being the query's `queryFn`. Only a known app type may create; an unknown type can merely look the app up,
+        // and a numeric uid is an app id, which cannot be upserted.
+        // Sending the same payload again is pointless whether the first one is still in flight or already done, and
+        // this block runs several times per mount, so an identical payload is skipped regardless of cache state.
+        const alreadySent = upsertPayload === this.#lastUpsertPayload;
+
+        if (
+          appType !== UnknownApp &&
+          typeof currentUid === "string" &&
+          !alreadySent &&
+          !(cachedApp && appDataIsCurrent)
+        ) {
+          this.#lastUpsertPayload = upsertPayload;
+
+          await this.#appUpsert.trackMutation(
+            getEnsureAppMutationOptions(weavy, currentUid, appType, appMembers, appData),
+          );
+
+          // Deliberately not awaited. A mutation paused while offline never settles, and awaiting a network round trip
+          // inside `willUpdate` would let a later update's `trackQuery` be overwritten by this one on resume, leaving
+          // the component observing a uid it has already moved off.
+          void this.#appUpsert.mutate({}).catch((error: unknown) => {
+            // The app query is the single source of truth for what the component renders and already reports the app
+            // as missing, so this only needs surfacing for diagnosis.
+            console.warn(`Could not create app ${currentUid}.`, error);
+          });
+        }
+
+        // Re-tracking builds a new observer and forces a fetch, so only do it when the query actually changes.
+        // `getAppOptions()` depends on nothing but the client and the uid.
+        if (this.#trackedApp?.weavy !== weavy || this.#trackedApp.uid !== currentUid) {
+          this.#trackedApp = { weavy, uid: currentUid };
+          // Not optimistic, for the same reason as the multiple-app queries below: several components can observe
+          // one app, and a later one must not force a fetch over data an earlier one just put there.
+          await this.#appQuery.trackQuery(getAppOptions(weavy, currentUid), false);
+        }
       } else {
+        this.#trackedApp = undefined;
         this.#appQuery.untrackQuery();
       }
     }
@@ -420,7 +495,9 @@ export class WeavyAppComponent
         this.uids.forEach((uid) => {
           if (!this.#multipleAppsQueryMap.has(uid) && this.weavy) {
             const query = new QueryController<AppType>(this);
-            void query.trackQuery(getAppOptions(this.weavy, uid));
+            // Not optimistic: a second observer on a key another observer just populated must not force its own
+            // fetch over data that is still fresh.
+            void query.trackQuery(getAppOptions(this.weavy, uid), false);
             this.#multipleAppsQueryMap.set(uid, query);
           }
         });

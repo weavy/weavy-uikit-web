@@ -6,6 +6,8 @@ import { UserOrAgentMinimalType } from "./users.types";
 export type MemberType = UserOrAgentMinimalType & {
   presence?: PresenceType;
   comment?: string;
+  /** Whether the authenticated user has blocked this member. Caller-relative; never indicates the inverse. */
+  is_blocked?: boolean;
 };
 
 export type MemberDetailType = MemberType & {

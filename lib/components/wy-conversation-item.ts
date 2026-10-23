@@ -7,7 +7,7 @@ import type { MsgType } from "../types/msg.types";
 import type { UserType } from "../types/users.types";
 import { type MembersResultType } from "../types/members.types";
 import { localized, msg } from "@lit/localize";
-import { relativeTime } from "../utils/datetime";
+import { relativeDays } from "../utils/datetime";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { RealtimeAppMarkedEventType, RealtimeMessageEventType } from "../types/realtime.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
@@ -24,7 +24,9 @@ import {
   SelectedEventType,
   StarEventType,
   TrashEventType,
+  BlockEventType,
 } from "../types/app.events";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 import conversationsCss from "../scss/components/conversations.scss";
 
@@ -56,6 +58,7 @@ declare global {
  * - [`<wy-typing>`](./wy-typing.ts)
  *
  * @csspart wy-conversation-item - The conversation item container (applied on the inner wy-item)
+ * @csspart wy-conversation-item-avatar - The conversation avatar, whichever of the three variants is rendered.
  *
  * @fires {SelectedEventType} selected - Emitted when the conversation item is selected.
  * @fires {StarEventType} star - Emitted when the star/unstar action is requested.
@@ -64,6 +67,7 @@ declare global {
  * @fires {LeaveEventType} leave - Emitted when the current user requests to leave the conversation.
  * @fires {RemoveEventType} remove - Emitted when the conversation should be removed/deleted.
  * @fires {TrashEventType} trash - Emitted when the conversation should be trashed.
+ * @fires {BlockEventType} block - Emitted when the other user in a private chat should be blocked or unblocked.
  */
 @customElement("wy-conversation-item")
 @localized()
@@ -151,19 +155,37 @@ export class WyConversationItem extends LitElement {
   pinned: boolean = false;
 
   /**
+   * Whether this is a private chat with a blocked user.
+   *
+   * A blocked conversation goes quiet: it is dimmed, shows no preview or unread, and offers unblock as its only action.
+   * It still opens, onto the blocked notice rather than the chat. Nothing is deleted -- unblocking brings it all back.
+   */
+  @property({ attribute: true, type: Boolean, reflect: true })
+  blocked: boolean = false;
+
+  /**
+   * Whether blocking is offered for this conversation.
+   *
+   * Set by the parent list, since this component has no feature policy of its own. Gates blocking only -- unblock
+   * stays available, so turning the feature off cannot strand someone with a block they can no longer undo.
+   */
+  @property({ attribute: true, type: Boolean, reflect: true })
+  canBlock: boolean = false;
+
+  /**
    * A list of members in the conversation.
    *
    * @internal
    */
   @property({ attribute: false })
-  members!: MembersResultType;
+  members?: MembersResultType;
 
   /**
    * The last received message in the conversation.
    *
    * @internal
    */
-  @property({ attribute: false })
+  @property({ attribute: false, type: Object })
   lastMessage?: MsgType;
 
   /**
@@ -179,10 +201,15 @@ export class WyConversationItem extends LitElement {
       return;
     }
 
+    // A blocked conversation stays quiet in realtime too. The server suppresses unread when the list is fetched, but
+    // realtime events are delivered to the blocker regardless -- suppression is presentational, by design -- so the flag
+    // has to be held down here as well or an incoming message would light the conversation up again.
+    const isUnread = !this.blocked && realtimeEvent.message.created_by.id !== this.user?.id;
+
     updateCacheItem<AppType>(this.weavy.queryClient, ["apps", realtimeEvent.message.app.id], undefined, (item) => ({
       ...item,
       last_message: realtimeEvent.message,
-      is_unread: realtimeEvent.message.created_by.id !== this.user?.id,
+      is_unread: isUnread,
     }));
 
     updateCacheItems<AppType>(
@@ -192,7 +219,7 @@ export class WyConversationItem extends LitElement {
       (item) => ({
         ...item,
         last_message: realtimeEvent.message,
-        is_unread: realtimeEvent.message.created_by.id !== this.user?.id,
+        is_unread: isUnread,
       }),
     );
   };
@@ -235,6 +262,43 @@ export class WyConversationItem extends LitElement {
       detail: { id: this.conversationId },
     });
     return this.dispatchEvent(event);
+  }
+
+  /**
+   * Trigger `block` event for the other member of a private chat.
+   *
+   * @param userId - The id of the other member.
+   * @param block - Whether the user should be blocked or unblocked.
+   * @returns Whether the event was dispatched successfully.
+   *
+   * @internal
+   */
+  private dispatchBlock(userId: number, block: boolean) {
+    const event: BlockEventType = new (CustomEvent as NamedEvent)("block", {
+      detail: { userId, block },
+    });
+    return this.dispatchEvent(event);
+  }
+
+  /**
+   * Confirm and block the other member of a private chat.
+   *
+   * Copy is identical to `wy-user-card` on purpose -- blocking is reachable from both and should not be explained two
+   * different ways. Unblock stays unconfirmed; it only restores what was there.
+   *
+   * @param userId - The id of the other member.
+   *
+   * @internal
+   */
+  private confirmBlock(userId: number) {
+    const confirmed = window.confirm(
+      msg(
+        "Block this user? You will stop seeing notifications and messages from them. They are not notified, and can still see and write to you.",
+      ),
+    );
+    if (confirmed) {
+      this.dispatchBlock(userId, true);
+    }
   }
 
   /**
@@ -387,7 +451,7 @@ export class WyConversationItem extends LitElement {
         )
       : "";
     const dateFromNow = this.lastMessage?.created_at
-      ? relativeTime(this.weavy?.locale, new Date(this.lastMessage.created_at))
+      ? relativeDays(this.weavy?.locale, new Date(this.lastMessage.created_at))
       : "";
 
     const otherMember =
@@ -395,13 +459,19 @@ export class WyConversationItem extends LitElement {
         ? ((this.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user)
         : null;
 
+    // a blocked private chat is muted, not hidden: dimmed, no unread, no preview, "Blocked" instead. Still openable --
+    // wy-conversation renders it as a notice, not a live chat. Presence is dropped too, like the typing indicator
+    // below, since it is a live feed of the blocked user. One direction only: the flag is the viewer's own, and hiding
+    // the blocker's presence from the blocked user would leak the block.
+    const blocked = this.blocked && this.type === AppTypeGuid.PrivateChat;
+
     return html`
       <wy-item
-        part="wy-conversation-item"
+        part=${partMap({ "wy-conversation-item": true, "wy-conversation-item-blocked": blocked })}
         size="lg"
         interactive
         outer
-        status=${this.unread ? "unread" : undefined}
+        status=${!blocked && this.unread ? "unread" : undefined}
         ?selected=${this.selected}
         tabindex="0"
         actionsPosition="bottom"
@@ -414,9 +484,10 @@ export class WyConversationItem extends LitElement {
       >
         ${this.type !== AppTypeGuid.AgentChat
           ? this.avatarUrl
-            ? html`<wy-avatar slot="image" .size=${48} src=${this.avatarUrl}></wy-avatar>`
+            ? html`<wy-avatar part="wy-conversation-item-avatar" slot="image" .size=${48} src=${this.avatarUrl}></wy-avatar>`
             : this.type == AppTypeGuid.ChatRoom
               ? html` <wy-avatar-group
+                  part="wy-conversation-item-avatar"
                   slot="image"
                   .members=${this.members?.data}
                   title=${this.name}
@@ -424,11 +495,12 @@ export class WyConversationItem extends LitElement {
                 ></wy-avatar-group>`
               : html`
                   <wy-avatar
+                    part="wy-conversation-item-avatar"
                     slot="image"
                     src=${ifDefined(otherMember?.avatar_url)}
-                    name=${ifDefined(otherMember?.name)}
+                    name=${ifDefined(otherMember?.name ?? this.name)}
                     description=${ifDefined(otherMember?.comment)}
-                    presence=${otherMember?.presence || "away"}
+                    presence=${ifDefined(blocked || !otherMember ? undefined : otherMember.presence || "away")}
                     ?isAgent=${otherMember?.is_agent}
                     id=${ifDefined(otherMember?.id)}
                     size=${48}
@@ -437,7 +509,7 @@ export class WyConversationItem extends LitElement {
           : nothing}
 
         <span slot="title">${this.name || this.lastMessage?.plain || msg("Untitled conversation")}</span>
-        ${this.lastMessage
+        ${!blocked && this.lastMessage
           ? html`
               <time slot="meta" datetime=${this.lastMessage.created_at.toString()} title=${dateFull}
                 >${dateFromNow}</time
@@ -445,26 +517,31 @@ export class WyConversationItem extends LitElement {
             `
           : nothing}
         <span slot="text">
-          ${this.user
+          ${blocked
+            ? html`<span part="wy-conversation-item-blocked-label">${msg("Blocked")}</span>`
+            : nothing}
+          ${!blocked && this.user
             ? html`
                 <wy-typing appId=${this.conversationId} userId=${this.user.id}>
                   ${this.lastMessage
                     ? html`
                         ${this.user.id === this.lastMessage.created_by.id ? html`${msg("You")}: ` : nothing}
-                        ${this.members.count > 2 && this.user.id !== this.lastMessage?.created_by.id
+                        ${this.type !== AppTypeGuid.PrivateChat &&
+                        this.type !== AppTypeGuid.AgentChat &&
+                        this.user.id !== this.lastMessage.created_by.id
                           ? html`${this.lastMessage?.created_by.name}: `
                           : nothing}
                       `
                     : nothing}
                   ${this.lastMessage?.text ? html`<span>${this.lastMessage.plain}</span>` : nothing}
                   ${!this.lastMessage?.text && (this.lastMessage?.attachments?.count || 0) > 0
-                    ? html`<wy-icon kind="text-icon" name="attachment"></wy-icon>`
+                    ? html`<wy-icon inline name="attachment"></wy-icon>`
                     : nothing}
                   ${!this.lastMessage?.text && this.lastMessage?.meeting?.id
-                    ? html`<wy-icon kind="text-icon" name="video"></wy-icon>`
+                    ? html`<wy-icon inline name="video"></wy-icon>`
                     : nothing}
                   ${!this.lastMessage?.text && (this.lastMessage?.options?.count || 0) > 0
-                    ? html`<wy-icon kind="text-icon" name="poll"></wy-icon>`
+                    ? html`<wy-icon inline name="poll"></wy-icon>`
                     : nothing}
                   ${!this.lastMessage ? html`&nbsp;` : nothing}
                 </wy-typing>
@@ -472,7 +549,7 @@ export class WyConversationItem extends LitElement {
             : nothing}
         </span>
 
-        ${this.starred
+        ${!blocked && this.starred
           ? html`<wy-button
               small
               slot="actions"
@@ -485,7 +562,7 @@ export class WyConversationItem extends LitElement {
               <wy-icon name="star" size=${24} color="yellow"></wy-icon>
             </wy-button>`
           : nothing}
-        ${this.pinned
+        ${!blocked && this.pinned
           ? html`<wy-button
               small
               slot="actions"
@@ -500,6 +577,16 @@ export class WyConversationItem extends LitElement {
           : nothing}
 
         <wy-dropdown small slot="actions" directionX="left">
+          ${blocked
+            ? html`
+                <wy-dropdown-item
+                  @click=${() => otherMember && this.dispatchBlock(otherMember.id, false)}
+                >
+                  <wy-icon name="cancel"></wy-icon>
+                  ${msg("Unblock")}
+                </wy-dropdown-item>
+              `
+            : html`
           <wy-dropdown-item @click=${() => this.dispatchMarked(this.unread)}>
             <wy-icon name=${this.unread ? "read" : "unread"}></wy-icon>
             ${this.unread ? msg("Mark as read") : msg("Mark as unread")}
@@ -512,6 +599,12 @@ export class WyConversationItem extends LitElement {
             <wy-icon name=${this.starred ? "unstar" : "star"}></wy-icon>
             ${this.starred ? msg("Unstar") : msg("Star")}
           </wy-dropdown-item>
+          ${this.type === AppTypeGuid.PrivateChat && this.canBlock && otherMember
+            ? html`<wy-dropdown-item @click=${() => this.confirmBlock(otherMember.id)}>
+                <wy-icon name="cancel"></wy-icon>
+                ${msg("Block")}
+              </wy-dropdown-item>`
+            : nothing}
           ${this.type === AppTypeGuid.PrivateChat
             ? html`<wy-dropdown-item @click=${() => this.dispatchRemoveConversation()}>
                 <wy-icon name="trashcan"></wy-icon>
@@ -532,6 +625,7 @@ export class WyConversationItem extends LitElement {
                 </wy-dropdown-item>
               `
             : nothing}
+              `}
         </wy-dropdown>
       </wy-item>
     `;

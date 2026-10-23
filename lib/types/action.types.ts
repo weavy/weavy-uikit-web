@@ -27,10 +27,27 @@ export enum ActionType {
    Open = "open",
    /** Action when an entity should be edited. */
    Edit = "edit",
+   /** Action when an entity name should edited. */
+   EditName = "edit-name",
+   /** Action when an entity name should be saved. */
+   Rename = "rename",
+   /** Action when an entity should be saved. */
+   Save = "save",
    /** Action when an entity should be trashed. */
    Trash = "trash",
    /** Action when an entity should be deleted forever. */
    DeleteForever = "delete-forever",
    /** Action when an entity should be restored. */
    Restore = "restore",
+   /** Action when comments should be shown for the entity */
+   Comment = "comment",
+   /** Action when history should be shown for the entity */
+   History = "history",
 };
+
+export enum ActionKindType {
+   File = "file",
+   Embed = "embed",
+   App = "app",
+   User = "user"
+}

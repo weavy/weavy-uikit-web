@@ -15,36 +15,36 @@ import {
   updateCacheItems,
 } from "../utils/query-cache";
 import { MemberDetailType } from "../types/members.types";
+import { QueryPagingAroundType } from "../types/query.types";
+import { firstPageParam, initialPageParam, lastPageParam, queryPageParams } from "./api";
+
+export type MessagesQueryKeyType = ["messages", number | null];
 
 export function getMessagesOptions(
   weavy: WeavyType,
   appId: number | null,
+  around?: number,
   options: object = {}
 ): InfiniteQueryObserverOptions<MessagesResultType, Error, InfiniteData<MessagesResultType>> {
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
+  
+  // TODO: `around` must be in query key for messages to update on parameter change
+  const queryKey: MessagesQueryKeyType = ["messages", appId]
+
   return {
     ...options,
-    initialPageParam: 0,
-    queryKey: ["messages", appId],
+    initialPageParam: initialPageParam(around),
+    queryKey,
     queryFn: async (opt) => {
-      const skip = opt.pageParam as number;
-      const url = "/api/apps/" + appId + "/messages?order_by=id+desc&skip=" + skip;
+      const queryParams = queryPageParams(opt.pageParam as QueryPagingAroundType)
+
+      const url = `/api/apps/${appId}/messages?order_by=id+desc&${queryParams.toString()}`;
       const response = await weavy.fetch(url);
       const result = (await response.json()) as MessagesResultType;
       result.data = result.data?.reverse() || [];
       return result;
     },
-    getNextPageParam: (lastPage) => {
-      if (lastPage?.end && lastPage?.end < lastPage?.count) {
-        return lastPage.end;
-      }
-      return undefined;
-    },
-    select: (data) => ({
-      // reverse scroll
-      pages: [...data.pages].reverse(),
-      pageParams: [...data.pageParams].reverse(),
-    }),
+    getPreviousPageParam: lastPageParam(),
+    getNextPageParam: firstPageParam(),
   };
 }
 
@@ -58,7 +58,7 @@ export function getAddMessageMutationOptions(weavy: WeavyType, mutationKey: Muta
           blobs: variables.blobs,
           embed_id: variables.embed_id || null,
           meeting_id: variables.meeting_id,
-          options: variables.poll_options
+          options: (variables.poll_options || [])
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { text: o.text };

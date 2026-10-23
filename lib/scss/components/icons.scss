@@ -39,7 +39,9 @@
 }
 
 [part~="wy-icon-inline"] {
-  vertical-align: -0.25em;
+  vertical-align: -0.375lh;
+  --wy-component-icon-width: 1.25lh;
+  --wy-component-icon-height: 1.25lh;
 }
 
 [part~="wy-icon-overlay"] {

@@ -1,5 +1,9 @@
-import { FileKindType, FileProviderType, PreviewFormatType, ProviderType } from "../types/files.types";
+import { FileKindType, FileProviderType, FileType, PreviewFormatType, ProviderType } from "../types/files.types";
 import { iconNamesType } from "./icons";
+import { AccessType, AppType, PermissionType } from "../types/app.types";
+import { Feature } from "../types/features.types";
+import type { ComponentFeaturePolicy } from "../types/features.types";
+import { hasAnyPermission } from "./permission";
 
 export const fileSizeAsString = (size: number, significantDigits: number = 3) => {
   const format = [" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
@@ -355,6 +359,39 @@ export function getWebPreviewFormat(name: string): PreviewFormatType {
   }
 
   return "none";
+}
+
+/**
+ * Whether a file can be opened in the built-in editor and saved back.
+ *
+ * Editability is a pure client decision: the editor (`wy-file-view-text`) is only rendered for the `text`, `code` and
+ * `html` preview formats, and saving uploads a new blob and replaces the file version. The server computes
+ * `preview_format` from the blob, so it already excludes external provider files (Google Drive, OneDrive etc.), which
+ * have no `download_url` to load content from. Keying on `preview_format` instead of `kind` keeps the menu, the preview
+ * and file creation in agreement with what the file view actually renders.
+ *
+ * @param file - The file to check. Temporary files (id < 1) that are still uploading are never editable.
+ * @param app - The app the file belongs to. Needs write access and create or admin permission.
+ * @param features - Feature policy of the component. The `FileEdit` feature must be allowed.
+ * @returns `true` when the file can be opened in edit mode.
+ */
+export function isFileEditable(
+  file: FileType | undefined,
+  app: AppType | undefined,
+  features: ComponentFeaturePolicy | undefined,
+): boolean {
+  if (!file || !app || !features) {
+    return false;
+  }
+
+  return (
+    file.id >= 1 &&
+    !file.is_trashed &&
+    (file.preview_format === "text" || file.preview_format === "code" || file.preview_format === "html") &&
+    app.access === AccessType.Write &&
+    hasAnyPermission([PermissionType.Create, PermissionType.Admin], app.permissions) &&
+    features.allowsFeature(Feature.FileEdit)
+  );
 }
 
 export function getProvider(provider: FileProviderType | undefined): ProviderType | "" {

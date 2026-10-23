@@ -343,9 +343,13 @@ export const WeavyConnectionMixin = <TBase extends Constructor<WeavyClient>>(Bas
           } else {
             console.info(
               this.weavyId,
-              "Server is probably down, retrying SignalR connect after a delay or when window regains focus."
+              "Server is probably down, retrying SignalR connect after a delay or when window regains focus.",
+              `Attempt: ${attempt}`
             );
             this.connectionState = "reconnecting";
+            if (attempt > 3 && this.serverState === "ok") {
+              this.serverState = "unreachable";
+            }
             await reconnectDelay(attempt);
           }
 

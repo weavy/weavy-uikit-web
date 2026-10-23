@@ -1,18 +1,10 @@
-import { type PropertyValueMap, html, nothing } from "lit";
+import { type PropertyValueMap, html } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { getInfiniteFileListOptions } from "../data/files";
+import { getBidirectionalInfiniteFileListOptions } from "../data/files";
 import type { FileOrderType, FilesResultType, FileViewType } from "../types/files.types";
-import type {
-  FileDeleteForeverEventType,
-  FileOpenEventType,
-  FileRenameEventType,
-  FileRestoreEventType,
-  FileSubscribeEventType,
-  FileTrashEventType,
-} from "../types/files.events";
 import {
   type RemoveFileMutationType,
   type DeleteForeverFileMutationType,
@@ -21,27 +13,30 @@ import {
   getDeleteForeverFileMutation,
 } from "../data/file-remove";
 import { type SubscribeFileMutationType, getSubscribeFileMutation } from "../data/file-subscribe";
-import { RenameFileMutationType, getRenameFileMutation } from "../data/file-rename";
+import { RenameFileMutationType, getRenameFileMutation } from "../data/file-edit";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { AppType, EntityTypeString } from "../types/app.types";
+import { AppType, EntityTypeString, PermissionType } from "../types/app.types";
 import { getEntityChainMatch, hasEntityChildType } from "../utils/notifications";
-import { getFlatInfiniteResultData } from "../utils/query-cache";
 import type { NamedEvent } from "../types/generic.types";
 import type { OrderEventType } from "../types/lists.events";
 import type { WyPreview } from "./wy-preview";
 import { RealtimeFileEventType } from "../types/realtime.types";
+import { ActionKindType, ActionType } from "../types/action.types";
 
 import pagerCss from "../scss/components/pager.scss";
 
 import "./ui/wy-icon";
 import "./ui/wy-progress-circular";
-import "./wy-file-grid";
-import "./wy-file-table";
+import "./wy-files-grid";
+import "./wy-files-table";
 import "./wy-preview";
 import "./wy-empty";
+import { isActionEvent, WyActionEventType } from "../types/action.events";
+import { Feature } from "../types/features.types";
+import { hasAnyPermission } from "../utils/permission";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -54,26 +49,17 @@ declare global {
  *
  * **Used sub components:**
  *
- * - [`<wy-file-grid>`](./wy-file-grid.ts)
- * - [`<wy-file-table>`](./wy-file-table.ts)
+ * - [`<wy-files-grid>`](./wy-files-grid.ts)
+ * - [`<wy-files-table>`](./wy-files-table.ts)
  * - [`<wy-preview>`](./wy-preview.ts)
  * - [`<wy-empty>`](./wy-empty.ts)
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  *
  * @csspart wy-files-list - Root wrapper (applies host styles from hostContentsCss).
- * @csspart wy-pager - Pager anchor for infinite scrolling detection.
- * @csspart wy-pager-bottom - Modifier for pager placed in the bottom.
  *
- * @fires {FileOpenEventType} file-open - Emitted when a file should be opened in preview.
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an entity.
  * @fires {OrderEventType<FileOrderType>} order - Emitted when the user changes sort order.
- * @fires {FileEditNameEventType} edit-name - Emitted when rename mode is activated.
- * @fires {FileRenameEventType} rename - Emitted when a file is renamed.
- * @fires {FileTrashEventType} trash - Emitted when a file is trashed.
- * @fires {FileRestoreEventType} restore - Emitted when a file is restored.
- * @fires {FileDeleteForeverEventType} delete-forever - Emitted when a file is permanently deleted.
- * @fires {FileSubscribeEventType} subscribe - Emitted when subscribe state is toggled.
- * @fires {WyActionEventType} wy-action - Emitted when an embed action button is triggered.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  */
@@ -110,6 +96,13 @@ export class WyFilesList extends WeavySubAppComponent {
   placeholder?: string;
 
   /**
+   * File id that is selected.
+   *
+   */
+  @property({ type: Number })
+  selectedId?: number = NaN;
+
+  /**
    * File id that should be highlighted and scrolled into view.
    *
    * @internal
@@ -124,6 +117,17 @@ export class WyFilesList extends WeavySubAppComponent {
    */
   @state()
   highlightComment: boolean = false;
+
+  /**
+   * Open a file in preview/edit
+   * @param fileId - The id of the file to open
+   * @param options.edit - Optional edit mode
+   * @param options.tab - Optional tab to open in preview
+   */
+  preview(fileId: number, options: { edit?: boolean; tab?: "comments" | "versions" }) {
+    this.highlightId = fileId;
+    void this.previewRef.value?.open(fileId, options);
+  }
 
   /**
    * Query controller tracking the paged file list.
@@ -174,10 +178,22 @@ export class WyFilesList extends WeavySubAppComponent {
   private infiniteScroll = new InfiniteScrollController(this);
 
   /**
-   * Intersection target for infinite scrolling.
+   * Infinite reverse scroll controller for lazy loading.
    * @internal
    */
-  private pagerRef: Ref<HTMLElement> = createRef();
+  private infiniteReverseScroll = new InfiniteScrollController(this, true);
+
+  /**
+   * Reference to the pager element for loading previous items.
+   */
+  @state()
+  previousPager?: Element;
+
+  /**
+   * Reference to the pager element for loading next items.
+   */
+  @state()
+  nextPager?: Element;
 
   /**
    * Resolve the query key used for the app file listing.
@@ -265,18 +281,6 @@ export class WyFilesList extends WeavySubAppComponent {
   };
 
   /**
-   * Emit a `file-open` event requesting preview for the supplied file.
-   *
-   * @param fileId - Identifier of the file to open.
-   * @param tab - Optional preview tab to activate.
-   * @returns {boolean} True if the event was not canceled.
-   */
-  dispatchFileOpen(fileId: number, tab?: "comments" | "versions") {
-    const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId, tab } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
    * Emit an `order` event with the provided sort order.
    *
    * @param order - Order to apply.
@@ -285,6 +289,52 @@ export class WyFilesList extends WeavySubAppComponent {
   dispatchOrder(order: FileOrderType) {
     const event: OrderEventType<FileOrderType> = new (CustomEvent as NamedEvent)("order", { detail: { order } });
     return this.dispatchEvent(event);
+  }
+
+  protected handleActionEvent(e: WyActionEventType) {
+    if (isActionEvent(e, ActionKindType.File) && e.detail.file) {
+      const action = e.detail.action;
+      const file = e.detail.file;
+
+      if (e.defaultPrevented) {
+        return
+      }
+
+      const hasModifyPermission = hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions);
+
+      if (
+        (action === ActionType.Default ||
+          action === ActionType.Select ||
+          action === ActionType.Preview ||
+          action === ActionType.Edit ||
+          action === ActionType.Comment ||
+          action === ActionType.History) &&
+        this.componentFeatures?.allowsFeature(Feature.Previews)
+      ) {
+        void this.previewRef.value?.open(file.id, {
+          tab:
+            action === ActionType.Comment && this.componentFeatures?.allowsFeature(Feature.Comments)
+              ? "comments"
+              : action === ActionType.History && this.componentFeatures?.allowsFeature(Feature.Versions)
+                ? "versions"
+                : undefined,
+          edit: action === ActionType.Edit && hasModifyPermission && this.componentFeatures?.allowsFeature(Feature.FileEdit),
+        });
+      } else if (action === ActionType.Rename && hasModifyPermission && this.componentFeatures?.allowsFeature(Feature.FileRename)) {
+        void this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.file.name });
+      } else if (action === ActionType.Subscribe || action === ActionType.Unsubscribe) {
+        void this.subscribeFileMutation?.mutate({
+          file: e.detail.file,
+          subscribe: action === ActionType.Subscribe,
+        });
+      } else if (action === ActionType.Trash && hasModifyPermission) {
+        void this.trashFileMutation?.mutate({ file: e.detail.file });
+      } else if (action === ActionType.Restore && hasModifyPermission) {
+        void this.restoreFileMutation?.mutate({ file: e.detail.file });
+      } else if (action === ActionType.DeleteForever && hasModifyPermission) {
+        void this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
+      }
+    }
   }
 
   /**
@@ -305,22 +355,24 @@ export class WyFilesList extends WeavySubAppComponent {
     }
 
     if (changedProperties.has("highlightComment") && this.highlightComment && this.highlightId) {
-      this.dispatchFileOpen(this.highlightId, "comments");
+      this.preview(this.highlightId, { tab: "comments" });
     }
 
     if (
       (changedProperties.has("weavy") ||
         changedProperties.has("app") ||
         changedProperties.has("order") ||
-        changedProperties.has("showTrashed")) &&
+        changedProperties.has("showTrashed") ||
+        changedProperties.has("highlightId")) &&
       this.weavy &&
       this.app
     ) {
       await this.filesQuery.trackInfiniteQuery(
-        getInfiniteFileListOptions(this.weavy, this.app.id, {
+        getBidirectionalInfiniteFileListOptions(this.weavy, this.app.id, {
+          around: this.highlightId || undefined,
           order: this.order,
           trashed: this.showTrashed,
-        })
+        }),
       );
     }
 
@@ -362,90 +414,72 @@ export class WyFilesList extends WeavySubAppComponent {
   }
 
   override render() {
-    const { data, hasNextPage, isPending } = this.filesQuery.result;
-    const files = getFlatInfiniteResultData(data);
+    const { data, isPending } = this.filesQuery.result;
+    const hasFilesData = Boolean(data?.pages?.[0] && data.pages[0].data?.length);
 
-    if (files && files.length) {
-      return html`
-        ${this.view === "grid"
+    return [
+      hasFilesData
+        ? this.view === "grid"
           ? html`
-              <wy-file-grid
-                .files=${files}
+              <wy-files-grid
+                .infiniteQueryResult=${this.filesQuery.result}
+                .selectedId=${this.selectedId}
                 .highlightId=${this.highlightId}
-                @file-open=${(e: FileOpenEventType) => {
-                  void this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
+                .previousPagerRef=${(el?: Element) => {
+                  if (!this.previousPager?.isConnected) {
+                    this.previousPager = el;
+                  }
                 }}
+                .nextPagerRef=${(el?: Element) => {
+                  if (!this.nextPager?.isConnected) this.nextPager = el;
+                }}
+                @wy-action=${(e: WyActionEventType) => this.handleActionEvent(e)}
                 @order=${(e: OrderEventType<FileOrderType>) => this.dispatchOrder(e.detail.order)}
-                @rename=${(e: FileRenameEventType) => {
-                  void this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
-                }}
-                @subscribe=${(e: FileSubscribeEventType) => {
-                  void this.subscribeFileMutation?.mutate({
-                    file: e.detail.file,
-                    subscribe: e.detail.subscribe,
-                  });
-                }}
-                @trash=${(e: FileTrashEventType) => {
-                  void this.trashFileMutation?.mutate({ file: e.detail.file });
-                }}
-                @restore=${(e: FileRestoreEventType) => {
-                  void this.restoreFileMutation?.mutate({ file: e.detail.file });
-                }}
-                @delete-forever=${(e: FileDeleteForeverEventType) => {
-                  void this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
-                }}
-              ></wy-file-grid>
+              ></wy-files-grid>
             `
           : html`
-              <wy-file-table
-                .files=${files}
+              <wy-files-table
+                .infiniteQueryResult=${this.filesQuery.result}
                 .order=${this.order}
+                .selectedId=${this.selectedId}
                 .highlightId=${this.highlightId}
-                @file-open=${(e: FileOpenEventType) => {
-                  void this.previewRef.value?.open(e.detail.fileId, e.detail.tab);
+                .previousPagerRef=${(el?: Element) => {
+                  if (!this.previousPager?.isConnected) {
+                    this.previousPager = el;
+                  }
                 }}
+                .nextPagerRef=${(el?: Element) => {
+                  if (!this.nextPager?.isConnected) this.nextPager = el;
+                }}
+                @wy-action=${(e: WyActionEventType) => this.handleActionEvent(e)}
                 @order=${(e: OrderEventType<FileOrderType>) => this.dispatchOrder(e.detail.order)}
-                @rename=${(e: FileRenameEventType) => {
-                  void this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
-                }}
-                @subscribe=${(e: FileSubscribeEventType) => {
-                  void this.subscribeFileMutation?.mutate({
-                    file: e.detail.file,
-                    subscribe: e.detail.subscribe,
-                  });
-                }}
-                @trash=${(e: FileTrashEventType) => {
-                  void this.trashFileMutation?.mutate({ file: e.detail.file });
-                }}
-                @restore=${(e: FileRestoreEventType) => {
-                  void this.restoreFileMutation?.mutate({ file: e.detail.file });
-                }}
-                @delete-forever=${(e: FileDeleteForeverEventType) => {
-                  void this.deleteForeverFileMutation?.mutate({ file: e.detail.file });
-                }}
-              ></wy-file-table>
-            `}
-        ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
-        ${data
-          ? html` <wy-preview ${ref(this.previewRef)} .placeholder=${this.placeholder} .infiniteQueryResult=${this.filesQuery.result}></wy-preview> `
-          : nothing}
-      `;
-    } else {
-      return html`
-        <wy-empty>
-          ${isPending
-            ? html`<wy-progress-circular indeterminate padded reveal></wy-progress-circular>`
-            : html` <wy-icon-display>
-                <wy-icon name="file-upload"></wy-icon>
-                <span slot="text">${msg("Add some files to get started!")}</span>
-              </wy-icon-display>`}
-        </wy-empty>
-      `;
-    }
+              ></wy-files-table>
+            `
+        : html`
+            <wy-empty>
+              ${isPending
+                ? html`<wy-progress-circular indeterminate padded reveal></wy-progress-circular>`
+                : html` <wy-icon-display>
+                    <wy-icon name="file-upload"></wy-icon>
+                    <span slot="text">${msg("Add some files to get started!")}</span>
+                  </wy-icon-display>`}
+            </wy-empty>
+          `,
+      html`
+        <wy-preview
+          ${ref(this.previewRef)}
+          .placeholder=${this.placeholder}
+          .infiniteQueryResult=${this.filesQuery.result}
+          @wy-preview-close=${() => {
+            this.dispatchAction({ action: ActionType.Select, file: null })}}
+        ></wy-preview>
+      `,
+    ];
   }
 
   protected override updated() {
-    this.infiniteScroll.observe(this.filesQuery.result, this.pagerRef.value);
+    this.infiniteReverseScroll.observe(this.filesQuery.result, this.previousPager as HTMLElement);
+    this.infiniteScroll.observe(this.filesQuery.result, this.nextPager as HTMLElement);
   }
 
   override disconnectedCallback(): void {

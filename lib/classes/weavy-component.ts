@@ -9,14 +9,16 @@ import { getApiOptions } from "../data/api";
 import { UserContext } from "../contexts/user-context";
 import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
 import { v4 as uuid_v4 } from "uuid";
-import type { WeavyComponentContextProps } from "../types/component.types";
+import type { WeavyComponentActionProps, WeavyComponentContextProps } from "../types/component.types";
+import { WyActionEventDetailType, WyActionEventType } from "../types/action.events";
+import { NamedEvent } from "../types/generic.types";
 
 /**
  * Base class for exposed/public weavy components. This class provides common external properties and internal data provided as contexts for sub components.
  *
  * @fires ready - When the component has rendered.
  */
-export class WeavyComponent extends LitElement implements WeavyComponentContextProps {
+export class WeavyComponent extends LitElement implements WeavyComponentContextProps, WeavyComponentActionProps {
   // CONTEXT CONSUMERS
   /** @internal */
   protected weavyContextConsumer?: ContextConsumer<{ __context__: WeavyType }, this>;
@@ -105,6 +107,21 @@ export class WeavyComponent extends LitElement implements WeavyComponentContextP
   #whenReady = new Promise<WeavyComponent>((r) => {
     this.#resolveReady = r;
   });
+
+  /**
+   * Dispatch a `wy-action` event on the component.
+   *
+   * @fires {WyActionEventType} wy-action - Emitted when an action takes place.
+   */
+  dispatchAction(detail: WyActionEventDetailType): boolean {
+    const eventAction: WyActionEventType = new (CustomEvent as NamedEvent)("wy-action", {
+      detail,
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    });
+    return this.dispatchEvent(eventAction);
+  }
 
   // INTERNAL PROPERTIES
 

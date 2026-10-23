@@ -1,5 +1,10 @@
 // TODO: Make global open/close events
 /**
+ * Fired when a component is shown.
+ */
+export type ShownEventType = CustomEvent & { type: "shown" }
+
+/**
  * Fired when a component is hidden.
  */
 export type HideEventType = CustomEvent & { type: "hide" };

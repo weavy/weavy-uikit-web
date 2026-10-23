@@ -78,9 +78,9 @@ export class TypingController implements ReactiveController {
   async setContexts() {
     this.whenWeavyContext = new Promise((r) => (this.resolveWeavyContext = r));
     this.whenComponentFeaturesContext = new Promise((r) => (this.resolveComponentFeaturesContext = r));
-    await whenParentsDefined(this.host as LitElement);
-    this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
-    this.componentFeaturesContext = new ContextConsumer(this.host as LitElement, {
+    await whenParentsDefined(this.host);
+    this.weavyContext = new ContextConsumer(this.host, { context: WeavyContext, subscribe: true });
+    this.componentFeaturesContext = new ContextConsumer(this.host, {
       context: FeaturePolicyContext,
       subscribe: true,
     });

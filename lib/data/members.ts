@@ -11,7 +11,6 @@ import type {
 //import { AppType } from "../types/app.types";
 
 export function getMemberOptions(weavy: WeavyType, appId: number, options: QueryOptions<MembersResultType>) {
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return <QueryObserverOptions<MembersResultType>>{
     queryKey: ["members", appId],
     queryFn: async () => {
@@ -29,7 +28,6 @@ export function getInfiniteSearchMemberOptions(
   appId: number | undefined,
   getAgent: () => boolean | undefined,
 ): InfiniteQueryObserverOptions<MembersResultType, Error, InfiniteData<MembersResultType>> {
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     queryKey: ["search__members", appId],
     initialPageParam: 0,

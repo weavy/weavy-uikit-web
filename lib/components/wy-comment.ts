@@ -1,4 +1,4 @@
-import { html, nothing, PropertyValueMap, PropertyValues } from "lit";
+import { html, nothing, PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -8,10 +8,9 @@ import type { NamedEvent } from "../types/generic.types";
 import type { CommentType, MutateCommentProps } from "../types/comments.types";
 import type { FileType } from "../types/files.types";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
-import { relativeTime } from "../utils/datetime";
+import { relativeDays } from "../utils/datetime";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
-import { localized, msg } from "@lit/localize";
-import { FileOpenEventType } from "../types/files.events";
+import { localized, msg, str } from "@lit/localize";
 import { Feature } from "../types/features.types";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { isEntityChainMatch } from "../utils/notifications";
@@ -19,10 +18,13 @@ import { EntityTypeString, PermissionType } from "../types/app.types";
 import { MsgEditorSubmitEventType } from "../types/editor.events";
 import { MutationController } from "../controllers/mutation-controller";
 import { getUpdateCommentMutationOptions } from "../data/comments";
+import { getReportMutationOptions, MutateReportProps } from "../data/reports";
 import { partMap } from "../utils/directives/shadow-part-map";
 import type { WyPreview } from "./wy-preview";
-import { dispatchUserAction } from "../utils/users";
 import { hasPermission } from "../utils/permission";
+import { autoScrollRef } from "../utils/dom";
+import { WyActionEventType } from "../types/action.events";
+import { ActionType } from "../types/action.types";
 
 import rebootCss from "../scss/reboot.scss";
 import commentCss from "../scss/components/comments.scss";
@@ -85,6 +87,7 @@ declare global {
  * @csspart wy-trashed - When comment is trashed.
  * @csspart wy-content - HTML content area
  * @csspart wy-meta - Meta section.
+ * @csspart wy-comment-reported - The filled flag in the meta section shown once the reader has reported the comment. Hide it with `::part(wy-comment-reported)` if reporting should be fire-and-forget.
  *
  * @fires {PollVoteEventType} vote - Emitted when a poll option is voted
  * @fires {CommentTrashEventType} trash - Emitted when the comment is trashed
@@ -155,7 +158,6 @@ export class WyComment extends WeavySubAppComponent {
    */
   private previewAnnotationsRef: Ref<WyPreview> = createRef();
   private previewAttachmentsRef: Ref<WyPreview> = createRef();
-  private highlightRef: Ref<HTMLElement> = createRef();
 
   /**
    * Mutation controller used to update comments.
@@ -163,6 +165,35 @@ export class WyComment extends WeavySubAppComponent {
    * @internal
    */
   private updateCommentMutation = new MutationController<CommentType, Error, MutateCommentProps, unknown>(this);
+
+  /**
+   * @internal
+   */
+  #reportMutation = new MutationController<void, Error, MutateReportProps, void>(this);
+
+  /**
+   * Confirm and report the comment for moderation.
+   *
+   * Uses the native confirm rather than an in-app dialog, matching how reporting a message works: reporting cannot be
+   * undone and there is no report to look up afterwards, so the interruption is the point.
+   *
+   * @internal
+   */
+  private confirmReport() {
+    const confirmed = window.confirm(
+      msg("Report this comment for review? The author is not notified, and reporting cannot be undone."),
+    );
+
+    if (confirmed) {
+      // comments are cached under their parent, so the patch needs the same key the list was loaded with
+      void this.#reportMutation.mutate({
+        entityType: "comments",
+        entityId: this.comment.id,
+        parentType: this.location,
+        parentId: this.parentId,
+      });
+    }
+  }
 
   /**
    * Dispatch a poll vote event for this comment.
@@ -198,8 +229,6 @@ export class WyComment extends WeavySubAppComponent {
     return this.dispatchEvent(event);
   }
 
-  private dispatchUserAction = dispatchUserAction.bind(this);
-
   /**
    * Submit updated comment content via mutation and exit edit mode.
    *
@@ -230,6 +259,10 @@ export class WyComment extends WeavySubAppComponent {
       );
     }
 
+    if (changedProperties.has("weavy") && this.weavy) {
+      await this.#reportMutation.trackMutation(getReportMutationOptions(this.weavy));
+    }
+
     if (changedProperties.has("link")) {
       this.highlight = Boolean(
         this.link && isEntityChainMatch(this.link, EntityTypeString.Comment, { id: this.comment.id }),
@@ -245,9 +278,30 @@ export class WyComment extends WeavySubAppComponent {
       dateStyle: "full",
       timeStyle: "short",
     }).format(new Date(this.comment.created_at));
-    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.comment.created_at));
+    const dateFromNow = relativeDays(this.weavy?.locale, new Date(this.comment.created_at));
 
     const isSkeleton = this.comment.id < 0;
+
+    // same wording and format as the flag on a reported message, so the two read the same across components.
+    // "by you" because the flag is caller-relative: weavy keeps no report counts, so it can only ever say that this
+    // reader reported the comment. Falls back to the label without a date when the report was patched into the cache
+    // by the mutation and the next fetch has not brought the real timestamp yet.
+    const reportedAtFull = this.comment.reported_at
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+          new Date(this.comment.reported_at),
+        )
+      : "";
+    const reportedTitle = this.comment.reported_at
+      ? msg(str`Reported by you on ${reportedAtFull}`)
+      : msg("Reported by you");
+
+    const isAuthor = Boolean(this.user && this.user.id === this.comment.created_by.id);
+    const isAdmin = hasPermission(PermissionType.Admin, this.app?.permissions);
+    // Reporting your own comment is rejected by the server, and there is nothing to moderate about it anyway.
+    // Skeleton comments are not on the server yet, so there is nothing to report either.
+    const canReport = Boolean(
+      this.componentFeatures?.allowsFeature(Feature.Report) && !isAuthor && !isSkeleton && !this.comment.is_reported,
+    );
 
     return html`
       <div
@@ -256,7 +310,7 @@ export class WyComment extends WeavySubAppComponent {
           "wy-comment-skeleton": isSkeleton,
           "wy-highlight": this.highlight,
         })}"
-        ${ref(this.highlightRef)}
+        ${this.highlight ? ref(autoScrollRef({ block: "center" })) : nothing}
       >
         ${isSkeleton
           ? html`
@@ -352,16 +406,15 @@ export class WyComment extends WeavySubAppComponent {
                       .size=${32}
                       .name=${this.comment.created_by.name}
                       .isAgent=${this.comment.created_by.is_agent}
-                      @click=${() => this.dispatchUserAction(this.comment.created_by)}
+                      @click=${() => this.dispatchAction({ action: ActionType.Preview, user: this.comment.created_by })}
                       role="button"
                       title=${this.comment.created_by.name}
                     ></wy-avatar>
 
-                    ${this.user && this.user.id === this.comment.created_by.id ||
-                      hasPermission(PermissionType.Admin, this.app?.permissions)
+                    ${isAuthor || isAdmin || canReport
                       ? html`
                           <wy-dropdown small slot="actions">
-                            ${this.user && this.user.id === this.comment.created_by.id
+                            ${isAuthor
                               ? html`
                                   <wy-dropdown-item @click=${() => (this.editing = true)}>
                                     <wy-icon name="pencil"></wy-icon>
@@ -369,8 +422,15 @@ export class WyComment extends WeavySubAppComponent {
                                   </wy-dropdown-item>
                                 `
                               : nothing}
-                            ${this.user && this.user.id === this.comment.created_by.id ||
-                            hasPermission(PermissionType.Admin, this.app?.permissions)
+                            ${canReport
+                              ? html`
+                                  <wy-dropdown-item @click=${() => this.confirmReport()}>
+                                    <wy-icon name="flag"></wy-icon>
+                                    ${msg("Report")}
+                                  </wy-dropdown-item>
+                                `
+                              : nothing}
+                            ${isAuthor || isAdmin
                               ? html`
                                   <wy-dropdown-item @click=${() => this.dispatchTrash()}>
                                     <wy-icon name="trashcan"></wy-icon>
@@ -384,7 +444,10 @@ export class WyComment extends WeavySubAppComponent {
 
                     <div slot="content" part="wy-comment-body">
                       <div part="wy-comment-title">
-                        <wy-button kind="link" @click=${() => this.dispatchUserAction(this.comment.created_by)}
+                        <wy-button
+                          kind="link"
+                          @click=${() =>
+                            this.dispatchAction({ action: ActionType.Preview, user: this.comment.created_by })}
                           >${this.comment.created_by.name}</wy-button
                         >
                         <small part="wy-meta">
@@ -392,6 +455,11 @@ export class WyComment extends WeavySubAppComponent {
                           <time datetime=${this.comment.created_at} title=${dateFull}>${dateFromNow}</time>
                           ${this.comment.updated_at
                             ? html`<time datetime=${this.comment.updated_at}> · ${msg("edited")}</time>`
+                            : nothing}
+                          ${this.comment.is_reported
+                            ? html`<span part="wy-comment-reported" title=${reportedTitle}>
+                                · <wy-icon inline name="flag" size=${14}></wy-icon>
+                              </span>`
                             : nothing}
                         </small>
                       </div>
@@ -401,8 +469,10 @@ export class WyComment extends WeavySubAppComponent {
                         ? html`<wy-image-grid
                             part="wy-comment-images"
                             .images=${images}
-                            @file-open=${(e: FileOpenEventType) => {
-                              void this.previewAttachmentsRef.value?.open(e.detail.fileId);
+                            @wy-action=${(e: WyActionEventType) => {
+                              if (e.detail.action === ActionType.Preview && e.detail.file) {
+                                void this.previewAttachmentsRef.value?.open(e.detail.file.id);
+                              }
                             }}
                           ></wy-image-grid>`
                         : ``}
@@ -419,7 +489,10 @@ export class WyComment extends WeavySubAppComponent {
                                 const uid =
                                   e.target.dataset.eid?.startsWith("u") && parseInt(e.target.dataset.eid.substring(1));
                                 if (uid) {
-                                  this.dispatchUserAction({ id: uid, name: e.target.innerText });
+                                  this.dispatchAction({
+                                    action: ActionType.Preview,
+                                    user: { id: uid, name: e.target.innerText },
+                                  });
                                 }
                               }
                             }}
@@ -434,8 +507,10 @@ export class WyComment extends WeavySubAppComponent {
                       ${this.comment.annotations?.data?.length
                         ? html`<wy-annotation-list
                             .files=${this.comment.annotations.data}
-                            @file-open=${(e: FileOpenEventType) => {
-                              void this.previewAnnotationsRef.value?.open(e.detail.fileId);
+                            @wy-action=${(e: WyActionEventType) => {
+                              if (e.detail.action === ActionType.Preview && e.detail.file) {
+                                void this.previewAnnotationsRef.value?.open(e.detail.file.id);
+                              }
                             }}
                           ></wy-annotation-list>`
                         : nothing}
@@ -460,8 +535,10 @@ export class WyComment extends WeavySubAppComponent {
                         ? html`<wy-attachment-list
                             filled
                             .files=${files ?? []}
-                            @file-open=${(e: FileOpenEventType) => {
-                              void this.previewAttachmentsRef.value?.open(e.detail.fileId);
+                            @wy-action=${(e: WyActionEventType) => {
+                              if (e.detail.action === ActionType.Preview && e.detail.file) {
+                                void this.previewAttachmentsRef.value?.open(e.detail.file.id);
+                              }
                             }}
                           ></wy-attachment-list>`
                         : ``}
@@ -503,13 +580,5 @@ export class WyComment extends WeavySubAppComponent {
                 `}
       </div>
     `;
-  }
-
-  protected override updated(changedProperties: PropertyValues<this>) {
-    if (changedProperties.has("highlight") && this.highlight) {
-      requestAnimationFrame(() => {
-        this.highlightRef.value?.scrollIntoView({ block: "center" });
-      });
-    }
   }
 }

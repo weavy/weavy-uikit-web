@@ -8,8 +8,9 @@
   width: 100%;
   vertical-align: top;
   border-collapse: collapse;
+  position: relative;
 
-  tr {
+  tr:not([part~="wy-pager"]) {
     @include highlight.flash;
   }
 
@@ -20,15 +21,32 @@
     font-weight: var.default(--wy-headings-font-weight);
   }
 
-  th,
   td {
-    background-color: var(--wy-component-background-color);
+    padding: 0;
+  }
 
+  tr {
+    border-radius: var.default(--wy-border-radius-outer);
+  }
+
+  th,
+  tr:not([part~="wy-pager"]) td {
+    background-color: var(--wy-component-background-color);
     padding: var.default(--wy-table-cell-padding-y) var.default(--wy-table-cell-padding-x);
-    box-shadow: #{color.token(--wy-outline-variant)} 0px -1px 0px 0px inset;
+    border-bottom: #{color.token(--wy-outline-variant)} solid #{var.default(--wy-table-border)};
     line-height: 1;
     vertical-align: middle;
     height: calc(#{var.wy-rem(2)} + #{var.default(--wy-table-cell-padding-y)} * 2);
+
+    &:first-of-type {
+      border-top-left-radius: var.default(--wy-border-radius-outer);
+      border-bottom-left-radius: var.default(--wy-border-radius-outer);
+    }
+
+    &:last-of-type {
+      border-top-right-radius: var.default(--wy-border-radius-outer);
+      border-bottom-right-radius: var.default(--wy-border-radius-outer);
+    }
   }
 
   > tbody {
@@ -40,14 +58,39 @@
   }
 
   &[part~="wy-table-interactive"] {
-      // hover effect for rows
-     > tbody > tr:hover > *  {
-        --wy-component-color: #{color.token(--wy-on-surface)};
-        background-color: #{color.token(--wy-surface-layer)};
+    > tbody > tr:not([part~="wy-pager"]) {
+      > * {
+        background-color: var(--wy-component-background-color);
         color: var(--wy-component-color);
+        user-select: none;
         cursor: pointer;
+      }
 
-      
+      // hover effect for rows
+      &:hover,
+      &:focus {
+        > * {
+          background-color: var(--wy-component-background-color-hover, #{color.token(--wy-surface-layer-high)});
+          --wy-component-color: #{color.token(--wy-on-surface)};
+          cursor: pointer;
+        }
+      }
+
+      &:active {
+        > * {
+          background-color: var(--wy-component-background-color-active, #{color.token(--wy-surface-layer-highest)});
+        }
+      }
+
+      &[part~="wy-selected"] {
+        > * {
+          // selected?
+          --wy-component-color: var(--wy-component-color-selected, #{color.token(--wy-on-secondary-container)});
+          background-color: var(--wy-component-background-color-selected, #{color.token(--wy-secondary-container)});
+          color: var(--wy-component-color);
+          border-color: var(--wy-component-background-color-selected, #{color.token(--wy-secondary-container)});
+        }
+      }
     }
   }
 }

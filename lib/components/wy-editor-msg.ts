@@ -39,7 +39,7 @@ import { DropFilesEventType, ExternalBlobsEventType } from "../types/files.event
 import type { EditorChangeEventType, MsgEditorSubmitEventType } from "../types/editor.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { EmbedRemoveEventType } from "../types/embeds.events";
-import { getStorage, onlyValues } from "../utils/data";
+import { onlyValues } from "../utils/data";
 import { AgentAppTypeGuids } from "../classes/weavy-type-component";
 import { partMap } from "../utils/directives/shadow-part-map";
 
@@ -59,6 +59,7 @@ import "./ui/wy-button";
 import "./ui/wy-icon";
 import "./wy-editor-core";
 import { WyEditorCore } from "./wy-editor-core";
+import { getDraft, removeDraft, saveDraft } from "../data/drafts";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -88,7 +89,7 @@ declare global {
  * @csspart wy-poll-form - Poll options container
  * @csspart wy-input - Inputs inside poll options
  *
- * @fires {MsgEditorSubmitEventType} submit - Emitted when the editor content is submitted 
+ * @fires {MsgEditorSubmitEventType} submit - Emitted when the editor content is submitted
  * @fires {CustomEvent} edit-last - Emitted when the last message should be edited.
  */
 @customElement("wy-editor-msg")
@@ -102,9 +103,6 @@ export class WyEditorMsg extends WeavySubAppComponent {
    * @internal
    */
   protected exportParts = new ShadowPartsController(this);
-
-  /** @internal */
-  protected storage = getStorage("localStorage");
 
   /**
    * Whether the editor is disabled.
@@ -350,7 +348,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
     this.addEventListener("keyup", inputConsume);
   }
 
-  override willUpdate(changedProperties: PropertyValueMap<this>): void {
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("app") && changedProperties.get("app")?.id !== this.app?.id) {
@@ -359,16 +357,16 @@ export class WyEditorMsg extends WeavySubAppComponent {
     }
 
     if (
-      (changedProperties.has("weavy") && changedProperties.get("weavy") !== this.weavy ||
-        changedProperties.has("app") && changedProperties.get("app")?.id !== this.app?.id ||
-        changedProperties.has("user") && changedProperties.get("user")?.id !== this.user?.id ||
+      ((changedProperties.has("weavy") && changedProperties.get("weavy") !== this.weavy) ||
+        (changedProperties.has("app") && changedProperties.get("app")?.id !== this.app?.id) ||
+        (changedProperties.has("user") && changedProperties.get("user")?.id !== this.user?.id) ||
         changedProperties.has("parentId")) &&
       this.weavy &&
       this.app &&
       this.user
     ) {
       this.mutationAppId = this.mutationAppId ?? this.app?.id ?? Date.now() * -1;
-      this.draftKey = `draft-${this.editorType}-${this.parentId || this.mutationAppId}`;
+      this.draftKey = `${this.editorType}-${this.parentId || this.mutationAppId}`;
 
       void this.uploadBlobMutation.trackMutation(
         getUploadBlobMutationOptions(
@@ -402,21 +400,18 @@ export class WyEditorMsg extends WeavySubAppComponent {
 
       if (
         this.draft &&
-        this.storage &&
         (!this.hasChanged() ||
-          changedProperties.get("weavy") ||
-          changedProperties.get("app") ||
-          changedProperties.get("user") ||
-          changedProperties.get("parentId"))
+          changedProperties.has("weavy") ||
+          changedProperties.has("app") ||
+          changedProperties.has("user") ||
+          changedProperties.has("parentId"))
       ) {
-        const draftString = this.storage.getItem(this.draftKey);
-        if (draftString) {
-          const draft = JSON.parse(draftString) as EditorDraftType;
-
+        const draft = await getDraft(this.weavy, this.draftKey);
+        if (draft) {
           this.text = draft.text ?? "";
-          this.embeds = draft.embeds;
+          this.embeds = draft.embeds || [];
           this.meeting = draft.meeting;
-          if (draft.pollOptions?.length > 0) {
+          if (draft.pollOptions && draft.pollOptions.length > 0) {
             this.pollOptions = draft.pollOptions;
           }
 
@@ -570,7 +565,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
    * @internal
    */
   protected saveDraft() {
-    if (!this.draft || !this.storage) return;
+    if (!this.weavy || !this.draft || !this.draftKey) return;
 
     const files = this.mutatingFiles.result;
 
@@ -581,15 +576,16 @@ export class WyEditorMsg extends WeavySubAppComponent {
       (!this.pollOptions.length || this.pollOptions.filter((option) => option.text.trim() !== "").length === 0) &&
       this.text === ""
     ) {
-      this.storage.removeItem(this.draftKey);
+      removeDraft(this.weavy, this.draftKey);
     } else {
       const draft: EditorDraftType = {
         meeting: this.meeting,
         text: this.text,
         pollOptions: this.pollOptions.filter((option) => option.text.trim() !== ""),
         embeds: this.embeds,
+        updatedAt: new Date().toUTCString(),
       };
-      this.storage.setItem(this.draftKey, JSON.stringify(draft));
+      saveDraft(this.weavy, this.draftKey, draft);
     }
   }
 
@@ -665,6 +661,10 @@ export class WyEditorMsg extends WeavySubAppComponent {
    * @internal
    */
   protected resetEditor() {
+    if (this.weavy && this.draftKey) {
+      removeDraft(this.weavy, this.draftKey);
+    }
+
     this.clearEditor();
 
     if (this.weavy && this.mutationAppId) {
@@ -675,8 +675,6 @@ export class WyEditorMsg extends WeavySubAppComponent {
         `${this.editorLocation}-${this.parentId || this.mutationAppId}`,
       ]);
     }
-
-    this.storage?.removeItem(this.draftKey);
   }
 
   /**
@@ -873,7 +871,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
       <wy-editor-core
         ${ref(this.editorRef)}
         .placeholder=${this.placeholder}
-        .editorType=${this.editorType}
+        .appearance=${this.editorType === "posts" ? "multiline" : "line"}
         .typing=${this.typing}
         .text=${this.text}
         ?disabled=${this.disabled}
@@ -978,11 +976,11 @@ export class WyEditorMsg extends WeavySubAppComponent {
                 <wy-icon name="poll"></wy-icon>
               </wy-button>`
             : nothing}
-            <slot name="actions"></slot>
+          <slot name="actions"></slot>
         </div>
 
         <slot name="inputs"></slot>
-        
+
         <!-- Button -->
         <wy-button @click="${() => this.submit()}" color="primary" title=${this.buttonText} ?disabled=${this.disabled}>
           ${this.buttonText}
@@ -1165,15 +1163,19 @@ export class WyEditorMsg extends WeavySubAppComponent {
   protected override render() {
     const isDragActive = this.dropZone.isDragActive;
 
+    const editorPartMap = {
+      "wy-editor": true,
+      "wy-dragging": isDragActive,
+    } as { [key: string]: boolean };
+
+    // Add editorClasses to editorPartMap
+    this.editorClass
+      .split(" ")
+      .filter(onlyValues)
+      .forEach((editorClass) => (editorPartMap[editorClass] = true));
+
     return html`
-      <div
-        part=${partMap({
-          "wy-editor": true,
-          [this.editorClass]: true,
-          "wy-dragging": isDragActive,
-        })}
-        data-drag-title=${msg("Drop files here")}
-      >
+      <div part=${partMap(editorPartMap)} data-drag-title=${msg("Drop files here")}>
         ${this.renderTopSlot()} ${this.renderMiddleSlot()} ${this.renderBottomSlot()}
       </div>
       ${this.renderCloudFiles()}

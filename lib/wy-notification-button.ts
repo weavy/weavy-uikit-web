@@ -160,11 +160,11 @@ export class WyNotificationButton
   /**
    * Notification badge appearance variant.
    *
-   * @type {"count" | "compact" | "dot" | "none"}
+   * @type {"count" | "dot" | "none"}
    * @default "count"
    */
   @property({ type: String })
-  badge: BadgeAppearanceType = "compact";
+  badge: BadgeAppearanceType = "count";
 
   /**
    * Set the position of the badge. `"inline"` means no positioning.
@@ -189,7 +189,7 @@ export class WyNotificationButton
    * When set, only notifications from apps belonging to this directory are shown.
    */
   @property()
-  override directory?: string;
+  override directory?: string | number;
 
   /** @internal */
   @state()
@@ -234,10 +234,9 @@ export class WyNotificationButton
           ${this.user && this.badge !== "none"
             ? html`
                 <wy-badge
-                  appearance=${this.badge}
+                  ?dot=${this.badge === "dot"}
                   position=${this.badgePosition}
-                  .count=${this.unreadNotifications.isUnreadPending ? NaN : this.unreadNotifications.unread}
-                ></wy-badge>
+                >${this.unreadNotifications.isUnreadPending ? "" : this.unreadNotifications.unread}</wy-badge>
               `
             : nothing}
         </wy-icon>
@@ -274,7 +273,7 @@ export class WyNotificationButton
                 : nothing}
             </slot>
             <slot slot="title">${msg("Notifications")}</slot>
-            <wy-container scrollY>
+            <wy-container fill scrollY>
               ${this.showNotificationList
                 ? html`
                     ${showNotificationHeader

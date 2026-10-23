@@ -3,8 +3,15 @@ import { customElement } from "../utils/decorators/custom-element";
 import { property, state } from "lit/decorators.js";
 import type { FileLoadingState, FilesResultType, FileType } from "../types/files.types";
 import type {
+  FileCommentsEventType,
+  FileEditEventType,
+  FileEditNameEventType,
   FilePreviewLoadedEventType,
+  FileRenameEventType,
+  FileSaveEventType,
+  FileSubscribeEventType,
   FileVersionSelectEventType,
+  FileVersionsEventType,
   WyPreviewCloseEventType,
   WyPreviewOpenEventType,
 } from "../types/files.events";
@@ -20,8 +27,14 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { getFlatInfiniteResultData } from "../utils/query-cache";
 import { NamedEvent } from "../types/generic.types";
 import { Feature } from "../types/features.types";
+import { isFileEditable } from "../utils/files";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { onlyValues } from "../utils/data";
+import { getRenameFileMutation, RenameFileMutationType } from "../data/file-edit";
+import { getSubscribeFileMutation, SubscribeFileMutationType } from "../data/file-subscribe";
+import { QueryController } from "../controllers/query-controller";
+import { getDraftOptions, getFileDraftKey } from "../data/drafts";
+import type { EditorDraftType } from "../types/editor.types";
 
 import previewCss from "../scss/components/preview.scss";
 import sidebarCss from "../scss/components/sidebar.scss";
@@ -31,17 +44,21 @@ import scrollCss from "../scss/scroll.scss";
 import colorModesCss from "../scss/color-modes.scss";
 
 import "./ui/wy-button";
+import "./ui/wy-container";
 import "./ui/wy-dropdown";
 import "./ui/wy-icon";
 import "./ui/wy-item";
 import "./ui/wy-overlay";
 import "./ui/wy-progress-circular";
 import "./ui/wy-titlebar";
-import "./wy-preview-item";
+import "./wy-file-view";
 import "./wy-file-menu";
 import "./wy-comment-list";
 import "./wy-file-versions";
 import "./wy-user-card";
+import "./wy-file-title";
+import { WyFileView } from "./wy-file-view";
+import { WyOverlay } from "./ui/wy-overlay";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -56,16 +73,20 @@ declare global {
  * **Used sub components:**
  *
  * - [`<wy-button>`](./ui/wy-button.ts)
+ * - [`<wy-container>`](./ui/wy-container.ts)
  * - [`<wy-dropdown>`](./ui/wy-dropdown.ts)
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * - [`<wy-item>`](./ui/wy-item.ts)
  * - [`<wy-overlay>`](./ui/wy-overlay.ts)
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  * - [`<wy-titlebar>`](./ui/wy-titlebar.ts)
- * - [`<wy-preview-item>`](./wy-preview-item.ts)
+ * - [`<wy-file-view>`](./wy-file-view.ts)
  * - [`<wy-file-menu>`](./wy-file-menu.ts)
  * - [`<wy-comment-list>`](./wy-comment-list.ts)
  * - [`<wy-file-versions>`](./wy-file-versions.ts)
+ * - [`<wy-user-card>`](./wy-user-card.ts)
+ * - [`<wy-file-title>`](./wy-file-title.ts)
+ * - [`<wy-file-view>`](./wy-file-view.ts)
  *
  * @csspart wy-dark - Overlay dark/root modifier.
  * @csspart wy-preview-layout - Layout wrapper for the preview.
@@ -123,6 +144,18 @@ export class WyPreview extends WeavySubAppComponent {
   infiniteQueryResult?: InfiniteQueryObserverResult<InfiniteData<FilesResultType, unknown>>;
 
   /**
+   * Mutation handling rename requests.
+   * @internal
+   */
+  protected renameFileMutation?: RenameFileMutationType;
+
+  /**
+   * Mutation handling subscribe/unsubscribe actions.
+   * @internal
+   */
+  protected subscribeFileMutation?: SubscribeFileMutationType;
+
+  /**
    * Authenticated user context used for sidebar content.
    *
    * @internal
@@ -153,6 +186,22 @@ export class WyPreview extends WeavySubAppComponent {
    */
   @property({ type: Boolean })
   filled: boolean = false;
+
+  /**
+   * Puts the current file in edit mode if available.
+   *
+   * @attr
+   */
+  @property({ type: Boolean })
+  edit: boolean = false;
+
+  /**
+   * Puts the current file in edit filename mode if available.
+   *
+   * @attr
+   */
+  @property({ type: Boolean })
+  editName: boolean = false;
 
   /**
    * File currently selected in the carousel.
@@ -211,6 +260,34 @@ export class WyPreview extends WeavySubAppComponent {
   versionsOpen = false;
 
   /**
+   * Whether the main area shows the unsaved draft of the current file instead of a stored version.
+   *
+   * @internal
+   */
+  @state()
+  showDraft = false;
+
+  /**
+   * Draft key of the current file, used to detect when the draft query must be retargeted.
+   * @internal
+   */
+  private draftKey?: string;
+
+  /**
+   * Query for the unsaved draft of the current file. A file that has a draft opens on the draft, so Edit and Discard
+   * are available right away, and falls back to the current version when the draft is published or discarded.
+   * @internal
+   */
+  private draftQuery = new QueryController<EditorDraftType>(this);
+
+  /**
+   * Whether the user explicitly picked a version or the draft for the current file. A draft that appears after that
+   * (e.g. from another tab) must not replace what the user chose to view.
+   * @internal
+   */
+  private versionSelected = false;
+
+  /**
    * Whether the active sidebar occupies extra width.
    *
    * @internal
@@ -233,11 +310,11 @@ export class WyPreview extends WeavySubAppComponent {
   private swipeScroller: SwipeScrollController = new SwipeScrollController(this);
 
   /**
-   * Reference to the current preview element.
+   * Reference to the current view element.
    *
    * @internal
    */
-  protected previewFileRef: Ref<Element> = createRef();
+  protected currentViewRef: Ref<WyFileView> = createRef();
 
   /**
    * Reference to the next preview element.
@@ -252,6 +329,13 @@ export class WyPreview extends WeavySubAppComponent {
    * @internal
    */
   protected prevRef: Ref<Element> = createRef();
+
+  /**
+   * Reference to the overlay.
+   *
+   * @internal
+   */
+  protected overlayRef: Ref<WyOverlay> = createRef();
 
   /**
    * Element monitored for swipe intersection changes.
@@ -401,7 +485,7 @@ export class WyPreview extends WeavySubAppComponent {
    * @param fileId - File to display.
    * @param showTab - Optional sidebar tab to activate.
    */
-  async open(fileId: number, showTab?: "comments" | "versions") {
+  async open(fileId: number, options: { edit?: boolean; tab?: "comments" | "versions" } = {}) {
     await this.whenApp();
     await this.updateComplete;
 
@@ -409,8 +493,10 @@ export class WyPreview extends WeavySubAppComponent {
       this.currentId = fileId;
     }
 
-    if (showTab) {
-      this.toggleSidebarTab(showTab, true);
+    this.edit = Boolean(options.edit);
+
+    if (options.tab) {
+      this.toggleSidebarTab(options.tab, true);
     }
 
     this.showOverlay = true;
@@ -421,6 +507,22 @@ export class WyPreview extends WeavySubAppComponent {
    */
   close() {
     this.showOverlay = false;
+  }
+
+  /**
+   * Saves the current document and returns to preview after a successful save.
+   */
+  async save() {
+    await this.currentViewRef.value?.save();
+    this.edit = false;
+  }
+
+  setFocus() {
+      if (this.edit) {
+        this.currentViewRef.value?.setFocus();
+      } else {
+        this.overlayRef.value?.setFocus();
+      }
   }
 
   /**
@@ -451,6 +553,8 @@ export class WyPreview extends WeavySubAppComponent {
    */
   handleVersionFile(e: FileVersionSelectEventType) {
     this.currentVersionFile = e.detail.versionFile;
+    this.showDraft = Boolean(e.detail.draft);
+    this.versionSelected = true;
   }
 
   /**
@@ -476,7 +580,7 @@ export class WyPreview extends WeavySubAppComponent {
    * @internal
    */
   scrollToPrev() {
-    if (this.prevRef.value) {
+    if (!this.edit && this.prevRef.value) {
       this.unblockSwipeScroll();
       this.prevRef.value.scrollIntoView({ behavior: this.weavy?.scrollBehavior });
     }
@@ -488,7 +592,7 @@ export class WyPreview extends WeavySubAppComponent {
    * @internal
    */
   scrollToNext() {
-    if (this.nextRef.value) {
+    if (!this.edit && this.nextRef.value) {
       this.unblockSwipeScroll();
       this.nextRef.value.scrollIntoView({ behavior: this.weavy?.scrollBehavior });
     }
@@ -522,7 +626,7 @@ export class WyPreview extends WeavySubAppComponent {
    * @internal
    */
   setPrev() {
-    if (this.previousFile) {
+    if (!this.edit && this.previousFile) {
       this.currentId = this.previousFile.id;
       this.blockSwipeScroll();
     }
@@ -534,7 +638,7 @@ export class WyPreview extends WeavySubAppComponent {
    * @internal
    */
   setNext() {
-    if (this.nextFile) {
+    if (!this.edit && this.nextFile) {
       this.currentId = this.nextFile.id;
       this.blockSwipeScroll();
     }
@@ -579,6 +683,16 @@ export class WyPreview extends WeavySubAppComponent {
       }
     }
 
+    if (
+      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("user")) &&
+      this.weavy &&
+      this.app &&
+      this.user
+    ) {
+      this.renameFileMutation = getRenameFileMutation(this.weavy, this.app);
+      this.subscribeFileMutation = getSubscribeFileMutation(this.weavy, this.app);
+    }
+
     if (changedProperties.has("queryResult") && this.queryResult) {
       const { data } = this.queryResult ?? {};
       this.files = data?.filter((file) => file && !file.is_trashed);
@@ -595,6 +709,16 @@ export class WyPreview extends WeavySubAppComponent {
       }
     }
 
+    if (changedProperties.has("edit") && this.edit) {
+      // The editor loads the draft itself, so the draft view is only for preview mode
+      this.currentVersionFile = this.currentFile;
+      this.showDraft = false;
+      this.versionSelected = false;
+      this.commentsOpen = false;
+      this.versionsOpen = false;
+    }
+
+
     if (
       (changedProperties.has("files") || changedProperties.has("currentId") || changedProperties.has("showOverlay")) &&
       this.files &&
@@ -604,6 +728,8 @@ export class WyPreview extends WeavySubAppComponent {
       this.previousFile = undefined;
       this.nextFile = undefined;
       this.currentVersionFile = undefined;
+      this.showDraft = false;
+      this.versionSelected = false;
 
       this.currentVersionFile = this.currentFile = this.files.find((file, index) => {
         if (this.files && file.id === this.currentId) {
@@ -656,6 +782,32 @@ export class WyPreview extends WeavySubAppComponent {
       this.loadNextInQueue();
     }
 
+    // Follow the draft of the current file. The key only depends on the file id, so navigating between files
+    // retargets the query while version changes of the same file keep it.
+    const draftKey = this.currentFile && this.weavy ? getFileDraftKey(this.currentFile) : undefined;
+    if (draftKey !== this.draftKey) {
+      this.draftKey = draftKey;
+      this.versionSelected = false;
+      if (draftKey && this.weavy) {
+        await this.draftQuery.trackQuery(getDraftOptions(this.weavy, draftKey));
+      } else {
+        this.draftQuery.untrackQuery();
+      }
+    }
+
+    // A file with a draft is viewed as the draft, so Edit and Discard are at hand, until the user picks a stored
+    // version or the draft in the versions list. Derived on every update so that reopening the file or leaving the
+    // editor also lands on the draft, and so that the draft view is left when the draft is published or discarded.
+    // A cached draft the user can no longer act on (revoked permission, editing turned off) is ignored.
+    const hasDraft =
+      Boolean(this.draftKey && this.draftQuery.result?.data) &&
+      isFileEditable(this.currentFile, this.app, this.componentFeatures);
+    if (!hasDraft && this.showDraft) {
+      this.showDraft = false;
+    } else if (hasDraft && !this.edit && !this.versionSelected && !this.showDraft) {
+      this.showDraft = true;
+    }
+
     if (changedProperties.has("showOverlay")) {
       if (this.showOverlay) {
         await this.dispatchOpen();
@@ -674,41 +826,76 @@ export class WyPreview extends WeavySubAppComponent {
   renderHeader(activeFile?: FileType) {
     return html`
       <wy-titlebar header ?trashed=${Boolean(activeFile?.is_trashed)}>
-        <wy-button slot="icon" kind="icon" @click=${() => this.close()}><wy-icon name="close"></wy-icon></wy-button>
-        ${activeFile ? html` <span slot="title">${activeFile.name}</span> ` : nothing}
+        ${this.edit
+          ? html`
+              <wy-button
+                slot="icon"
+                kind="icon"
+                title=${msg("Back to preview")}
+                @click=${() => {
+                  // Leaves the editor only; any draft is kept and shown in the preview.
+                  this.edit = false;
+                }}
+                ><wy-icon name="back"></wy-icon
+              ></wy-button>
+            `
+          : html`
+              <wy-button slot="icon" kind="icon" @click=${() => this.close()}><wy-icon name="close"></wy-icon></wy-button>
+            `}
         ${activeFile
           ? html`
-              ${this.componentFeatures?.allowsFeature(Feature.Comments) && activeFile.id >= 1 && !this.isAttachment
-                ? html`
-                    <wy-button
-                      slot="actions"
-                      kind="icon"
-                      ?active=${this.commentsOpen}
-                      @click=${() => this.toggleSidebarTab("comments")}
-                      title=${msg("Comments")}
-                    >
-                      <wy-icon-stack>
-                        ${activeFile.comments?.count && activeFile.comments?.count > 0
-                          ? html`<wy-icon name="comment" state ?active=${!this.commentsOpen}></wy-icon>
-                              <wy-icon name="comment" layer state ?active=${this.commentsOpen}></wy-icon>`
-                          : html`<wy-icon name="comment-outline" state ?active=${!this.commentsOpen}></wy-icon>
-                              <wy-icon name="comment" layer state ?active=${this.commentsOpen}></wy-icon>`}
-                      </wy-icon-stack>
-                    </wy-button>
-                  `
-                : nothing}
-              <wy-file-menu slot="actions" .file=${activeFile}>
-                ${this.componentFeatures?.allowsFeature(Feature.Versions) && activeFile.id >= 1 && !this.isAttachment
-                  ? html`
-                      <wy-dropdown-item ?active=${this.versionsOpen} @click=${() => this.toggleSidebarTab("versions")}>
-                        <wy-icon name="backup-restore"></wy-icon>
-                        ${msg("Versions")}
-                      </wy-dropdown-item>
-                    `
-                  : nothing}
-              </wy-file-menu>
+              <wy-file-title
+                slot="title-section"
+                .file=${activeFile}
+                .draft=${this.showDraft || this.edit}
+                .hasEditName=${!this.isAttachment}
+                .editName=${this.editName}
+                @edit-name=${(e: FileEditNameEventType) => {
+                  this.editName = e.detail.editName;
+                }}
+                @rename=${(e: FileRenameEventType) => {
+                  void this.renameFileMutation?.mutate({ file: e.detail.file, name: e.detail.name });
+                  this.editName = false;
+                }}
+              ></wy-file-title>
             `
           : nothing}
+        <wy-file-menu
+          slot="actions"
+          .file=${activeFile}
+          .hasEdit=${true}
+          .hasComments=${!this.isAttachment}
+          .hasVersions=${!this.isAttachment}
+          .hasSubscribe=${!this.isAttachment}
+          .hasRename=${!this.isAttachment}
+          .editActive=${this.edit}
+          .draftActive=${this.showDraft}
+          .oldVersionActive=${Boolean(
+            this.currentVersionFile && this.currentFile && this.currentVersionFile.rev !== this.currentFile.rev,
+          )}
+          .editNameActive=${this.editName}
+          .commentsActive=${this.commentsOpen}
+          .versionsActive=${this.versionsOpen}
+          @save=${(_e: FileSaveEventType) => void this.save()}
+          @comments=${(e: FileCommentsEventType) => {
+            this.toggleSidebarTab(e.detail.show ? "comments" : undefined);
+          }}
+          @versions=${(e: FileVersionsEventType) => {
+            this.toggleSidebarTab(e.detail.show ? "versions" : undefined);
+          }}
+          @edit=${(e: FileEditEventType) => {
+            this.edit = e.detail.edit;
+          }}
+          @edit-name=${(e: FileEditNameEventType) => {
+            this.editName = e.detail.editName;
+          }}
+          @subscribe=${(e: FileSubscribeEventType) => {
+            void this.subscribeFileMutation?.mutate({
+              file: e.detail.file,
+              subscribe: e.detail.subscribe,
+            });
+          }}
+        ></wy-file-menu>
       </wy-titlebar>
     `;
   }
@@ -722,6 +909,9 @@ export class WyPreview extends WeavySubAppComponent {
       isPending = this.infiniteQueryResult.isPending;
     }
 
+    // Is the current file editable?
+    const editCurrent = this.edit && isFileEditable(this.currentFile, this.app, this.componentFeatures);
+
     // Make a short list so we can use repeat
     const previewFiles = [this.previousFile, this.currentVersionFile, this.nextFile].filter(onlyValues);
 
@@ -731,7 +921,7 @@ export class WyPreview extends WeavySubAppComponent {
     }
 
     const previewSwiperParts = {
-      "wy-preview-swiper-disabled": this.disableSwipeScroll,
+      "wy-preview-swiper-disabled": this.disableSwipeScroll || this.edit,
     };
 
     if (!this.weavy) {
@@ -740,6 +930,7 @@ export class WyPreview extends WeavySubAppComponent {
 
     return html`
       <wy-overlay
+        ${ref(this.overlayRef)}
         part="wy-dark"
         maximized
         noHeader
@@ -755,7 +946,7 @@ export class WyPreview extends WeavySubAppComponent {
               ${this.renderHeader(this.currentFile)}
 
               <div part="wy-preview-main">
-                ${this.isAttachment
+                ${this.edit || this.isAttachment
                   ? nothing
                   : html`
                       ${this.componentFeatures?.allowsFeature(Feature.Comments)
@@ -788,6 +979,7 @@ export class WyPreview extends WeavySubAppComponent {
                                 ></button>
                               </nav>
                               <div part="wy-pane wy-scroll-y">
+                                <div part="wy-pane-group">
                                 ${this.commentsOpen &&
                                 this.currentFile &&
                                 this.currentFile.id >= 1 &&
@@ -796,12 +988,15 @@ export class WyPreview extends WeavySubAppComponent {
                                   ? html`
                                       <wy-comment-list
                                         reveal
+                                        .previousPaging=${"infinite"}
+                                        .nextPaging=${"infinite"}
                                         .placeholder=${this.placeholder}
                                         .parentId=${this.currentFile.id}
                                         .location=${"files"}
                                       ></wy-comment-list>
                                     `
                                   : nothing}
+                                </div>
                               </div>
                             </aside>
                           `
@@ -842,8 +1037,13 @@ export class WyPreview extends WeavySubAppComponent {
                                         <wy-file-versions
                                           .file=${this.currentFile}
                                           .activeVersion=${this.currentVersionFile}
-                                          @file-version-select=${(e: FileVersionSelectEventType) =>
-                                            this.handleVersionFile(e)}
+                                          .activeDraft=${this.showDraft}
+                                          @file-version-select=${(e: FileVersionSelectEventType) => {
+                                            this.handleVersionFile(e);
+                                          }}
+                                          @edit=${(e: FileEditEventType) => {
+                                            this.edit = e.detail.edit;
+                                          }}
                                         ></wy-file-versions>
                                       `
                                     : nothing}
@@ -867,33 +1067,40 @@ export class WyPreview extends WeavySubAppComponent {
                       previewFiles,
                       (previewFile) => "preview-area-" + previewFile?.id,
                       (previewFile) => {
+                        const isCurrent = previewFile === this.currentVersionFile;
+
                         const currentPreviewFileCallback = (refElement: Element | undefined) => {
                           refElement?.scrollIntoView();
                           requestAnimationFrame(() => refElement?.scrollIntoView());
                         };
 
-                        const previewFileRef =
-                          previewFile === this.currentVersionFile
-                            ? currentPreviewFileCallback
-                            : previewFile === this.nextFile
-                              ? this.nextRef
-                              : previewFile === this.previousFile
-                                ? this.prevRef
-                                : undefined;
+                        const previewFileRef = isCurrent
+                          ? currentPreviewFileCallback
+                          : previewFile === this.nextFile
+                            ? this.nextRef
+                            : previewFile === this.previousFile
+                              ? this.prevRef
+                              : undefined;
 
                         const fileLoadingState = this.loadingQueue.find((fls) => fls.file === previewFile);
 
                         return previewFile
                           ? html`
                               <div id="preview-${previewFile.id}" ${ref(previewFileRef)} part="wy-preview-area">
-                                ${!isPending && (fileLoadingState?.loading || fileLoadingState?.loaded)
+                                ${!isPending &&
+                                (fileLoadingState?.loading || fileLoadingState?.loaded || (isCurrent && editCurrent))
                                   ? html`
-                                      <wy-preview-item
-                                        .file=${previewFile}
-                                        ?current=${previewFile === this.currentVersionFile}
-                                        @file-preview-loaded=${(e: FilePreviewLoadedEventType) =>
-                                          this.updateLoadingState(e.detail.file, { loaded: true })}
-                                      ></wy-preview-item>
+                                      <wy-container fill scrollY>
+                                        <wy-file-view
+                                          ${isCurrent ? ref(this.currentViewRef) : nothing}
+                                          .edit=${isCurrent && editCurrent}
+                                          .draft=${isCurrent && this.showDraft}
+                                          .file=${previewFile}
+                                          .current=${isCurrent}
+                                          @file-preview-loaded=${(e: FilePreviewLoadedEventType) =>
+                                            this.updateLoadingState(e.detail.file, { loaded: true })}
+                                        ></wy-file-view>
+                                      </wy-container>
                                     `
                                   : html` <wy-progress-circular indeterminate overlay></wy-progress-circular> `}
                               </div>
@@ -902,7 +1109,7 @@ export class WyPreview extends WeavySubAppComponent {
                       },
                     )}
                   </div>
-                  ${this.currentFile
+                  ${this.currentFile && !this.edit
                     ? html`
                         ${this.previousFile
                           ? html`
@@ -941,10 +1148,14 @@ export class WyPreview extends WeavySubAppComponent {
       this.registerSwipeScroller();
     }
 
-    if (!this.disableSwipeScroll && this.swipeScroller.swipeElement === this.swipeScrollElement) {
+    if (!this.edit && !this.disableSwipeScroll && this.swipeScroller.swipeElement === this.swipeScrollElement) {
       this.swipeScroller.observe(this.prevRef.value, this.nextRef.value);
     } else {
       this.swipeScroller.clearObserver();
+    }
+
+    if (changedProperties.has("editName") && !this.editName) {
+      this.setFocus();
     }
   }
 }

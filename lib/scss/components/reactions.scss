@@ -38,7 +38,13 @@
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
 
-  display: flex;
+  // Keep the browser's default stylesheet: none for a closed popover; an unconditional display briefly
+  // shows the menu in normal flow before the toggle event sets [hidden], flashing a scrollbar.
+  &:not([popover]),
+  &:popover-open {
+    display: flex;
+  }
+
   margin: 0; // Override default margin of ul
   text-align: start; // Ensures proper alignment if parent has it changed (e.g., modal footer)
   background-clip: padding-box;

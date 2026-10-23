@@ -5,16 +5,12 @@
     name="viewport"
     content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
   />
-  <script>
-    //fetch("/api/contextual/acme-chat?type=chat")
-  </script>
   <link rel="modulepreload" href="/locales/sv-SE.ts" />
   <script type="module" src="/lib"></script>
   <script type="module" src="/utils/tanstack-dev-tools.ts"></script>
   <style>
     :root {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-        "Open Sans", "Helvetica Neue", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
     }
 
     html {
@@ -28,40 +24,20 @@
       flex: 1;
     }
 
-    .header {
+    header {
+      padding: .5rem;
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 20px;
-
-      > * {
-        background: lightcyan;
-        border-radius: 0.5rem;
-        padding: 0.5rem;
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-        align-items: center;
-        min-height: 2.5rem;
-      }
-
-      button {
-        height: 100%;
-        position: relative;
-      }
+      align-items: center;
+      gap: 1rem;
+      justify-content: flex-end; /* Align items to the right */
     }
 
-    .grid {
-      flex: 1;
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: 1fr;
-      gap: 0.5rem;
-      background: #fff;
-    }
+
   </style>
   <script type="module" src="/utils/dev-user.ts" async defer></script>
 </head>
 <body>
+  <dev-current-user position="top-left"></dev-current-user>
   <wy-context
     url="%WEAVY_URL%"
     reactions="👍 ❤️ 😂 😒 😁"
@@ -76,34 +52,14 @@
       }
     }"
   >
-    <div class="header">
-      <div>
-        <button>
-          <span>Messenger badge</span>
-          <wy-messenger-badge></wy-messenger-badge>
-        </button>
-      </div>
-      <div>
-        <button>
-          <span>Global agent badge</span>
-          <wy-messenger-badge agent="?" badgePosition="top-right"></wy-messenger-badge>
-        </button>
-      </div>
-      <div>
-        <button>
-          <span>Gemini agent badge</span>
-          <wy-messenger-badge agent="gemini" badgePosition="top-right"></wy-messenger-badge>
-        </button>
-      </div>
-      <div>
-        <button>
-          <span>OpenAI agent badge</span>
-          <wy-messenger-badge agent="openai" badge="dot" badgePosition="bottom-right"></wy-messenger-badge>
-        </button>
-      </div>
-    </div>
+    <header>
+        <wy-messenger-badge badge="dot"></wy-messenger-badge>  
+        <wy-messenger-badge></wy-messenger-badge>
+        <wy-messenger-button></wy-messenger-button>     
+    </header>
 
     <wy-messenger
+      features="report block"
       contextualData="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
     ></wy-messenger>
     <tanstack-dev-tools buttonposition="bottom-left" position="top"></tanstack-dev-tools>

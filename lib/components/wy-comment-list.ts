@@ -1,6 +1,6 @@
 import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
-import { property } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
@@ -14,21 +14,23 @@ import { updateReaction } from "../data/reactions";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { MutationController } from "../controllers/mutation-controller";
 import { RemoveCommentMutationType, getRestoreCommentMutation, getTrashCommentMutation } from "../data/comment-remove";
-import { PollMutationType, getPollMutation } from "../data/poll";
-import { getFlatInfiniteResultData, updateCacheItem } from "../utils/query-cache";
+import { PollMutationType, getPollMutation, handleRealtimeVote } from "../data/poll";
+import { getFlatInfiniteResultData, updateCacheItems } from "../utils/query-cache";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
-import type { RealtimeGroupType, RealtimeReactionEventType } from "../types/realtime.types";
+import type { RealtimeGroupType, RealtimeReactionEventType, RealtimeVoteEventType } from "../types/realtime.types";
 import type { MsgType } from "../types/msg.types";
 import { Feature } from "../types/features.types";
 import type { MsgEditorSubmitEventType } from "../types/editor.events";
 import type { CommentRestoreEventType, CommentTrashEventType } from "../types/comments.events";
 import type { PollVoteEventType } from "../types/polls.events";
+import { getEntityChildType } from "../utils/notifications";
 
 import commentsCss from "../scss/components/comments.scss";
 import pagerStyles from "../scss/components/pager.scss";
 
-import "./wy-comment";
+import "./ui/wy-button";
 import "./ui/wy-progress-circular";
+import "./wy-comment";
 import "./wy-editor-comment";
 import "./wy-empty";
 
@@ -43,15 +45,16 @@ declare global {
  *
  * **Used sub components:**
  *
+ * - [`<wy-button>`](./ui/wy-button.ts)
+ * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  * - [`<wy-comment>`](./wy-comment.ts)
  * - [`<wy-editor-comment>`](./wy-editor-comment.ts)
- * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
  * - [`<wy-empty>`](./wy-empty.ts)
  *
  * @csspart wy-comments - Container for the comments list
  * @csspart wy-pager - Pager container element
  * @csspart wy-pager-bottom - Bottom pager modifier
- * 
+ *
  * @slot empty - Content when no comments are available.
  *
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
@@ -100,6 +103,30 @@ export class WyCommentList extends WeavySubAppComponent {
    */
   @property({ type: Boolean, reflect: true })
   padded: boolean = false;
+
+  /**
+   * Paging behavior for loading previous comments.
+   *
+   * - "infinite" is recommended when the component is placed in an overflowing/scrollable area.
+   **/
+  @property()
+  previousPaging: "infinite" | "paged" = "paged";
+
+  /**
+   * Paging behavior for loading next comments.
+   *
+   * - "infinite" is recommended when the component is placed in an overflowing/scrollable area.
+   **/
+  @property()
+  nextPaging: "infinite" | "paged" = "paged";
+
+  /**
+   * Comment id that should be highlighted and scrolled into view.
+   *
+   * @internal
+   */
+  @state()
+  highlightId?: number = NaN;
 
   /**
    * Internal promise resolver used to wait for parentId to become available.
@@ -162,11 +189,25 @@ export class WyCommentList extends WeavySubAppComponent {
   private infiniteScroll = new InfiniteScrollController(this);
 
   /**
+   * Reverse infinite scroll controller instance used to observe the pager node.
+   *
+   * @internal
+   */
+  private reverseInfiniteScroll = new InfiniteScrollController(this, true);
+
+  /**
+   * Ref for pager element used by the reverse infinite scroll controller.
+   *
+   * @internal
+   */
+  private previousPagerRef: Ref<HTMLElement> = createRef();
+
+  /**
    * Ref for pager element used by the infinite scroll controller.
    *
    * @internal
    */
-  private pagerRef: Ref<HTMLElement> = createRef();
+  private nextPagerRef: Ref<HTMLElement> = createRef();
 
   /**
    * Unsubscribe function for realtime subscriptions.
@@ -175,11 +216,120 @@ export class WyCommentList extends WeavySubAppComponent {
    */
   #unsubscribeToRealtime?: () => void;
 
+  /**
+   * Handler invoked when a realtime comment is created.
+   *
+   * @internal
+   */
+  handleRealtimeCommentCreated = () => {
+    void this.weavy?.queryClient.invalidateQueries({ queryKey: [this.location, "comments", this.parentId] });
+  };
+
+  /**
+   * Handler invoked when a realtime reaction is added.
+   *
+   * Updates the local cache for the affected comment.
+   *
+   * @internal
+   */
+  handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
+    if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
+      return;
+    }
+
+    updateCacheItems<MsgType>(
+      this.weavy.queryClient,
+      { queryKey: [this.location, "comments", this.parentId] },
+      realtimeEvent.entity.id,
+      (item) => updateReaction(item, realtimeEvent.reaction, realtimeEvent.actor),
+    );
+  };
+
+  /**
+   * Handler invoked when a realtime reaction is removed.
+   *
+   * Updates the local cache for the affected comment.
+   *
+   * @internal
+   */
+  handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
+    if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
+      return;
+    }
+    updateCacheItems<MsgType>(
+      this.weavy.queryClient,
+      { queryKey: [this.location, "comments", this.parentId] },
+      realtimeEvent.entity.id,
+      (item) => updateReaction(item, undefined, realtimeEvent.actor),
+    );
+  };
+
+  /**
+   * Handler invoked when a poll vote is added or removed. Refreshes the options of the voted comment.
+   *
+   * @internal
+   */
+  handleRealtimeVote = (realtimeEvent: RealtimeVoteEventType) => {
+    if (!this.weavy || !this.parentId) {
+      return;
+    }
+    void handleRealtimeVote(this.weavy, "comments", [this.location, "comments", this.parentId], realtimeEvent);
+  };
+
+  /**
+   * Handle submit from the comment editor and trigger add comment mutation.
+   *
+   * @internal
+   */
+  private async handleSubmit(e: MsgEditorSubmitEventType) {
+    if (this.app && this.parentId && this.user) {
+      await this.addCommentMutation.mutate({
+        app_id: this.app.id,
+        parent_id: this.parentId,
+        type: this.location,
+        text: e.detail.text,
+        meeting_id: e.detail.meetingId,
+        blobs: e.detail.blobs,
+        poll_options: e.detail.pollOptions,
+        embed_id: e.detail.embedId,
+        context: e.detail.contextData,
+        user: this.user,
+      });
+    }
+  }
+
   override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has("parentId") && this.parentId) {
       this.#resolveParentId?.(this.parentId);
+    }
+
+    if (changedProperties.has("link")) {
+      const parentType =
+        this.location === "files"
+          ? EntityTypeString.File
+          : this.location === "posts"
+            ? EntityTypeString.Post
+            : EntityTypeString.App;
+
+      this.highlightId =
+        this.link &&
+        this.parentId &&
+        getEntityChildType(this.link, parentType, { id: this.parentId }, EntityTypeString.Comment)?.id;
+    }
+
+    if (
+      (changedProperties.has("parentId") ||
+        changedProperties.has("weavy") ||
+        changedProperties.has("componentFeatures") ||
+        changedProperties.has("highlightId")) &&
+      this.parentId &&
+      this.weavy
+    ) {
+      await this.commentsQuery.trackInfiniteQuery(
+        getCommentsOptions(this.weavy, this.location, this.parentId, this.highlightId),
+      );
     }
 
     if (
@@ -189,7 +339,6 @@ export class WyCommentList extends WeavySubAppComponent {
       this.parentId &&
       this.weavy
     ) {
-      await this.commentsQuery.trackInfiniteQuery(getCommentsOptions(this.weavy, this.location, this.parentId));
       await this.addCommentMutation.trackMutation(getAddCommentMutationOptions(this.weavy));
       this.removeCommentMutation = getTrashCommentMutation(this.weavy, this.location, this.parentId);
       this.restoreCommentMutation = getRestoreCommentMutation(this.weavy, this.location, this.parentId);
@@ -219,87 +368,19 @@ export class WyCommentList extends WeavySubAppComponent {
         void this.weavy.subscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
       }
 
+      if (this.componentFeatures?.allowsFeature(Feature.Polls)) {
+        void this.weavy.subscribe(subscribeGroup, "vote_added", this.handleRealtimeVote);
+        void this.weavy.subscribe(subscribeGroup, "vote_removed", this.handleRealtimeVote);
+      }
+
       this.#unsubscribeToRealtime = () => {
         void this.weavy?.unsubscribe(subscribeGroup, "comment_created", this.handleRealtimeCommentCreated);
         void this.weavy?.unsubscribe(subscribeGroup, "reaction_added", this.handleRealtimeReactionAdded);
         void this.weavy?.unsubscribe(subscribeGroup, "reaction_removed", this.handleRealtimeReactionDeleted);
+        void this.weavy?.unsubscribe(subscribeGroup, "vote_added", this.handleRealtimeVote);
+        void this.weavy?.unsubscribe(subscribeGroup, "vote_removed", this.handleRealtimeVote);
         this.#unsubscribeToRealtime = undefined;
       };
-    }
-  }
-
-  protected override update(changedProperties: PropertyValueMap<this>): void {
-    super.update(changedProperties);
-    this.infiniteScroll.observe(this.commentsQuery.result, this.pagerRef.value);
-  }
-
-  /**
-   * Handler invoked when a realtime comment is created.
-   *
-   * @internal
-   */
-  handleRealtimeCommentCreated = () => {
-    void this.weavy?.queryClient.invalidateQueries({ queryKey: [this.location, "comments", this.parentId] });
-  };
-
-  /**
-   * Handler invoked when a realtime reaction is added.
-   *
-   * Updates the local cache for the affected comment.
-   *
-   * @internal
-   */
-  handleRealtimeReactionAdded = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
-      return;
-    }
-
-    updateCacheItem<MsgType>(
-      this.weavy.queryClient,
-      [this.location, "comments", this.parentId],
-      realtimeEvent.entity.id,
-      (item) => updateReaction(item, realtimeEvent.reaction, realtimeEvent.actor),
-    );
-  };
-
-  /**
-   * Handler invoked when a realtime reaction is removed.
-   *
-   * Updates the local cache for the affected comment.
-   *
-   * @internal
-   */
-  handleRealtimeReactionDeleted = (realtimeEvent: RealtimeReactionEventType) => {
-    if (!this.weavy || realtimeEvent.entity.type !== EntityTypeString.Comment) {
-      return;
-    }
-    updateCacheItem<MsgType>(
-      this.weavy.queryClient,
-      [this.location, "comments", this.parentId],
-      realtimeEvent.entity.id,
-      (item) => updateReaction(item, undefined, realtimeEvent.actor),
-    );
-  };
-
-  /**
-   * Handle submit from the comment editor and trigger add comment mutation.
-   *
-   * @internal
-   */
-  private async handleSubmit(e: MsgEditorSubmitEventType) {
-    if (this.app && this.parentId && this.user) {
-      await this.addCommentMutation.mutate({
-        app_id: this.app.id,
-        parent_id: this.parentId,
-        type: this.location,
-        text: e.detail.text,
-        meeting_id: e.detail.meetingId,
-        blobs: e.detail.blobs,
-        poll_options: e.detail.pollOptions,
-        embed_id: e.detail.embedId,
-        context: e.detail.contextData,
-        user: this.user,
-      });
     }
   }
 
@@ -321,6 +402,7 @@ export class WyCommentList extends WeavySubAppComponent {
                 .parentId=${this.parentId}
                 .location=${this.location}
                 .comment=${comment}
+                .highlight=${this.highlightId === comment.id}
                 @trash=${async (e: CommentTrashEventType) => {
                   const app = await this.whenApp();
                   const parentId = await this.whenParentId();
@@ -359,19 +441,60 @@ export class WyCommentList extends WeavySubAppComponent {
   }
 
   override render() {
-    const { data: infiniteData, hasNextPage, isPending } = this.commentsQuery.result ?? {};
+    const {
+      data: infiniteData,
+      hasPreviousPage,
+      hasNextPage,
+      isPending,
+      isFetchingNextPage,
+      isFetchingPreviousPage,
+    } = this.commentsQuery.result ?? {};
     const flattenedPages = getFlatInfiniteResultData(infiniteData);
 
     return html`
       ${flattenedPages && flattenedPages.length && this.componentFeatures?.allowsFeature(Feature.Comments)
         ? html`
             <div part="wy-comments">
+              ${hasPreviousPage
+                ? this.previousPaging === "infinite"
+                  ? html`<div ${ref(this.previousPagerRef)} part="wy-pager wy-pager-top"></div>`
+                  : !isFetchingPreviousPage
+                    ? html`<div part="wy-pager"
+                        ><wy-button
+                          part="wy-pager"
+                          @click=${() => {
+                            void this.commentsQuery.loadPrevious();
+                          }}
+                          ?disabled=${isFetchingPreviousPage}
+                          >${isFetchingPreviousPage ? html`<wy-progress-circular indeterminate></wy-progress-circular>` : nothing} ${msg("Show more comments")}</wy-button
+                        ></div
+                      >`
+                    : nothing
+                : nothing}
               ${this.renderComments(flattenedPages)}
-              ${hasNextPage ? html`<div ${ref(this.pagerRef)} part="wy-pager wy-pager-bottom"></div>` : nothing}
+              ${hasNextPage
+                ? this.nextPaging === "infinite"
+                  ? html`<div ${ref(this.nextPagerRef)} part="wy-pager wy-pager-bottom"></div>`
+                  : html`<div part="wy-pager"
+                        ><wy-container padded
+                          ><wy-button
+                            part="wy-pager"
+                            @click=${() => {
+                              void this.commentsQuery.loadNext();
+                            }}
+                            ?disabled=${isFetchingNextPage}
+                            >${isFetchingNextPage ? html`<wy-progress-circular indeterminate></wy-progress-circular>` : nothing} ${msg("Show more comments")}</wy-button
+                          ></wy-container
+                        ></div
+                      >`
+                    
+                : nothing}
             </div>
           `
         : isPending
-          ? html`<wy-empty noNetwork><wy-progress-circular indeterminate padded reveal></wy-progress-circular></wy-empty>`
+          ? html`<wy-empty noNetwork
+              ><wy-progress-circular indeterminate padded reveal></wy-progress-circular
+            ></wy-empty>`
           : html`<slot name="empty"></slot>`}
       ${this.componentFeatures?.allowsFeature(Feature.Comments, Feature.Comment)
         ? html`
@@ -390,6 +513,11 @@ export class WyCommentList extends WeavySubAppComponent {
           ? html`<em>${msg("Commenting is not enabled for this.")}</em>`
           : nothing}
     `;
+  }
+
+  protected override updated(): void {
+    this.reverseInfiniteScroll.observe(this.commentsQuery.result, this.previousPagerRef.value);
+    this.infiniteScroll.observe(this.commentsQuery.result, this.nextPagerRef.value);
   }
 
   override disconnectedCallback(): void {

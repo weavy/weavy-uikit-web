@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, html } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
@@ -7,16 +7,17 @@ import { codecError, mediaError, mediaLoaded } from "../utils/media";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { NamedEvent } from "../types/generic.types";
 import type { FilePreviewLoadedEventType } from "../types/files.events";
+import type { FileType } from "../types/files.types";
 
 import contentMediaCss from "../scss/components/content-media.scss";
 import hostContentsCss from "../scss/host-contents.scss";
 
 import "./ui/wy-progress-circular";
-import "./wy-preview-icon";
+import "./wy-file-view-icon";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wy-preview-media": WyPreviewMedia;
+    "wy-file-view-media": WyFileViewMedia;
   }
 }
 
@@ -28,53 +29,32 @@ declare global {
  * **Used sub components:**
  *
  * - [`<wy-progress-circular>`](./ui/wy-progress-circular.ts)
- * - [`<wy-preview-icon>`](./wy-preview-icon.ts)
+ * - [`<wy-file-view-icon>`](./wy-file-view-icon.ts)
  *
  * @csspart wy-content-video - Video element container / element.
  * @csspart wy-content-audio - Audio element container / element.
  * @csspart wy-content-progress - Progress indicator shown while media loads.
- * 
+ *
  * @fires {FilePreviewLoadedEventType} file-preview-loaded - The file preview is considered loaded.
  */
-@customElement("wy-preview-media")
-export class WyPreviewMedia extends LitElement {
-  static override styles = [
-    contentMediaCss,
-    hostContentsCss,
-  ];
+@customElement("wy-file-view-media")
+export class WyFileViewMedia extends LitElement {
+  static override styles = [contentMediaCss, hostContentsCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * Preview format to render. Accepts `"video"` or `"audio"`.
+   * Source file.
    */
-  @property()
-  format: string = "";
-
-  /**
-   * Source URL used by the media element.
-   */
-  @property()
-  src!: string;
+  @property({ attribute: false })
+  file?: FileType;
 
   /**
    * Toggles playback when the preview item is marked as current.
    */
   @property({ type: Boolean })
   play: boolean = false;
-
-  /**
-   * Display name of the media file.
-   */
-  @property()
-  name: string = "";
-
-  /**
-   * MIME type associated with the media source.
-   */
-  @property()
-  mediaType?: string;
 
   /**
    * Currently registered media element reference.
@@ -103,7 +83,7 @@ export class WyPreviewMedia extends LitElement {
   protected handleLoaded = (e: Event) => {
     mediaLoaded(e);
     this.dispatchLoaded();
-  }
+  };
 
   /**
    * Registers load and error listeners on the provided media element.
@@ -146,17 +126,33 @@ export class WyPreviewMedia extends LitElement {
   }
 
   override render() {
-    return this.format === "video"
+    const file = this.file;
+
+    if (!file) return nothing;
+
+    const previewSrc = file.preview_url || file.download_url || "";
+
+    return file.preview_format === "video"
       ? html`
-          <video ${ref((ref) => this.registerLoading(ref))} part="wy-content-video" controls crossorigin="use-credentials">
-            <source src=${this.src} type=${ifDefined(this.mediaType)} />
-            <wy-preview-icon src=${this.src} icon="file-video"></wy-preview-icon>
+          <video
+            ${ref((ref) => this.registerLoading(ref))}
+            part="wy-content-video"
+            controls
+            crossorigin="use-credentials"
+          >
+            <source src=${previewSrc} type=${ifDefined(file.media_type)} />
+            <wy-file-view-icon .file=${file}></wy-file-view-icon>
           </video>
           <wy-progress-circular part="wy-content-progress" indeterminate overlay></wy-progress-circular>
         `
       : html`
-          <audio ${ref((ref) => this.registerLoading(ref))} part="wy-content-audio" controls crossorigin="use-credentials">
-            <source src=${this.src} type=${ifDefined(this.mediaType)} />
+          <audio
+            ${ref((ref) => this.registerLoading(ref))}
+            part="wy-content-audio"
+            controls
+            crossorigin="use-credentials"
+          >
+            <source src=${previewSrc} type=${ifDefined(file.media_type)} />
           </audio>
         `;
   }
@@ -171,7 +167,7 @@ export class WyPreviewMedia extends LitElement {
         this.mediaElement.pause();
       }
     }
-  } 
+  }
 
   override disconnectedCallback() {
     this.unregisterLoading();

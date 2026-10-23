@@ -1,5 +1,4 @@
 @use "../base/var";
-@use "../base/const";
 @use "../base/color";
 @use "../base/scroll";
 @use "../base/svg";
@@ -35,23 +34,6 @@
   .pdfViewer .page.loadingIcon::after {
     background: svg.$spinner center no-repeat;
   }
-}
-
-[part~="wy-pdf-toolbar"] {
-  position: sticky;
-  z-index: const.$zindex-sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  min-height: min-content;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  justify-items: center;
-  box-sizing: border-box;
-  margin-top: auto;
-
-  padding: var.default(--wy-padding-lg);
 }
 
 .wy-pdf-page-number {

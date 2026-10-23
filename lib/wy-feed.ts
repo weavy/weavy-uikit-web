@@ -145,6 +145,7 @@ export class WyFeed extends WeavyAppComponent implements PostQueryFilterProps {
     [Feature.Polls]: true,
     [Feature.Previews]: true,
     [Feature.Reactions]: true,
+    [Feature.Report]: false,
     [Feature.Typing]: false, // Has no effect currently
     [Feature.ZoomMeetings]: false,
   });
@@ -252,7 +253,6 @@ export class WyFeed extends WeavyAppComponent implements PostQueryFilterProps {
           ? html`
               <wy-buttons position="sticky">
                 <wy-search
-                  compact
                   query=${this.query || undefined}
                   @search=${(e: SearchEventType) => (this.query = e.detail.query)}
                 ></wy-search>

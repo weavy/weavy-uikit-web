@@ -149,6 +149,7 @@
   /* Tables */
   --wy-table-cell-padding-x:      var(--wy-gap-sm, calc(.5  * var(--wy-gap, wy-rem(.5)))),
   --wy-table-cell-padding-y:      var(--wy-gap-sm, calc(.5  * var(--wy-gap, wy-rem(.5)))),
+  --wy-table-border:              var(--wy-border, 0),
 
   /* Shadows */
   --wy-shadow-level0:             none, // xxs

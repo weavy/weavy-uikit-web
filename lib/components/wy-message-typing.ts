@@ -143,7 +143,7 @@ export class WyMessageTyping extends LitElement {
   override render() {
     const members = this.typingMembers.map((typingMember) =>
       this.members.find((member) => member.id === typingMember.id)
-    ).filter(onlyValues);
+    ).filter(onlyValues<MemberType>);
 
     // Make a readable list
     const typingNames = new Intl.ListFormat(this.weavy?.locale, { style: "long", type: "conjunction" }).format(
@@ -173,7 +173,7 @@ export class WyMessageTyping extends LitElement {
                 ? html`
                     <wy-avatar-group
                       .size=${32}
-                      .members=${members as MemberType[]}
+                      .members=${members}
                       title=${typingNames}
                     ></wy-avatar-group>
                   `

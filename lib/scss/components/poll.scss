@@ -22,7 +22,7 @@
 }
 
 [part~="wy-poll-option"] {
-  --wy-component-color: #{color.token(--wy-on-background)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
   display: flex;
   align-items: center;
   clip-path: border-box;
@@ -65,10 +65,13 @@
 }
 
 [part~="wy-poll-amount"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  min-width: 3em;
-  text-align: end;
-  white-space: nowrap;
+  // Same width as a small icon button, so the badge centers on the same axis as the reaction and menu icons
+  // in the rows below and above: those sit 8px (the button padding) in from the edge the option's padding is.
+  min-width: calc(var.default(--wy-button-size) * .6);
 }
 
 [part~="wy-poll-meter"] {

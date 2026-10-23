@@ -1,6 +1,6 @@
 import { customElement } from "./utils/decorators/custom-element";
 import { ThemeController } from "./controllers/theme-controller";
-import { html } from "lit";
+import { html, nothing } from "lit";
 import { AppTypeGuid } from "./types/app.types";
 import { localized } from "@lit/localize";
 import { ComponentFeatures, Feature } from "./contexts/features-context";
@@ -77,6 +77,7 @@ declare global {
  *
  * @tagname wy-chat
  * @slot actions - Floating buttons placed in the top right.
+ * @slot empty - Placeholder shown when no `uid` is set. The message editor is disabled in this state.
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
  * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
@@ -130,6 +131,7 @@ export class WyChat extends WeavyAppComponent {
   override componentFeatures = new ComponentFeatures({
     // All available features as enabled/disabled by default
     [Feature.Attachments]: true,
+    [Feature.Block]: false,
     [Feature.ContextData]: true,
     [Feature.CloudFiles]: true,
     [Feature.Embeds]: true,
@@ -142,6 +144,7 @@ export class WyChat extends WeavyAppComponent {
     [Feature.Previews]: true,
     [Feature.Reactions]: true,
     [Feature.Receipts]: false,
+    [Feature.Report]: false,
     [Feature.Typing]: false,
     [Feature.ZoomMeetings]: true,
   });
@@ -162,14 +165,19 @@ export class WyChat extends WeavyAppComponent {
   placeholder?: string;
 
   override render() {
+    // `generateUid` sets the uid asynchronously, so it counts as a selection to avoid flashing the empty state.
+    const hasSelection = this.uids.length > 0 || Boolean(this.generateUid);
+
     return html`
       <wy-buttons position="floating" reverse><slot name="actions"></slot></wy-buttons>
       <wy-conversation
         .agentInstructions=${this.instructions}
-        .conversation=${this.app}
-        .conversationId=${this.app?.id}
+        .conversation=${hasSelection ? this.app : undefined}
+        .conversationId=${hasSelection ? this.app?.id : undefined}
         .placeholder=${this.placeholder}
+        ?disabled=${!hasSelection}
       >
+        ${hasSelection ? nothing : html`<slot name="empty" slot="empty"></slot>`}
         <wy-context-data-progress slot="footerbar"></wy-context-data-progress>
       </wy-conversation>
       <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>

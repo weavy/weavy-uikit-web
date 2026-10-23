@@ -85,7 +85,7 @@ export class WyIcon extends LitElement {
    * Kind of icon or file type.
    */
   @property()
-  kind?: FileKindType | "text-icon";
+  kind?: FileKindType;
 
   /**
    * Any file extension. Sets what color to use for some extensions.
@@ -161,6 +161,7 @@ export class WyIcon extends LitElement {
     const wrapperParts = {
       ["wy-icon-wrapper"]: true,
       ["wy-icon-stack-layer"]: this.layer,
+      ["wy-icon-inline"]: this.inline,
     };
 
     const iconParts = {
@@ -171,16 +172,17 @@ export class WyIcon extends LitElement {
       ["wy-icon-color-" + this.color]: Boolean(this.color),
       ["wy-icon-first"]: this.first,
       ["wy-icon-last"]: this.last,
-      ["wy-icon-inline"]: this.inline,
       ["wy-icon-state"]: this.state,
       ["wy-active"]: this.active,
     };
 
-    const hasRemSize = this.size !== 24;
-    const remSize = this.size / 16;
-    const sizeStyle = hasRemSize
-      ? `width: var(--wy-component-icon-width, calc(${remSize} * var(--wy-size, 1rem))); height: var(--wy-component-icon-height, calc(${remSize} * var(--wy-size, 1rem)));`
-      : "";
+    // An explicit size is written as the icon variables on the wrapper rather than as width/height on the svg. The svg
+    // reads the variables as usual, and because an inline style beats the stylesheet on the same element, `size` wins
+    // over the inline default that `[part~="wy-icon-inline"]` sets on the wrapper, as well as over any container that
+    // sets the variables further up.
+    const remSize = `calc(${this.size / 16} * var(--wy-size, 1rem))`;
+    const sizeStyle =
+      this.size !== 24 ? `--wy-component-icon-width: ${remSize}; --wy-component-icon-height: ${remSize};` : "";
 
     if (this.overlayIcon) {
       return [
@@ -192,8 +194,8 @@ export class WyIcon extends LitElement {
           </style>
         `,
         html`
-          <div part=${partMap(wrapperParts)}>
-            <wy-icon-stack style="${sizeStyle}">
+          <div part=${partMap(wrapperParts)} style="${sizeStyle}">
+            <wy-icon-stack>
               <svg
                 part=${partMap(iconParts)}
                 viewBox=${this.icon.viewBox || "0 0 24 24"}
@@ -244,10 +246,9 @@ export class WyIcon extends LitElement {
     }
 
     return html`
-      <div part=${partMap(wrapperParts)}>
+      <div part=${partMap(wrapperParts)} style="${sizeStyle}">
         <svg
           part=${partMap(iconParts)}
-          style="${sizeStyle}"
           viewBox=${this.icon.viewBox || "0 0 24 24"}
           width="${this.size}"
           height="${this.size}"

@@ -1,46 +1,51 @@
-import { html, nothing, PropertyValueMap } from "lit";
+import { html, nothing } from "lit";
 import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputConsume } from "../utils/keyboard";
-import { createRef, Ref, ref } from "lit/directives/ref.js";
-import { autofocusRef, isModifiedClick } from "../utils/dom";
+import { createRef, ref, RefOrCallback } from "lit/directives/ref.js";
+import { autoFocusRef, autoScrollRef, isModifiedClick } from "../utils/dom";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { checkImageLoad, imageLoaded } from "../utils/images";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { localized, msg, str } from "@lit/localize";
 import { openUrl } from "../utils/urls";
 
-import type { FileOrderType, FileType } from "../types/files.types";
+import type { FileOrderType, FilesResultType } from "../types/files.types";
 import type {
   FileDeleteForeverEventType,
   FileEditNameEventType,
   FileRestoreEventType,
   FileSubscribeEventType,
   FileTrashEventType,
-  FileOpenEventType,
-  FileRenameEventType,
+  FileEditEventType,
 } from "../types/files.events";
 import { customElement, property, state } from "lit/decorators.js";
 import { WeavySubTypeComponent } from "../classes/weavy-sub-type-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { repeat } from "lit/directives/repeat.js";
+import { range } from "lit/directives/range.js";
 import { NamedEvent } from "../types/generic.types";
 import { OrderEventType } from "../types/lists.events";
+import { Feature } from "../types/features.types";
+import type { InfiniteData, InfiniteQueryObserverResult } from "@tanstack/query-core";
+import { getFlatInfiniteResultData } from "../utils/query-cache";
+import { ActionType } from "../types/action.types";
 
 import inputCss from "../scss/components/input.scss";
 import gridCss from "../scss/components/grid.scss";
 import cardCss from "../scss/components/card.scss";
+import pagerCss from "../scss/components/pager.scss";
 
 import hostContentsCss from "../scss/host-contents.scss";
 
 import "./ui/wy-icon";
 import "./wy-file-menu";
+import "./wy-file-draft-badge";
 import "./ui/wy-button";
 import "./ui/wy-badge";
-import { Feature } from "../types/features.types";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wy-file-grid": WyFileGrid;
+    "wy-files-grid": WyFilesGrid;
   }
 }
 
@@ -50,13 +55,14 @@ declare global {
  * **Used sub components:**
  *
  * - [`<wy-file-menu>`](./wy-file-menu.ts)
+ * - [`<wy-file-draft-badge>`](./wy-file-draft-badge.ts)
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * - [`<wy-button>`](./ui/wy-button.ts)
  *
  * @csspart wy-grid - Card grid layout
  * @csspart wy-card - Card root container
  * @csspart wy-trashed - Modifier for trashed cards
- * @csspart wy-card-hover - Hoverable card modifier
+ * @csspart wy-card-interactive - Hoverable card modifier
  * @csspart wy-highlight - Highlighted card modifier
  * @csspart wy-card-actions - Container for per-card actions
  * @csspart wy-card-image - Thumbnail image area
@@ -66,29 +72,36 @@ declare global {
  * @csspart wy-card-text - Text in the card
  * @csspart wy-card-button-icon - Title action / badge
  * @csspart wy-badge - Badge used for comment counts
+ * @csspart wy-pager - Pager anchor for infinite scrolling detection.
+ * @csspart wy-pager-overlay - Modifier for overlaying pager.
+ * @csspart wy-pager-top - Modifier for pager placed in the top.
+ * @csspart wy-pager-bottom - Modifier for pager placed in the bottom.
  *
- * @fires {FileOpenEventType} file-open - Emitted when a file should be opened in preview.
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an entity.
  * @fires {OrderEventType<FileOrderType>} order - Emitted when the user changes sort order.
- * @fires {FileEditNameEventType} edit-name - Emitted when rename mode is activated.
- * @fires {FileRenameEventType} rename - Emitted when a file is renamed.
- * @fires {FileTrashEventType} trash - Emitted when a file is trashed.
- * @fires {FileRestoreEventType} restore - Emitted when a file is restored.
- * @fires {FileDeleteForeverEventType} delete-forever - Emitted when a file is permanently deleted.
- * @fires {FileSubscribeEventType} subscribe - Emitted when subscribe state is toggled.
  */
-@customElement("wy-file-grid")
+@customElement("wy-files-grid")
 @localized()
-export class WyFileGrid extends WeavySubTypeComponent {
-  static override styles = [inputCss, gridCss, cardCss, hostContentsCss];
+export class WyFilesGrid extends WeavySubTypeComponent {
+  static override styles = [inputCss, gridCss, cardCss, pagerCss, hostContentsCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * Files to display in the grid.
+   * Infinite query result backing the file grid.
+   *
+   * @internal
    */
   @property({ attribute: false })
-  files?: FileType[];
+  infiniteQueryResult?: InfiniteQueryObserverResult<InfiniteData<FilesResultType, unknown>>;
+
+  /**
+   * File id that is selected.
+   *
+   */
+  @property({ type: Number })
+  selectedId?: number = NaN;
 
   /**
    * File id currently being renamed.
@@ -105,31 +118,24 @@ export class WyFileGrid extends WeavySubTypeComponent {
   highlightId?: number = NaN;
 
   /**
-   * Scroll target for a highlighted file card.
-   * @internal
+   * Reference to the pager element for loading previous items.
    */
-  private highlightRef: Ref<HTMLElement> = createRef();
+  previousPagerRef: RefOrCallback<Element> = createRef();
+
+  /**
+   * Reference to the pager element for loading next items.
+   */
+  nextPagerRef: RefOrCallback<Element> = createRef();
 
   constructor() {
     super();
-    this.addEventListener("edit-name", (e) => {
-      this.isRenamingId = (e as FileEditNameEventType).detail.file.id;
+    this.addEventListener("wy-action", (e) => {
+      if (e.detail.action === ActionType.EditName) {
+        this.isRenamingId = e.detail.file ? e.detail.file.id : NaN;
+      } else if (e.detail.action === ActionType.Rename) {
+        this.isRenamingId = NaN;
+      }
     });
-    this.addEventListener("rename", () => {
-      this.isRenamingId = NaN;
-    });
-  }
-
-  /**
-   * Emit a `file-open` event requesting preview for the given file.
-   *
-   * @param fileId - Identifier of the file to open.
-   * @param tab - Optional preview tab to activate.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchFileOpen(fileId: number, tab?: "comments" | "versions") {
-    const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId, tab } });
-    return this.dispatchEvent(event);
   }
 
   /**
@@ -143,89 +149,44 @@ export class WyFileGrid extends WeavySubTypeComponent {
     return this.dispatchEvent(event);
   }
 
-  /**
-   * Emit an `edit-name` event to enter rename mode for the given file.
-   *
-   * @param file - File that should be renamed.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchEditName(file: FileType) {
-    const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `rename` event containing the updated file name.
-   *
-   * @param file - File being renamed.
-   * @param name - New filename.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchRename(file: FileType, name: string) {
-    const event: FileRenameEventType = new (CustomEvent as NamedEvent)("rename", { detail: { file, name } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `trash` event to move the file to the recycle bin.
-   *
-   * @param file - File to trash.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchTrash(file: FileType) {
-    const event: FileTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `restore` event to recover a trashed file.
-   *
-   * @param file - File to restore.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchRestore(file: FileType) {
-    const event: FileRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `delete-forever` event to permanently remove a file.
-   *
-   * @param file - File to delete.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchDeleteForever(file: FileType) {
-    const event: FileDeleteForeverEventType = new (CustomEvent as NamedEvent)("delete-forever", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `subscribe` event toggling file subscription.
-   *
-   * @param file - File to subscribe or unsubscribe.
-   * @param subscribe - Desired subscription state.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchSubscribe(file: FileType, subscribe: boolean) {
-    const event: FileSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", { detail: { file, subscribe } });
-    return this.dispatchEvent(event);
-  }
-
   override render() {
-    if (this.files && this.files.length) {
+    const { data } = this.infiniteQueryResult || {};
+    const files = getFlatInfiniteResultData(data);
+
+    if (files && files.length) {
+      // We may need to fill the grid with placeholders when using reverse infinite scroll to avoid jumping in the layout.
+      const previousCount = Math.max((data?.pages[0]?.start ?? NaN) - 1, 0);
+
       return html`
         <div part="wy-grid">
+          ${previousCount
+            ? html`
+                ${repeat(
+                  range(1, previousCount),
+                  (i) => i,
+                  (i) => html`<div data-id=${i}></div>`,
+                )}
+                <div ${ref(this.previousPagerRef)} part="wy-pager wy-pager-top" data-count=${previousCount}></div>
+              `
+            : nothing}
           ${repeat(
-            this.files,
+            files,
             (file) => file.id,
             (file) => {
-              const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
+              const fileSize = !file.provider || file.size > 0 ? fileSizeAsString(file.size) : nothing;
               const fileChangedAt = file.updated_at || file.created_at;
               const fileDate = new Intl.DateTimeFormat(this.weavy?.locale, {
                 dateStyle: "full",
                 timeStyle: "short",
               }).format(new Date(fileChangedAt));
-              const isRenaming = Boolean(this.isRenamingId && this.isRenamingId === file.id);
+
+              const isRenaming = Boolean(
+                this.componentFeatures?.allowsFeature(Feature.FileRename) &&
+                this.isRenamingId &&
+                this.isRenamingId === file.id,
+              );
+
+              const isSelected = this.selectedId === file.id;
 
               const { icon } = getIcon(file.name);
               const ext = getExtension(file.name);
@@ -235,10 +196,14 @@ export class WyFileGrid extends WeavySubTypeComponent {
                 e.stopImmediatePropagation();
 
                 const renameTarget = e.target as HTMLInputElement;
-                if (renameTarget.value && renameTarget.value !== file.name) {
-                  this.dispatchRename(file, renameTarget.value);
+                if (
+                  this.componentFeatures?.allowsFeature(Feature.FileRename) &&
+                  renameTarget.value &&
+                  renameTarget.value !== file.name
+                ) {
+                  this.dispatchAction({ action: ActionType.Rename, file: { ...file, name: renameTarget.value } });
                 } else {
-                  this.dispatchEditName({ id: NaN } as FileType);
+                  this.dispatchAction({ action: ActionType.EditName, file: null });
                 }
               };
 
@@ -262,33 +227,55 @@ export class WyFileGrid extends WeavySubTypeComponent {
                   part=${partMap({
                     "wy-card": true,
                     "wy-trashed": file.is_trashed,
-                    "wy-card-hover": !file.is_trashed && !isRenaming,
+                    "wy-card-interactive": !file.is_trashed && !isRenaming,
                     "wy-highlight": highlight,
+                    "wy-selected": isSelected,
                   })}
+                  data-id=${file.id}
                   title="${file.name} • ${fileSize} • ${fileDate}"
                   tabindex="0"
                   @click=${(e: MouseEvent) => {
-                    if (isModifiedClick(e)) {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      openUrl(file.download_url ?? file.external_url, "_blank");
+                    if (file.is_trashed) {
+                      return;
                     }
-                    !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file.id);
+
+                    if (isModifiedClick(e)) {
+                      if (!e.defaultPrevented && this.dispatchAction({ action: ActionType.Open, file })) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        openUrl(file.download_url ?? file.external_url, "_blank");
+                      }
+                    } else {
+                      !e.defaultPrevented && this.dispatchAction({ action: ActionType.Select, file });
+                    }
                   }}
                   @keydown=${clickOnEnterAndConsumeOnSpace}
                   @keyup=${clickOnSpace}
-                  ${highlight && this.highlightRef ? ref(this.highlightRef) : nothing}
+                  ${highlight ? ref(autoScrollRef({ block: "center", behavior: "instant" })) : nothing}
                 >
                   <div part="wy-card-actions">
+                    <wy-file-draft-badge .file=${file}></wy-file-draft-badge>
                     <wy-file-menu
                       small
                       .file=${file}
-                      @edit-name=${(e: FileEditNameEventType) => this.dispatchEditName(e.detail.file)}
-                      @trash=${(e: FileTrashEventType) => this.dispatchTrash(e.detail.file)}
-                      @restore=${(e: FileRestoreEventType) => this.dispatchRestore(e.detail.file)}
-                      @delete-forever=${(e: FileDeleteForeverEventType) => this.dispatchDeleteForever(e.detail.file)}
+                      @edit=${(e: FileEditEventType) =>
+                        this.dispatchAction({ action: ActionType.Edit, file: e.detail.file })}
+                      @edit-name=${(e: FileEditNameEventType) =>
+                        this.dispatchAction({
+                          action: ActionType.EditName,
+                          file: e.detail.editName ? e.detail.file : null,
+                        })}
+                      @trash=${(e: FileTrashEventType) =>
+                        this.dispatchAction({ action: ActionType.Trash, file: e.detail.file })}
+                      @restore=${(e: FileRestoreEventType) =>
+                        this.dispatchAction({ action: ActionType.Restore, file: e.detail.file })}
+                      @delete-forever=${(e: FileDeleteForeverEventType) =>
+                        this.dispatchAction({ action: ActionType.DeleteForever, file: e.detail.file })}
                       @subscribe=${(e: FileSubscribeEventType) =>
-                        this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}
+                        this.dispatchAction({
+                          action: e.detail.subscribe ? ActionType.Subscribe : ActionType.Unsubscribe,
+                          file: e.detail.file,
+                        })}
                     ></wy-file-menu>
                   </div>
                   ${!file.is_trashed && file.thumbnail_url
@@ -297,6 +284,11 @@ export class WyFileGrid extends WeavySubTypeComponent {
                           part="wy-card-image ${partMap({ "wy-card-image-top": file.kind !== "image" })}"
                           width=${ifDefined(file.width)}
                           height=${ifDefined(file.height)}
+                          style=${ifDefined(
+                            file.width && file.height
+                              ? `aspect-ratio: auto ${file.width} / ${file.height};`
+                              : undefined,
+                          )}
                           src=${file.thumbnail_url}
                           alt=${file.name}
                           ${ref(checkImageLoad)}
@@ -331,11 +323,13 @@ export class WyFileGrid extends WeavySubTypeComponent {
                           }}
                           @click=${(e: Event) => e.preventDefault()}
                           @focus=${handleSelectFilename}
-                          ${ref(autofocusRef)}
+                          ${ref(autoFocusRef())}
                         />
                       `
                     : html`<div part="wy-card-title">
-                        <div part="wy-card-text">${file.name}</div> ${this.componentFeatures?.allowsFeature(Feature.Comments) && file.comments?.count
+                        <div part="wy-card-text">${file.name}</div> ${this.componentFeatures?.allowsFeature(
+                          Feature.Comments,
+                        ) && file.comments?.count
                           ? html`<wy-button
                               part="wy-card-button-icon"
                               small
@@ -344,30 +338,25 @@ export class WyFileGrid extends WeavySubTypeComponent {
                               @click=${(e: Event) => {
                                 if (!e.defaultPrevented && !file.is_trashed) {
                                   (e.target as HTMLElement).blur();
-                                  this.dispatchFileOpen(file.id, "comments");
+                                  this.dispatchAction({ action: ActionType.Comment, file });
                                   e.stopPropagation();
                                 }
                               }}
                               title=${msg(str`${file.comments.count} comments`)}
                             >
-                              <wy-badge count=${file.comments.count}></wy-badge>
+                              <wy-badge>${file.comments.count}</wy-badge>
                             </wy-button>`
                           : nothing}
                       </div>`}
                 </div>
               `;
-            }
+            },
           )}
+          <div ${ref(this.nextPagerRef)} part="wy-pager wy-pager-overlay wy-pager-bottom"></div>
         </div>
       `;
     }
 
     return nothing;
-  }
-
-  protected override updated(changedProperties: PropertyValueMap<this>) {
-    if (changedProperties.has("highlightId") && this.highlightId) {
-      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
-    }
   }
 }

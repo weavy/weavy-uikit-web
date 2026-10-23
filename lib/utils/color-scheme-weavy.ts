@@ -162,7 +162,7 @@ export class SchemeWeavy extends DynamicScheme {
       purple: TonalPalette.fromHueAndChroma(redHue + 14 * colorGap, colorChroma),
       pink: TonalPalette.fromHueAndChroma(redHue + 15 * colorGap, colorChroma),
       gray: TonalPalette.fromHueAndChroma(hue, 4),
-    } as { [key in ColorPaletteName]: TonalPalette };
+    };
   }
 
   // Solid base colors

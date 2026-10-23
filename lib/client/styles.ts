@@ -2,8 +2,9 @@ import { WeavyClient } from "./weavy";
 import { adoptGlobalStyles } from "../utils/styles";
 import { Constructor } from "../types/generic.types";
 
-import colorModes from "../scss/color-modes.scss";
-import definitionStyles from "../scss/definitions.scss";
+import colorModesCss from "../scss/color-modes.scss";
+import definitionCss from "../scss/definitions.scss";
+import overlayDrawerRootCss from "../scss/components/overlay-drawer-root.scss";
 
 export interface WeavyStylesProps {}
 
@@ -16,7 +17,7 @@ export const WeavyStylesMixin = <TBase extends Constructor<WeavyClient>>(Base: T
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       super(...args);
 
-      adoptGlobalStyles([definitionStyles, colorModes]);
+      adoptGlobalStyles([definitionCss, colorModesCss, overlayDrawerRootCss]);
     }
   };
 };

@@ -10,7 +10,6 @@ import { NamedEvent } from "../types/generic.types";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { repeat } from "lit/directives/repeat.js";
 import { openUrl } from "../utils/urls";
-import { WyActionEventDetailType, WyActionEventType } from "../types/action.events";
 import { ActionType } from "../types/action.types";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { createRef, ref, Ref } from "lit/directives/ref.js";
@@ -22,6 +21,7 @@ import "./ui/wy-dropdown";
 import "./ui/wy-button";
 import "./ui/wy-icon";
 import "./ui/wy-item";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -58,7 +58,7 @@ declare global {
  * @fires {WyActionEventType} wy-action - Emitted when an action button is triggered.
  */
 @customElement("wy-embed")
-export class WyEmbed extends LitElement {
+export class WyEmbed extends WeavySubComponent {
   static override styles = [hostContentsCss, embedCss];
 
   /** @internal */
@@ -83,26 +83,6 @@ export class WyEmbed extends LitElement {
    */
   protected embedContentRef: Ref<HTMLDivElement> = createRef();
 
-  /**
-   * Dispatch a wy-action event for this embed.
-   *
-   * @internal
-   * @param {ActionType | string} [action=""] - Action to dispatch.
-   * @returns {boolean} True if the event was not canceled.
-   */
-  private dispatchActionEvent(action: WyActionEventType["detail"]["action"] = ActionType.Default) {
-    const event: WyActionEventType = new (CustomEvent as NamedEvent)("wy-action", {
-      detail: {
-        action,
-        embed: this.embed,
-      } as WyActionEventDetailType,
-      bubbles: true,
-      composed: true,
-      cancelable: true,
-    });
-    return this.dispatchEvent(event);
-  }
-
   override render() {
     // Array copy
     const actionList = this.embed.actions ? [...this.embed.actions] : [];
@@ -121,7 +101,7 @@ export class WyEmbed extends LitElement {
         })}"
         title=${this.embed.url ? this.embed.url : this.embed.title || ""}
         @click=${() =>
-          this.embed.url && this.dispatchActionEvent(ActionType.Default) && openUrl(this.embed.url, "_blank")}
+          this.embed.url && this.dispatchAction({ action: ActionType.Default, embed: this.embed }) && openUrl(this.embed.url, "_blank")}
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
       >
@@ -189,7 +169,7 @@ export class WyEmbed extends LitElement {
                         color="variant"
                         @click=${(e: Event) => {
                           e.stopPropagation();
-                          this.dispatchActionEvent(secondaryAction);
+                          this.dispatchAction({ action: secondaryAction, embed: this.embed });
                         }}
                       >
                         ${secondaryAction}
@@ -203,7 +183,7 @@ export class WyEmbed extends LitElement {
                         color="primary"
                         @click=${(e: Event) => {
                           e.stopPropagation();
-                          this.dispatchActionEvent(primaryAction);
+                          this.dispatchAction({ action: primaryAction, embed: this.embed });
                         }}
                       >
                         ${primaryAction}
@@ -220,7 +200,7 @@ export class WyEmbed extends LitElement {
                                 @click=${(e: Event) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  this.dispatchActionEvent(action);
+                                  this.dispatchAction({ action, embed: this.embed });
                                 }}
                               >
                                 ${action}

@@ -35,6 +35,11 @@ export type RemoveEventType<TAdditionalDetail extends object = object> = CustomE
 export type TrashEventType<TAdditionalDetail extends object = object> = CustomEvent<{
   id: number;
 } & TAdditionalDetail> & { type: "trash" }
+
+export type BlockEventType<TAdditionalDetail extends object = object> = CustomEvent<{
+  userId: number;
+  block: boolean;
+} & TAdditionalDetail> & { type: "block" }
 // Public component API events (composed: true, bubbling: false)
 
 /**

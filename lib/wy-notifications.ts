@@ -148,7 +148,7 @@ export class WyNotifications
    * When set, only notifications from apps belonging to this directory are shown.
    */
   @property()
-  override directory?: string;
+  override directory?: string | number;
 
   /** Current unread notification count. */
   get unread(): number {

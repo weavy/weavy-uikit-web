@@ -43,6 +43,15 @@ export type MsgType = {
   is_subscribed: boolean;
   /** If the message is trashed. */
   is_trashed: boolean;
+  /**
+   * If the authenticated user has reported the entity. Caller-relative -- never says whether anyone *else* reported it.
+   *
+   * Sent by the server whenever markers are included. Also set optimistically after a successful report, so the flag
+   * fills in before the list is refetched.
+   */
+  is_reported?: boolean;
+  /** When the authenticated user reported the entity. Caller-relative, like `is_reported`. */
+  reported_at?: string;
   /** Date and time (UTC) the entity was created. */
   created_at: string;
   /** The user that created the entity. */

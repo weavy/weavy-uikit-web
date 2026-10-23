@@ -144,3 +144,7 @@ export type FileLoadingState = {
   loading?: boolean;
   loaded?: boolean;
 };
+
+export interface FileEditableProps {
+  save?: () => Promise<void>;
+}

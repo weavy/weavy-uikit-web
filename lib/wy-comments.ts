@@ -92,7 +92,15 @@ declare global {
 @customElement("wy-comments")
 @localized()
 export class WyComments extends WeavyAppComponent {
-  static override styles = [hostBlockCss, hostFillCss, hostPaddedCss, hostScrollYCss, colorModesCss, hostFontCss, commentsCss];
+  static override styles = [
+    hostBlockCss,
+    hostFillCss,
+    hostPaddedCss,
+    hostScrollYCss,
+    colorModesCss,
+    hostFontCss,
+    commentsCss,
+  ];
 
   /** @internal */
   override appType = AppTypeGuid.Comments;
@@ -114,6 +122,7 @@ export class WyComments extends WeavyAppComponent {
     [Feature.Polls]: true,
     [Feature.Previews]: true,
     [Feature.Reactions]: true,
+    [Feature.Report]: false,
     [Feature.Typing]: false, // Has no effect currently
     [Feature.ZoomMeetings]: false,
   });
@@ -127,11 +136,37 @@ export class WyComments extends WeavyAppComponent {
   @property()
   placeholder?: string;
 
+  /** 
+   * Paging behavior for loading previous comments.
+   * 
+   * - "infinite" is recommended when the component is placed in an overflowing/scrollable area.
+   **/
+  @property()
+  previousPaging: "infinite" | "paged" = "paged";
+
+  /** 
+   * Paging behavior for loading next comments.
+   * 
+   * - "infinite" is recommended when the component is placed in an overflowing/scrollable area.
+   **/
+  @property()
+  nextPaging: "infinite" | "paged" = "paged";
+
   override render() {
     return html`
       <wy-buttons position="floating" reverse><slot name="actions"></slot></wy-buttons>
-      <wy-comment-list .parentId=${this.app?.id} .location=${"apps"} .placeholder=${this.placeholder}>
-        <wy-empty slot="empty"><slot name="empty"><wy-container padded><em>${msg("No comments yet.")}</em></wy-container></slot></wy-empty>
+      <wy-comment-list
+        .parentId=${this.app?.id}
+        .location=${"apps"}
+        .placeholder=${this.placeholder}
+        .previousPaging=${this.previousPaging}
+        .nextPaging=${this.nextPaging}
+      >
+        <wy-empty slot="empty"
+          ><slot name="empty"
+            ><wy-container padded><em>${msg("No comments yet.")}</em></wy-container></slot
+          ></wy-empty
+        >
       </wy-comment-list>
       <wy-user-card .listenTo=${this.shadowRoot}></wy-user-card>
       <wy-context-data-progress></wy-context-data-progress>

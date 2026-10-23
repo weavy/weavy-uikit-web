@@ -21,3 +21,18 @@
   align-items: center;
   gap: var.default(--wy-gap-sm);
 }
+
+// A blocked private chat is dimmed but not disabled: wy-item's own disabled state kills pointer events for the whole
+// row, and unblock has to stay reachable. So only the body and the avatar are dimmed, leaving the actions readable.
+[part~="wy-conversation-item-blocked"] {
+  &::part(wy-item-body) {
+    opacity: var.default(--wy-opacity-disabled);
+  }
+
+  // dimmed on its own part rather than through ::part(wy-item-image), which does not reach the slotted avatar. The
+  // part is set on all three avatar variants, so the photo, the group and the initials fallback dim alike.
+  [part~="wy-conversation-item-avatar"] {
+    opacity: var.default(--wy-opacity-disabled);
+  }
+}
+

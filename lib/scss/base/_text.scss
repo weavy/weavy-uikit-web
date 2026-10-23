@@ -1,3 +1,5 @@
+@use "./var";
+
 /**
  * Text truncate.
  * Requires inline-block or block for proper styling.
@@ -37,4 +39,11 @@
     z-index: 1;
     content: "";
   }
+}
+
+@mixin pre {
+  font-family: var.default(--wy-font-monospace);
+  word-break: break-word;
+  white-space: pre-wrap;
+  margin-block: var.default(--wy-gap);
 }

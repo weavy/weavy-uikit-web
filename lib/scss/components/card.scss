@@ -20,6 +20,7 @@
   background-clip: border-box;
 
   padding: var.default(--wy-padding-sm);
+
   @include highlight.flash;
 }
 
@@ -35,7 +36,7 @@
 }
 
 // hover modifier
-[part~="wy-card-hover"] {
+[part~="wy-card-interactive"] {
   cursor: pointer;
   user-select: none;
 
@@ -68,6 +69,13 @@
       opacity: var.default(--wy-opacity-state-active); //12%;
     }
   }
+
+  &[part~="wy-selected"] {
+    --wy-component-background-color: var(--wy-component-background-color-selected, #{color.token(--wy-secondary-container)});
+    --wy-component-color: var(--wy-component-color-selected, #{color.token(--wy-on-secondary-container)});
+    background-color: var(--wy-component-background-color);
+    color: var(--wy-component-color);
+  }
 }
 
 [part~="wy-card-actions"] {
@@ -76,6 +84,7 @@
   right: var.default(--wy-padding);
   align-items: center;
   display: flex;
+  gap: var.default(--wy-gap-sm);
 }
 
 [part~="wy-card-icon"] {

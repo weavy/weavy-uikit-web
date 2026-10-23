@@ -26,9 +26,29 @@
     color: #{color.token(--wy-outline)};
   }
 
+  .cm-gutters {
+    background-color: transparent;
+    color: #{color.token(--wy-outline)};
+    
+    padding-inline: var.default(--wy-padding-sm);
+    margin-inline-end: calc(2 * (#{var.default(--wy-padding-sm)} - #{var.default(--wy-border)}));
+    border: 0px solid #{color.token(--wy-outline)};
+    justify-content: flex-end;
+    font-variant-numeric: tabular-nums;
+    
+    &.cm-gutters-before {
+      border-right-width: #{var.default(--wy-border)};
+    }
+  }
+
+  .cm-lineNumbers .cm-gutterElement {
+    padding: 0;
+    min-width: calc(#{var.wy-rem(2)} + 1px);
+  }
+
   /*.ͼ2*/
   .cm-content {
-    caret-color: #{color.token(--wy-on-background)};
+    caret-color: #{color.token(--wy-on-surface)};
 
     // TODO: Code color might not work (use shadow parts)
     @include code.themes;
@@ -53,7 +73,7 @@
 
     &.cm-focused {
       /* default theme in codemirror seems difficult to override */
-      --wy-component-color: #{color.token(--wy-on-background)};
+      --wy-component-color: #{color.token(--wy-on-surface)};
       color: var(--wy-component-color);
       border-color: #{color.token(--wy-primary)};
       outline: 0;
@@ -95,7 +115,8 @@
 
   .cm-tooltip-autocomplete ul li[aria-selected] wy-item {
     background: #{color.token(--wy-primary-container)};
-    color: unset;
+    --wy-component-color: #{color.token(--wy-on-primary-container)};
+    color: #{color.token(--wy-on-primary-container)};
   }
   //}
 

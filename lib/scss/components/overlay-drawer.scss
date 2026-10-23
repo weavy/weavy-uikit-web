@@ -17,16 +17,17 @@ $drawer-width: 24;
     top: 0;
     right: 0;
     bottom: 0;
-    left: 0;
+    left: auto;
     border-radius: 0;
+    width: 100%;
 
     @include breakpoints.container-size-up(md) {
       top: var(--wy-padding-outer, 0px);
       right: var(--wy-padding-outer, 0px);
       bottom: var(--wy-padding-outer, 0px);
       left: auto;
-      width: var.wy-rem($drawer-width);
-      min-width: var.wy-rem($drawer-width);
+      width: calc(var.wy-rem($drawer-width) - var(--wy-padding-outer, 0px));
+      min-width: calc(var.wy-rem($drawer-width) - var(--wy-padding-outer, 0px));
       border-radius: var(--wy-border-radius-outer, 0px); 
   }
 
@@ -35,6 +36,12 @@ $drawer-width: 24;
       //left: var(--wy-padding-outer, #{var.default(--wy-padding)});
       width: calc(100% - 2 * var(--wy-padding-outer, 0px));
     }
+  }
+}
+
+[part~="wy-drawer-resize"] {
+  @include breakpoints.container-size-down(md) {
+    display: none;
   }
 }
 
@@ -51,3 +58,4 @@ $drawer-width: 24;
     }
   }
 }
+

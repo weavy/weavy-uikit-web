@@ -40,8 +40,8 @@ export class RealtimeController implements ReactiveController {
    * Initiates context consumers
    */
   async setContexts() {
-    await whenParentsDefined(this.host as LitElement);
-    this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
+    await whenParentsDefined(this.host);
+    this.weavyContext = new ContextConsumer(this.host, { context: WeavyContext, subscribe: true });
   }
 
   /**

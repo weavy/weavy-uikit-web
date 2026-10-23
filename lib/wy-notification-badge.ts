@@ -37,13 +37,12 @@ declare global {
  *
  * The badge displays as an inline badge, matching normal text per default.
  * It has a filled background with rounded edge.
- * The size and font-size is relative to the current font-size where it's placed, defaulting to `0.75em` for the badge `font-size` and `0.3333em` of the badge *font-size* for the `padding`.
+ * The badge scales with the current font-size where it's placed, using `0.75em` for the badge `font-size`.
  * The badge is only displayed when there is an unread count of 1 or higher.
  *
  * > When placing the badge in a `<button>` element, note that buttons initially have a `font-size` of `13.3333px` instead of inheriting font-size from it's parents.
  *
- * Setting the `badge` property to `"compact"` reduces the padding and size to occupy less visual space.
- * It can also be set to `"dot"` to remove the text, only indicating that there is unread notifications without any count.
+ * Setting the `badge` property to `"dot"` removes the text, only indicating that there is unread notifications without any count.
  *
  * The `badgePosition` property can be changed from `"inline"` to `"top-right"` or any other corner,
  * to give it absolute positioning over the top-right corner.
@@ -73,15 +72,15 @@ declare global {
  *  <wy-notification-badge uid="test-chat" typeFilter="reaction"></wy-notification-badge>
  * ```
  * 
- * @example <caption>Compact cornered notification badge</caption>
+ * @example <caption>Cornered notification badge</caption>
  *
- * Displays a _compact_ badge in the top-right corner of a button with adjusted font-size.
+ * Displays a badge in the top-right corner of a button with adjusted font-size.
  * Note that the badge position is relative to its closest positioned ancestor element, therefore we need to set CSS `position` on the button.
  *
  * ```html
  * <button style="position: relative; font-size: 1rem;">
  *   <span>Notifications</span>
- *   <wy-notification-badge badge="compact" badgePosition="top-right"></wy-notification-badge>
+ *   <wy-notification-badge badgePosition="top-right"></wy-notification-badge>
  * </button>
  * ```
  */
@@ -109,7 +108,7 @@ export class WyNotificationBadge
   /**
    * Display size of the badge.
    *
-   * @type {"count" | "compact" | "dot" | "none"}
+   * @type {"count" | "dot" | "none"}
    * @default "count"
    */
   @property({ type: String })
@@ -138,7 +137,7 @@ export class WyNotificationBadge
    * When set, only unread notifications from apps belonging to this directory are counted.
    */
   @property()
-  override directory?: string;
+  override directory?: string | number;
 
   /** Current unread notification count. */
   get unread(): number {
@@ -162,10 +161,9 @@ export class WyNotificationBadge
     return this.user && this.badge !== "none"
       ? html`
           <wy-badge
-            appearance=${this.badge}
+            ?dot=${this.badge === "dot"}
             position=${this.badgePosition}
-            .count=${this.unreadNotifications.isUnreadPending ? NaN : this.unreadNotifications.unread}
-          ></wy-badge>
+          >${this.unreadNotifications.isUnreadPending ? "" : this.unreadNotifications.unread}</wy-badge>
         `
       : nothing;
   }

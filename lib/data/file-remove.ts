@@ -35,7 +35,11 @@ export function getTrashFileMutationOptions(weavy: WeavyType, app: AppType) {
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true })
+        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true }),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_trashed: true }),
       );
       return <FileMutationContextType>{ type: "trash", file: variables.file, status: { state: "pending" } };
     },
@@ -44,7 +48,11 @@ export function getTrashFileMutationOptions(weavy: WeavyType, app: AppType) {
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, data)
+        (existingFile: FileType) => Object.assign(existingFile, data),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, data),
       );
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "ok";
@@ -55,7 +63,11 @@ export function getTrashFileMutationOptions(weavy: WeavyType, app: AppType) {
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false })
+        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false }),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_trashed: false }),
       );
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "error";
@@ -95,7 +107,11 @@ export function getRestoreFileMutationOptions(weavy: WeavyType, app: AppType) {
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { status: "pending" })
+        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false }),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_trashed: false }),
       );
       return <FileMutationContextType>{ type: "restore", file: variables.file, status: { state: "pending" } };
     },
@@ -104,7 +120,11 @@ export function getRestoreFileMutationOptions(weavy: WeavyType, app: AppType) {
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false, status: "ok" })
+        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: false }),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_trashed: false }),
       );
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "ok";
@@ -115,7 +135,11 @@ export function getRestoreFileMutationOptions(weavy: WeavyType, app: AppType) {
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true })
+        (existingFile: FileType) => Object.assign(existingFile, { is_trashed: true }),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_trashed: true }),
       );
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "error";
@@ -154,12 +178,13 @@ export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppTy
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { status: "pending" })
+        (existingFile: FileType) => Object.assign(existingFile, { status: "pending" }),
       );
       return <FileMutationContextType>{ type: "delete-forever", file: variables.file, status: { state: "pending" } };
     },
     onSuccess: (_data: void, variables: MutateFileVariables) => {
       removeCacheItems(queryClient, { queryKey: options.mutationKey, exact: false }, variables.file.id);
+      queryClient.setQueryData(["app", app.id, "file", variables.file.id], () => null);
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "ok";
       });
@@ -170,7 +195,7 @@ export function getDeleteForeverFileMutationOptions(weavy: WeavyType, app: AppTy
         queryClient,
         { queryKey: options.mutationKey, exact: false },
         variables.file.id,
-        (existingFile: FileType) => Object.assign(existingFile, { status: undefined })
+        (existingFile: FileType) => Object.assign(existingFile, { status: undefined }),
       );
       updateMutationContext(queryClient, options.mutationKey, variables, (context) => {
         (context as FileMutationContextType).status.state = "error";

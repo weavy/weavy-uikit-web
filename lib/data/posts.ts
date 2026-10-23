@@ -19,6 +19,7 @@ import {
 import { PollOptionType } from "../types/polls.types";
 import { cleanFalsyProperties, flattenToSearchParams } from "../utils/objects";
 import { getApiOptions } from "./api";
+import { getRealtimeVoteOptions } from "./poll";
 import { isQueryFilter } from "../types/query.types";
 import {
   RealtimeCommentEventType,
@@ -47,7 +48,6 @@ export function getPostsOptions(
   const cleanedFilter = cleanFalsyProperties({ ...postFilter, count_only: countOnly });
   const filterParams = new URLSearchParams(flattenToSearchParams(cleanedFilter));
 
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     initialPageParam: 0,
     queryKey: ["posts", appId, cleanedFilter],
@@ -89,7 +89,7 @@ export function getUpdatePostMutationOptions(weavy: WeavyType, mutationKey: Muta
           blobs: variables.blobs,
           attachments: variables.attachments,
           meeting_id: variables.meeting_id,
-          options: variables.poll_options
+          options: (variables.poll_options || [])
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { id: o.id, text: o.text };
@@ -147,7 +147,7 @@ export function getAddPostMutationOptions(weavy: WeavyType, mutationKey: Mutatio
           text: variables.text,
           blobs: variables.blobs,
           meeting_id: variables.meeting_id,
-          options: variables.poll_options
+          options: (variables.poll_options || [])
             .filter((o: PollOptionType) => o.text.trim() !== "")
             .map((o: PollOptionType) => {
               return { text: o.text };
@@ -338,5 +338,8 @@ export function getRealtimePostOptions(
           },
         }
       : undefined,
+    ...(componentFeatures.allowsFeature(Feature.Polls)
+      ? getRealtimeVoteOptions(weavy, group, "posts", ["posts", listId])
+      : []),
   ];
 }

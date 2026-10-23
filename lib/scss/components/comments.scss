@@ -8,7 +8,6 @@
   --wy-component-border-radius: #{var.default(--wy-border-radius-outer)};
 }
 
-
 [part~="wy-comment-list-padded"] {
   padding: var.default(--wy-padding);
 }
@@ -70,4 +69,11 @@ wy-comment::part(wy-editor) {
   padding-left: 0;
   padding-right: 0;
   margin-right: calc(-1 * var.default(--wy-size));
+}
+
+[part~="wy-comment-reported"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
+  cursor: default;
 }

@@ -44,6 +44,10 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
         variables.file.id,
         (existingFile: FileType) => ({ ...existingFile, is_subscribed: variables.subscribe, status: "pending" }),
       );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_subscribed: variables.subscribe }),
+      );
       return <FileMutationContextType>{
         type: variables.subscribe ? "subscribe" : "unsubscribe",
         file: variables.file,
@@ -57,6 +61,10 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
         variables.file.id,
         (existingFile: FileType) => ({ ...existingFile, status: "ok" }),
       );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) => existingFile && Object.assign(existingFile, { is_subscribed: variables.subscribe }),
+      );
       updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
         context.status.state = "ok";
       });
@@ -67,6 +75,11 @@ export function getSubscribeFileMutationOptions(weavy: WeavyType, app: AppType) 
         { queryKey: filesKey, exact: false },
         variables.file.id,
         (existingFile: FileType) => ({ ...existingFile, is_subscribed: variables.file.is_subscribed, status: "error" }),
+      );
+      queryClient.setQueryData(
+        ["app", app.id, "file", variables.file.id],
+        (existingFile: FileType) =>
+          existingFile && Object.assign(existingFile, { is_subscribed: variables.file.is_subscribed }),
       );
       updateMutationContext(queryClient, filesKey, variables, (context: FileMutationContextType) => {
         context.status.state = "error";

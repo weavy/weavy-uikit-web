@@ -10,6 +10,7 @@ import { DestroyError } from "../utils/errors";
 import { observeConnected } from "../utils/dom";
 import type { FileMutationContextType } from "../types/files.types";
 import { Constructor } from "../types/generic.types";
+import { getStorage } from "../utils/data";
 
 export interface WeavyQueryProps {
   queryClient: QueryClient;
@@ -60,7 +61,7 @@ export const WeavyQueryMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
       try {
         this._sessionStoragePersister = createSyncStoragePersister({
           key: "WEAVY_QUERY_OFFLINE_CACHE",
-          storage: window.sessionStorage,
+          storage: getStorage("sessionStorage"), //window.sessionStorage,
           throttleTime: this.staleTime,
         });
 

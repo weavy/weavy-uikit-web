@@ -19,6 +19,11 @@ export enum Feature {
    */
   Attachments = "attachments",
   /**
+   * Possibility to block and unblock other users. Blocking is one-way and receive-side: it quiets the blocker's side of
+   * the relationship, while the blocked user sees and sends as before and is never told.
+   */
+  Block = "block",
+  /**
    * Cloud file picker (Google Drive, Dropbox etc.).
    */
   CloudFiles = "cloud_files",
@@ -38,6 +43,22 @@ export enum Feature {
    * Creating embeds from urls in editor text.
    */
   Embeds = "embeds",
+  /**
+   * Possibility to create new files.
+   */
+  FileCreate = "file_create",
+  /**
+   * Possibility to edit files.
+   */
+  FileEdit = "file_edit",
+  /**
+   * Possibility to rename files.
+   */
+  FileRename = "file_rename",
+  /**
+   * Possibility to upload files.
+   */
+  FileUpload = "file_upload",
   /**
    * Possibility to follow or unfollow users. 
    */
@@ -74,6 +95,12 @@ export enum Feature {
    * Read receipts on messages.
    */
   Receipts = "receipts",
+  /**
+   * Possibility to report a message, post, comment or user for moderation. Weavy stores the report and emits a `report_created`
+   * webhook; acting on it is up to the host application, so this feature is **disabled by default** and must be
+   * opted into with the `features` attribute once you have somewhere for reports to go.
+   */
+  Report = "report",
   /**
    * Thumbnails for file previews.
    */

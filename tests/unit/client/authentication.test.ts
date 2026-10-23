@@ -1,6 +1,6 @@
-import { expect } from "@open-wc/testing";
-
+/* eslint-disable @typescript-eslint/require-await */
 import "../../utils/version";
+import { expect } from "@open-wc/testing";
 import { Weavy, type WeavyType } from "../../../lib";
 
 describe("WeavyAuthenticationMixin", () => {
@@ -11,18 +11,20 @@ describe("WeavyAuthenticationMixin", () => {
   });
 
   it('has an async "tokenFactory" property that can be invoked', async () => {
-    weavy = new Weavy({ tokenFactory: async () => "token-factory-result" });
+    weavy = new Weavy({
+      tokenFactory: async () => "token-factory-result",
+    });
 
     expect(weavy).to.respondTo("tokenFactory");
-    expect(await weavy.tokenFactory?.(false)).to.equal("token-factory-result");
+    await expect(await weavy.tokenFactory?.(false)).to.equal("token-factory-result");
 
     expect(() => (weavy.tokenFactory = async () => "next-token-factory-result")).to.change(weavy, "tokenFactory");
-    expect(await weavy.tokenFactory?.(false)).to.equal("next-token-factory-result");
+    await expect(await weavy.tokenFactory?.(false)).to.equal("next-token-factory-result");
   });
 
   it('has a "tokenFactoryUrl" property that returns an URL that sets a tokenFactory', async () => {
     weavy = new Weavy({ tokenUrl: "https://weavy.test/" });
-    expect(weavy)
+    await expect(weavy)
       .to.have.a.property("tokenUrl")
       .that.is.instanceOf(URL)
       .with.property("href")
@@ -41,8 +43,8 @@ describe("WeavyAuthenticationMixin", () => {
     });
 
     await weavy.whenUrlAndTokenFactory();
-    expect(weavy.url?.toString()).to.equal("https://weavy.test/");
-    expect(await weavy.tokenFactory?.(false)).to.equal("token-factory-result");
+    await expect(weavy.url?.toString()).to.equal("https://weavy.test/");
+    await expect(await weavy.tokenFactory?.(false)).to.equal("token-factory-result");
   });
 
   it('has a "whenTokenIsValid" promise that resolves', async () => {
@@ -55,16 +57,17 @@ describe("WeavyAuthenticationMixin", () => {
 
     queueMicrotask(() => {
       weavy.tokenFactory = async () => "wyu_valid-token";
-      weavy.getToken(true);
+      void weavy.getToken(true);
     });
 
     await weavy.whenTokenIsValid();
-    expect(await weavy.getToken(true)).to.equal("wyu_valid-token");
+    await expect(await weavy.getToken(true)).to.equal("wyu_valid-token");
   });
 
   it('has an async "getToken" method that returns a token', async () => {
     weavy = new Weavy({
       url: "https://weavy.test",
+
       tokenFactory: async (refresh) => {
         if (refresh) {
           return "wyu_refresh-token";
@@ -74,8 +77,8 @@ describe("WeavyAuthenticationMixin", () => {
       },
     });
 
-    expect(await weavy.getToken()).to.equal("wyu_normal-token");
-    expect(await weavy.getToken(true)).to.equal("wyu_refresh-token");
+    await expect(await weavy.getToken()).to.equal("wyu_normal-token");
+    await expect(await weavy.getToken(true)).to.equal("wyu_refresh-token");
 
     try {
       weavy.tokenFactory = async () => "wys_invalid_system_token";
@@ -107,18 +110,18 @@ describe("WeavyAuthenticationMixin", () => {
         });
       });
     });
-    expect(await weavy.getToken()).to.equal("wyu_delayed-token");
-    
+    await expect(await weavy.getToken()).to.equal("wyu_delayed-token");
+
     // Refreshed token
     queueMicrotask(() => {
-      weavy.tokenFactory = async (refresh: boolean) => refresh ? "" : "invalid_token";
+      weavy.tokenFactory = async (refresh: boolean) => (refresh ? "" : "invalid_token");
       queueMicrotask(() => {
-        weavy.tokenFactory = async (refresh: boolean) => refresh ? null : "invalid_token";
+        weavy.tokenFactory = async (refresh: boolean) => (refresh ? null : "invalid_token");
         queueMicrotask(() => {
-          weavy.tokenFactory = async (refresh: boolean) => refresh ? "wyu_updated-token" : "invalid_token";
+          weavy.tokenFactory = async (refresh: boolean) => (refresh ? "wyu_updated-token" : "invalid_token");
         });
       });
     });
-    expect(await weavy.getToken(true)).to.equal("wyu_updated-token");
+    await expect(await weavy.getToken(true)).to.equal("wyu_updated-token");
   });
 });

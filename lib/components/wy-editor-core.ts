@@ -8,8 +8,9 @@ import throttle from "lodash.throttle";
 import type { UserType } from "../types/users.types";
 import { inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import type { EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
-import type { Compartment, EditorState, Extension, Facet } from "@codemirror/state";
+import type { Compartment, EditorState, Extension, Facet, SelectionRange } from "@codemirror/state";
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
+import type { LanguageSupport } from "@codemirror/language";
 import { desktop } from "../utils/browser";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -17,6 +18,8 @@ import { Feature } from "../types/features.types";
 import type {
   EditorChangeEventType,
   EditorClearEventType,
+  EditorLoadedEventType,
+  EditorSelectEventType,
   EditorSubmitEventType,
   EditorTypingEventType,
 } from "../types/editor.events";
@@ -51,10 +54,12 @@ declare global {
  *
  * @csspart wy-core-editor - Wrapper for the editor
  *
+ * @fires {EditorLoadedEventType} loaded - Emitted when the editor is loaded
  * @fires {EditorSubmitEventType} submit - Emitted when the editor content is submitted
  * @fires {EditorTypingEventType} edit - Throttled event when the user is typing.
  * @fires {EditorEditEventType} edit - When an edit of a previous text is requested.
  * @fires {EditorChangeEventType} change - When the text changes.
+ * @fires {EditorSelectEventType} select - When the selection changes.
  * @fires {EditorClearEventType} clear - When clearing of the editor is requested.
  * @fires {DropFilesEventType} drop-files - When files are pasted into the editor.
  */
@@ -85,7 +90,7 @@ export class WyEditorCore extends WeavySubAppComponent {
    * Initial editor text content (draft or loaded content).
    */
   @property()
-  text?: string = "";
+  text: string = "";
 
   /**
    * Whether typing indicators should be emitted.
@@ -97,7 +102,10 @@ export class WyEditorCore extends WeavySubAppComponent {
    * Editor usage context, used to adjust behavior and styling.
    */
   @property()
-  editorType: "messages" | "posts" | "comments" = "posts";
+  appearance: "line" | "multiline" | "full" = "multiline";
+
+  @property()
+  filename?: string;
 
   /**
    * Select all content in the editor.
@@ -110,6 +118,21 @@ export class WyEditorCore extends WeavySubAppComponent {
       selection: {
         anchor: 0,
         head: this.editor.state.doc.length,
+      },
+    });
+  }
+
+  /**
+   * Place cursor at the start of the editor content.
+   *
+   * @internal
+   */
+  async setCursorFirst() {
+    await this.whenEditor();
+    this.editor?.dispatch({
+      selection: {
+        anchor: 0,
+        head: 0,
       },
     });
   }
@@ -148,7 +171,7 @@ export class WyEditorCore extends WeavySubAppComponent {
    * @internal
    */
   @state()
-  protected editor?: EditorView;
+  editor?: EditorView;
 
   /**
    * Resolves when the editor is available.
@@ -185,6 +208,13 @@ export class WyEditorCore extends WeavySubAppComponent {
   protected editorEditable?: Compartment;
 
   /**
+   * The main parsing language of the editor.
+   *
+   * @internal
+   */
+  protected editorLanguage?: LanguageSupport;
+
+  /**
    * Compartment and facets used to manage the editor keymap.
    *
    * @internal
@@ -194,7 +224,9 @@ export class WyEditorCore extends WeavySubAppComponent {
   protected keymaps?: {
     weavyEnterSendKeymap: KeyBinding[];
     weavyModifierEnterSendKeymap: KeyBinding[];
+    weavySaveKeymap: KeyBinding[];
     weavyKeymap: KeyBinding[];
+    markdownKeymap: KeyBinding[];
     defaultKeymap: KeyBinding[];
     historyKeymap: KeyBinding[];
   };
@@ -255,9 +287,10 @@ export class WyEditorCore extends WeavySubAppComponent {
     ) {
       void this.weavy.whenUrl().then(() => {
         void import("../utils/editor/editor").then(
-          ({
+          async ({
             weavyHighlighter,
             syntaxHighlighting,
+            getLanguageFromFilename,
             history,
             dropCursor,
             mentions,
@@ -266,13 +299,15 @@ export class WyEditorCore extends WeavySubAppComponent {
             placeholder,
             keymap,
             weavyKeymap,
+            markdownKeymap,
             defaultKeymap,
             historyKeymap,
-            markdown,
-            languages,
+            loadMarkdown,
             EditorView,
             EditorState,
             Compartment,
+            lineNumbers,
+            gutter,
           }) => {
             if (this.editorInitialized) {
               return;
@@ -287,8 +322,9 @@ export class WyEditorCore extends WeavySubAppComponent {
             this.placeholderExtension = placeholder;
             this.keymapFacet = keymap;
             this.keymaps = {
-              weavyModifierEnterSendKeymap: [{ key: "Mod-Enter", run: () => this.submit() }],
-              weavyEnterSendKeymap: [{ key: "Enter", run: () => this.submit() }],
+              weavyModifierEnterSendKeymap: [{ key: "Mod-Enter", run: () => this.submit() || true }],
+              weavyEnterSendKeymap: [{ key: "Enter", run: () => this.submit() || true }],
+              weavySaveKeymap: [{ key: "Mod-s", run: () => this.submit() || true }],
               weavyKeymap: [
                 ...weavyKeymap,
                 {
@@ -301,9 +337,63 @@ export class WyEditorCore extends WeavySubAppComponent {
                   },
                 },
               ],
+              markdownKeymap: [...markdownKeymap],
               defaultKeymap: [...defaultKeymap],
               historyKeymap: [...historyKeymap],
             };
+
+            this.editorLanguage = this.filename
+              ? (await getLanguageFromFilename(this.filename)) || undefined
+              : await loadMarkdown();
+
+            const editorLanguage = this.editorLanguage ? [this.editorLanguage] : [];
+            // A file without a matching language is still code, so it keeps the gutter; only markdown goes without
+            const lineGutter =
+              !this.filename || this.editorLanguage?.language.name === "markdown"
+                ? []
+                : [lineNumbers(), gutter({})];
+
+            const mentionExtensions =
+              this.filename && this.appearance === "full"
+                ? []
+                : [
+                    mentions,
+                    autocompletion({
+                      override: this.componentFeatures?.allowsFeature(Feature.Mentions)
+                        ? [(context: CompletionContext) => this.autocomplete(context)]
+                        : [], //showMention
+                      closeOnBlur: false,
+                      aboveCursor: this.appearance === "line",
+                      icons: false,
+                      addToOptions: [
+                        {
+                          render: function (completion: MentionsCompletion, _state: EditorState) {
+                            const item = document.createElement("wy-item");
+
+                            item.interactive = false;
+
+                            if (!completion.item?.access || completion.item.access === AccessType.None) {
+                              item.disabled = true;
+                            }
+
+                            const avatar = document.createElement("wy-avatar");
+                            avatar.slot = "image";
+                            avatar.src = completion.item?.avatar_url || "";
+                            avatar.name = completion.item?.name || "";
+
+                            const name = document.createElement("span");
+                            name.slot = "title";
+                            name.innerText = completion.item?.name || "";
+
+                            item.appendChild(avatar);
+                            item.appendChild(name);
+                            return item;
+                          },
+                          position: 10,
+                        },
+                      ],
+                    }),
+                  ];
 
             this.editorExtensions = [
               EditorView.contentAttributes.of({
@@ -329,45 +419,11 @@ export class WyEditorCore extends WeavySubAppComponent {
               }),
               history(),
               dropCursor(),
-              mentions,
-              autocompletion({
-                override: this.componentFeatures?.allowsFeature(Feature.Mentions)
-                  ? [(context: CompletionContext) => this.autocomplete(context)]
-                  : [], //showMention
-                closeOnBlur: false,
-                aboveCursor: this.editorType !== "posts",
-                icons: false,
-                addToOptions: [
-                  {
-                    render: function (completion: MentionsCompletion, _state: EditorState) {
-                      const item = document.createElement("wy-item");
-
-                      item.interactive = false;
-
-                      if (!completion.item?.access || completion.item.access === AccessType.None) {
-                        item.disabled = true;
-                      }
-
-                      const avatar = document.createElement("wy-avatar");
-                      avatar.slot = "image";
-                      avatar.src = completion.item?.avatar_url || "";
-                      avatar.name = completion.item?.name || "";
-
-                      const name = document.createElement("span");
-                      name.slot = "title";
-                      name.innerText = completion.item?.name || "";
-
-                      item.appendChild(avatar);
-                      item.appendChild(name);
-                      return item;
-                    },
-                    position: 10,
-                  },
-                ],
-              }),
+              ...mentionExtensions,
               syntaxHighlighting(weavyHighlighter, { fallback: true }),
               EditorView.lineWrapping,
-              markdown({ codeLanguages: languages }),
+              ...editorLanguage,
+              ...lineGutter,
               EditorView.domEventHandlers({
                 paste: (evt: ClipboardEvent, _view: EditorView): boolean | void => {
                   let files: File[] = [];
@@ -402,9 +458,17 @@ export class WyEditorCore extends WeavySubAppComponent {
                 if (update.docChanged) {
                   // This runs whenever the document content changes
 
-                  this.text = update.state.doc.toString().trim();
+                  // File edits must preserve indentation and trailing newlines when text is rebound to CodeMirror.
+                  const text = update.state.doc.toString();
+                  this.text = this.appearance === "full" ? text : text.trim();
 
                   void this.dispatchChange(this.text);
+                }
+
+                if (update.selectionSet && this.text !== undefined) {
+                  // This runs whenever the selection changes
+                  const selection = update.state.selection.main;
+                  void this.dispatchSelection(this.text, selection);
                 }
               }),
               // Compartments
@@ -437,6 +501,9 @@ export class WyEditorCore extends WeavySubAppComponent {
               });
 
               this.#resolveEditor?.(this.editor);
+
+              const editorLoadedEvent: EditorLoadedEventType = new (CustomEvent as NamedEvent)("loaded");
+              this.dispatchEvent(editorLoadedEvent);
             }
           },
         );
@@ -521,8 +588,15 @@ export class WyEditorCore extends WeavySubAppComponent {
       return [];
     }
 
-    const { weavyKeymap, defaultKeymap, historyKeymap, weavyEnterSendKeymap, weavyModifierEnterSendKeymap } =
-      this.keymaps;
+    const {
+      weavyKeymap,
+      defaultKeymap,
+      historyKeymap,
+      weavyEnterSendKeymap,
+      weavyModifierEnterSendKeymap,
+      weavySaveKeymap,
+      markdownKeymap,
+    } = this.keymaps;
 
     /**
      * Enter-to-send keymap:
@@ -536,14 +610,20 @@ export class WyEditorCore extends WeavySubAppComponent {
 
     if (
       ((!this.settings?.enterToSend || this.settings?.enterToSend === "auto") &&
-        this.editorType === "messages" &&
+        this.appearance === "line" &&
         desktop) ||
       this.settings?.enterToSend === "always"
     ) {
       enterKeymap = [...weavyEnterSendKeymap, ...enterKeymap];
     }
 
-    return [...enterKeymap, ...weavyKeymap, ...defaultKeymap, ...historyKeymap];
+    // Mod-S for files, enter for messages.
+    const submitKeymap = this.filename ? weavySaveKeymap : enterKeymap;
+
+    // Any language specific keymaps
+    const languageKeymap = this.editorLanguage?.language.name === "markdown" ? [...markdownKeymap] : [];
+
+    return [...submitKeymap, ...weavyKeymap, ...languageKeymap, ...defaultKeymap, ...historyKeymap];
   }
 
   /**
@@ -621,13 +701,15 @@ export class WyEditorCore extends WeavySubAppComponent {
       detail: { text },
       bubbles: false,
       composed: false,
+      cancelable: true,
     });
 
     const submitResult = this.dispatchEvent(submitEvent);
 
-    if (submitResult) {
+    /*if (submitResult) {
+      console.log("core submitResult clear", submitResult)
       this.clear();
-    }
+    }*/
     return submitResult;
   }
 
@@ -673,6 +755,16 @@ export class WyEditorCore extends WeavySubAppComponent {
     }
   }
 
+  protected dispatchSelection(text: string, selection: SelectionRange) {
+    const event: EditorSelectEventType = new (CustomEvent as NamedEvent)("select", {
+      detail: { text, selection },
+      bubbles: true,
+      composed: true,
+    });
+
+    return this.dispatchEvent(event);
+  }
+
   protected dispatchChange(text: string) {
     const event: EditorChangeEventType = new (CustomEvent as NamedEvent)("change", {
       detail: { text },
@@ -700,20 +792,22 @@ export class WyEditorCore extends WeavySubAppComponent {
   protected renderEditorDummy(): TemplateResult | typeof nothing {
     return !this.editorInitialized
       ? html`
-          <div class="cm-editor">
-            <div class="cm-announced"></div>
-            <div tabindex="-1" class="cm-scroller">
-              <div class="cm-content cm-lineWrapping">
-                <div class="cm-line"
-                  >${this.text
-                    ? this.text
-                    : html`<img class="cm-widgetBuffer" aria-hidden="true" /><span class="cm-placeholder"
-                          >${this.placeholder}</span
-                        ><br />`}</div
-                >
+          <slot>
+            <div class="cm-editor">
+              <div class="cm-announced"></div>
+              <div tabindex="-1" class="cm-scroller">
+                <div class="cm-content cm-lineWrapping">
+                  <div class="cm-line"
+                    >${this.text
+                      ? this.text
+                      : html`<img class="cm-widgetBuffer" aria-hidden="true" /><span class="cm-placeholder"
+                            >${this.placeholder}</span
+                          ><br />`}</div
+                  >
+                </div>
               </div>
             </div>
-          </div>
+          </slot>
         `
       : nothing;
   }
@@ -723,9 +817,9 @@ export class WyEditorCore extends WeavySubAppComponent {
       <div
         part=${partMap({
           "wy-core-editor": true,
-          "wy-core-post-editor": this.editorType === "posts",
-          "wy-core-editor-comment": this.editorType === "comments",
-          "wy-core-editor-message": this.editorType === "messages",
+          "wy-core-editor-multiline": this.appearance === "multiline",
+          "wy-core-editor-line": this.appearance === "line",
+          "wy-core-editor-full": this.appearance === "full",
         })}
         ${ref(this.editorRef)}
       >

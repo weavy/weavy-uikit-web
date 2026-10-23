@@ -16,7 +16,7 @@ import {
   UnreadConversationsController,
   type UnreadConversationsProps,
 } from "./controllers/unread-conversations-controller";
-import { DefaultMessengerFeatures, DefaultMessengerAgentFeatures } from "./types/conversation.types";
+import { DefaultMessengerFeatures } from "./types/conversation.types";
 import { CreateConversationController } from "./controllers/create-conversation-controller";
 import { CreateConversationEventType } from "./types/conversation.events";
 import { MemberIdType } from "./types/members.types";
@@ -50,14 +50,14 @@ declare global {
 }
 
 /**
- * @import { WyAppEventType } from "./types/app.events"
+ * @import { WyActionEventType } from "./types/action.events"
  * @import { WyPreviewOpenEventType } from "./types/files.events"
  * @import { WyPreviewCloseEventType } from "./types/files.events"
  * @import { WyUnreadEventType } from "./types/ui.events"
  */
 
 /**
- * The Weavy Messenger button component renders a Messenger button complete with a realtime badge for the number of unread conversations. When clicked, the button opens a built in overlay displaying the full [`<wy-messenger>`](./wy-messenger.ts) component for multiple one-to-one conversations, group chats or agent conversations.
+ * The Weavy Messenger button component renders a Messenger button complete with a realtime badge for the number of unread conversations. When clicked, the button opens a built in overlay displaying the full [`<wy-messenger>`](./wy-messenger.ts) component for multiple one-to-one conversations and group chats.
  *
  * The Messenger displays a list of all conversations with possibility to pin, star and mark conversations as read.
  * Each conversation item displays an avatar, the participants or the room name as title, a line with the latest message.
@@ -84,9 +84,6 @@ declare global {
  * It has buttons for adding polls, video meetings, images, files and cloud files.
  * Mentions brings up a user selector.
  * Drafts are automatically saved for each conversation.
- *
- * The Messenger button component can optionally be configured in _agent mode_, by defining the `agent` property, to only show conversations with a given [AI agent](https://www.weavy.com/docs/learn/integrations/agents).
- * In agent mode, the create conversation button instantly creates a new conversation with the agent when clicked, instead of opening a create conversation modal.
  *
  * > Complement this with the [`<wy-notification-toasts>`](./wy-notification-toasts.ts) component to also get realtime _in-app notifications_ or _browser notifications_ when new messages arrive.
  *
@@ -141,13 +138,13 @@ declare global {
  * ```html
  * <wy-messenger-button></wy-messenger-button>
  * ```
- * 
- * @example <caption>Messenger button component in agent mode</caption>
- * 
- * Display a button that opens a Messenger in agent mode. Also, show a dot instead of a count when there are unread notifications.
- * 
+ *
+ * @example <caption>Messenger button with a dot badge</caption>
+ *
+ * Display a button that shows a dot instead of a count when there are unread conversations.
+ *
  * ```html
- * <wy-messenger-button agent="assistant" badge="dot"></wy-messenger-button>
+ * <wy-messenger-button badge="dot"></wy-messenger-button>
  * ```
  */
 @customElement("wy-messenger-button")
@@ -179,11 +176,11 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
   /**
    * Badge appearance variant.
    *
-   * @type {"count" | "compact" | "dot" | "none"}
-   * @default "compact"
+   * @type {"count" | "dot" | "none"}
+   * @default "count"
    */
   @property({ type: String })
-  badge: BadgeAppearanceType = "compact";
+  badge: BadgeAppearanceType = "count";
 
   /**
    * Badge position relative to the messenger button.
@@ -196,49 +193,17 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
 
   /** Conversation types included in the messenger list. */
   @property({ attribute: false })
-  override componentTypes: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
+  override appTypes: AppTypeGuid[] = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
 
   /** Check visibility on the Messenger */
   protected override get visibilityElement() {
     return this.messengerRef.value;
   }
 
-  /**
-   * Agent uid filter. When set, conversations are limited to the agent chat.
-   */
-  @property({ type: String })
-  override set agent(agent: string | undefined) {
-    super.agent = agent;
-    if (this._agentUid) {
-      this.componentTypes = [AppTypeGuid.AgentChat];
-      this.componentFeatures = new ComponentFeatures(
-        DefaultMessengerAgentFeatures,
-        this.componentFeatures.allowedFeatures()
-      );
-    } else {
-      this.componentTypes = [AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat];
-      this.componentFeatures = new ComponentFeatures(
-        DefaultMessengerFeatures,
-        this.componentFeatures.allowedFeatures()
-      );
-    }
-    this.conversationId = null;
-  }
-
-  override get agent() {
-    return super.agent;
-  }
-
   /** Current unread conversation count. */
   get unread(): number {
     return this.unreadConversationsController.unread;
   }
-
-  /**
-   * Optional agent instructions appended to submitted messages.
-   */
-  @property()
-  instructions?: string;
 
   /**
    * Placeholder text for the message editor.
@@ -276,8 +241,6 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
   /**
    * Creates a new conversation.
    *
-   * - When in agent mode, a conversation is created instantly.
-   *
    * @param members {(number|string)[] | undefined} - Optional array of member id or member uid.
    */
   async createConversation(members?: MemberIdType[]) {
@@ -297,14 +260,10 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
   protected override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
     await super.willUpdate(changedProperties);
 
-    if (
-      (changedProperties.has("weavy") || changedProperties.has("agent") || changedProperties.has("user")) &&
-      this.weavy &&
-      this.user
-    ) {
+    if ((changedProperties.has("weavy") || changedProperties.has("user")) && this.weavy && this.user) {
       this.persistState.observe(
         [{ name: "conversationId", override: false }],
-        this.agent || "messenger",
+        "messenger",
         `u${this.user?.id}`,
         (changedPersistProperties) => {
           if (changedPersistProperties.has("conversationId") && this.conversationId) {
@@ -329,18 +288,14 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
 
     if ((changedProperties.has("conversationId") || changedProperties.has("weavy")) && this.weavy) {
       if (this.conversationId) {
-        void this.conversationQuery.trackQuery(getConversationOptions(this.weavy, this.conversationId, this.componentTypes));
+        void this.conversationQuery.trackQuery(getConversationOptions(this.weavy, this.conversationId, this.appTypes));
       } else {
         this.conversationQuery.untrackQuery();
       }
     }
 
-    if (changedProperties.has("agent")) {
-      this.createConversationController.agent = this.agent;
-    }
-
-    if (changedProperties.has("componentTypes") || changedProperties.has("agent")) {
-      await this.unreadConversationsController.track(this.componentTypes, this.agent);
+    if (changedProperties.has("appTypes")) {
+      await this.unreadConversationsController.track(this.appTypes);
     }
   }
 
@@ -356,12 +311,11 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
           ${this.user && this.badge !== "none"
             ? html`
                 <wy-badge
-                  appearance=${this.badge}
+                  ?dot=${this.badge === "dot"}
                   position=${this.badgePosition}
-                  .count=${this.unreadConversationsController.isUnreadPending
-                    ? NaN
-                    : this.unreadConversationsController.unread}
-                ></wy-badge>
+                >${this.unreadConversationsController.isUnreadPending
+                    ? ""
+                    : this.unreadConversationsController.unread}</wy-badge>
               `
             : nothing}
         </wy-icon>
@@ -397,8 +351,7 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
 
                 <wy-conversation-list
                   ${ref(this.conversationListRef)}
-                  .conversationTypes=${this.componentTypes}
-                  .agent=${this.agent}
+                  .conversationTypes=${this.appTypes}
                   conversationId=${ifDefined(this.conversationId !== null ? this.conversationId : undefined)}
                   @wy-action=${(e: WyActionEventType) => {
                     if (!e.defaultPrevented && e.detail.action === ActionType.Select && e.detail.app !== undefined) {
@@ -408,7 +361,6 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
                 >
                   <wy-conversation-new
                     slot="actions"
-                    .agent=${this.agent}
                     @create=${async (e: CreateConversationEventType) => {
                       const newApp = await this.createConversationController.create(e.detail.members);
                       if (newApp) {
@@ -443,11 +395,11 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
                       <wy-icon name="back"></wy-icon>
                     </wy-button>
                     <wy-badge
+                      delayed 
                       reveal
-                      .count=${this.unreadConversationsController.isUnreadPending
-                        ? NaN
-                        : this.unreadConversationsController.unread}
-                    ></wy-badge>
+                    >${this.unreadConversationsController.isUnreadPending
+                        ? ""
+                        : this.unreadConversationsController.unread}</wy-badge>
                   </span>
                 </wy-conversation-header>
 
@@ -455,9 +407,8 @@ export class WyMessengerButton extends WeavyTypeComponent implements UnreadConve
                   ? html`<wy-conversation
                       .conversationId=${this.conversationId}
                       .conversation=${conversation}
-                      .agentInstructions=${this.instructions}
-                      .placeholder=${this.placeholder ?? (this.agent ? msg("Ask anything...") : undefined)}
-                      .header=${!this.agent}
+                      .placeholder=${this.placeholder}
+                      header
                     ></wy-conversation>`
                   : conversationListLength
                   ? html`<wy-empty noNetwork>${msg("Select a conversation")}</wy-empty>`

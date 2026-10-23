@@ -887,8 +887,8 @@
 
     --viewer-container-height: 0;
     --pdfViewer-padding-bottom: 0;
-    --page-margin: 1px auto -8px;
-    --page-border: 9px solid transparent;
+    --page-margin: 8px auto 8px;
+    --page-border: 0px solid transparent;
     --spreadHorizontalWrapped-margin-LR: -3.5px;
     --loading-icon-delay: 400ms;
     --focus-ring-color: light-dark(#0060df, #0df);
@@ -898,7 +898,7 @@
   @media screen and (forced-colors: active) {
     @at-root :host {
       --pdfViewer-padding-bottom: 9px;
-      --page-margin: 8px auto -1px;
+      --page-margin: 7px auto 7px;
       --page-border: 1px solid CanvasText;
       --spreadHorizontalWrapped-margin-LR: 3.5px;
       --focus-ring-color: CanvasText;

@@ -42,8 +42,8 @@ export class WyEditorComment extends WyEditorMsg {
     this.editorClass = "wy-editor-comment";
   }
 
-  override willUpdate(changedProperties: PropertyValueMap<this>): void {
-    super.willUpdate(changedProperties);
+  override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
+    await super.willUpdate(changedProperties);
 
     if (changedProperties.has("editorLocation")) {
       if (this.editorLocation === "files") {

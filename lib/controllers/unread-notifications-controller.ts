@@ -32,7 +32,7 @@ export interface NotificationFilterProps {
    * When set, only notifications from apps belonging to this directory are counted.
    * Has no effect when `appId` is set (app scoping takes priority).
    */
-  directory?: string;
+  directory?: string | number;
 
   /**
    * Type of notifications for the scope.
@@ -61,7 +61,7 @@ export class UnreadNotificationsController implements ReactiveController, Unread
   /**
    * Optional directory identifier (`id` or `name`) for unread scoping.
    */
-  directory?: string;
+  directory?: string | number;
 
   /**
    * Type of notifications for the scope.
@@ -121,8 +121,8 @@ export class UnreadNotificationsController implements ReactiveController, Unread
    * Initiates context consumers
    */
   async setContexts() {
-    await whenParentsDefined(this.host as LitElement);
-    this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
+    await whenParentsDefined(this.host);
+    this.weavyContext = new ContextConsumer(this.host, { context: WeavyContext, subscribe: true });
   }
 
   /**
@@ -186,7 +186,7 @@ export class UnreadNotificationsController implements ReactiveController, Unread
    * @param appId - Optional app id for the filtering scope.
    * @param directory - Optional directory identifier for the filtering scope.
    */
-  async track(typeFilter: NotificationTypes, appId?: number, directory?: string) {
+  async track(typeFilter: NotificationTypes, appId?: number, directory?: string | number) {
     this.appId = appId;
     this.directory = directory;
     this.typeFilter = typeFilter;

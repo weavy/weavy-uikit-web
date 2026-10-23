@@ -11,3 +11,7 @@
   box-sizing: border-box;
   container-type: inline-size;
 }
+
+:host([hidden]) {
+  display: none !important;
+}

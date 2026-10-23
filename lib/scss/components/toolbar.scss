@@ -1,11 +1,12 @@
 @use "sass:math";
+@use "../base/const";
 @use "../base/var";
 @use "../base/color";
 @use "../base/backdrop";
 @use "../base/position";
 @use "../base/text";
 
-[part~=wy-toolbar] {
+[part~="wy-toolbar"] {
   --wy-component-color: #{color.token(--wy-on-surface)};
   --wy-component-background-color: #{color.token(--wy-surface-container-low)};
 
@@ -24,29 +25,58 @@
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
   border-radius: var(--wy-component-border-radius);
-  //box-shadow: #{color.token(--wy-outline-variant)} 0px calc(-1 * #{var.default(--wy-border)}) 0px 0px inset;
 }
 
-[part~=wy-toolbar-center] {
+[part~="wy-toolbar-area"] {
+  position: sticky;
+  z-index: const.$zindex-sticky;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  min-height: min-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+  box-sizing: border-box;
+  margin-top: auto;
+  margin-bottom: #{var.wy-rem(-4.5)};
+  padding: var.default(--wy-padding-lg);
+}
+
+[part~="wy-toolbar-center"] {
   margin: 0 auto;
   border-radius: var.default(--wy-border-radius);
   justify-content: center;
   min-height: min-content;
+  width: fit-content;
+  max-width: fit-content;
+  box-shadow: #{color.token(--wy-outline-variant)} 0px calc(-1 * #{var.default(--wy-border)}) 0px 0px inset;
 }
 
-[part~=wy-toolbar-buttons] {
+[part~="wy-toolbar-divider"] {
+  flex: 0 0 #{var.default(--wy-border)};
+  align-self: stretch;
+  margin: var.default(--wy-gap-sm);
+  background-color: #{color.token(--wy-outline-variant)};
+}
+
+[part~="wy-toolbar-buttons"] {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   gap: var.default(--wy-gap-sm);
   max-width: 100%;
+  flex-wrap: balance;
+  justify-content: space-evenly;
 }
 
-[part~=wy-toolbar-buttons-last] {
+[part~="wy-toolbar-buttons-last"] {
   margin-inline-start: auto;
 }
 
-[part~=wy-toolbar-text] {
+[part~="wy-toolbar-text"] {
   margin-left: var.default(--wy-gap);
 }
 

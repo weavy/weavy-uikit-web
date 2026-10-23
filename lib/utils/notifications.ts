@@ -46,7 +46,7 @@ export function hasEntityChildType(
   entity: EntityType,
   type: EntityTypeString,
   item: { id: number },
-  childType: EntityTypeString
+  childType: EntityTypeString,
 ) {
   // Looking at child to be able to check parent
   const childMatch = getEntityChainMatch(entity, childType);
@@ -58,27 +58,40 @@ export function hasEntityChildType(
   }
 }
 
-export function dispatchRawLinkEvent(
-  target: EventTarget,
-  link: LinkType
+export function getEntityChildType(
+  entity: EntityType,
+  type: EntityTypeString,
+  item: { id: number },
+  childType: EntityTypeString,
 ) {
+  // Looking at child to be able to check parent
+  const childMatch = getEntityChainMatch(entity, childType);
+
+  if (childMatch && childMatch.parent && isEntityChainMatch(childMatch.parent, type, item)) {
+    return childMatch;
+  } else {
+    return undefined;
+  }
+}
+
+export function dispatchRawLinkEvent(target: EventTarget, link: LinkType) {
   const event: WyLinkEventType = new (CustomEvent as NamedEvent)("wy-link", {
     bubbles: true,
     composed: true,
     cancelable: true,
-    detail: {      
+    detail: {
       link,
       app_type: (link?.app?.type && AppTypeGuids.get(link.app.type)) || UnknownApp,
     },
   });
 
   return target.dispatchEvent(event);
-} 
+}
 
 export async function dispatchLinkEvent(
   target: EventTarget,
   weavy: WeavyType | undefined,
-  notification: NotificationType
+  notification: NotificationType,
 ) {
   let appMetadata: MetadataSourceType | undefined;
 
@@ -94,13 +107,20 @@ export async function dispatchLinkEvent(
     bubbles: true,
     composed: true,
     cancelable: true,
-    detail: {      
-      link: notification.link ? {
-        ...notification?.link,   
-        // HACK: pass along the agent uid so uikit can match the correct agent chat     
-        agent: notification.actor.is_agent && notification.link?.app?.type && AgentAppTypeGuids.has(notification.link.app.type) ? notification.actor.uid : undefined,
-      } : undefined,
-      metadata: notification.metadata,      
+    detail: {
+      link: notification.link
+        ? {
+            ...notification?.link,
+            // HACK: pass along the agent uid so uikit can match the correct agent chat
+            agent:
+              notification.actor.is_agent &&
+              notification.link?.app?.type &&
+              AgentAppTypeGuids.has(notification.link.app.type)
+                ? notification.actor.uid
+                : undefined,
+          }
+        : undefined,
+      metadata: notification.metadata,
       app_type: (notification?.link?.app?.type && AppTypeGuids.get(notification.link.app.type)) || UnknownApp,
       source_name: appMetadata?.source_name,
       source_url: appMetadata?.source_url,
@@ -302,7 +322,7 @@ export function getNotificationText(notification: NotificationType): {
       return {
         title: msg(str`${name1}, ${name2} and ${name3} voted on your poll`),
         titleHtml: msg(
-          html`<strong>${name1}</strong>, <strong>${name2}</strong> and <strong>${name3}</strong> voted on your poll`
+          html`<strong>${name1}</strong>, <strong>${name2}</strong> and <strong>${name3}</strong> voted on your poll`,
         ),
       };
     }
@@ -316,11 +336,10 @@ export function getNotificationText(notification: NotificationType): {
     default: {
       return {
         title: notification.plain,
-        titleHtml: html`${unsafeHTML(notification.html)}`
+        titleHtml: html`${unsafeHTML(notification.html)}`,
       };
       // console.error(`Notification template not found! '${notification.template}'`);
       // return { title: "", titleHtml: nothing };
-
     }
   }
 }

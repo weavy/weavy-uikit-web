@@ -5,14 +5,16 @@ import { WeavyContext, type WeavyType } from "../contexts/weavy-context";
 import type { UserType } from "../types/users.types";
 import { UserContext } from "../contexts/user-context";
 import { ContextIdContext, type ContextIdType } from "../contexts/context-id-context";
-import { WeavyComponentContextProps } from "../types/component.types";
+import { WeavyComponentActionProps, WeavyComponentContextProps } from "../types/component.types";
+import { WyActionEventDetailType, WyActionEventType } from "../types/action.events";
+import { NamedEvent } from "../types/generic.types";
 
 /**
  * Base class for internal weavy sub components. This class provides common properties and internal data consumed from contexts.
  *
  * @fires ready - When the component has rendered.
  */
-export class WeavySubComponent extends LitElement implements WeavyComponentContextProps {
+export class WeavySubComponent extends LitElement implements WeavyComponentContextProps, WeavyComponentActionProps {
   // CONTEXT PROVIDERS
   /**
    * @internal
@@ -92,6 +94,21 @@ export class WeavySubComponent extends LitElement implements WeavyComponentConte
   #whenReady = new Promise<WeavySubComponent>((r) => {
     this.#resolveReady = r;
   });
+
+  /**
+   * Dispatch a `wy-action` event on the component.
+   *
+   * @fires {WyActionEventType} wy-action - Emitted when an action takes place.
+   */
+  dispatchAction(detail: WyActionEventDetailType): boolean {
+    const eventAction: WyActionEventType = new (CustomEvent as NamedEvent)("wy-action", {
+      detail,
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    });
+    return this.dispatchEvent(eventAction);
+  }
 
   protected override willUpdate(changedProperties: PropertyValueMap<this>): void {
     super.willUpdate(changedProperties);

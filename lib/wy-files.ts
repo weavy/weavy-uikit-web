@@ -1,27 +1,9 @@
-import { html, type PropertyValues } from "lit";
+import { html, nothing, type PropertyValues } from "lit";
 import { customElement } from "./utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
-import { AppTypeGuid, PermissionType } from "./types/app.types";
-import type {
-  FileOrderType,
-  BlobType,
-  CreateFileProps,
-  FileType,
-  MutateFileProps,
-  FileMutationContextType,
-  FileViewType,
-} from "./types/files.types";
-import type {
-  CreateFilesEventType,
-  DropFilesEventType,
-  ExternalBlobsEventType,
-  FilesEventType,
-  UploadFilesEventType,
-} from "./types/files.events";
-import { MutationController } from "./controllers/mutation-controller";
-import { getCreateFileMutationOptions } from "./data/file-create";
-import { getUploadBlobMutationOptions } from "./data/blob-upload";
-import { ExternalBlobMutationType, getExternalBlobMutation } from "./data/blob-external";
+import { AppTypeGuid } from "./types/app.types";
+import type { FileOrderType, FileViewType } from "./types/files.types";
+import type { DropFilesEventType } from "./types/files.events";
 import { DropZoneController } from "./controllers/dropzone-controller";
 import { localized, msg } from "@lit/localize";
 //import { HistoryController } from './controllers/history-controller'
@@ -32,7 +14,11 @@ import { ComponentFeatures, Feature } from "./contexts/features-context";
 import { OrderEventType, ShowTrashedEventType, ViewEventType } from "./types/lists.events";
 import { SubscribeEventType } from "./types/app.events";
 import { partMap } from "./utils/directives/shadow-part-map";
-import { hasAnyPermission } from "./utils/permission";
+import { CreateFilesController } from "./controllers/create-files-controller";
+import { createRef, ref, Ref } from "lit/directives/ref.js";
+import { normalizeAppearanceMode, type AppearanceModeType } from "./types/ui.types";
+import { isActionEvent, WyActionEventType } from "./types/action.events";
+import { ActionKindType, ActionType } from "./types/action.types";
 
 import dropZoneCss from "./scss/components/dropzone.scss";
 import hostBlockCss from "./scss/host-block.scss";
@@ -45,6 +31,7 @@ import colorModesCss from "./scss/color-modes.scss";
 import "./components/wy-files-header";
 import "./components/wy-files-list";
 import "./components/wy-user-card";
+import { WyFilesList } from "./components/wy-files-list";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -112,7 +99,7 @@ declare global {
  * @csspart wy-dragging - Modifier for the main layout when dragging over.
  * @slot actions - Buttons placed in the toolbar.
  * @fires {WyAppEventType} wy-app - Fired whenever the app property changes.
- * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an embed.
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an entity.
  * @fires {WyPreviewOpenEventType} wy-preview-open - Fired when a preview overlay is about to open.
  * @fires {WyPreviewCloseEventType} wy-preview-close - Fired when a preview overlay is closed.
  *
@@ -138,6 +125,50 @@ declare global {
  *   view="grid"
  *   order="{ by: 'updated_at', descending: true }"
  * ></wy-files>
+ * ```
+ * 
+ * @example <caption>Files list without header connected to a `<wy-file>` view</caption>
+ * 
+ * Displays a table files list without the header bar (`header="none"` attribute). Instead of opening the preview, all files are opened in a separate [file view](xref:uikit-file).
+ * 
+ * Specifying the app identifier (`uid`) is required, and automatically creates a [corresponding app](xref:concepts#app) on your Weavy environment when the component is first initialized. It's recommended to specify a readable `name` of the posts app, to get better readable notifications from the app.
+ * 
+ * ```html
+ * <wy-files id="files-list" uid="test-files" header="none"></wy-files>
+ * <wy-file id="file-view" uid="test-files"></wy-file>
+ * <script>
+ *   const filesList = document.getElementById("files-list");
+ *   const fileView = document.getElementById("file-view");
+ *   filesList.addEventListener("wy-action", (e) => {
+ *       if (
+ *         // Check for `file`
+ *         e.detail.file &&
+ *         // Check for file specific actions
+ *         /select|preview|edit|comment|history/.test(e.detail.action)
+ *       ) {
+ *         // Prevent default to stop the preview overlay from showing
+ *         // Note: This _must_ be done in the `capture` phase of the event
+ *         e.preventDefault();
+ * 
+ *         // Set the file id to show
+ *         fileView.fileId = e.detail.file.id;
+ * 
+ *         // Set edit mode to enable opening directly into edit
+ *         fileView.edit = e.detail.action === "edit";
+ * 
+ *         // Optionally set tab to "comments" or "versions" to open these panels directly.
+ *         fileView.tab =
+ *           e.detail.action === "comment"
+ *             ? "comments"
+ *             : e.detail.action === "history"
+ *               ? "versions"
+ *               : undefined;
+ *       }
+ *     },
+ *     // It's important to use the `capture` phase to be able to prevent the default event action.
+ *     { capture: true },
+ *   );
+ * </script>
  * ```
  */
 @customElement("wy-files")
@@ -165,6 +196,10 @@ export class WyFiles extends WeavyAppComponent {
     [Feature.Comment]: true,
     [Feature.ContextData]: true,
     [Feature.Embeds]: true,
+    [Feature.FileCreate]: true,
+    [Feature.FileEdit]: true,
+    [Feature.FileRename]: true,
+    [Feature.FileUpload]: true,
     [Feature.Follow]: true,
     [Feature.GoogleMeet]: false,
     [Feature.Meetings]: false,
@@ -173,6 +208,7 @@ export class WyFiles extends WeavyAppComponent {
     [Feature.Polls]: true,
     [Feature.Previews]: true,
     [Feature.Reactions]: true,
+    [Feature.Report]: false,
     [Feature.Typing]: false, // Has no effect currently
     [Feature.Versions]: true,
     [Feature.WebDAV]: true,
@@ -192,6 +228,14 @@ export class WyFiles extends WeavyAppComponent {
   view: FileViewType = "list";
 
   /**
+   * Appearance of the file list header.
+   * @type {"interactive" | "empty" | "none"}
+   * @default "interactive"
+   */
+  @property()
+  header: AppearanceModeType = "interactive";
+
+  /**
    * File order in the list. Persisted in sessionStorage.
    */
   @property({ type: Object })
@@ -209,50 +253,56 @@ export class WyFiles extends WeavyAppComponent {
   @property()
   placeholder?: string;
 
+  /**
+   * File id that is selected.
+   */
+  @property({ type: Number })
+  selectedId?: number = NaN;
+
+  /**
+   * File id to load, scroll into view and highlight.
+   */
+  @property({ type: Number })
+  highlightId?: number = NaN;
+
   /** @internal */
   private persistState = new PersistStateController(this);
 
   /** @internal */
   private dropZone: DropZoneController = new DropZoneController(this);
 
-  /** @internal */
-  private uploadBlobMutation = new MutationController<BlobType, Error, MutateFileProps, FileMutationContextType>(this);
+  private createFilesController = new CreateFilesController(this);
 
-  /** @internal */
-  private externalBlobMutation?: ExternalBlobMutationType;
+  /**
+   * Reference to the files list component.
+   * @internal
+   */
+  private filesListRef: Ref<WyFilesList> = createRef();
 
-  /** @internal */
-  private createFileMutation = new MutationController<FileType, Error, CreateFileProps, FileMutationContextType>(this);
-
-  /** @internal */
-  private handleBlobUpload(e: FilesEventType) {
-    if (hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions) && e.detail.files) {
-      for (let i = 0; i < e.detail.files.length; i++) {
-        const file = e.detail.files[i];
-        const fileProps = { file: file };
-        void this.uploadBlobMutation.mutate(fileProps).then((blob) => this.handleCreateFile(blob));
-      }
-    }
-  }
-
-  /** @internal */
-  private handleExternalBlobs(e: ExternalBlobsEventType) {
-    if (hasAnyPermission([PermissionType.Create, PermissionType.Admin], this.app?.permissions) && e.detail.externalBlobs) {
-      for (let i = 0; i < e.detail.externalBlobs.length; i++) {
-        const externalBlob = e.detail.externalBlobs[i];
-        void this.externalBlobMutation?.mutate({ externalBlob }).then((blob) => this.handleCreateFile(blob));
-      }
-    }
-  }
-
-  /** @internal */
-  private async handleCreateFile(blob: BlobType, replace?: boolean) {
-    return await this.createFileMutation.mutate({ blob, replace });
+  /**
+   * Open a file in preview/edit. Optionally opens "comment" tab or "versions" tab.
+   *
+   * @param fileId - The id of the file to open
+   * @param options.edit - Optional edit mode
+   * @param options.tab - Optional tab to open in preview
+   */
+  preview(fileId: number, options: { edit?: boolean; tab?: "comments" | "versions" }) {
+    void this.filesListRef.value?.preview(fileId, options);
   }
 
   constructor() {
     super();
-    this.addEventListener("drop-files", (e) => this.handleBlobUpload(e as DropFilesEventType));
+    this.addEventListener("drop-files", (e) => {
+      if (this.componentFeatures?.allowsFeature(Feature.FileUpload)) {
+        void this.createFilesController.uploadFiles((e as DropFilesEventType).detail.files).then((files) => {
+          // Select the last uploaded file. Nothing is shown as selected if it is outside the loaded pages.
+          const lastFile = files?.findLast((file) => file);
+          if (lastFile) {
+            this.selectedId = lastFile.id;
+          }
+        });
+      }
+    });
   }
 
   protected override async willUpdate(changedProperties: PropertyValues<this>): Promise<void> {
@@ -276,53 +326,61 @@ export class WyFiles extends WeavyAppComponent {
       );
       //this.history.observe(['view'], this.uid.toString())
     }
-
-    if (
-      (changedProperties.has("weavy") || changedProperties.has("app") || changedProperties.has("user")) &&
-      this.weavy &&
-      this.app &&
-      this.user
-    ) {
-      await this.uploadBlobMutation.trackMutation(getUploadBlobMutationOptions(this.weavy, this.user, this.app.id));
-      await this.createFileMutation.trackMutation(getCreateFileMutationOptions(this.weavy, this.user, this.app));
-      this.externalBlobMutation = getExternalBlobMutation(this.weavy, this.user, this.app.id);
-    }
   }
 
   protected override render() {
-    const isDragActive = this.dropZone.isDragActive;
+    const isDragActive = this.componentFeatures?.allowsFeature(Feature.FileUpload) && this.dropZone.isDragActive;
+    const header = normalizeAppearanceMode(this.header);
 
     return html`
       <div part="wy-files ${partMap({ "wy-dragging": isDragActive })}" data-drag-title=${msg("Drop files here")}>
-        <wy-files-header
-          .order=${this.order}
-          .showTrashed=${this.showTrashed}
-          .view=${this.view}
-          @upload-files=${(e: UploadFilesEventType) => this.handleBlobUpload(e)}
-          @external-blobs=${(e: ExternalBlobsEventType) => this.handleExternalBlobs(e)}
-          @create-files=${(e: CreateFilesEventType) =>
-            (e.detail.blobs as BlobType[]).forEach((blob) => this.handleCreateFile(blob, e.detail.replace))}
-          @order=${(e: OrderEventType<FileOrderType>) => {
-            this.order = e.detail.order;
-          }}
-          @show-trashed=${(e: ShowTrashedEventType) => {
-            this.showTrashed = e.detail.showTrashed;
-          }}
-          @view=${(e: ViewEventType<FileViewType>) => {
-            this.view = e.detail.view;
-          }}
-          @subscribe=${(e: SubscribeEventType) => this.subscribe(e.detail.subscribe)}
-        >
-          <slot name="actions" slot="actions"></slot>
-        </wy-files-header>
+        ${header !== "none"
+          ? html`
+              <wy-files-header
+                .header=${header}
+                .order=${this.order}
+                .showTrashed=${this.showTrashed}
+                .view=${this.view}
+                @wy-action=${(e: WyActionEventType) => {
+                  if (e.detail.file && e.detail.action === ActionType.Edit) {
+                    this.preview(e.detail.file.id, { edit: true });
+                  } else if (isActionEvent(e, ActionKindType.File) && e.detail.file && e.detail.action === ActionType.Select) {
+                    // Only selects the created file. It is not highlighted, because loading the list around a
+                    // file outside the loaded pages makes the infinite pagers load pages repeatedly.
+                    this.selectedId = e.detail.file.id;
+                  }
+                }}
+                @order=${(e: OrderEventType<FileOrderType>) => {
+                  this.order = e.detail.order;
+                }}
+                @show-trashed=${(e: ShowTrashedEventType) => {
+                  this.showTrashed = e.detail.showTrashed;
+                }}
+                @view=${(e: ViewEventType<FileViewType>) => {
+                  this.view = e.detail.view;
+                }}
+                @subscribe=${(e: SubscribeEventType) => this.subscribe(e.detail.subscribe)}
+              >
+                <slot name="actions" slot="actions"></slot>
+              </wy-files-header>
+            `
+          : nothing}
 
         <wy-files-list
+          ${ref(this.filesListRef)}
           .view=${this.view}
           .order=${this.order}
           .showTrashed=${this.showTrashed}
           .placeholder=${this.placeholder}
+          .selectedId=${this.selectedId}
+          .highlightId=${this.highlightId}
           @order=${(e: OrderEventType<FileOrderType>) => {
             this.order = e.detail.order;
+          }}
+          @wy-action=${(e: WyActionEventType) => {
+            if (isActionEvent(e, ActionKindType.File) && e.detail.action === ActionType.Select) {
+              this.selectedId = e.detail.file?.id;
+            }
           }}
         ></wy-files-list>
       </div>

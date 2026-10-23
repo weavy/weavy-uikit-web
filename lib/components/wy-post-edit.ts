@@ -10,7 +10,7 @@ import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import type { PostEditEventType } from "../types/posts.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { MsgEditorSubmitEventType } from "../types/editor.events";
-import { relativeTime } from "../utils/datetime";
+import { relativeDays } from "../utils/datetime";
 
 import postCss from "../scss/components/post.scss";
 import textCss from "../scss/components/text.scss";
@@ -108,7 +108,7 @@ export class WyPostEdit extends WeavySubAppComponent {
   }
 
   override render() {
-    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.post.created_at));
+    const dateFromNow = relativeDays(this.weavy?.locale, new Date(this.post.created_at));
 
     return html`
       <div part="wy-post">

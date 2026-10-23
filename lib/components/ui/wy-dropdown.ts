@@ -83,6 +83,12 @@ export class WyDropdown extends LitElement {
   disabled: boolean = false;
 
   /**
+   * Overrides the highlight state of the dropdown button.
+   */
+  @property({ type: Boolean })
+  active?: boolean;
+
+  /**
    * Floating-ui compatible positioning
    * @internal
    */
@@ -94,6 +100,7 @@ export class WyDropdown extends LitElement {
    */
   @state()
   showMenu: boolean = false;
+
 
   /**
    * Any nodes assigned to the `button` slot.
@@ -237,7 +244,7 @@ export class WyDropdown extends LitElement {
             .kind=${isIcon ? "icon" : undefined}
             ?small=${this.small}
             title=${this.title}
-            ?active=${this.showMenu}
+            ?active=${this.active !== undefined ? this.active : this.showMenu}
             ?disabled=${this.disabled}
           >
             <slot name="button-content" @slotchange=${() => this.requestUpdate()}>
@@ -278,6 +285,7 @@ export class WyDropdown extends LitElement {
  * @slot - Default slot for icon and text.
  * @csspart wy-dropdown-item - The container for the dropdown item.
  * @csspart wy-active - Active state for the dropdown item.
+ * @csspart wy-disabled - Disabled state for the dropdown item.
  */
 @customElement("wy-dropdown-item")
 export class WyDropdownItem extends LitElement {
@@ -291,8 +299,14 @@ export class WyDropdownItem extends LitElement {
   @property({ type: Boolean })
   active: boolean = false;
 
+  /**
+   * Disables interactions.
+   */
+  @property({ type: Boolean })
+  disabled: boolean = false;
+
   override render() {
-    return html`<div part="wy-dropdown-item ${partMap({ "wy-active": this.active })}" tabindex="0"><slot></slot></div>`;
+    return html`<div part="wy-dropdown-item ${partMap({ "wy-active": this.active, "wy-disabled": this.disabled })}" tabindex="0"><slot></slot></div>`;
   }
 }
 

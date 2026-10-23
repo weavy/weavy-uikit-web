@@ -11,8 +11,6 @@ export type FileEventType<TAdditionalDetail extends object = object> = CustomEve
 
 export type FilesEventType = CustomEvent<{ files: File[] | FileList | null }>
 
-export type FileOpenEventType = CustomEvent<{ fileId: number; tab?: "comments" | "versions" }> & { type: "file-open" };
-
 export type ExternalBlobsEventType = CustomEvent<{ externalBlobs: ExternalBlobType[] | null }> & {
   type: "external-blobs";
 };
@@ -30,7 +28,15 @@ export type CreateFilesEventType = CustomEvent<{
   replace: boolean;
 }> & { type: "create-files" }
 
-export type FileEditNameEventType = FileEventType & { type: "edit-name" }
+export type FileEditEventType = FileEventType<{ edit: boolean }> & { type: "edit" }
+
+export type FileCommentsEventType = FileEventType<{ show: boolean }> & { type: "comments" }
+
+export type FileVersionsEventType = FileEventType<{ show: boolean }> & { type: "versions" }
+
+export type FileSaveEventType = FileEventType & { type: "save" }
+
+export type FileEditNameEventType = FileEventType<{ editName: boolean }>  & { type: "edit-name" }
 
 export type FileRenameEventType = FileEventType<{ name: string }> & { type: "rename" }
 
@@ -44,6 +50,8 @@ export type FileSubscribeEventType = SubscribeEventType<{ file: FileType }>
 
 export type FileVersionSelectEventType = CustomEvent<{
   versionFile: FileType;
+  
+  draft?: boolean;
 }> & { type: "file-version-select" }
 
 /**

@@ -5,6 +5,14 @@
   justify-self: center;
 }
 
+[part~="wy-pager-overlay"] {
+  position: absolute;
+}
+
+[part~="wy-pager-overlay-top"] {
+  top: 0;
+}
+
 [part~="wy-pager-bottom"] {
   /* intersection element used instead of using rootMargin on the intersection observer */
   width: 16px;

@@ -224,7 +224,8 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
           (context as FileMutationContextType).status.text = undefined;
         }
       });
-      return queryClient.invalidateQueries({ queryKey: filesKey });
+
+      //await queryClient.invalidateQueries({ queryKey: filesKey, exact: false });
     },
     onError(error: Error, variables: CreateFileProps, _context: FileMutationContextType | undefined) {
       if ((error?.cause as ServerErrorResponseType)?.status === 409) {
@@ -247,5 +248,18 @@ export function getCreateFileMutationOptions(weavy: WeavyType, user: UserType, a
     },
   };
 
+  return options;
+}
+
+
+/// Alternate Mutation for adding a <BlobType> to a <FileType> query
+export function getUpdateFileMutationOptions(weavy: WeavyType, user: UserType, app: AppType) {
+  const options = getCreateFileMutationOptions(weavy, user, app);
+  const createMutationFn = options.mutationFn;
+
+  // Same, but replacing by default
+  options.mutationFn = async ({ blob, replace = true }: CreateFileProps) => {
+      return await createMutationFn({ blob, replace });
+    };
   return options;
 }

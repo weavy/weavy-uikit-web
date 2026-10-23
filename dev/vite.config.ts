@@ -1,28 +1,33 @@
 import { defineConfig, loadEnv } from "vite";
-import packageJson from "../package.json";
-import dts from "vite-plugin-dts";
+import packageJson from "../package.json" with { type: "json" };
+import dts from "unplugin-dts/vite";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import {
+  checkVersionPrefix,
   utf8BomPlugin,
   weavyAuthServer,
   weavyChunkNames,
   weavyImportUrlPlugin,
   excludeNodeInPdfJS,
-} from "../utils/vite-plugins";
+} from "../utils/vite-plugins.js";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { fixOverlayInCodemirror } from "../utils/vite-plugins.js";
 
 // CEM Plugins
 import { jsdocExamplePlugin } from "cem-plugin-jsdoc-example";
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
-const sourceName = process.argv.find((s) => s.startsWith("--source-name="))?.split("=")[1] || packageJson.name;
-const version = process.argv.find((s) => s.startsWith("--version="))?.split("=")[1] || packageJson.version;
+const sourceName = packageJson.name;
+const version = packageJson.version;
+
+checkVersionPrefix(packageJson, fileURLToPath(new URL("..", import.meta.url)));
 
 // https://vitejs.dev/config/
 
@@ -63,9 +68,10 @@ export default defineConfig(({ command, mode }) => {
     envPrefix: "WEAVY_",
     plugins: [
       excludeNodeInPdfJS(),
+      fixOverlayInCodemirror(),
       dts({
         tsconfigPath: "dev/tsconfig.build.json",
-        outDir: "dist/types",
+        outDirs: "dist/types",
         include: ["lib"],
         entryRoot: "lib",
       }),
@@ -84,22 +90,27 @@ export default defineConfig(({ command, mode }) => {
           {
             src: "node_modules/pdfjs-dist/build/pdf.worker.min.mjs",
             dest: "pdfjs",
+            rename: { stripBase: true }
           },
           {
             src: "node_modules/pdfjs-dist/cmaps/*.bcmap",
             dest: "pdfjs/cmaps",
+            rename: { stripBase: true }
           },
           {
             src: "node_modules/pdfjs-dist/iccs/*.icc",
             dest: "pdfjs/iccs",
+            rename: { stripBase: true }
           },
           {
             src: "node_modules/pdfjs-dist/standard_fonts/*.@(pfb|ttf)",
             dest: "pdfjs/fonts",
+            rename: { stripBase: true }
           },
           {
             src: "node_modules/pdfjs-dist/wasm/*.wasm",
             dest: "pdfjs/wasm",
+            rename: { stripBase: true }
           },
         ],
       }),
@@ -109,8 +120,15 @@ export default defineConfig(({ command, mode }) => {
     ],
     define,
     optimizeDeps: {
-      esbuildOptions: {
-        target: "esnext",
+      // Needed for web test runner to work
+      exclude: ['/__web-dev-server__web-socket.js'],
+      rolldownOptions: {
+        transform: {
+          target: "esnext",
+        },
+        output: {
+          keepNames: true,
+        },
       },
     },
     resolve: {
@@ -143,12 +161,6 @@ export default defineConfig(({ command, mode }) => {
       },*/
       https: httpsConfig,
     },
-    esbuild: {
-      legalComments: "none",
-      charset: "utf8",
-      //banner: "\ufeff", // UTF-8 BOM
-      keepNames: true,
-    },
     build: {
       outDir: "dist",
       lib: {
@@ -176,26 +188,39 @@ export default defineConfig(({ command, mode }) => {
             minifyInternalExports: false,
             preserveModules: false,
             intro: `const WEAVY_SOURCE_FORMAT = "esm/dynamic";`,
-            manualChunks: {
-              editor: [
-                "./lib/utils/editor/editor",
-                "@codemirror/view",
-                "@codemirror/state",
-                "@codemirror/language",
-                "@codemirror/autocomplete",
-                "@codemirror/lang-markdown",
-                "@codemirror/language-data",
-                "@codemirror/legacy-modes/mode/simple-mode",
-                "@lezer/common",
-                "@lezer/highlight",
-                "@lezer/lr",
-                "@lezer/markdown",
+            codeSplitting: {
+              groups: [
+                {
+                  name: "editor",
+                  test: (id: string) =>
+                    [
+                      "/lib/utils/editor/editor.ts",
+                      "@codemirror/view",
+                      "@codemirror/state",
+                      "@codemirror/language",
+                      "@codemirror/autocomplete",
+                      "@codemirror/lang-markdown",
+                      "@codemirror/language-data",
+                      "@codemirror/legacy-modes/mode/simple-mode",
+                      "@lezer/common",
+                      "@lezer/highlight",
+                      "@lezer/lr",
+                      "@lezer/markdown",
+                    ].some((searchId) => id.includes(searchId)),
+                },
+                {
+                  name: "pdfjs",
+                  test: "pdfjs-dist",
+                },
+                {
+                  name: "locales/sv-SE",
+                  test: "./locales/sv-SE",
+                },
+                /* {
+                  name "tools": 
+                  test: "@tanstack/query-devtools"
+                }*/
               ],
-              pdfjs: ["pdfjs-dist"],
-              "locales/sv-SE": ["./locales/sv-SE"],
-              /*tools: [
-                "@tanstack/query-devtools"
-              ]*/
             },
             chunkFileNames: weavyChunkNames,
           },

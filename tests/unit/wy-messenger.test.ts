@@ -3,6 +3,8 @@ import { expect, fixture, html } from "@open-wc/testing";
 import "../utils/version";
 import "../../lib";
 import { type WyMessenger } from "../../lib";
+import type { WyConversationList } from "../../lib/components/wy-conversation-list";
+import { AppTypeGuid } from "../../lib/types/app.types";
 
 describe("wy-messenger", () => {
   it("has a shadowDom and a slot", async () => {
@@ -12,7 +14,20 @@ describe("wy-messenger", () => {
 
     expect(el).shadowDom.to.exist;
     //expect(el).shadowDom.to.equal(``);
-    expect(el).lightDom.to.equal(``);
+    await expect(el).lightDom.to.equal(``);
+  });
+
+  it("keeps the messenger conversation types when an agent is configured", async () => {
+    const el = await fixture<WyMessenger>(html`<wy-messenger></wy-messenger>`);
+    const list = el.shadowRoot!.querySelector<WyConversationList>("wy-conversation-list")!;
+
+    expect(list.conversationTypes).to.deep.equal([AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat]);
+
+    // The inherited `agent` property no longer switches the messenger into agent mode
+    el.agent = "assistant";
+    await el.updateComplete;
+    expect(list.conversationTypes).to.deep.equal([AppTypeGuid.ChatRoom, AppTypeGuid.PrivateChat]);
+    expect("instructions" in el).to.equal(false);
   });
 
   /*it('has a "themeColor" attribute with unreflected property that sets --wy-theme-color', async () => {

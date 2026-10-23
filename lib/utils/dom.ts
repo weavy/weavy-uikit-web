@@ -1,3 +1,5 @@
+import { getScrollParent } from "./scroll-position";
+
 /**
  * Waits for the DOM to be ready. Same as <script defer></script> or jQuery.ready().
  * Executes instantly if ready.
@@ -16,8 +18,37 @@ export function defer(callback: () => void) {
   }
 }
 
-export const autofocusRef = (r: Element | undefined) => {
-  r && requestAnimationFrame(() => (r as HTMLElement)?.focus?.());
+/**
+ * Creates a function that focuses the referenced element
+ * @param options - Options to use with the focus() method.
+ * @returns 
+ */
+export const autoFocusRef = (options?: FocusOptions) => (r: Element | undefined) => {
+  r && requestAnimationFrame(() => (r as HTMLElement)?.focus?.(options));
+  return r;
+};
+
+/**
+ * References for the last used scrolling element, per scroll area.
+ */
+export const currentScrollMap: WeakMap<Element, Element> = new WeakMap();
+
+/**
+ * Scrolls the element into view. Skips scrolling if the element is the same as last time (unless forceScroll is set).
+ * 
+ * @param options - Options to use with the scrollIntoView() method
+ * @param forceScroll - Ignore the last scrolled element and scroll anyway.
+ * @returns 
+ */
+export const autoScrollRef = (options?: ScrollIntoViewOptions, forceScroll: boolean = false) => (r: Element | undefined) => {
+  if (r) {
+    const scrollParent = getScrollParent(r as HTMLElement);
+    if (forceScroll || currentScrollMap.get(scrollParent) !== r) {
+      currentScrollMap.set(scrollParent, r);
+      r && requestAnimationFrame(() => r.scrollIntoView(options));
+    }
+  }
+  return r;
 };
 
 export async function whenParentsDefined(element: Element, prefix: string = "wy-") {

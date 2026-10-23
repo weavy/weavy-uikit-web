@@ -182,11 +182,11 @@ export function getAuthServer(serverConfig, users) {
 
 export async function whenServerOk(serverConfig) {
   try {
-    const response = await fetch(new URL("/status", serverConfig.weavyUrl), {
+    const response = await fetch(new URL("/ready", serverConfig.weavyUrl), {
       agent: serverConfig.agent,
     });
 
-    if (!response.ok || (await response.text()) !== "Ok") {
+    if (!response.ok) {
       throw new Error();
     }
   } catch {

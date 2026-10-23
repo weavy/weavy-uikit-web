@@ -15,6 +15,7 @@ import pollCss from "../scss/components/poll.scss";
 import hostContentsCss from "../scss/host-contents.scss";
 
 import "./ui/wy-avatar";
+import "./ui/wy-badge";
 import "./ui/wy-icon";
 import "./ui/wy-item";
 import "./ui/wy-overlay";
@@ -91,12 +92,13 @@ export class WyPoll extends LitElement {
  * - [`<wy-container>`](./ui/wy-container.ts)
  * - [`<wy-item>`](./ui/wy-item.ts)
  * - [`<wy-avatar>`](./ui/wy-avatar.ts)
+ * - [`<wy-badge>`](./ui/wy-badge.ts)
  *
  * @csspart wy-poll-option - Root poll option container.
  * @csspart wy-poll-meter - Visual meter showing vote ratio.
  * @csspart wy-poll-image - Icon/indicator area.
  * @csspart wy-poll-title - Option label.
- * @csspart wy-poll-amount - Percentage/amount element (clickable to open voter sheet).
+ * @csspart wy-poll-amount - Vote count badge with the share as hover text (clickable to open voter sheet).
  *
  * @fires {PollVoteEventType} vote - Emitted when this option is voted.
  */
@@ -187,6 +189,7 @@ export class WyPollOption extends WeavySubComponent {
       <div
         part=${partMap(optionParts)}
         tabindex="0"
+        title=${msg("Click to vote")}
         @click=${() => this.dispatchVote(this.option?.id)}
         @keydown=${clickOnEnterAndConsumeOnSpace}
         @keyup=${clickOnSpace}
@@ -198,24 +201,27 @@ export class WyPollOption extends WeavySubComponent {
             : html`<wy-icon name="checkbox-blank"></wy-icon>`}
         </div>
         <div part="wy-poll-title">${this.option.text}</div>
-        ${this.option.votes?.count
+        ${voteCount
           ? html`<span
               part="wy-poll-amount"
               tabindex="0"
               @click=${(e: Event) => this.openSheet(e)}
               @keydown=${clickOnEnterAndConsumeOnSpace}
               @keyup=${clickOnSpace}
-              title=${msg(str`Votes on ${this.option.text}: ${voteCount}`)}
             >
-               ${ratio + "%"} (${this.option.votes.count})
+              <wy-badge color="variant" .limit=${999} title=${ratio + "%"}>${voteCount}</wy-badge>
             </span>`
-          : html`<span part="wy-poll-amount"></span>`}
+          : nothing}
       </div>
 
       ${this.weavy
         ? html`
             <wy-overlay type="sheet" .show=${this.showSheet} @close=${() => (this.showSheet = false)}>
-              <span slot="title">${msg(str`Votes on ${this.option.text}: ${voteCount}`)}</span>
+              <span slot="title"
+                >${voteCount === 1
+                  ? msg(str`1 person voted for “${this.option.text}”`)
+                  : msg(str`${voteCount} people voted for “${this.option.text}”`)}</span
+              >
               <wy-container scrollY padded>
                 ${this.showSheet && data && !isLoading
                   ? html`

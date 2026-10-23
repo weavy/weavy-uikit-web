@@ -114,25 +114,25 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
   // Promises
 
   // whenUrl
-  #resolveUrl?: (url: URL) => void;
+  _resolveUrl?: (url: URL) => void;
 
-  #whenUrl = new Promise((r) => {
-    this.#resolveUrl = r;
+  _whenUrl = new Promise((r) => {
+    this._resolveUrl = r;
   });
 
   async whenUrl() {
-    await this.#whenUrl;
+    await this._whenUrl;
   }
 
   // Reactive options
 
-  #url?: URL;
+  _url?: URL;
 
   /**
    * The URL to the weavy environment.
    */
   get url(): URL | undefined {
-    return this.#url;
+    return this._url;
   }
 
   set url(url: string | URL | null | undefined) {
@@ -143,12 +143,12 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
     try {
       if (typeof url === "string") {
         if (url) {
-          this.#url = new URL(url, window.location.toString());
+          this._url = new URL(url, window.location.toString());
         }
       } else if (url instanceof URL) {
-        this.#url = url || undefined;
+        this._url = url || undefined;
       } else if (url === undefined || url === null) {
-        this.#url = undefined;
+        this._url = undefined;
       } else {
         throw new Error();
       }
@@ -167,8 +167,8 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
       ).href;
     }
 
-    if (this.#url) {
-      this.#resolveUrl?.(this.#url);
+    if (this._url) {
+      this._resolveUrl?.(this._url);
     }
   }
 
@@ -214,14 +214,14 @@ export class WeavyClient implements WeavyOptions, Resettable, Destructable {
     console.info(this.weavyId, "is reset");
   }
 
-  #isDestroyed = false;
+  _isDestroyed = false;
 
   get isDestroyed() {
-    return this.#isDestroyed;
+    return this._isDestroyed;
   }
 
   destroy() {
-    this.#isDestroyed = true;
+    this._isDestroyed = true;
     console.info(this.weavyId, "was destroyed");
   }
 }

@@ -4,7 +4,7 @@ const showDebug = Boolean(process.argv.find((s) => s.startsWith("--debug")))
 
 export default {
   files: [
-    "tests/**/*.test.ts", 
+    "./tests/**/*.test.ts", 
     //"tests/**/*.spec.ts"
   ],
   nodeResolve: true,

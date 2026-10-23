@@ -7,6 +7,7 @@ import { partMap } from "../../utils/directives/shadow-part-map";
 import containerCss from "../../scss/components/container.scss";
 import scrollCss from "../../scss/scroll.scss";
 import hostContentsCss from "../../scss/host-contents.scss";
+import rebootCss from "../../scss/reboot.scss";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -32,7 +33,7 @@ declare global {
  */
 @customElement("wy-container")
 export class WyContainer extends LitElement {
-  static override styles = [scrollCss, hostContentsCss, containerCss];
+  static override styles = [rebootCss, scrollCss, hostContentsCss, containerCss];
   protected exportParts = new ShadowPartsController(this);
 
   /** Whether to scroll horizontally */
@@ -63,6 +64,14 @@ export class WyContainer extends LitElement {
   @property({ type: Boolean })
   fill: boolean = false;
 
+  /** Whether the container should overflow it's minimum size */
+  @property({ type: Boolean })
+  overflow: boolean = false;
+
+  /** Flex layout direction. "auto" is responsive to what fits better. */
+  @property()
+  direction: "vertical" | "horizontal" | "auto" = "vertical";
+
   override render() {
     const containerParts = {
       "wy-container": true,
@@ -71,6 +80,9 @@ export class WyContainer extends LitElement {
       "wy-container-gap-lg": this.gap === "lg",
       "wy-container-gap-xl": this.gap === "xl",
       "wy-container-fill": this.fill,
+      "wy-container-overflow": this.overflow,
+      "wy-container-horizontal": this.direction === "horizontal",
+      "wy-container-responsive": this.direction === "auto",
       "wy-scroll-x": this.scrollX && !this.scrollY,
       "wy-scroll-y": this.scrollY && !this.scrollX,
       "wy-scroll-x-y": this.scrollX && this.scrollY,

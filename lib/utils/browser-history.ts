@@ -12,7 +12,7 @@ import { assign, eqObjects, isPlainObject } from "./objects";
 export function getBrowserStateProperty<T>(prefix: string, property: PropertyKey) {
   throwOnDomNotAvailable();
 
-  const historyState = assign<PlainObjectType>({} as PlainObjectType, window.history.state as PlainObjectType, true);
+  const historyState = assign<PlainObjectType>({}, window.history.state as PlainObjectType, true);
   if (!historyState.weavy || !(historyState.weavy as PlainObjectType)[prefix] || !Object.hasOwn((historyState.weavy as PlainObjectType)[prefix] as PlainObjectType, property)) {
     //console.log("property not found", window.history.state)
     throw new Error("Property not found");
@@ -40,7 +40,7 @@ export function setBrowserState(prefix: string, state: unknown, action: "push" |
 
     // Always modify any existing state
 
-    const currentHistoryState = assign<PlainObjectType>({} as PlainObjectType, window.history.state as PlainObjectType, true);
+    const currentHistoryState = assign<PlainObjectType>({}, window.history.state as PlainObjectType, true);
     currentHistoryState.weavy ??= {} as PlainObjectType;
 
     (currentHistoryState.weavy as PlainObjectType)[prefix] = state;
@@ -105,7 +105,7 @@ export function updateHistoryProperties<T = object>(parent: T, key: string, prop
 
 export function itemHasChanged(a: unknown, b: unknown) {
   if (a && b && (isPlainObject(a) || isPlainObject(b))) {
-    if (a && Object.hasOwn(a as object, "id") || b && Object.hasOwn(b as object, "id")) {
+    if (a && Object.hasOwn(a, "id") || b && Object.hasOwn(b, "id")) {
       return (a as unknown as { id: unknown }).id !== (b as unknown as { id: unknown }).id;
     } else {
       return !eqObjects(a as PlainObjectType, b as PlainObjectType);

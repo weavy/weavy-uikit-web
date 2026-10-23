@@ -10,15 +10,12 @@
   --wy-component-color: #{color.token(--wy-on-surface)};
 
   box-sizing: border-box;
-  display: grid;
+  display: flex;
   align-items: center;
-  justify-content: space-between;
   justify-items: center;
   min-height: var.default(--wy-titlebar-height);
   padding: calc(var.default(--wy-padding-sm));
   flex: 0 0 var.default(--wy-titlebar-height);
-  grid-template-columns: #{var.default(--wy-button-size)} minmax(0, max-content) #{var.default(--wy-button-size)};
-  column-gap: var.default(--wy-gap);
   line-height: var.default(--wy-line-height);
 
   color: var(--wy-component-color);
@@ -39,6 +36,18 @@
     background-color: color(from var(--wy-component-background-color) srgb r g b / 0.5);
     backdrop-filter: blur(4px);
   }*/
+}
+
+[part~="wy-titlebar-section"] {
+  margin-left: auto;
+  margin-right: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+[part~="wy-titlebar-wrapping"] {
+  flex-wrap: balance;
+  justify-content: flex-end;
 }
 
 [part~="wy-titlebar-lg"] {
@@ -67,4 +76,10 @@
 
 [part~="wy-titlebar-text-trashed"] {
   text-decoration: line-through;
+}
+
+[part~="wy-titlebar-fill"] {
+  flex: 0 999999999999999 auto;
+  --wy-fill: attr(data-fill px);
+  width: var(--wy-fill, 0);
 }

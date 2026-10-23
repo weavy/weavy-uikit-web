@@ -1,5 +1,6 @@
 import { WeavyType } from "../contexts";
 import { WeavyComponentSettingsType } from "../contexts/settings-context";
+import { WyActionEventDetailType } from "./action.events";
 import { AppListType, AppType, AppUidType, LinkType } from "./app.types";
 import { ContextDataBlobsType, ContextIdType } from "./context.types";
 import { EnterToSend } from "./editor.types";
@@ -31,6 +32,15 @@ export interface WeavyComponentSettingProps {
    * A space separated string of available reaction emojis in unicode.
    */
   reactions: string;
+}
+
+export interface WeavyComponentActionProps {
+  /**
+   * Dispatch a `wy-action` event on the component.
+   *
+   * @fires {WyActionEventType} wy-action - Emitted when an action takes place.
+   */
+  dispatchAction: (detail: WyActionEventDetailType) => boolean;
 }
 
 export interface WeavyComponentContextProps {
@@ -165,7 +175,7 @@ export interface WeavyAppComponentProps {
   /**
    * Optional directory identifier (`id` or `name`) used when a single uid initializes an app.
    */
-  directory?: string
+  directory?: string | number
 }
 
 export interface WeavyAppComponentContextProps {
@@ -192,4 +202,10 @@ export interface WeavyAppComponentContextProps {
    * @returns {Promise<AppListType>}
    */
   whenApps(): Promise<AppListType>;
+}
+/**
+ * Props for focusable handling.
+ */
+export interface FocusProps {
+  setFocus?: () => void;
 }

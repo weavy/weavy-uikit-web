@@ -6,8 +6,11 @@ import { WeavySubComponent } from "../classes/weavy-sub-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { MemberSearchSubmitEventType } from "../types/members.events";
 import { NamedEvent } from "../types/generic.types";
-import { MemberIdType } from "../types/members.types";
+import { MemberIdType, MemberType } from "../types/members.types";
 import { CreateConversationEventType } from "../types/conversation.events";
+import { consume } from "@lit/context";
+import { FeaturePolicyContext, type ComponentFeaturePolicy } from "../contexts/features-context";
+import { Feature } from "../types/features.types";
 
 import hostContentsCss from "../scss/host-contents.scss";
 
@@ -16,6 +19,8 @@ import "./ui/wy-icon";
 import "./ui/wy-overlay";
 import "./ui/wy-titlebar";
 import "./wy-users-search";
+import type { OverlayAppearanceType } from "../types/ui.types";
+import { ActionType } from "../types/action.types";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -48,6 +53,15 @@ export class WyConversationNew extends WeavySubComponent {
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
+
+  /**
+   * The feature policy of the host component, used to tell the picker whether blocking is available.
+   *
+   * @internal
+   */
+  @consume({ context: FeaturePolicyContext, subscribe: true })
+  @state()
+  componentFeatures: ComponentFeaturePolicy | undefined;
 
   /**
    * Internal resolver for the member selection promise.
@@ -96,12 +110,13 @@ export class WyConversationNew extends WeavySubComponent {
   }
 
   /**
-   * Any agent uid
+   * Overlay appearance used for the create conversation dialog.
    *
-   * When set, the component can create agent conversations directly.
+   * @type {"modal" | "sheet" | "drawer" | "full" | "none"}
+   * @default "modal"
    */
-  @property()
-  agent?: string;
+  @property({ type: String })
+  overlay: OverlayAppearanceType = "modal";
 
   /**
    * Whether the new conversation dialog is shown.
@@ -148,6 +163,29 @@ export class WyConversationNew extends WeavySubComponent {
   }
 
   /**
+   * Handle a member selection from the picker.
+   *
+   * Picking exactly one blocked person opens their profile card instead of starting a conversation: a blocked 1:1 is
+   * not openable, so creating one would drop the user straight into a muted conversation with no way forward. The card
+   * is where unblock lives. Any other selection -- including a group that happens to contain a blocked person -- is
+   * created as usual, since group participation is unrestricted.
+   *
+   * @internal
+   * @param members - The members chosen in the picker.
+   */
+  private async handleSubmit(members: MemberType[]) {
+    const blocked = members.length === 1 && members[0].is_blocked ? members[0] : undefined;
+
+    if (blocked) {
+      this.close();
+      this.dispatchAction({ action: ActionType.Preview, user: blocked });
+      return;
+    }
+
+    await this.submit(members.map((m) => m.id));
+  }
+
+  /**
    * Create a conversation by dispatching a `create` event and closing the dialog.
    *
    * @param members - Array of members by id/uid for a new conversation.
@@ -179,14 +217,10 @@ export class WyConversationNew extends WeavySubComponent {
               part="wy-conversation-new-button"
               kind="icon"
               @click=${async () => {
-                if (this.agent) {
-                  await this.submit();
-                } else {
-                  try {
-                    await this.selectMembers();
-                  } catch {
-                    /* No members selected, no worries */
-                  }
+                try {
+                  await this.selectMembers();
+                } catch {
+                  /* No members selected, no worries */
                 }
               }}
             >
@@ -195,9 +229,10 @@ export class WyConversationNew extends WeavySubComponent {
           `}
       <slot></slot>
 
-      ${!this.agent && this.weavy && this.user
+      ${this.weavy && this.user
         ? html`<wy-overlay
             part="wy-conversation-new-dialog"
+            .type=${this.overlay}
             .show=${this.show}
             @close=${() => {
               this.show = false;
@@ -212,7 +247,8 @@ export class WyConversationNew extends WeavySubComponent {
             ${this.show
               ? html`
                   <wy-users-search
-                    @submit=${(e: MemberSearchSubmitEventType) => this.submit(e.detail.members.map((m) => m.id))}
+                    .canBlock=${Boolean(this.componentFeatures?.allowsFeature(Feature.Block))}
+                    @submit=${(e: MemberSearchSubmitEventType) => this.handleSubmit(e.detail.members)}
                   ></wy-users-search>
                 `
               : nothing}

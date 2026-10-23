@@ -6,8 +6,9 @@ import { ShadowPartsController } from "../../controllers/shadow-parts-controller
 import { partMap } from "../../utils/directives/shadow-part-map";
 import type { OverlayAppearanceType } from "../../types/ui.types";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { CloseEventType } from "../../types/ui.events";
+import { CloseEventType, ShownEventType } from "../../types/ui.events";
 import { NamedEvent } from "../../types/generic.types";
+import { whenElementVisible } from "../../utils/dom";
 
 import overlayCss from "../../scss/components/overlay.scss";
 import modalCss from "../../scss/components/overlay-modal.scss";
@@ -39,6 +40,7 @@ declare global {
  * - [`<wy-button>`](./wy-button.ts)
  * - [`<wy-icon>`](./wy-icon.ts)
  *
+ * @fires {ShownEventType} shown - When overlay is shown.
  * @fires {CloseEventType} close - When overlay is closed.
  *
  * @slot - Default overlay content.
@@ -76,6 +78,7 @@ export class WyOverlay extends LitElement {
    * Appearance of the overlay.
    *
    * - "modal" - Centered overlay with blocked background.
+   * - "modal-input" - Centered smaller overlay with blocked background.
    * - "sheet" - Bottom overlay without background blocking.
    * - "drawer" - Side overlay without background blocking.
    * - "full" - Full window overlay.
@@ -121,7 +124,26 @@ export class WyOverlay extends LitElement {
   isModal(type?: OverlayAppearanceType) {
     type ??= this.type;
 
-    return type === "modal" || type === "full";
+    return type === "modal" || type === "modal-input" || type === "full";
+  }
+
+  setFocus() {
+    this.viewportRef.value?.focus()
+  }
+
+  /**
+   * Trigger an event when the overlay is shown.
+   * @internal
+   */
+  async triggerShownEvent() {
+    await new Promise((r) => requestAnimationFrame(r));
+
+    if (this.viewportRef.value) {
+      await whenElementVisible(this.viewportRef.value);
+    }
+
+    const event: ShownEventType = new (CustomEvent as NamedEvent)("shown");
+    this.dispatchEvent(event);
   }
 
   /**
@@ -159,8 +181,9 @@ export class WyOverlay extends LitElement {
 
     const overlayParts = {
       "wy-overlay": true,
-      "wy-modal": this.isModal(), // modal, full
-      "wy-modal-centered": this.type === "modal",
+      "wy-modal": this.isModal(), // modal, modal-input, full
+      "wy-modal-input": this.type === "modal-input",
+      "wy-modal-centered": this.type === "modal" || this.type === "modal-input",
       "wy-sheet": this.type === "sheet",
       "wy-drawer": this.type === "drawer",
       "wy-maximized": this.maximized,
@@ -170,12 +193,7 @@ export class WyOverlay extends LitElement {
     const popover = this.isModal() ? undefined : "auto";
 
     return html`
-      <dialog
-        part=${partMap(dialogParts)}
-        tabindex="0"
-        popover=${ifDefined(popover)}
-        ${ref(this.viewportRef)}
-      >
+      <dialog part=${partMap(dialogParts)} tabindex="0" popover=${ifDefined(popover)} ${ref(this.viewportRef)}>
         <div part=${partMap(overlayParts)}>
           ${this.noHeader
             ? nothing
@@ -197,6 +215,19 @@ export class WyOverlay extends LitElement {
   }
 
   override updated(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("show") || changedProperties.has("type")) {
+      if (this.type === "drawer" && this.show) {
+        // Add global drawer CSS class
+        document.documentElement.classList.add("wy-drawer-open");
+      } else if (
+        (typeof this.type === "string" && changedProperties.get("type") === "drawer") ||
+        changedProperties.get("show") == true
+      ) {
+        // Remove global drawer CSS class
+        document.documentElement.classList.remove("wy-drawer-open");
+      }
+    }
+
     if (changedProperties.has("type")) {
       // Register close/toggle event listener
       const eventType = !this.isModal() && this.viewportRef.value?.popover ? "toggle" : "close";
@@ -218,7 +249,7 @@ export class WyOverlay extends LitElement {
         if (this.show) {
           if (this.isModal()) {
             this.viewportRef.value?.showModal();
-          } else if (this.viewportRef.value?.popover) {
+          } else if (this.viewportRef.value?.popover && this.type !== "drawer") {
             this.viewportRef.value?.showPopover();
           } else {
             this.viewportRef.value?.show();
@@ -236,7 +267,8 @@ export class WyOverlay extends LitElement {
     }
 
     if (changedProperties.has("show") && this.show) {
-      this.viewportRef.value?.focus();
+      this.setFocus();
+      void this.triggerShownEvent();
     }
   }
 

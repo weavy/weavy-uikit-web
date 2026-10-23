@@ -71,7 +71,7 @@ export function getSimpleUploadBlobMutationOptions(weavy: WeavyType) {
   return options;
 }
 
-export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, appId: number | string, uniqueId?: string, type: "blobs" | "data" = "blobs") {
+export function getUploadBlobMutationOptions(weavy: WeavyType, user: UserType, appId: string | number, uniqueId?: string, type: "blobs" | "data" = "blobs") {
   const queryClient = weavy.queryClient;
   const blobsKey: MutationKey = uniqueId ? ["apps", appId, type, uniqueId] : ["apps", appId, type];
 

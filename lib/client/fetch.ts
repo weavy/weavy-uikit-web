@@ -4,6 +4,7 @@ import { assign } from "../utils/objects";
 import { defaultFetchSettings } from "../utils/data";
 import type { Constructor } from "../types/generic.types";
 import { type FetchOptions, HeaderContentType, HttpMethodType, type HttpUploadMethodType } from "../types/http.types";
+import { FileType } from "../types/files.types";
 
 export interface WeavyFetchProps {
   /**
@@ -23,6 +24,15 @@ export interface WeavyFetchProps {
    * @returns { Promise<Response> } A standard fetch() Response
    */
   fetch: (url: string | URL, options?: FetchOptions) => Promise<Response>;
+
+  /**
+   * Fetch file data from the server. Includes file access token handling and acts on behalf of the current user.
+   * 
+   * @param url { string | URL } - The URL to the file. Note: Only file URL:s are supported.
+   * @param options { FetchOptions } Optional RequestInit compatible fetch options. Note that `method` is limited to "GET" | "POST" | "PUT" | "DELETE" | "PATCH".
+   * @returns { Promise<Response> } A standard fetch() Response
+   */
+  fetchFile: (url: string | URL, options?: FetchOptions) => Promise<Response>;
 
   /**
    * Upload data to the Web API using a progress callback function to monitor the progress.
@@ -136,15 +146,77 @@ export const WeavyFetchMixin = <TBase extends Constructor<WeavyClient>>(Base: TB
       }
 
       const fetchOptions: RequestInit = await this.fetchOptions(options);
+      const parsedUrl = new URL(url, this.url);
 
       this.networkStateIsPending = true;
-      const response = await fetch(new URL(url, this.url), fetchOptions);
+      const response = await fetch(parsedUrl, fetchOptions);
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           if (retry) {
             await this.getToken(true);
-            return await this.fetch(url, options, false);
+            return await this.fetch(parsedUrl, options, false);
+          } else {
+            this.networkStateIsPending = false;
+            this.serverState = "unauthorized";
+          }
+        } else {
+          this.networkStateIsPending = false;
+        }
+
+        //console.error(this.weavyId, `Error calling endpoint ${url}`, response)
+      } else {
+        this.networkStateIsPending = false;
+        this.serverState = "ok";
+      }
+
+      if (response.status === 204) {
+        // Chromium reports an unread 204 body as net::ERR_ABORTED when the Response is garbage collected, so drain it
+        // here and return a body-less Response that callers can still safely read.
+        await response.arrayBuffer();
+        return new Response(null, { status: response.status, statusText: response.statusText, headers: response.headers });
+      }
+
+      return response;
+    }
+
+    async fetchFile(
+      this: this & WeavyType,
+      url: string | URL,
+      options?: FetchOptions,
+      retry: boolean = true
+    ): Promise<Response> {
+      if (this.isDestroyed) {
+        throw new DestroyError();
+      }
+
+      const fetchOptions: RequestInit = await this.fetchOptions(options, false);
+      const parsedUrl = new URL(url, this.url);
+      const fileId = Number.parseInt(/\/f(\d+)\/.*$/.exec(parsedUrl.pathname)?.[1] || '');
+
+      if (isNaN(fileId)) {
+        throw new Error("No valid file url provided");
+      }
+
+      this.networkStateIsPending = true;
+      
+      const response = await fetch(parsedUrl, fetchOptions);
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          if (retry) {
+            const fileApiResponse = await this.fetch(`/api/files/${fileId}`);
+            if (fileApiResponse.ok) {
+              const file = await fileApiResponse.json() as FileType;
+              if (file.download_url) {
+                const fileToken = /[&?]t=([a-zA-Z0-9]+)(?=&|$)/.exec(file.download_url)?.[1];
+                if (fileToken) {
+                  // Update current url with new token
+                  parsedUrl.searchParams.set("t", fileToken);
+                  return await this.fetchFile(parsedUrl, options, false);
+                }
+              }
+            }
           } else {
             this.networkStateIsPending = false;
             this.serverState = "unauthorized";

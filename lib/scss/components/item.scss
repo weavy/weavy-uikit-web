@@ -5,10 +5,11 @@
 // An individual (list) item with support for icon/img, content and actions.
 :host(wy-item),
 [part~="wy-item"] {
-  --wy-component-color: #{color.token(--wy-on-background)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
   display: flex;
   //clip-path: border-box;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 [part~="wy-item-rounded"] {
@@ -155,7 +156,7 @@
 }
 
 [part~="wy-unread"] {
-  --wy-component-color: color.token(--wy-on-background);
+  --wy-component-color: color.token(--wy-on-surface);
   [part~="wy-item-title"],
   [part~="wy-item-text"] {
     font-weight: var.default(--wy-font-weight-bold);

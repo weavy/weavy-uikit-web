@@ -1,6 +1,5 @@
-import { expect } from "@open-wc/testing";
-
 import "../../utils/version";
+import { expect } from "@open-wc/testing";
 import { Weavy, type WeavyType } from "../../../lib";
 import { HubConnection } from "@microsoft/signalr";
 

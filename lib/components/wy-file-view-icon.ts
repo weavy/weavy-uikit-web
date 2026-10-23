@@ -1,11 +1,10 @@
-import { LitElement, PropertyValues, html } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized, msg, str } from "@lit/localize";
-import { getProvider } from "../utils/files";
-import type { FileProviderType } from "../types/files.types";
+import { getIcon, getProvider } from "../utils/files";
+import type { FileType } from "../types/files.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import type { iconNamesType } from "../utils/icons";
 import type { FilePreviewLoadedEventType } from "../types/files.events";
 import type { NamedEvent } from "../types/generic.types";
 
@@ -16,7 +15,7 @@ import "./ui/wy-button";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wy-preview-icon": WyPreviewIcon;
+    "wy-file-view-icon": WyFileViewIcon;
   }
 }
 
@@ -32,34 +31,19 @@ declare global {
  *
  * @fires {FilePreviewLoadedEventType} file-preview-loaded - The file preview is considered loaded.
  */
-@customElement("wy-preview-icon")
+@customElement("wy-file-view-icon")
 @localized()
-export class WyPreviewIcon extends LitElement {
-  
-  static override styles = [
-    hostContentsCss,
-  ];
-  
+export class WyFileViewIcon extends LitElement {
+  static override styles = [hostContentsCss];
+
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
-  
-  /**
-   * Source URL used when opening the original content.
-   */
-  @property()
-  src!: string;
 
   /**
-   * Icon name representing the preview.
+   * Source file.
    */
-  @property()
-  icon!: iconNamesType;
-
-  /**
-   * File provider metadata that decorates the preview.
-   */
-  @property()
-  provider?: FileProviderType;
+  @property({ attribute: false })
+  file?: FileType;
 
   /**
    * Dispatch `file-preview-loaded` when the fallback content is ready.
@@ -72,17 +56,22 @@ export class WyPreviewIcon extends LitElement {
   }
 
   override render() {
-    const icon = this.icon;
-    const provider = getProvider(this.provider);
+    const file = this.file;
+    if (!file) return nothing;
+
+    const { icon } = getIcon(file.name);
+    const provider = getProvider(file.provider);
 
     return html`
       <wy-icon-display fill>
         <wy-icon name=${icon} .overlayName=${provider}></wy-icon>
         <span slot="text">
-          ${this.provider
+          ${provider
             ? html`
                 <p>${msg("No preview available :(")} </p>
-                <wy-button kind="filled" color="variant" href=${this.src} target="_blank">${msg(str`Open in ${this.provider}`)}</wy-button>
+                <wy-button kind="filled" color="variant" href=${file.external_url} target="_blank"
+                  >${msg(str`Open in ${provider}`)}</wy-button
+                >
               `
             : html`<div>${msg("No preview available :(")}</div>`}
         </span>
@@ -91,7 +80,7 @@ export class WyPreviewIcon extends LitElement {
   }
 
   protected override updated(changedProperties: PropertyValues): void {
-    if ((changedProperties.has("icon") || changedProperties.has("src")) && (this.icon || this.src)) {
+    if ((changedProperties.has("file")) && (this.file)) {
       this.dispatchLoaded();
     }
   }

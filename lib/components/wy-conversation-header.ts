@@ -18,6 +18,7 @@ import {
 } from "../data/conversation";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { inputBlurOnEnter } from "../utils/keyboard";
+import { partMap } from "../utils/directives/shadow-part-map";
 import type { RealtimeAppEventType, RealtimePresenceEventType } from "../types/realtime.types";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { BlobType } from "../types/files.types";
@@ -25,9 +26,7 @@ import { type AppType, AppTypeGuid, AccessType, PermissionType } from "../types/
 import { hasPermission } from "../utils/permission";
 import type { BlobUploadedEventType } from "../types/files.events";
 import type { MemberSearchSubmitEventType } from "../types/members.events";
-import { NamedEvent } from "../types/generic.types";
 import { ActionType } from "../types/action.types";
-import { WyActionEventType } from "../types/action.events";
 
 import inputCss from "../scss/components/input.scss";
 import paneCss from "../scss/components/pane.scss";
@@ -82,7 +81,7 @@ declare global {
  * @csspart wy-label - Labels for inputs in the details view.
  * @csspart wy-input - Inputs (room name) in the details view.
  * @csspart wy-description - Description/help text in the details view.
- * @csspart wy-conversation-details-add-members-button - Button for opening the add-members flow.
+ * @csspart wy-conversation-details-add-members-action - Menu item for opening the add-members flow.
  *
  * @fires {WyActionEventType} wy-action - Emitted when the conversation is deselected/cleared.
  */
@@ -303,6 +302,7 @@ export class WyConversationHeader extends WeavySubComponent {
       await this.leaveConversationMutation?.mutate({
         appId: this.conversationId,
         members: [memberId],
+        userId: this.user.id,
       });
     }
 
@@ -310,7 +310,7 @@ export class WyConversationHeader extends WeavySubComponent {
       this.showDetails = false;
       this.conversation = undefined;
       this.conversationId = undefined;
-      this.dispatchAction(ActionType.Select, null);
+      this.dispatchAction({ action: ActionType.Select, app: null });
     } else {
       await this.membersQuery.result.refetch();
     }
@@ -319,27 +319,12 @@ export class WyConversationHeader extends WeavySubComponent {
   }
 
   /**
-   * Triggers `wy-action` event.
-   *
-   * @param action - The performed action.
-   * @param conversation - The conversation to select or `null` to clear.
-   * @returns Whether the event was successful.
-   *
-   * @internal
-   */
-  private dispatchAction(action: ActionType, conversation: AppType | null) {
-    this.conversationId = conversation?.id;
-    const event: WyActionEventType = new (CustomEvent as NamedEvent)("wy-action", { detail: { action, app: conversation }, bubbles: true, composed: true });
-    return this.dispatchEvent(event);
-  }
-
-  /**
    * Updates member presence data from realtime presence events.
    *
    * @internal
    */
   private handlePresenceChange = (data: RealtimePresenceEventType) => {
-    if (!this.weavy) {
+    if (!this.weavy || !this.isPrivateChat()) {
       return;
     }
     
@@ -355,11 +340,16 @@ export class WyConversationHeader extends WeavySubComponent {
       return members;
     };
 
-    this.weavy.queryClient.setQueryData(["apps", this.conversationId], (app: AppType) => {
+    this.weavy.queryClient.setQueryData(["apps", this.conversationId], (app: AppType | undefined) => {
+      if (!app?.members) {
+        return app;
+      }
       app.members.data = updateMembersInApps(app.members.data);
       return app;
     });
-    this.weavy.queryClient.setQueryData(["members", this.conversationId], (members: MemberType[]) => updateMembersInApps(members));
+    this.weavy.queryClient.setQueryData(["members", this.conversationId], (members: MembersResultType | undefined) =>
+      members ? { ...members, data: updateMembersInApps(members.data) } : members,
+    );
   };
 
   /**
@@ -431,6 +421,7 @@ export class WyConversationHeader extends WeavySubComponent {
       this.user && this.isPrivateChat()
         ? (this.conversation?.members?.data || []).filter((member) => member.id !== this.user?.id)?.[0] ?? this.user
         : null;
+    const isBlockedPrivateChat = this.conversation?.type === AppTypeGuid.PrivateChat && Boolean(otherMember?.is_blocked);
 
     return this.conversationId
       ? html`
@@ -438,7 +429,7 @@ export class WyConversationHeader extends WeavySubComponent {
             <slot slot="icon" name="icon"><span></span></slot>
             ${this.conversation && this.user
               ? html`
-                  ${this.conversation.type === AppTypeGuid.PrivateChat
+                  ${this.conversation.type === AppTypeGuid.PrivateChat && !isBlockedPrivateChat
                     ? html`<wy-presence
                         slot="title-section"
                         placement="text"
@@ -446,7 +437,12 @@ export class WyConversationHeader extends WeavySubComponent {
                         id=${ifDefined(otherMember?.id)}
                       ></wy-presence>`
                     : nothing}
-                  <wy-titlebar-text slot="title-section">${this.conversationTitle}</wy-titlebar-text>
+                  <wy-titlebar-text slot="title-section">
+                    <span style="display: inline-flex; align-items: center; gap: 0.5rem; max-width: 100%; vertical-align: middle">
+                      ${isBlockedPrivateChat ? html`<wy-icon name="cancel" aria-hidden="true"></wy-icon>` : nothing}
+                      <span style="overflow: hidden; text-overflow: ellipsis">${this.conversationTitle}</span>
+                    </span>
+                  </wy-titlebar-text>
                 `
               : nothing}
             ${this.isChatRoom()
@@ -482,6 +478,22 @@ export class WyConversationHeader extends WeavySubComponent {
                       <wy-icon name="close"></wy-icon>
                     </wy-button>
                     <span slot="title">${this.conversationTitle}</span>
+                    ${this.isChatRoom()
+                      ? html`
+                          <wy-dropdown slot="actions">
+                            <wy-dropdown-item
+                              part="wy-conversation-details-add-members-action"
+                              @click=${() => {
+                                this.showDetails = false;
+                                this.showAddMembers = true;
+                              }}
+                            >
+                              <wy-icon name="account-plus"></wy-icon>
+                              ${msg("Add members")}
+                            </wy-dropdown-item>
+                          </wy-dropdown>
+                        `
+                      : nothing}
                   </wy-titlebar>
                   <div part="wy-scroll-y">
                     ${this.showDetails && this.conversation && this.user
@@ -517,7 +529,9 @@ export class WyConversationHeader extends WeavySubComponent {
                                   <wy-avatar
                                     src=${ifDefined(otherMember?.avatar_url)}
                                     name=${ifDefined(otherMember?.name)}
-                                    presence=${otherMember?.presence || "away"}
+                                    presence=${ifDefined(
+                                      otherMember?.is_blocked ? undefined : otherMember?.presence || "away",
+                                    )}
                                     ?isAgent=${otherMember?.is_agent}
                                     id=${ifDefined(otherMember?.id)}
                                     size=${96}
@@ -550,7 +564,13 @@ export class WyConversationHeader extends WeavySubComponent {
                                         <wy-item-list>
                                           ${membersData.data?.map(
                                             (member) => html`
-                                              <wy-item>
+                                              <wy-item
+                                                interactive
+                                                part=${partMap({
+                                                  "wy-conversation-details-member": true,
+                                                  "wy-conversation-details-member-blocked": Boolean(member.is_blocked),
+                                                })}
+                                              >
                                                 <wy-avatar
                                                   slot="image"
                                                   .src=${member.avatar_url}
@@ -559,12 +579,18 @@ export class WyConversationHeader extends WeavySubComponent {
                                                   .isAgent=${member.is_agent}
                                                   size=${32}
                                                 ></wy-avatar>
-                                                <span slot="title">
-                                                  ${member.name}
+                                                <span slot="title" class="wy-member-title">
+                                                  <span>${member.name}</span>
+                                                  ${member.is_blocked
+                                                    ? html`<wy-icon
+                                                        size="20"
+                                                        name="cancel"
+                                                        title=${msg("Blocked")}
+                                                      ></wy-icon>`
+                                                    : nothing}
                                                   ${member.access === AccessType.Admin
                                                     ? html` <wy-icon
                                                         size="20"
-                                                        inline
                                                         name="shield-star"
                                                         title=${msg("Admin")}
                                                       ></wy-icon>`
@@ -616,20 +642,6 @@ export class WyConversationHeader extends WeavySubComponent {
                                         </wy-item-list>
                                       `
                                     : nothing}
-                                  <div>
-                                    <wy-button
-                                      part="wy-conversation-details-add-members-button"
-                                      kind="filled"
-                                      color="primary"
-                                      @click=${() => {
-                                        this.showDetails = false;
-                                        this.showAddMembers = true;
-                                      }}
-                                      title=${msg("Add members")}
-                                    >
-                                      ${msg("Add members")}
-                                    </wy-button>
-                                  </div>
                                 </div>
                               `
                             : nothing}
@@ -650,7 +662,7 @@ export class WyConversationHeader extends WeavySubComponent {
                     this.showAddMembers = false;
                   }}
                 >
-                  <wy-titlebar header>
+                  <wy-titlebar header slot="header">
                     <wy-button
                       slot="icon"
                       kind="icon"

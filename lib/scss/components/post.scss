@@ -99,3 +99,10 @@
   text-decoration: line-through;
   color: color.token(--wy-outline);
 }
+
+[part~="wy-post-reported"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
+  cursor: default;
+}

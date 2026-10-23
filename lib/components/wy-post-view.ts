@@ -5,9 +5,8 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import type { WyPreview } from "./wy-preview";
 import type { FileType } from "../types/files.types";
-import type { FileOpenEventType } from "../types/files.events";
 import { localized, msg, str } from "@lit/localize";
-import { relativeTime } from "../utils/datetime";
+import { relativeDays } from "../utils/datetime";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import { EntityTypeString, PermissionType } from "../types/app.types";
@@ -17,9 +16,12 @@ import { Feature } from "../types/features.types";
 import { PostEditEventType, PostSubscribeEventType, PostTrashEventType } from "../types/posts.events";
 import { NamedEvent } from "../types/generic.types";
 import { PollVoteEventType } from "../types/polls.events";
-import { dispatchUserAction } from "../utils/users";
 import type { PostType } from "../types/posts.types";
 import { hasPermission } from "../utils/permission";
+import { MutationController } from "../controllers/mutation-controller";
+import { getReportMutationOptions, MutateReportProps } from "../data/reports";
+import { WyActionEventType } from "../types/action.events";
+import { ActionType } from "../types/action.types";
 
 import rebootCss from "../scss/reboot.scss";
 import postCss from "../scss/components/post.scss";
@@ -73,6 +75,7 @@ declare global {
  * @csspart wy-content - HTML/content area.
  * @csspart wy-post-comments - Comments container.
  * @csspart wy-post-attachment-list - Attachments area list.
+ * @csspart wy-post-reported - The filled flag in the header shown once the reader has reported the post. Hide it with `::part(wy-post-reported)` if reporting should be fire-and-forget.
  *
  * @fires {PollVoteEventType} vote - Emitted when a poll option is voted.
  * @fires {PostSubscribeEventType} subscribe - Emitted when subscribe/unsubscribe is requested.
@@ -212,7 +215,33 @@ export class WyPostView extends WeavySubAppComponent {
     return this.dispatchEvent(event);
   }
 
-  private dispatchUserAction = dispatchUserAction.bind(this);
+  /**
+   * @internal
+   */
+  #reportMutation = new MutationController<void, Error, MutateReportProps, void>(this);
+
+  /**
+   * Confirm and report the post for moderation.
+   *
+   * Uses the native confirm rather than an in-app dialog, matching how reporting a message works: reporting cannot be
+   * undone and there is no report to look up afterwards, so the interruption is the point.
+   *
+   * @internal
+   */
+  private confirmReport() {
+    const confirmed = window.confirm(
+      msg("Report this post for review? The author is not notified, and reporting cannot be undone."),
+    );
+
+    if (confirmed) {
+      // the post carries its own app ref so the cache patch works in the feed too, where this.app is not the post's app
+      void this.#reportMutation.mutate({
+        entityType: "posts",
+        entityId: this.post.id,
+        appId: this.post.app?.id ?? this.app?.id,
+      });
+    }
+  }
 
   /**
    * Toggle comment visibility and ensure comment data is loaded.
@@ -241,6 +270,10 @@ export class WyPostView extends WeavySubAppComponent {
       this.loadComments = true;
       this.showComments = true;
     }
+
+    if (changedProperties.has("weavy") && this.weavy) {
+      void this.#reportMutation.trackMutation(getReportMutationOptions(this.weavy));
+    }
   }
 
   override render() {
@@ -257,13 +290,33 @@ export class WyPostView extends WeavySubAppComponent {
       dateStyle: "full",
       timeStyle: "short",
     }).format(new Date(this.post.created_at));
-    const dateFromNow = relativeTime(this.weavy?.locale, new Date(this.post.created_at));
+    const dateFromNow = relativeDays(this.weavy?.locale, new Date(this.post.created_at));
     const modifiedDateFull =
       this.post.updated_at && this.weavy
         ? new Intl.DateTimeFormat(this.weavy.locale, { dateStyle: "full", timeStyle: "short" }).format(
             new Date(this.post.updated_at),
           )
         : "";
+
+    // same wording and format as the flag on a reported message, so the two read the same across components.
+    // "by you" because the flag is caller-relative: weavy keeps no report counts, so it can only ever say that this
+    // reader reported the post. Falls back to the label without a date when the report was patched into the cache by
+    // the mutation and the next fetch has not brought the real timestamp yet.
+    const reportedAtFull = this.post.reported_at
+      ? new Intl.DateTimeFormat(this.weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
+          new Date(this.post.reported_at),
+        )
+      : "";
+    const reportedTitle = this.post.reported_at
+      ? msg(str`Reported by you on ${reportedAtFull}`)
+      : msg("Reported by you");
+
+    // Reporting your own post is rejected by the server, and there is nothing to moderate about it anyway.
+    // Skeleton posts (negative id) are not on the server yet, so there is nothing to report either.
+    const isAuthor = Boolean(this.user && this.user.id === this.post.created_by.id);
+    const canReport = Boolean(
+      this.componentFeatures?.allowsFeature(Feature.Report) && !isAuthor && this.post.id > 0 && !this.post.is_reported,
+    );
 
     const hasImages = images && Boolean(images.length);
     const hasText = this.post.html && Boolean(this.post.html);
@@ -309,12 +362,12 @@ export class WyPostView extends WeavySubAppComponent {
                 .name=${this.post.created_by.name}
                 title=${this.post.created_by.name}
                 role="button"
-                @click=${() => this.dispatchUserAction(this.post.created_by)}
+                @click=${() => this.dispatchAction({ action: ActionType.Preview, user: this.post.created_by })}
               ></wy-avatar>
               <wy-button 
                 kind="link"
                 slot="title"
-                @click=${() => this.dispatchUserAction(this.post.created_by)}
+                @click=${() => this.dispatchAction({ action: ActionType.Preview, user: this.post.created_by })}
                 >${this.post.created_by.name}</wy-button>
               <span slot="text">
                 <time datetime=${this.post.created_at} title=${dateFull}>${dateFromNow}</time>
@@ -323,6 +376,15 @@ export class WyPostView extends WeavySubAppComponent {
                     ? html`<time datetime="${this.post.updated_at}" title=${modifiedDateFull}>
                         · ${msg("edited")}</time
                       >`
+                    : nothing
+                }
+                ${
+                  // the filled flag is the only record of the report the reporter ever sees, which is why it stays
+                  // visible rather than disappearing once set. Not interactive: a report cannot be undone or re-filed.
+                  this.post.is_reported
+                    ? html`<span part="wy-post-reported" title=${reportedTitle}>
+                        · <wy-icon inline name="flag" size=${14}></wy-icon>
+                      </span>`
                     : nothing
                 }
               </span>
@@ -337,6 +399,18 @@ export class WyPostView extends WeavySubAppComponent {
                         <wy-icon name="bell"></wy-icon>
                         ${msg("Subscribe")}
                       </wy-dropdown-item>`
+                }
+                ${
+                  // a menu item rather than the hover flag messages use: the post already has a menu, and the flag was
+                  // chosen for messages only because their menu would otherwise have held a single item. Once reported
+                  // the item goes away -- a report cannot be undone or re-filed -- and the flag in the meta row is the
+                  // record of it, the same way the filled flag is on a message.
+                  canReport
+                    ? html`<wy-dropdown-item @click=${() => this.confirmReport()}>
+                        <wy-icon name="flag"></wy-icon>
+                        ${msg("Report")}
+                      </wy-dropdown-item>`
+                    : nothing
                 }
                 ${
                   this.user && this.user.id === this.post.created_by.id
@@ -365,8 +439,10 @@ export class WyPostView extends WeavySubAppComponent {
                     part="wy-post-images"
                     outer
                     .images=${images}
-                    @file-open=${(e: FileOpenEventType) => {
-                      void this.previewAttachmentsRef.value?.open(e.detail.fileId);
+                    @wy-action=${(e: WyActionEventType) => {
+                      if (e.detail.action === ActionType.Preview && e.detail.file) {
+                        void this.previewAttachmentsRef.value?.open(e.detail.file.id);
+                      }
                     }}
                   ></wy-image-grid>`
                 : ``
@@ -388,7 +464,7 @@ export class WyPostView extends WeavySubAppComponent {
                                 const uid =
                                   e.target.dataset.eid?.startsWith("u") && parseInt(e.target.dataset.eid.substring(1));
                                 if (uid) {
-                                  this.dispatchUserAction({ id: uid, name: e.target.innerText });
+                                  this.dispatchAction({ action: ActionType.Preview, user: { id: uid, name: e.target.innerText }});
                                 }
                               }
                             }}
@@ -403,8 +479,10 @@ export class WyPostView extends WeavySubAppComponent {
                       ${hasAnnotations
                         ? html`<wy-annotation-list
                             .files=${annotations}
-                            @file-open=${(e: FileOpenEventType) => {
-                              void this.previewAnnotationsRef.value?.open(e.detail.fileId);
+                            @wy-action=${(e: WyActionEventType) => {
+                              if (e.detail.action === ActionType.Preview && e.detail.file) {
+                                void this.previewAnnotationsRef.value?.open(e.detail.file.id);
+                              }
                             }}
                           ></wy-annotation-list>`
                         : nothing}
@@ -428,8 +506,10 @@ export class WyPostView extends WeavySubAppComponent {
                             filled
                             part="wy-post-attachments"
                             .files=${files}
-                            @file-open=${(e: FileOpenEventType) => {
-                              void this.previewAttachmentsRef.value?.open(e.detail.fileId);
+                            @wy-action=${(e: WyActionEventType) => {
+                              if (e.detail.action === ActionType.Preview && e.detail.file) {
+                                void this.previewAttachmentsRef.value?.open(e.detail.file.id);
+                              }
                             }}
                           ></wy-attachment-list>`
                         : nothing}

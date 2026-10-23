@@ -19,7 +19,7 @@ export class InfiniteScrollController implements ReactiveController {
 
   observe(infiniteQueryResult?: InfiniteQueryObserverResult, loadMoreRefElement?: HTMLElement) {
     if (infiniteQueryResult && loadMoreRefElement) {
-      if (!infiniteQueryResult.isLoading && !this.isObservePending) {
+      if (!infiniteQueryResult.isPending && !infiniteQueryResult.isLoading && !this.isObservePending && (this.reverse ? infiniteQueryResult.hasPreviousPage : infiniteQueryResult.hasNextPage)) {
         this.isObservePending = true;
 
          requestAnimationFrame(() => {
@@ -28,12 +28,16 @@ export class InfiniteScrollController implements ReactiveController {
            this.scroller = createScroller(
             loadMoreRefElement,
             async () => {
-              if (infiniteQueryResult.hasNextPage && !infiniteQueryResult.isFetching) {
-                await infiniteQueryResult.fetchNextPage({ cancelRefetch: false });
+              if (infiniteQueryResult.isFetching) {
+                return;
+              }
+
+              if (this.reverse && infiniteQueryResult.hasPreviousPage) {
+                await infiniteQueryResult.fetchPreviousPage({ cancelRefetch: false });
                 // Wait for effects and trigger render before resolving
-                if (this.reverse) {
-                  await this.host.updateComplete;
-                }
+                await this.host.updateComplete;
+              } else if (infiniteQueryResult.hasNextPage) {
+                await infiniteQueryResult.fetchNextPage({ cancelRefetch: false });
               }
             },
             this.reverse

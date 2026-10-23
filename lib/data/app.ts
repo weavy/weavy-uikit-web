@@ -1,10 +1,9 @@
 import {
-  FetchQueryOptions,
   InfiniteData,
   InfiniteQueryObserverOptions,
   MutationKey,
   MutationObserver,
-  QueryObserverOptions,
+  MutationObserverOptions,
 } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
 import {
@@ -13,58 +12,86 @@ import {
   AppTypeGuid,
   AppTypeString,
   type AppType,
-  UnknownAppType,
   AppUidType,
 } from "../types/app.types";
-import { getApi, getApiMutation, getApiOptions } from "./api";
-import { UnknownApp } from "../classes/weavy-app-component";
+import { firstPageParam, getApiMutation, getApiOptions, initialPageParam, lastPageParam, queryPageParams } from "./api";
 import { QueryController } from "../controllers/query-controller";
 import { onlyValues } from "../utils/data";
+import { QueryPagingAroundType } from "../types/query.types";
+import { HttpError } from "../utils/errors";
+import type { MutationAbortProps } from "../types/query.types";
 
-export function getAppOptions<T extends AppType = AppType>(
-  weavy: WeavyType,
-  uid: string | number,
-  type: AppTypeString | UnknownAppType = UnknownApp,
-  appData?: AppUpProperties,
-) {
-  return type === UnknownApp || typeof uid === "number"
-    ? getApiOptions<T>(weavy, ["apps", uid])
-    : getApiOptions<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
+/**
+ * Options for reading a single app.
+ *
+ * This is the one and only query for app data: every component observes it, whether or not the component is allowed to
+ * create the app. Creating is done separately by {@link ensureApp}, which seeds this query with the result.
+ *
+ * The split matters because a TanStack query has a single `queryFn` shared by every observer of its key, and an
+ * observer that joins a fetch already in flight never gets to apply its own options
+ * (see https://github.com/TanStack/query/blob/main/packages/query-core/src/query.ts, `Query.fetch`). Letting creating
+ * and lookup-only components supply different `queryFn`s for `["apps", uid]` therefore made the effective request
+ * depend on which component happened to fetch first.
+ *
+ * @param weavy - The weavy client.
+ * @param uid - Unique app identifier or app id.
+ * @returns Query options for the app.
+ */
+export function getAppOptions<T extends AppType = AppType>(weavy: WeavyType, uid: string | number) {
+  return getApiOptions<T>(weavy, ["apps", uid], undefined, {
+    // An app that does not exist yet is an answer, not a failure, so a 404 must not sit in retry backoff while the
+    // upsert is already creating it. Timeouts and rate limits are transient though, so they keep the default retry
+    // count along with server and transport failures.
+    retry: (failureCount, error) =>
+      !(error instanceof HttpError && error.status < 500 && error.status !== 408 && error.status !== 429) &&
+      failureCount < 3,
+  });
 }
 
-export function getApp<T extends AppType = AppType>(
+/**
+ * Options for the mutation that makes sure an app exists.
+ *
+ * Creating an app is a write, so it runs as a mutation rather than as the `queryFn` of `["apps", uid]`. A TanStack
+ * query pairs exactly one `queryFn` with a key (https://github.com/TanStack/query/discussions/4020), so letting a
+ * creating component and a lookup-only component supply different ones made the effective request depend on whichever
+ * happened to fetch first — and when the lookup won, the app was never created at all.
+ *
+ * Being a mutation also keeps the default `networkMode`, so an upsert attempted while offline is paused and retried in
+ * order once the connection returns
+ * (https://tanstack.com/query/latest/docs/framework/react/guides/network-mode), which a bare `weavy.fetch` would not
+ * do — it would simply reject, leaving the app uncreated.
+ *
+ * `onSuccess` writes the app straight into the app query. That is the documented way to avoid spending a second
+ * request on data the response already carries
+ * (https://tanstack.com/query/latest/docs/framework/react/guides/updates-from-mutation-responses), and it reaches
+ * every observer of the app, lookup-only components included.
+ *
+ * Concurrent upserts for the same uid are not deduplicated here. Callers are expected to upsert only when the app is
+ * missing or its data has changed, and the request is an idempotent upsert, so the worst case is a duplicate write
+ * rather than a wrong result.
+ *
+ * @param weavy - The weavy client.
+ * @param uid - Unique app identifier. App ids cannot be upserted and must not be passed.
+ * @param type - The type of app to create.
+ * @param members - Members for the app. Creates the app with `POST /api/apps` instead of upserting it by uid.
+ * @param appData - Additional app properties, such as name and directory.
+ * @returns Mutation options for the upsert.
+ */
+export function getEnsureAppMutationOptions(
   weavy: WeavyType,
-  uid: string | number,
-  type: AppTypeString | UnknownAppType = UnknownApp,
-  appData?: AppUpProperties,
-) {
-  return type === UnknownApp || typeof uid === "number"
-    ? getApi<T>(weavy, ["apps", uid])
-    : getApi<T>(weavy, ["apps", uid], undefined, undefined, JSON.stringify({ type, ...appData }), "PUT");
-}
-
-export function getOrCreateAppOptions<T extends AppType = AppType>(
-  weavy: WeavyType,
-  uid: string | number,
-  type: AppTypeGuid | UnknownAppType = UnknownApp,
+  uid: string,
+  type: AppTypeGuid,
   members?: (number | string)[],
   appData?: AppUpProperties,
-) {
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
-  return <QueryObserverOptions<T>>{
-    queryKey: ["apps", uid],
-    queryFn: async () => {
-      //console.log("API", method, apiPath ? apiPath : "/api/" + apiKey.join("/"));
-
+): MutationObserverOptions<AppType, Error, MutationAbortProps, void> {
+  return {
+    mutationKey: ["apps", uid, "upsert"],
+    mutationFn: async () => {
       const appsRequests = [];
 
-      if (type === UnknownApp || typeof uid === "number") {
-        appsRequests.push(
-          // Get existing app
-          weavy.fetch(`/api/apps/${uid}`),
-        );
-      } else if (members?.length) {
-        // Get the succeeding one of GET and POST
+      if (members?.length) {
+        // Creating with members uses POST, which fails when the app already exists. Ask for the app and create it at
+        // the same time, then keep whichever of the two succeeded.
         appsRequests.push(
           // Get existing app
           weavy.fetch(`/api/apps/${uid}`),
@@ -86,26 +113,17 @@ export function getOrCreateAppOptions<T extends AppType = AppType>(
 
       const response = result?.status === "fulfilled" && result.value;
 
-      if (response) {
-        return (await response.json()) as T;
-      } else {
+      if (!response) {
         throw new Error(`Error getting or creating app ${uid}`);
       }
+
+      return (await response.json()) as AppType;
+    },
+    onSuccess: (app) => {
+      // Hand the app to every observer of the app query instead of making them fetch what we already have.
+      weavy.queryClient.setQueryData(["apps", uid], app);
     },
   };
-}
-
-export async function getOrCreateApp<T extends AppType = AppType>(
-  weavy: WeavyType,
-  uid: string | number,
-  type: AppTypeGuid | UnknownAppType = UnknownApp,
-  members?: (number | string)[],
-  appData?: AppUpProperties,
-) {
-  const queryClient = weavy.queryClient;
-  const appOptions = getOrCreateAppOptions(weavy, uid, type, members, appData);
-
-  return await queryClient.fetchQuery<T>(appOptions as FetchQueryOptions<T>);
 }
 
 export type MutateAddAppVariables = {
@@ -227,6 +245,7 @@ export function getMultipleAppsOptions(
 
 /**
  * Gets number of unread conversations/apps.
+ * Agent-chat-only queries exclude apps with a uid to keep contextual chats out of the standalone inbox.
  */
 export function getAppsUnreadOptions(
   weavy: WeavyType,
@@ -236,8 +255,11 @@ export function getAppsUnreadOptions(
   const queryParams = new URLSearchParams({
     count_only: "true",
     unread: "true",
-    uid: "false",
   });
+
+  if (types?.length === 1 && types.includes(AppTypeGuid.AgentChat)) {
+    queryParams.append("uid", "false");
+  }
 
   if (member) {
     queryParams.append("member", member);
@@ -249,35 +271,37 @@ export function getAppsUnreadOptions(
   return getApiOptions<AppsResultType>(weavy, queryKey, url);
 }
 
+export type AppsListFilterType = {
+  around?: number,
+  orderBy?: string | null,
+}
+
+/**
+ * Gets a paginated app list. Agent-chat-only queries exclude apps with a uid, matching the unread query.
+ */
 export function getAppListOptions(
   weavy: WeavyType,
-  options: object = {},
   types?: AppTypeGuid[] | null,
   member?: string,
+  filters: AppsListFilterType = {},
   searchText?: () => string | undefined,
-  orderBy?: string | null,
-  includeUid?: boolean | null,
+  options: object = {},
 ): InfiniteQueryObserverOptions<AppsResultType, Error, InfiniteData<AppsResultType>> {
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     ...options,
-    initialPageParam: 0,
-    queryKey: ["apps", "list", types, member, orderBy, includeUid],
+    initialPageParam: initialPageParam(filters.around),
+    queryKey: ["apps", "list", types, member, filters],
     queryFn: async (opt) => {
-      const queryParams = new URLSearchParams();
+      const queryParams = queryPageParams(opt.pageParam as QueryPagingAroundType);
 
       if (member) {
         queryParams.append("member", member);
       }
 
-      if (opt.pageParam && typeof opt.pageParam === "number") {
-        queryParams.append("skip", opt.pageParam?.toString());
-      }
-
       types?.forEach((type) => queryParams.append("type", type));
 
-      if (orderBy) {
-        queryParams.append("order_by", orderBy);
+      if (filters.orderBy) {
+        queryParams.append("order_by", filters.orderBy);
       }
 
       const q = searchText?.();
@@ -285,23 +309,17 @@ export function getAppListOptions(
         queryParams.append("q", q);
       }
 
-      if (includeUid === false) {
+      if (types?.length === 1 && types.includes(AppTypeGuid.AgentChat)) {
         queryParams.append("uid", "false");
       }
 
       const url = `/api/apps?${queryParams.toString()}`;
 
       const response = await weavy.fetch(url);
-      const result = (await response.json()) as AppsResultType;
-      result.data = result.data || [];
-      return result;
+      return (await response.json()) as AppsResultType;
     },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.end && lastPage?.end < lastPage?.count) {
-        return lastPage.end;
-      }
-      return undefined;
-    },
+    getPreviousPageParam: firstPageParam(),
+    getNextPageParam: lastPageParam(),
   };
 }
 

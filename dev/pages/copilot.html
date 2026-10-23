@@ -279,8 +279,9 @@
       console.log("wy-message", e.detail);
     });
 
-    copilot.addEventListener("wy-selected", (e) => {
-      console.log("wy-selected", e.detail);
+    copilot.addEventListener("wy-action", (e) => {
+      if (e.detail.action === "select" && e.detail.app)
+      console.log("wy-action select app", e.detail);
     });
 
   </script>

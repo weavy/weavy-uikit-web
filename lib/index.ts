@@ -27,6 +27,8 @@ export * from "./wy-feed";
 export * from "./wy-posts";
 export * from "./wy-post-editor";
 export * from "./wy-files";
+export * from "./wy-file";
+export * from "./wy-file-new";
 
 export * from "./wy-notifications";
 export * from "./wy-notification-badge";
@@ -34,10 +36,8 @@ export * from "./wy-notification-button";
 export * from "./wy-notification-toasts";
 
 export {
-    MessengerAgentTypes,
     MessengerTypes,
     DefaultMessengerFeatures,
-    DefaultMessengerAgentFeatures,
 } from "./types/conversation.types";
 
 export type {
@@ -47,6 +47,6 @@ export * from "./wy-messenger";
 export * from "./wy-messenger-button";
 export * from "./wy-messenger-new";
 export * from "./wy-messenger-badge";
-export * from "./wy-messenger-conversations";
+export * from "./wy-conversations";
 
 export * as WeavyComponents from "./components";

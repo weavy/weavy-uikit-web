@@ -23,7 +23,13 @@ export type MutatePinConversationVariables = {
 
 export type MutateLeaveConversationVariables = {
   appId: number;
+  /** Ids of the members to remove from the conversation. */
   members: number[];
+  /**
+   * Id of the current user. The conversation is only dropped from the cache when the user is among `members`
+   * (leaving); removing other members keeps it and refetches it instead. Omitted means the user is leaving.
+   */
+  userId?: number;
 };
 
 export type MutateRemoveConversationVariables = {
@@ -122,13 +128,13 @@ export function getMarkConversationMutationOptions(weavy: WeavyType) {
           queryKey: ["apps", "unread"],
           exact: false,
           predicate: (query) => {
-            const queryKeyAppTypes: AppTypeGuid[] = query.queryKey[2] as AppTypeGuid[];
-            const typeMatch = queryKeyAppTypes.includes(variables.app.type);
+            const queryKeyAppTypes = query.queryKey[2] as AppTypeGuid[] | null | undefined;
+            const typeMatch = !queryKeyAppTypes || queryKeyAppTypes.includes(variables.app.type);
 
-            const queryKeyAppMember: string | undefined = query.queryKey[2] as string | undefined;
+            const queryKeyAppMember = query.queryKey[3] as string | undefined;
             const memberMatch =
               !queryKeyAppMember ||
-              Boolean(variables.app.members.data?.find((m) => m.uid && m.uid === queryKeyAppMember));
+              Boolean(variables.app.members?.data?.find((m) => m.uid && m.uid === queryKeyAppMember));
             return typeMatch && memberMatch;
           },
         },
@@ -213,16 +219,26 @@ export function getPinConversationMutationOptions(weavy: WeavyType) {
 }
 
 export function getLeaveConversationMutationOptions(weavy: WeavyType) {
+  // The same endpoint removes any members, but only the user leaving makes the conversation go away for them.
+  // Removing someone else must keep the conversation cached: dropping its query leaves hosts holding a stale copy
+  // (the header kept showing the removed member in the generated title) with nothing left to refetch.
+  const isLeaving = ({ members, userId }: MutateLeaveConversationVariables) =>
+    userId === undefined || members.includes(userId);
+
   const options = {
     mutationFn: async ({ appId, members }: MutateLeaveConversationVariables) => {
       await weavy.fetch(`/api/apps/${appId}/members/${members.join(",")}`, { method: "DELETE" });
     },
     onMutate: (variables: MutateLeaveConversationVariables) => {
-      removeCacheItem(weavy.queryClient, ["apps", "list"], variables.appId);
+      if (isLeaving(variables)) {
+        removeCacheItem(weavy.queryClient, ["apps", "list"], variables.appId);
+      }
     },
     onSuccess: (data: void | undefined, variables: MutateLeaveConversationVariables) => {
-      weavy.queryClient.removeQueries({ queryKey: ["apps", variables.appId] });
-      weavy.queryClient.removeQueries({ queryKey: ["members", variables.appId] });
+      if (isLeaving(variables)) {
+        weavy.queryClient.removeQueries({ queryKey: ["apps", variables.appId] });
+        weavy.queryClient.removeQueries({ queryKey: ["members", variables.appId] });
+      }
     },
     onSettled: async () => {
       await weavy.queryClient.invalidateQueries({ queryKey: ["apps"] });

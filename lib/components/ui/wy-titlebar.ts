@@ -1,8 +1,9 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement } from "../../utils/decorators/custom-element";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
 import { partMap } from "../../utils/directives/shadow-part-map";
-import { property } from "lit/decorators.js";
+import { property, queryAssignedElements } from "lit/decorators.js";
+import { createRef, ref, Ref } from "lit/directives/ref.js";
 
 import headerCss from "../../scss/components/header.scss";
 import titlebarCss from "../../scss/components/titlebar.scss";
@@ -24,7 +25,7 @@ declare global {
  * @slot icon - Icon, avatar or button in the `first` section.
  * @slot title-section - Title in the `middle` section.
  * @slot title - Text in the `title`.
- * @slot actions - Action buttons in the `last`section.
+ * @slot actions - Action buttons in the `last` section.
  *
  * @csspart wy-titlebar - Wrapper for the titlebar.
  * @csspart wy-titlebar-lg - Wrapper when size is `lg`.
@@ -72,17 +73,58 @@ export class WyTitlebar extends LitElement {
   size: "md" | "lg" = "md";
 
   /**
+   * Allow titlebar layout to wrap.
+   */
+  @property({ type: Boolean })
+  wrapping: boolean = false;
+
+  /**
+   * @internal
+   */
+  @queryAssignedElements({ slot: "icon" })
+  slotIcons!: Array<HTMLElement>;
+
+  /**
+   * @internal
+   */
+  @queryAssignedElements({ slot: "actions" })
+  slotActions!: Array<HTMLElement>;
+
+  protected iconSlotRef: Ref<HTMLElement> = createRef();
+  protected actionsSlotRef: Ref<HTMLElement> = createRef();
+  protected iconFillRef: Ref<HTMLElement> = createRef();
+  protected actionsFillRef: Ref<HTMLElement> = createRef();
+
+  resizeObserver = new ResizeObserver(() => {
+    const iconSlotWidth = this.iconSlotRef.value?.offsetWidth || 0;
+    const actionsSlotWidth = this.actionsSlotRef.value?.offsetWidth || 0;
+    const maxSlotWidth = Math.max(iconSlotWidth, actionsSlotWidth);
+
+    if (this.iconFillRef.value) {
+      this.iconFillRef.value.dataset.fill = iconSlotWidth < maxSlotWidth ? `${maxSlotWidth - iconSlotWidth}` : "0";
+    }
+
+    if (this.actionsFillRef.value) {
+      this.actionsFillRef.value.dataset.fill =
+        actionsSlotWidth < maxSlotWidth ? `${maxSlotWidth - actionsSlotWidth}` : "0";
+    }
+  });
+
+  /**
    * render function for the inner titlebar.
    * @internal
    * @returns
    */
   renderTitlebar() {
     return html`
-      <nav part="wy-titlebar ${partMap({ "wy-titlebar-lg": this.size === "lg" })}">
+      <nav
+        part="wy-titlebar ${partMap({ "wy-titlebar-lg": this.size === "lg", "wy-titlebar-wrapping": this.wrapping })}"
+      >
         <slot name="first">
-          <div part="wy-titlebar-icon wy-titlebar-buttons wy-titlebar-buttons-first">
+          <div part="wy-titlebar-icon wy-titlebar-buttons wy-titlebar-buttons-first" ${ref(this.iconSlotRef)}>
             <slot name="icon"></slot>
           </div>
+          <div part="wy-titlebar-fill" ${ref(this.iconFillRef)}></div>
         </slot>
         <slot name="middle">
           <div part="wy-titlebar-title wy-titlebar-section">
@@ -92,7 +134,8 @@ export class WyTitlebar extends LitElement {
           </div>
         </slot>
         <slot name="last">
-          <div part="wy-titlebar-actions wy-titlebar-buttons wy-titlebar-buttons-last">
+          <div part="wy-titlebar-fill" ${ref(this.actionsFillRef)}></div>
+          <div part="wy-titlebar-actions wy-titlebar-buttons wy-titlebar-buttons-last" ${ref(this.actionsSlotRef)}>
             <slot name="actions"></slot>
           </div>
         </slot>
@@ -106,6 +149,22 @@ export class WyTitlebar extends LitElement {
           >${this.renderTitlebar()}</header
         >`
       : this.renderTitlebar();
+  }
+
+  protected override updated(_changedProperties: PropertyValues): void {
+    if (this.iconSlotRef.value) {
+      this.resizeObserver.observe(this.iconSlotRef.value);
+    }
+
+    if (this.actionsSlotRef.value) {
+      this.resizeObserver.observe(this.actionsSlotRef.value);
+    }
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+
+    this.resizeObserver.disconnect();
   }
 }
 

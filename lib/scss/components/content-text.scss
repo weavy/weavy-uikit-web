@@ -1,18 +1,24 @@
 @use "../base/color";
 @use "../base/var";
+@use "../base/text";
+
 
 // plain text
 [part~="wy-content-text"] {
+  font-family: var.default(--wy-font-monospace);
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+[part~="wy-content-text-edit"] {
+  white-space: normal;
 }
 
 // markdown or code with syntax highlighting
 [part~="wy-content-html"] {
   pre,
   code {
-    word-break: break-word;
-    white-space: pre-wrap;
+    @include text.pre;
   }
 
   hr {

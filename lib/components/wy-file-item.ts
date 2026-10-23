@@ -1,12 +1,12 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
-import { property, state } from "lit/decorators.js";
+import { property } from "lit/decorators.js";
 import { getExtension, getIcon, handleSelectFilename } from "../utils/files";
-import type { FileActionType, FileStatusType, FileType } from "../types/files.types";
+import type { FileStatusType, FileType } from "../types/files.types";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { inputConsume } from "../utils/keyboard";
+import { clickOnEnterAndConsumeOnSpace, clickOnSpace, inputBlurOnEscape, inputConsume } from "../utils/keyboard";
 import { ref } from "lit/directives/ref.js";
-import { autofocusRef } from "../utils/dom";
+import { autoFocusRef } from "../utils/dom";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
 import {
   FileDeleteForeverEventType,
@@ -19,6 +19,8 @@ import {
 import { NamedEvent } from "../types/generic.types";
 
 import inputCss from "../scss/components/input.scss";
+
+import hostContentsCss from "../scss/host-contents.scss";
 
 import "./ui/wy-icon";
 import "./ui/wy-item";
@@ -53,7 +55,7 @@ declare global {
  */
 @customElement("wy-file-item")
 export class WyFileItem extends LitElement {
-  static override styles = [inputCss];
+  static override styles = [inputCss, hostContentsCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
@@ -85,17 +87,15 @@ export class WyFileItem extends LitElement {
   rounded: boolean = false;
 
   /**
-   * Optional action type used for contextual handling.
+   * Allow renaming.
    */
-  @property()
-  actionType?: FileActionType;
+  @property({ type: Boolean })
+  hasEditName: boolean = false;
 
   /**
-   * Track whether the filename is currently being edited.
-   *
-   * @internal
+   * Enable renaming mode.
    */
-  @state()
+  @property({ type: Boolean })
   isRenaming: boolean = false;
 
   /**
@@ -104,8 +104,8 @@ export class WyFileItem extends LitElement {
    * @param file - File that should enter rename mode.
    * @returns Whether the event was not canceled.
    */
-  dispatchEditName(file: FileType) {
-    const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", { detail: { file } });
+  dispatchEditName(file: FileType, editName: boolean) {
+    const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", { detail: { file, editName } });
     return this.dispatchEvent(event);
   }
 
@@ -187,10 +187,11 @@ export class WyFileItem extends LitElement {
       e.stopImmediatePropagation();
 
       const renameTarget = e.target as HTMLInputElement;
+
       if (renameTarget.value && renameTarget.value !== file.name) {
         this.dispatchRename(file, renameTarget.value);
       } else {
-        this.dispatchEditName({ id: NaN } as FileType);
+        this.dispatchEditName(file, false);
       }
     };
 
@@ -223,28 +224,39 @@ export class WyFileItem extends LitElement {
               title=${ifDefined(this.status.text)}
             ></wy-icon>`
           : this.status.state === "conflict"
-          ? html`<wy-icon slot="image" name="alert" color="yellow" title=${ifDefined(this.status.text)}></wy-icon>`
-          : html`<wy-icon slot="image" .name=${icon} .size=${24} .kind=${file.kind} ext=${ext}></wy-icon>`}
-        ${this.isRenaming
+            ? html`<wy-icon slot="image" name="alert" color="yellow" title=${ifDefined(this.status.text)}></wy-icon>`
+            : html`<wy-icon slot="image" .name=${icon} .size=${24} .kind=${file.kind} ext=${ext}></wy-icon>`}
+        ${this.isRenaming && !file.is_trashed
           ? html`
               <input
-                slot="title"
+                slot="content"
                 type="text"
                 maxlength="256"
                 part="wy-input"
                 .defaultValue=${file.name}
                 @blur=${handleRename}
+                @keydown=${inputBlurOnEscape}
                 @keyup=${(e: KeyboardEvent) => {
                   inputConsume(e);
                   handleRenameKey(e);
                 }}
                 @click=${(e: Event) => e.preventDefault()}
                 @focus=${handleSelectFilename}
-                ${ref(autofocusRef)}
+                ${ref(autoFocusRef())}
               />
             `
           : html`
-              <span slot="title" title=${file.name + (this.status.text ? `: ${this.status.text}` : "")}>
+              <span
+                slot="title"
+                title=${file.name + (this.status.text ? `: ${this.status.text}` : "")}
+                @click=${() => {
+                  if (this.hasEditName && this.file) {
+                    this.dispatchEditName(this.file, true);
+                  }
+                }}
+                @keydown=${clickOnEnterAndConsumeOnSpace}
+                @keyup=${clickOnSpace}
+              >
                 <slot name="title"
                   >${this.title || file.name}${this.status.text ? html`: <em>${this.status.text}</em>` : nothing}</slot
                 >
@@ -254,7 +266,7 @@ export class WyFileItem extends LitElement {
         <slot slot="actions" name="actions">
           <wy-file-menu
             .file=${file}
-            @edit-name=${(e: FileEditNameEventType) => this.dispatchEditName(e.detail.file)}
+            @edit-name=${(e: FileEditNameEventType) => this.dispatchEditName(e.detail.file, e.detail.editName)}
             @trash=${(e: FileTrashEventType) => this.dispatchTrash(e.detail.file)}
             @restore=${(e: FileRestoreEventType) => this.dispatchRestore(e.detail.file)}
             @delete-forever=${(e: FileDeleteForeverEventType) => this.dispatchDeleteForever(e.detail.file)}

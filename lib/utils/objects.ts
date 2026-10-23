@@ -24,10 +24,10 @@ export function isObject(maybeObject: unknown): maybeObject is object {
  * @returns {boolean} True if the object is plain
  */
 export function isPlainObject(maybePlainObject: unknown): maybePlainObject is PlainObjectType {
-  if (isObject(maybePlainObject as object) === false) return false;
+  if (isObject(maybePlainObject) === false) return false;
 
   // If has modified constructor
-  const ctor = (maybePlainObject as object).constructor;
+  const ctor = (maybePlainObject).constructor;
   if (ctor === undefined) return true;
 
   // If has modified prototype
@@ -250,7 +250,7 @@ export function cleanFalsyProperties<T extends PlainObjectType>(obj: T, recursiv
 
       // Optional: If the resulting array is empty, we treat it as falsy
       if (Array.isArray(processedValue) && processedValue.length === 0) {
-        return acc as T;
+        return acc;
       }
     }
 
@@ -260,7 +260,7 @@ export function cleanFalsyProperties<T extends PlainObjectType>(obj: T, recursiv
 
       // Optional: If the resulting object is empty, we treat it as falsy
       if (Object.keys(processedValue as PlainObjectType).length === 0) {
-        return acc as T;
+        return acc;
       }
     }
 

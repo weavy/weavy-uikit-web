@@ -61,6 +61,7 @@ export type AppType = {
   rev: number;
   type: AppTypeGuid;
   access: AccessType;
+  directory_id?: number | null;
   permissions: PermissionType[];
   uid?: string;
   name: string;
@@ -75,9 +76,10 @@ export type AppType = {
   is_starred: boolean;
   is_subscribed: boolean;
   is_trashed: boolean;
-  last_message: MsgType;
+  is_blocked: boolean;  
   is_unread: boolean;
   is_pinned: boolean;
+  last_message: MsgType;
 };
 
 export type AppRef = {

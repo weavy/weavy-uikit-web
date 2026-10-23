@@ -6,8 +6,10 @@ import { type WeavyType, WeavyContext } from "../contexts/weavy-context";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 import type { MemberType } from "../types/members.types";
 import { getInfiniteSearchMemberOptions } from "../data/members";
+import { getBlockedUserIdsOptions } from "../data/blocks";
 import { localized, msg } from "@lit/localize";
 import { InfiniteQueryController } from "../controllers/infinite-query-controller";
+import { QueryController } from "../controllers/query-controller";
 import { InfiniteScrollController } from "../controllers/infinite-scroll-controller";
 import { clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -17,6 +19,7 @@ import type { MemberSearchSubmitEventType } from "../types/members.events";
 import type { NamedEvent } from "../types/generic.types";
 import type { SearchEventType } from "../types/search.events";
 import type { WySearch } from "./ui/wy-search";
+import { partMap } from "../utils/directives/shadow-part-map";
 
 import paneCss from "../scss/components/pane.scss";
 import footerbarCss from "../scss/components/footerbar.scss";
@@ -54,6 +57,7 @@ declare global {
  * @csspart wy-pane-body - Body area for content.
  * @csspart wy-pane-group - Group wrapper inside pane.
  * @csspart wy-no-result - Message shown when there are no results.
+ * @csspart wy-users-search-blocked - A result row for a user the authenticated user has blocked.
  * @csspart wy-footerbar - Footer bar container.
  * @csspart wy-footerbar-sticky - Sticky footer modifier.
  * @csspart wy-pager - Pager container.
@@ -90,12 +94,21 @@ export class WyUsersSearch extends LitElement {
   buttonTitle?: string;
 
   /**
+   * Whether blocking is available in the host component.
+   *
+   * Governs whether the block list is tracked at all. With the feature off there is no way to block or unblock anyone
+   * from here, so the list would only ever be an empty answer to a question nobody asked.
+   */
+  @property({ attribute: false })
+  canBlock: boolean = false;
+
+  /**
    * Filters search results to agents, non-agents, or all members.
    *
    * @internal
    */
   @state()
-  agentFilter?: boolean = undefined;
+  agentFilter?: boolean = false;
 
   /**
    * Members already chosen prior to the current selection.
@@ -129,6 +142,16 @@ export class WyUsersSearch extends LitElement {
   peopleQuery = new InfiniteQueryController<InfiniteQueryResultType<MemberType>>(this);
 
   /**
+   * Query controller for the ids of the users the viewer has blocked.
+   *
+   * Searching without an `appId` goes to `/api/users`, which maps users in summary form and carries no
+   * `is_blocked` -- that flag is answered per user only by the detailed representation. The list is what fills the gap.
+   *
+   * @internal
+   */
+  private blockedUsersQuery = new QueryController<number[]>(this);
+
+  /**
    * Reference to the search input instance.
    *
    * @internal
@@ -156,7 +179,12 @@ export class WyUsersSearch extends LitElement {
    * @returns {boolean} `true` if the event was not canceled.
    */
   private dispatchSubmit() {
-    this.selected = [...this.selected, ...this.select];
+    // Carry the resolved flag out with the selection rather than leaving it to the consumer: the new-conversation
+    // picker acts on `is_blocked`, and a search outside an app returns users in summary form, which does not carry it.
+    const blockedUserIds = this.blockedUsersQuery.result?.data;
+    this.selected = [...this.selected, ...this.select].map((member) =>
+      blockedUserIds?.includes(member.id) ? { ...member, is_blocked: true } : member
+    );
     const event: MemberSearchSubmitEventType = new (CustomEvent as NamedEvent)("submit", {
       detail: { members: this.selected },
     });
@@ -240,6 +268,7 @@ export class WyUsersSearch extends LitElement {
    */
   getSearchResult() {
     const { data: peopleData, hasNextPage, isPending } = this.peopleQuery.result ?? { data: [], isPending: true };
+    const blockedUserIds = this.blockedUsersQuery.result?.data;
     const flattenedPages = getFlatInfiniteResultData(peopleData);
     const hasResult = Boolean(flattenedPages.length);
     const templateResults: TemplateResult[] = [];
@@ -259,8 +288,16 @@ export class WyUsersSearch extends LitElement {
         html` ${flattenedPages
           .filter((m: MemberType) => this.selected.find((s) => s.id === m.id) === undefined)
           .map((member: MemberType) => {
+            // Blocked users stay selectable and are only marked: group participation is unrestricted, so the icon is
+            // informational. It is the new-conversation picker that treats the selection differently.
+            //
+            // Either source answers: a search scoped to an app returns members, which carry the flag, while an
+            // unscoped search returns users in summary form, which do not -- there the block list is all there is.
+            const isBlocked = Boolean(member.is_blocked || blockedUserIds?.includes(member.id));
+
             return html` <wy-item
               interactive
+              part=${partMap({ "wy-users-search-blocked": isBlocked })}
               @click=${() => this.handleSelected(member, !this.isChecked(member.id))}
               @keydown=${clickOnEnterAndConsumeOnSpace}
               @keyup=${clickOnEnterAndConsumeOnSpace}
@@ -275,7 +312,12 @@ export class WyUsersSearch extends LitElement {
                 .isAgent=${member.is_agent}
                 size=${32}
               ></wy-avatar>
-              <span slot="title"> ${member.name} </span>
+              <span slot="title" class="wy-member-title">
+                <span>${member.name}</span>
+                ${isBlocked
+                  ? html`<wy-icon size="20" name="cancel" title=${msg("Blocked")}></wy-icon>`
+                  : nothing}
+              </span>
               <wy-button slot="actions" kind="icon" .active=${false}
                 ><wy-icon name="${this.isChecked(member.id) ? "checkbox-marked" : "checkbox-blank"}"></wy-icon
               ></wy-button>
@@ -298,17 +340,21 @@ export class WyUsersSearch extends LitElement {
         <div>
           <wy-buttons tabs>
             <wy-button
+              ?active=${this.agentFilter === false}
+              @click=${() => (this.agentFilter = false)}
+              kind="tab"
+              small
+              >${msg("People")}</wy-button
+            >
+            <wy-button ?active=${this.agentFilter === true} @click=${() => (this.agentFilter = true)} kind="tab" small
+              >${msg("Agents")}</wy-button
+            >
+            <wy-button
               ?active=${this.agentFilter === undefined}
               @click=${() => (this.agentFilter = undefined)}
               kind="tab"
               small
               >${msg("All")}</wy-button
-            >
-            <wy-button ?active=${this.agentFilter === false} @click=${() => (this.agentFilter = false)} kind="tab" small
-              >${msg("People")}</wy-button
-            >
-            <wy-button ?active=${this.agentFilter === true} @click=${() => (this.agentFilter = true)} kind="tab" small
-              >${msg("Agents")}</wy-button
             >
           </wy-buttons>
         </div>
@@ -341,6 +387,14 @@ export class WyUsersSearch extends LitElement {
           () => this.agentFilter
         )
       );
+    }
+
+    if ((changedProperties.has("weavy") || changedProperties.has("canBlock")) && this.weavy) {
+      if (this.canBlock) {
+        await this.blockedUsersQuery.trackQuery(getBlockedUserIdsOptions(this.weavy));
+      } else {
+        this.blockedUsersQuery.untrackQuery();
+      }
     }
   }
 

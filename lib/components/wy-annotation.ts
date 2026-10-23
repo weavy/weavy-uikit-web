@@ -2,17 +2,16 @@ import { html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import type { FileType } from "../types/files.types";
-import type { FileOpenEventType } from "../types/files.events";
 import { fileSizeAsString, getExtension, getIcon, getKind, getProvider } from "../utils/files";
-import { NamedEvent } from "../types/generic.types";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
+import { WeavySubComponent } from "../classes/weavy-sub-component";
+import { ActionType } from "../types/action.types";
 
 import hostContentCss from "../scss/host-contents.scss";
 
 import "./ui/wy-icon";
 import "./ui/wy-button";
-import { WeavySubComponent } from "../classes/weavy-sub-component";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -29,7 +28,7 @@ declare global {
  * - [`<wy-button>`](./ui/wy-button.ts)
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * 
- * @fires {FileOpenEventType} file-open - When opening a file in preview is requested
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an entity.
  * @csspart wy-annotation - Annotation button.
  * @csspart wy-annotation-icon - The icon of the annotation button.
  * @csspart wy-annotation-text - The text of the annotation button.
@@ -46,18 +45,8 @@ export class WyAnnotation extends WeavySubComponent {
   @property({ type: Object, attribute: false})
   file!: FileType;
 
-  /**
-   * Triggers file-open event.
-   * @internal
-   */
-  dispatchFileOpen(e: Event, file: FileType) {
-    e.preventDefault();
-    const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId: file.id } });
-    return this.dispatchEvent(event);
-  }
-
   override render() {
-    const fileSize = this.file.size && this.file.size > 0 ? fileSizeAsString(this.file.size) : null;
+    const fileSize = !this.file.provider || this.file.size > 0 ? fileSizeAsString(this.file.size) : null;
     const ext = getExtension(this.file.name);
     const { icon } = getIcon(this.file.name);
     const kind = getKind(this.file.name);
@@ -68,7 +57,10 @@ export class WyAnnotation extends WeavySubComponent {
       <wy-button
         part="wy-annotation"
         @click=${(e: Event) => {
-          !e.defaultPrevented && !this.file.is_trashed && this.dispatchFileOpen(e, this.file);
+          if (!e.defaultPrevented && !this.file.is_trashed) {
+            e.preventDefault();
+            this.dispatchAction({ action: ActionType.Preview, file: this.file });
+          }
         }}
         kind="filled"
         small
@@ -95,7 +87,7 @@ export class WyAnnotation extends WeavySubComponent {
  *
  * - [`<wy-annotation>`](./wy-annotation.ts)
  * 
- * @fires {FileOpenEventType} file-open - When opening a file in preview is requested
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an entity.
  * @csspart wy-annotations - Wrapper for the annotations.
  */
 @customElement("wy-annotation-list")

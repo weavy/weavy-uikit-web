@@ -1,0 +1,23 @@
+@use "../base/color";
+@use "../base/var";
+
+[part~="wy-profile-details"] {
+  margin: 0 auto var.default(--wy-padding) auto;
+  text-align: center;
+  font-style: normal;
+}
+
+[part~="wy-profile-name"] {
+  display: inline-block;
+}
+
+[part~="wy-profile-email"],
+[part~="wy-profile-phone"] {
+  color: #{color.token(--wy-link)};
+  display: block;
+  text-decoration: var.default(--wy-link-decoration);
+  &:hover,
+  &:focus {
+    text-decoration: var.default(--wy-link-hover-decoration);
+  }
+}

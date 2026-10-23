@@ -13,19 +13,10 @@ export const MessengerTypes = new Map(
   })
 );
 
-/**
- * The conversation app type strings and app type guids specific for agents in Messenger.
- */
-export const MessengerAgentTypes = new Map(
-  Object.entries({
-    [AppTypeString.AgentChat]: AppTypeGuid.AgentChat,
-    [AppTypeGuid.AgentChat]: AppTypeString.AgentChat,
-  })
-);
-
 export const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
   // All available features as enabled/disabled by default
   [Feature.Attachments]: true,
+  [Feature.Block]: false,
   [Feature.CloudFiles]: true,
   [Feature.ContextData]: true,
   [Feature.Embeds]: true,
@@ -38,17 +29,9 @@ export const DefaultMessengerFeatures: ComponentFeaturePolicyConfig = {
   [Feature.Previews]: true,
   [Feature.Reactions]: true,
   [Feature.Receipts]: true,
+  // opt-in because a report goes nowhere until the host handles the report_created webhook. Turn it on with the
+  // `features` attribute once something is listening.
+  [Feature.Report]: false,
   [Feature.Typing]: true,
   [Feature.ZoomMeetings]: true,
-};
-
-export const DefaultMessengerAgentFeatures: ComponentFeaturePolicyConfig = {
-  // All available features as enabled/disabled by default
-  [Feature.Attachments]: true,
-  [Feature.ContextData]: true,
-  [Feature.Embeds]: true,
-  [Feature.Previews]: true,
-  [Feature.Reactions]: false,
-  [Feature.Receipts]: true,
-  [Feature.Typing]: true,
 };

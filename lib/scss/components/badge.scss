@@ -2,92 +2,143 @@
 @use "../base/color";
 @use "../base/text";
 
-// Font-size relative: 16px * 0.75 -> 12px * .333333 -> 4px
-$badge-padding: 0.333333em !default;
+// All sizes are in em relative to the badge font-size (which itself is relative to the parent font-size),
+// so badges scale with the text or heading they are placed in, like https://getbootstrap.com/docs/6.0/components/badge/
+$badge-height: 1.5em !default;
+$badge-padding-x: 0.5em !default;
+$badge-text-padding-x: 0.625em !default;
+$badge-dot-size: 0.75em !default;
+// Ring separating a positioned badge from the element it overlaps. Override --wy-badge-ring-color to match the background.
+$badge-ring-width: 0.0625rem !default;
 
 [part~="wy-badge"] {
+  box-sizing: border-box;
+  // inline-block (not flex) so text-overflow: ellipsis works directly on the text node of text badges.
+  // Vertical centering comes from line-height matching the height.
   display: inline-block;
   text-align: center;
   vertical-align: middle;
-  
+
   // For placing in flex layout
   align-self: center;
-  
+  flex: none;
+
   font-weight: var.default(--wy-font-weight-bold);
   font-size: var.default(--wy-font-size-xs);
-  line-height: 1.333333;
- 
-  color: color.token(--wy-on-primary-container);
-  border-radius: var.default(--wy-border-radius-pill);
-  background-color: color.token(--wy-primary-container);
+  font-variant-numeric: tabular-nums;
+  // Line box fills the badge height (instead of line-height: 1 + flex centering), which places caps/digits
+  // slightly higher so they look optically centered.
+  line-height: $badge-height;
+  white-space: nowrap;
 
-  padding: #{$badge-padding}; 
-  min-width: 1lh;
+  // Same height for counts and text; min-width makes single digits a perfect circle and longer counts a pill.
+  height: $badge-height;
+  min-width: $badge-height;
+  padding: 0 $badge-padding-x;
+
+  border-radius: var.default(--wy-border-radius-pill);
+  color: color.token(--wy-on-primary);
+  background-color: color.token(--wy-primary);
 
   // Empty badges collapse automatically
   &:empty {
-    display: none !important; 
+    display: none !important;
   }
 }
 
-[part~="wy-badge-positioned"] {
-  margin: calc(-0.5 * (var.default(--wy-font-size-xs) + #{$badge-padding} * 2));
-  position: absolute;
+// Long text labels are truncated with an ellipsis. Override --wy-badge-max-width to allow longer labels.
+[part~="wy-badge-text"] {
+  @include text.truncate;
 
-  &:not(:empty) {
-    display: block;
+  & {
+    max-width: var(--wy-badge-max-width, 8em);
+    padding: 0 $badge-text-padding-x;
+    color: color.token(--wy-on-primary-container);
+    background-color: color.token(--wy-primary-container);
   }
+}
+
+[part~="wy-badge-dot"] {
+  height: $badge-dot-size;
+  width: $badge-dot-size;
+  min-width: 0;
+  padding: 0;
+  border-radius: 50%;
+  color: color.token(--wy-on-primary);
+  background-color: color.token(--wy-primary);
+}
+
+// The muted pair for counts and labels that inform rather than call for attention. Declared after the count, text
+// and dot rules so it wins over their primary colors regardless of kind.
+[part~="wy-badge-variant"] {
+  color: color.token(--wy-on-secondary-container);
+  background-color: color.token(--wy-secondary-container);
+}
+
+// Keeps the text available to assistive technology while hiding it visually (for dots)
+[part~="wy-badge-label"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Positioned badges are centered on the corner of the closest positioned ancestor.
+// Uses the individual `translate` property so it doesn't conflict with the `scale` used by reveal.
+//
+// The ring fakes a cut-out between the badge and the element it overlaps, so it should match the background
+// behind that element. It can't be detected automatically, so the color is resolved in order of how specific it is:
+// 1. --wy-badge-ring-color: explicit override for a known background.
+// 2. --wy-surface: set (light or dark) by the color mode of the enclosing Weavy component.
+// 3. Canvas: system color for the page background, which follows the page's `color-scheme` for standalone badges.
+//    See https://developer.mozilla.org/en-US/docs/Web/CSS/system-color
+[part~="wy-badge-positioned"] {
+  position: absolute;
+  z-index: 1;
+  box-shadow: 0 0 0 $badge-ring-width var(--wy-badge-ring-color, var(--wy-surface, Canvas));
 }
 
 [part~="wy-badge-top-right"] {
   top: 0;
   right: 0;
+  translate: 50% -50%;
 }
 
 [part~="wy-badge-bottom-right"] {
   bottom: 0;
   right: 0;
+  translate: 50% 50%;
 }
 
 [part~="wy-badge-bottom-left"] {
   bottom: 0;
   left: 0;
+  translate: -50% 50%;
 }
 
 [part~="wy-badge-top-left"] {
   top: 0;
   left: 0;
-}
-
-[part~="wy-badge-compact"] {
-  $badge-padding: 0.25em;
-
-  padding: #{$badge-padding};
-  max-width: calc(var.default(--wy-font-size-xs) * 3 + #{$badge-padding});
-  height: calc(var.default(--wy-font-size-xs) + #{$badge-padding});
-  line-height: calc(var.default(--wy-font-size-xs) + #{$badge-padding});
-
-  @include text.truncate;
-
-  &[part~="wy-badge-positioned"] {
-    margin: calc(-0.5 * (var.default(--wy-font-size-xs) + #{$badge-padding} * 2));
-  }
-}
-
-[part~="wy-badge-dot"] {
-  content-visibility: hidden;
-  line-height: 0;
-  min-width: 0;
-  height: 0;
-  width: 0;
-  padding: var.default(--wy-padding-sm);
-  
-  &[part~="wy-badge-positioned"] {
-    margin: calc(-1 * #{var.default(--wy-padding-sm)});
-  }
+  translate: -50% -50%;
 }
 
 [part~="wy-badge-reveal"] {
+  opacity: 1;
+  scale: 1;
+  transition: opacity var.default(--wy-transition), scale var.default(--wy-transition-fast);
+
+  @starting-style {
+    opacity: 0;
+    scale: 0;
+  }
+}
+
+[part~="wy-badge-reveal-delayed"] {
   opacity: 1;
   transition: opacity var.default(--wy-transition)
     calc(var.default(--wy-transition-duration) + var.default(--wy-transition-reveal-delay));

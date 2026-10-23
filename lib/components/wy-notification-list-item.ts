@@ -2,7 +2,7 @@ import { html, nothing } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
-import { relativeTime } from "../utils/datetime";
+import { relativeDays } from "../utils/datetime";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -170,7 +170,7 @@ export class WyNotificationListItem extends WeavySubComponent {
         )
       : "";
     const dateFromNow = this.notification.created_at
-      ? relativeTime(this.weavy?.locale, new Date(this.notification.created_at))
+      ? relativeDays(this.weavy?.locale, new Date(this.notification.created_at))
       : "";
 
     const otherMember = this.notification.actor;

@@ -15,8 +15,8 @@ export type MutateCommentProps = {
   blobs?: number[];
   attachments?: number[];
   meeting_id?: number;
-  poll_options: PollOptionType[];
-  embed_id: number;
+  poll_options?: PollOptionType[];
+  embed_id?: number;
   context?: number[];
   user?: UserType;
 };

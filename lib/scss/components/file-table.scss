@@ -20,6 +20,11 @@ table {
   width: 100%;
   @include text.truncate;
 
+  // draft badge next to the name
+  wy-file-draft-badge::part(wy-badge) {
+    margin-inline-start: var.default(--wy-gap-sm);
+  }
+
   // rename input
   [part~="wy-input"] {
     width: 100%;

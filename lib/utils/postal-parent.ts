@@ -1,5 +1,5 @@
 //import WeavyPromise from './promise';
-import WeavyEvents from "./events";
+import { WeavyEvents } from "./events";
 
 import { S4 } from "./data";
 import { isDomAvailable, throwOnDomNotAvailable } from "./dom";

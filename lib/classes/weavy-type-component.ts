@@ -106,7 +106,7 @@ export class WeavyTypeComponent
     if (
       // Type app match, like the Messenger
       link?.app?.type &&
-      this.componentTypes?.includes(link.app.type)
+      this.appTypes?.includes(link.app.type)
     ) {
       return link.agent ? link.agent === this.agent : true;
     } else {
@@ -238,7 +238,7 @@ export class WeavyTypeComponent
    * @type {AppTypeGuid[]}
    */
   @state()
-  protected componentTypes?: AppTypeGuid[];
+  protected appTypes?: AppTypeGuid[];
 
   /**
    * Config for enabling/disabling specific features in the weavy component.
@@ -630,7 +630,7 @@ export class WeavyTypeComponent
 
     // Links
 
-    if ((changedProperties.has("componentTypes") || changedProperties.has("agent")) && this.componentTypes) {
+    if ((changedProperties.has("appTypes") || changedProperties.has("agent")) && this.appTypes) {
       //console.log("Checking for storage link", this.appTypes, this.agent);
       this.link = this.weavy?.readStorageLink();
     }

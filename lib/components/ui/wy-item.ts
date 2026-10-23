@@ -203,6 +203,7 @@ export class WyItem extends LitElement {
           "wy-item-top": this.align === "top",
           "wy-item-middle": this.align === "middle",
           "wy-item-bottom": this.align === "bottom",
+          "wy-item-trashed": this.trashed,
           "wy-read": this.status === "read",
           "wy-unread": this.status === "unread",
           "wy-selected": this.selected,

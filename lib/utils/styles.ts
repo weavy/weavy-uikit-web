@@ -25,7 +25,7 @@ export function observeCSSThemeColor(element: Element, callback: (themeColor?: s
     attributes: true,
     attributeFilter: ["class", "style"],
   };
-  let parent: Node | null = element as Node;
+  let parent: Node | null = element;
 
   while (parent && parent !== document) {
     observer.observe(parent, observerOptions);
@@ -127,9 +127,11 @@ export function generateThemeColors(seedColor: string, includeThemeColor = false
   // Red HSL Hue 0deg = HCT Hue 27,4deg
 
   const hct = Hct.fromInt(argb);
+
+  // NOTE: Contrast level needs to be -0.001 instead of 0.0, otherwise Tertiary colors sometimes gets inverted/dark due to some kind of floating point error.
   const weavySchemes = {
-    light: new SchemeWeavy(hct, false, 0.0, Variant.FIDELITY),
-    dark: new SchemeWeavy(hct, true, 0.0, Variant.FIDELITY),
+    light: new SchemeWeavy(hct, false, -0.001, Variant.FIDELITY),
+    dark: new SchemeWeavy(hct, true, -0.001, Variant.FIDELITY),
   };
 
   const colorTokenMap = {
@@ -248,7 +250,7 @@ export const adoptGlobalStyles = (styles: Array<CSSResultOrNative>) => {
   } else {
     for (const s of styles) {
       const style = document.createElement("style");
-      const nonce = (global as unknown as { litNonce: string })["litNonce"];
+      const nonce = (globalThis as unknown as { litNonce: string })["litNonce"];
       if (nonce !== undefined) {
         style.setAttribute("nonce", nonce);
       }

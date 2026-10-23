@@ -23,7 +23,7 @@ export function getUserFollowMutationOptions(weavy: WeavyType, uid: number | str
       }
     },
     onMutate: ({ follow }: MutateUserFollowProps) => {
-      let previousFollow: boolean | undefined;
+      const previousFollow = undefined;
 
       queryClient.setQueryData(["users", uid], (user: UserOrAgentDetailType) => ({
         ...user,

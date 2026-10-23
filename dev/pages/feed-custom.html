@@ -38,7 +38,7 @@
         display: flex;
         flex-direction: column;
         flex: 1;
-        gap: .5rem;
+        gap: 0.5rem;
       }
 
       .header {
@@ -63,15 +63,18 @@
         }
       }
 
-      wy-feed, wy-feed-editor {
+      wy-feed,
+      wy-feed-editor {
         --wy-padding-outer: 0 calc((100% - 600px) / 2); /* => 600px max-width*/
       }
 
       ::part(wy-post-header) {
+        /* Keep the header in first */
         order: -2;
       }
 
       ::part(wy-post-body) {
+        /* Place the body after the header, but before images. */
         order: -1;
       }
     </style>
@@ -89,9 +92,7 @@
         <button class="mode" value="light">Light</button>
         <button class="mode" value="dark">Dark</button>
       </div>
-      <div>
-        <input type="checkbox" id="following" checked /><label for="following">Following</label>
-      </div>
+      <div> <input type="checkbox" id="following" checked /><label for="following">Following</label> </div>
     </div>
     <wy-context url="%WEAVY_URL%" tokenUrl="/api/token">
       <wy-post-editor uid="acme-posts"></wy-post-editor>
@@ -143,7 +144,7 @@
       document.getElementById("color-scheme").addEventListener("click", (event) => {
         document.documentElement.className = event.target.value === "dark" ? "wy-dark" : "";
       });
-      
+
       document.getElementById("following").addEventListener("input", (event) => {
         console.log("following", event.target.checked);
         if (event.target.checked) {

@@ -29,7 +29,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
     return (
       this._result && this.observer
         ? this.observer.trackResult(this._result)
-        : this.observer?.getCurrentResult() ?? { isPending: true }
+        : (this.observer?.getCurrentResult() ?? { isPending: true })
     ) as InfiniteQueryObserverResult<InfiniteData<TData>>;
   }
 
@@ -60,7 +60,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
 
   async trackInfiniteQuery(
     infiniteQueryOptions: InfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>,
-    optimistic: boolean = true
+    optimistic: boolean = true,
   ) {
     this.observerUnsubscribe?.();
 
@@ -80,7 +80,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
     if (this.queryClient && this.observer) {
       if (optimistic) {
         this._result = this.observer.getOptimisticResult(
-          this.observer.options as DefaultedInfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>
+          this.observer.options as DefaultedInfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>,
         );
       } else {
         this._result = this.observer.getCurrentResult();
@@ -111,7 +111,7 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
           .getQueryCache()
           .get(
             (this.observer.options as DefaultedInfiniteQueryObserverOptions<TData, Error, InfiniteData<TData>>)
-              .queryHash
+              .queryHash,
           )?.promise;
       }
       whenUpdated
@@ -120,6 +120,22 @@ export class InfiniteQueryController<TData = unknown> implements ReactiveControl
           // `.updateResult()` will trigger the subscribe callback
           this.observer?.updateResult();
         });
+    }
+  }
+
+  async loadPrevious() {
+    const infiniteQueryResult = this.observer?.getCurrentResult();
+
+    if (infiniteQueryResult?.hasPreviousPage && !infiniteQueryResult.isFetchingPreviousPage) {
+      await infiniteQueryResult.fetchPreviousPage({ cancelRefetch: false });
+    }
+  }
+
+  async loadNext() {
+    const infiniteQueryResult = this.observer?.getCurrentResult();
+
+    if (infiniteQueryResult?.hasNextPage && !infiniteQueryResult.isFetchingNextPage) {
+      await infiniteQueryResult.fetchNextPage({ cancelRefetch: false });
     }
   }
 

@@ -58,7 +58,9 @@ export type UserDetailType = UserType & {
   phone_number?: string;
   username?: string;
   presence?: PresenceType;
+  is_blocked?: boolean;
   is_followed?: boolean;
+  is_reported?: boolean;
 }
 
 export type AgentDetailType = AgentType & {

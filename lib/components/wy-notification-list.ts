@@ -21,7 +21,6 @@ import type {
 import { getMarkNotificationMutation, getNotificationsOptions } from "../data/notifications";
 import { NamedEvent } from "../types/generic.types";
 import { ActionType } from "../types/action.types";
-import { WyActionEventType } from "../types/action.events";
 
 import paneCss from "../scss/components/pane.scss";
 import pagerCss from "../scss/components/pager.scss";
@@ -102,7 +101,7 @@ export class WyNotificationList extends WeavySubAppComponent {
    * When set, only notifications from apps belonging to this directory are shown.
    */
   @property()
-  directory?: string;
+  directory?: string | number;
 
   /**
    * Infinite query controller providing paged notifications.
@@ -150,24 +149,7 @@ export class WyNotificationList extends WeavySubAppComponent {
    */
   private selectNotification(notification: NotificationType) {
     this.notificationId = notification.id;
-    this.dispatchAction(ActionType.Select, notification);
-  }
-
-  /**
-   * Triggers `wy-action` event.
-   *
-   * @internal
-   * @param action - The performed action.
-   * @param notification - Selected notification payload.
-   * @returns Whether the event was successful.
-   */
-  private dispatchAction(action: ActionType, notification: NotificationType | null) {
-    const event: WyActionEventType = new (CustomEvent as NamedEvent)("wy-action", {
-      detail: { action, notification },
-      bubbles: true,
-      composed: true,
-    });
-    return this.dispatchEvent(event);
+    this.dispatchAction({ action: ActionType.Select, notification });
   }
 
   /**

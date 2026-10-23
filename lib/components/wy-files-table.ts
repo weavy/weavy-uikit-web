@@ -1,12 +1,11 @@
-import { html, nothing, PropertyValueMap } from "lit";
+import { html, nothing } from "lit";
 import { localized, msg, str } from "@lit/localize";
 import { fileSizeAsString, getExtension, getIcon, getProvider, handleSelectFilename } from "../utils/files";
-import type { FileOrderByType, FileOrderType, FileType } from "../types/files.types";
+import type { FileOrderByType, FileOrderType, FilesResultType, FileType } from "../types/files.types";
 import type {
   FileDeleteForeverEventType,
+  FileEditEventType,
   FileEditNameEventType,
-  FileOpenEventType,
-  FileRenameEventType,
   FileRestoreEventType,
   FileSubscribeEventType,
   FileTrashEventType,
@@ -14,8 +13,8 @@ import type {
 import { repeat } from "lit/directives/repeat.js";
 import { type WeavyType } from "../contexts/weavy-context";
 import { inputConsume, clickOnSpace, clickOnEnterAndConsumeOnSpace } from "../utils/keyboard";
-import { createRef, Ref, ref } from "lit/directives/ref.js";
-import { autofocusRef, isModifiedClick } from "../utils/dom";
+import { createRef, ref, RefOrCallback } from "lit/directives/ref.js";
+import { autoFocusRef, autoScrollRef, isModifiedClick } from "../utils/dom";
 import { partMap } from "../utils/directives/shadow-part-map";
 import { customElement, property, state } from "lit/decorators.js";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
@@ -24,6 +23,8 @@ import { NamedEvent } from "../types/generic.types";
 import { OrderEventType } from "../types/lists.events";
 import { openUrl } from "../utils/urls";
 import { Feature } from "../types/features.types";
+import type { InfiniteData, InfiniteQueryObserverResult } from "@tanstack/query-core";
+import { getFlatInfiniteResultData } from "../utils/query-cache";
 
 export type FileOrderHeaderType = { by: FileOrderByType | undefined; title: string; col: string }[];
 
@@ -32,15 +33,18 @@ import hostContentsCss from "../scss/host-contents.scss";
 import inputCss from "../scss/components/input.scss";
 import tableCss from "../scss/components/table.scss";
 import fileTableCss from "../scss/components/file-table.scss";
+import pagerCss from "../scss/components/pager.scss";
 
 import "./wy-file-menu";
+import "./wy-file-draft-badge";
 import "./ui/wy-icon";
 import "./ui/wy-button";
 import "./ui/wy-badge";
+import { ActionType } from "../types/action.types";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wy-file-table": WyFileTable;
+    "wy-files-table": WyFilesTable;
   }
 }
 
@@ -50,6 +54,7 @@ declare global {
  * **Used sub components:**
  *
  * - [`<wy-file-menu>`](./wy-file-menu.ts)
+ * - [`<wy-file-draft-badge>`](./wy-file-draft-badge.ts)
  * - [`<wy-icon>`](./ui/wy-icon.ts)
  * - [`<wy-button>`](./ui/wy-button.ts)
  *
@@ -68,35 +73,41 @@ declare global {
  * @csspart wy-highlight - Modifier for highlighted row
  * @csspart wy-trashed - Modifier for trashed row.
  * @csspart wy-badge - Badge used for comment counts
+ * @csspart wy-pager - Pager anchor for infinite scrolling detection.
+ * @csspart wy-pager-overlay - Modifier for overlaying pager.
+ * @csspart wy-pager-top - Modifier for pager placed in the top.
+ * @csspart wy-pager-bottom - Modifier for pager placed in the bottom.
  *
- * @fires {FileOpenEventType} file-open - Emitted when a file should be opened in preview.
+ * @fires {WyActionEventType} wy-action - Emitted when an action is performed on an entity.
  * @fires {OrderEventType<FileOrderType>} order - Emitted when the user changes sort order.
- * @fires {FileEditNameEventType} edit-name - Emitted when rename mode is activated.
- * @fires {FileRenameEventType} rename - Emitted when a file is renamed.
- * @fires {FileTrashEventType} trash - Emitted when a file is trashed.
- * @fires {FileRestoreEventType} restore - Emitted when a file is restored.
- * @fires {FileDeleteForeverEventType} delete-forever - Emitted when a file is permanently deleted.
- * @fires {FileSubscribeEventType} subscribe - Emitted when subscribe state is toggled.
  */
-@customElement("wy-file-table")
+@customElement("wy-files-table")
 @localized()
-export class WyFileTable extends WeavySubTypeComponent {
-  static override styles = [inputCss, tableCss, fileTableCss, hostContentsCss];
+export class WyFilesTable extends WeavySubTypeComponent {
+  static override styles = [inputCss, tableCss, fileTableCss, pagerCss, hostContentsCss];
 
   /** @internal */
   protected exportParts = new ShadowPartsController(this);
 
   /**
-   * Files rendered in the table view.
+   * Infinite query result backing the table view.
+   *
+   * @internal
    */
   @property({ attribute: false })
-  files?: FileType[];
+  infiniteQueryResult?: InfiniteQueryObserverResult<InfiniteData<FilesResultType, unknown>>;
 
   /**
    * Active sort order for the table.
    */
   @property({ attribute: false })
   order: FileOrderType = { by: "name", descending: false };
+
+  /**
+   * File id that is selected.
+   */
+  @property({ type: Number })
+  selectedId?: number = NaN;
 
   /**
    * Current file id in rename mode.
@@ -115,32 +126,24 @@ export class WyFileTable extends WeavySubTypeComponent {
   highlightId?: number = NaN;
 
   /**
-   * Scroll target used for highlighted rows.
-   *
-   * @internal
+   * Reference to the pager element for loading previous items.
    */
-  private highlightRef: Ref<HTMLElement> = createRef();
+  previousPagerRef: RefOrCallback<Element> = createRef();
+
+  /**
+   * Reference to the pager element for loading next items.
+   */
+  nextPagerRef: RefOrCallback<Element> = createRef();
 
   constructor() {
     super();
-    this.addEventListener("edit-name", (e) => {
-      this.isRenamingId = (e as FileEditNameEventType).detail.file.id;
+    this.addEventListener("wy-action", (e) => {
+      if (e.detail.action === ActionType.EditName) {
+        this.isRenamingId = e.detail.file ? e.detail.file.id : NaN;
+      } else if (e.detail.action === ActionType.Rename) {
+        this.isRenamingId = NaN;
+      }
     });
-    this.addEventListener("rename", () => {
-      this.isRenamingId = NaN;
-    });
-  }
-
-  /**
-   * Emit a `file-open` event requesting preview for the supplied file.
-   *
-   * @param fileId - Identifier of the file to open.
-   * @param tab - Optional preview tab to activate.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchFileOpen(fileId: number, tab?: "comments" | "versions") {
-    const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId, tab } });
-    return this.dispatchEvent(event);
   }
 
   /**
@@ -155,74 +158,6 @@ export class WyFileTable extends WeavySubTypeComponent {
   }
 
   /**
-   * Emit an `edit-name` event to enter rename mode for the specified file.
-   *
-   * @param file - File that should be renamed.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchEditName(file: FileType) {
-    const event: FileEditNameEventType = new (CustomEvent as NamedEvent)("edit-name", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `rename` event carrying the updated filename.
-   *
-   * @param file - File being renamed.
-   * @param name - New filename value.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchRename(file: FileType, name: string) {
-    const event: FileRenameEventType = new (CustomEvent as NamedEvent)("rename", { detail: { file, name } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `trash` event to move the file to the recycle bin.
-   *
-   * @param file - File to trash.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchTrash(file: FileType) {
-    const event: FileTrashEventType = new (CustomEvent as NamedEvent)("trash", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `restore` event to recover a trashed file.
-   *
-   * @param file - File to restore.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchRestore(file: FileType) {
-    const event: FileRestoreEventType = new (CustomEvent as NamedEvent)("restore", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `delete-forever` event to permanently remove the file.
-   *
-   * @param file - File targeted for permanent deletion.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchDeleteForever(file: FileType) {
-    const event: FileDeleteForeverEventType = new (CustomEvent as NamedEvent)("delete-forever", { detail: { file } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
-   * Emit a `subscribe` event toggling subscription state for the file.
-   *
-   * @param file - File whose subscription changes.
-   * @param subscribe - Desired subscription state.
-   * @returns Whether the event was not canceled.
-   */
-  dispatchSubscribe(file: FileType, subscribe: boolean) {
-    const event: FileSubscribeEventType = new (CustomEvent as NamedEvent)("subscribe", { detail: { file, subscribe } });
-    return this.dispatchEvent(event);
-  }
-
-  /**
    * Render the complete file table layout.
    *
    * @param files - Files to render.
@@ -231,13 +166,7 @@ export class WyFileTable extends WeavySubTypeComponent {
    * @param highlightId - File id to highlight.
    * @param highlightRef - Reference for scrolling highlighted rows.
    */
-  renderFileTable(
-    files: FileType[],
-    order?: FileOrderType,
-    isRenamingId?: number,
-    highlightId?: number,
-    highlightRef?: Ref
-  ) {
+  renderFileTable(files: FileType[], order?: FileOrderType, isRenamingId?: number, highlightId?: number) {
     return files && files.length
       ? html`
           <table part="wy-table wy-table-interactive">
@@ -246,9 +175,17 @@ export class WyFileTable extends WeavySubTypeComponent {
               ${repeat(
                 files,
                 (file) => file.id,
-                (file) =>
-                  this.renderFileTableRow.call(this, this.weavy, { file }, isRenamingId, highlightId, highlightRef)
+                (file) => this.renderFileTableRow.call(this, this.weavy, { file }, isRenamingId, highlightId),
               )}
+              ${files.length
+                ? html`<tr
+                    part="wy-pager wy-pager-overlay wy-pager-top wy-pager-overlay-top"
+                    ${ref(this.previousPagerRef)}
+                  ></tr>`
+                : nothing}
+              ${files.length
+                ? html`<tr part="wy-pager wy-pager-overlay wy-pager-bottom" ${ref(this.nextPagerRef)}></tr>`
+                : nothing}
             </tbody>
           </table>
         `
@@ -309,24 +246,25 @@ export class WyFileTable extends WeavySubTypeComponent {
    * @param row - Row data containing the file.
    * @param isRenamingId - File id in rename mode.
    * @param highlightId - File id to highlight.
-   * @param highlightRef - Reference for scrolling highlighted rows.
    */
   renderFileTableRow(
     weavy: WeavyType | undefined,
     { file }: { file: FileType },
     isRenamingId?: number,
     highlightId?: number,
-    highlightRef?: Ref
   ) {
-    const fileSize = file.size && file.size > 0 ? fileSizeAsString(file.size) : nothing;
+    const fileSize = !file.provider || file.size > 0 ? fileSizeAsString(file.size) : nothing;
     const fileChangedAt = file.updated_at || file.created_at;
     const fileDateFull = new Intl.DateTimeFormat(weavy?.locale, { dateStyle: "full", timeStyle: "short" }).format(
-      new Date(fileChangedAt)
+      new Date(fileChangedAt),
     );
     const fileDateShort = new Intl.DateTimeFormat(weavy?.locale, { dateStyle: "short" }).format(
-      new Date(fileChangedAt)
+      new Date(fileChangedAt),
     );
-    const isRenaming = Boolean(isRenamingId && isRenamingId === file.id);
+    const isRenaming = Boolean(
+      this.componentFeatures?.allowsFeature(Feature.FileRename) && isRenamingId && isRenamingId === file.id,
+    );
+    const isSelected = this.selectedId === file.id;
 
     const { icon } = getIcon(file.name);
     const ext = getExtension(file.name);
@@ -336,10 +274,14 @@ export class WyFileTable extends WeavySubTypeComponent {
       e.stopImmediatePropagation();
 
       const renameTarget = e.target as HTMLInputElement;
-      if (renameTarget.value && renameTarget.value !== file.name) {
-        this.dispatchRename(file, renameTarget.value);
+      if (
+        this.componentFeatures?.allowsFeature(Feature.FileRename) &&
+        renameTarget.value &&
+        renameTarget.value !== file.name
+      ) {
+        this.dispatchAction({ action: ActionType.Rename, file: { ...file, name: renameTarget.value } });
       } else {
-        this.dispatchEditName({ id: NaN } as FileType);
+        this.dispatchAction({ action: ActionType.EditName, file: null });
       }
     };
 
@@ -360,20 +302,39 @@ export class WyFileTable extends WeavySubTypeComponent {
 
     return html`
       <tr
-        part=${partMap({ "wy-tr": true, "wy-highlight": highlight, "wy-trashed": file.is_trashed })}
+        part=${partMap({
+          "wy-tr": true,
+          "wy-highlight": highlight,
+          "wy-trashed": file.is_trashed,
+          "wy-selected": isSelected,
+        })}
+        data-id=${file.id}
         @click=${(e: MouseEvent) => {
-          if (isModifiedClick(e)) {
-            e.stopPropagation();
-            e.preventDefault();
-            openUrl(file.download_url ?? file.external_url, "_blank");
+          if (file.is_trashed) {
+            return;
           }
 
-          !e.defaultPrevented && !file.is_trashed && this.dispatchFileOpen(file.id);
+          if (isModifiedClick(e)) {
+            if (!e.defaultPrevented && this.dispatchAction({ action: ActionType.Open, file })) {
+              e.stopPropagation();
+              e.preventDefault();
+              openUrl(file.download_url ?? file.external_url, "_blank");
+            }
+          } else {
+            !e.defaultPrevented && this.dispatchAction({ action: ActionType.Select, file });
+          }
         }}
-        ${highlight && highlightRef ? ref(highlightRef) : nothing}
+        ${highlight ? ref(autoScrollRef({ block: "center", behavior: "instant" })) : nothing}
       >
         <td part="wy-td wy-col-icon"
-          ><wy-icon part="wy-col-icon-content" name=${icon} .overlayName=${provider} size="24" kind=${file.kind} ext=${ext}></wy-icon
+          ><wy-icon
+            part="wy-col-icon-content"
+            name=${icon}
+            .overlayName=${provider}
+            size="24"
+            kind=${file.kind}
+            ext=${ext}
+          ></wy-icon
         ></td>
         <td part="wy-td wy-col-name">
           ${isRenaming
@@ -391,10 +352,10 @@ export class WyFileTable extends WeavySubTypeComponent {
                   }}
                   @click=${(e: Event) => e.preventDefault()}
                   @focus=${handleSelectFilename}
-                  ${ref(autofocusRef)}
+                  ${ref(autoFocusRef())}
                 />
               `
-            : html`${file.name}`}
+            : html`${file.name}<wy-file-draft-badge .file=${file}></wy-file-draft-badge>`}
         </td>
         <td part="wy-td wy-col-icon"
           >${this.componentFeatures?.allowsFeature(Feature.Comments) && file.comments?.count
@@ -404,13 +365,13 @@ export class WyFileTable extends WeavySubTypeComponent {
                 @click=${(e: Event) => {
                   if (!e.defaultPrevented && !file.is_trashed) {
                     (e.target as HTMLElement).blur();
-                    this.dispatchFileOpen(file.id, "comments");
+                    this.dispatchAction({ action: ActionType.Comment, file });
                     e.stopPropagation();
                   }
                 }}
                 title=${msg(str`${file.comments.count} comments`)}
               >
-                <wy-badge count=${file.comments.count}></wy-badge>
+                <wy-badge>${file.comments.count}</wy-badge>
               </wy-button>`
             : nothing}</td
         >
@@ -423,11 +384,22 @@ export class WyFileTable extends WeavySubTypeComponent {
           <wy-file-menu
             part="wy-col-icon-content"
             .file=${file}
-            @edit-name=${(e: FileEditNameEventType) => this.dispatchEditName(e.detail.file)}
-            @trash=${(e: FileTrashEventType) => this.dispatchTrash(e.detail.file)}
-            @restore=${(e: FileRestoreEventType) => this.dispatchRestore(e.detail.file)}
-            @delete-forever=${(e: FileDeleteForeverEventType) => this.dispatchDeleteForever(e.detail.file)}
-            @subscribe=${(e: FileSubscribeEventType) => this.dispatchSubscribe(e.detail.file, e.detail.subscribe)}
+            @edit=${(e: FileEditEventType) => this.dispatchAction({ action: ActionType.Edit, file: e.detail.file })}
+            @edit-name=${(e: FileEditNameEventType) =>
+              this.dispatchAction({
+                action: ActionType.EditName,
+                file: e.detail.editName ? e.detail.file : null,
+              })}
+            @trash=${(e: FileTrashEventType) => this.dispatchAction({ action: ActionType.Trash, file: e.detail.file })}
+            @restore=${(e: FileRestoreEventType) =>
+              this.dispatchAction({ action: ActionType.Restore, file: e.detail.file })}
+            @delete-forever=${(e: FileDeleteForeverEventType) =>
+              this.dispatchAction({ action: ActionType.DeleteForever, file: e.detail.file })}
+            @subscribe=${(e: FileSubscribeEventType) =>
+              this.dispatchAction({
+                action: e.detail.subscribe ? ActionType.Subscribe : ActionType.Unsubscribe,
+                file: e.detail.file,
+              })}
           >
           </wy-file-menu>
         </td>
@@ -436,23 +408,13 @@ export class WyFileTable extends WeavySubTypeComponent {
   }
 
   override render() {
-    if (this.files && this.files.length) {
-      return this.renderFileTable.call(
-        this,
-        this.files,
-        this.order,
-        this.isRenamingId,
-        this.highlightId,
-        this.highlightRef
-      );
+    const { data } = this.infiniteQueryResult || {};
+    const files = getFlatInfiniteResultData(data);
+
+    if (files && files.length) {
+      return this.renderFileTable.call(this, files, this.order, this.isRenamingId, this.highlightId);
     }
 
     return nothing;
-  }
-
-  protected override updated(changedProperties: PropertyValueMap<this>) {
-    if (changedProperties.has("highlightId") && this.highlightId) {
-      this.highlightRef.value?.scrollIntoView({ block: "nearest" });
-    }
   }
 }

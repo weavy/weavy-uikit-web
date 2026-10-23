@@ -33,3 +33,38 @@
   align-items: center;
   padding: var.default(--wy-padding-sm);
 }
+
+.wy-member-title {
+  display: flex;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
+  min-width: 0;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Blocked users are marked in search results, never hidden -- they stay selectable, since group participation is
+// unrestricted. Only the image and body dim, so the selection checkbox stays legible.
+[part~="wy-users-search-blocked"] {
+  &::part(wy-item-image),
+  &::part(wy-item-body) {
+    opacity: var.default(--wy-opacity-disabled);
+  }
+}
+
+// Blocked members are marked in the group details list, never hidden -- group participation is unrestricted, so this is
+// informational.
+[part~="wy-conversation-details-member"]::part(wy-item-interactive) {
+  cursor: default;
+}
+
+[part~="wy-conversation-details-member-blocked"] {
+  &::part(wy-item-image),
+  &::part(wy-item-body) {
+    opacity: var.default(--wy-opacity-disabled);
+  }
+}

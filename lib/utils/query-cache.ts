@@ -1,4 +1,4 @@
-import { InfiniteData, NoInfer, QueryClient, QueryFilters, QueryKey, SetDataOptions, Query } from "@tanstack/query-core";
+import { InfiniteData, QueryClient, QueryFilters, QueryKey, SetDataOptions, Query } from "@tanstack/query-core";
 import { PlainObjectType } from "../types/generic.types";
 import { isQueryFilter, InfiniteQueryResultType, QueryResultType } from "../types/query.types";
 import { MsgType } from "../types/msg.types";
@@ -125,7 +125,7 @@ export function addToQueryData<
               page.end === page.count
             ) {
               // end of the list
-              page.data = [...newData, item as TDataItem & PlainObjectType];
+              page.data = [...newData, item];
 
               if (page.end) {
                 page.end += 1 + newData.length - pageData.length;
@@ -137,9 +137,9 @@ export function addToQueryData<
             // add new item to first page
             if (i === 0) {
               if (sorting.descending) {
-                page.data = [item as TDataItem & PlainObjectType, ...newData];
+                page.data = [item, ...newData];
               } else {
-                page.data = [...newData, item as TDataItem & PlainObjectType];
+                page.data = [...newData, item];
               }
 
               if (page.end) {
@@ -204,15 +204,15 @@ export function addToQueryData<
           newData.splice(foundIndex, 0, item as TDataItem & PlainObjectType);
         } else {
           // end of the list
-          newData.push(item as TDataItem & PlainObjectType);
+          newData.push(item);
           count++;
         }
       } else {
         // no specific sorting
         if (sorting.descending) {
-          newData.unshift(item as TDataItem & PlainObjectType);
+          newData.unshift(item);
         } else {
-          newData.push(item as TDataItem & PlainObjectType);
+          newData.push(item);
         }
         count++;
       }
@@ -414,7 +414,7 @@ export const updateCacheItem = <T extends PlainObjectType>(
   select: number | ((item: T) => boolean) | undefined,
   fnUpdater: (item: T) => T
 ): T | void => {
-  return queryClient.setQueryData(key, (data: unknown) => {
+  return queryClient.setQueryData<NoInfer<void | T>>(key, (data: unknown) => {
     return updateQueryData<T>(
       data as
         | InfiniteQueryResultType<T>
@@ -449,7 +449,7 @@ export const removeCacheItem = <T extends PlainObjectType>(
   key: QueryKey,
   select: number | ((item: T) => boolean)
 ): T | void => {
-  return queryClient.setQueryData(key, (data: unknown) => {
+  return queryClient.setQueryData<NoInfer<void | T>>(key, (data: unknown) => {
     return removeQueryData<T>(
       data as InfiniteData<InfiniteQueryResultType<T>, unknown> | QueryResultType<T>,
       select
@@ -472,7 +472,7 @@ export const updateCacheItemCount = <T extends PlainObjectType>(
   key: QueryKey,
   fnUpdater: (count: number) => number
 ): T | void => {
-  return queryClient.setQueryData(key, (data: unknown) => {
+  return queryClient.setQueryData<NoInfer<void | T>>(key, (data: unknown) => {
     const { count } = data as QueryResultType<T>;
     return { count: fnUpdater(count) } as unknown as NoInfer<void | T> | undefined;
   });
@@ -493,7 +493,8 @@ export function keepPages(
   queryClient: QueryClient | undefined,
   queryKey: QueryKey,
   options?: SetDataOptions,
-  pagesLength: number = 1
+  pagesLength: number = 1,
+  reverse: boolean = false,
 ) {
   if (!queryClient) {
     return;
@@ -504,9 +505,11 @@ export function keepPages(
     queryClient.setQueryData(
       queryKey,
       (data: InfiniteData<unknown>) => {
+        const start = reverse ? -1 * pagesLength : 0;
+        const end = reverse ? undefined : pagesLength;
         return {
-          pages: data.pages.slice(0, pagesLength),
-          pageParams: data.pageParams.slice(0, pagesLength),
+          pages: data.pages.slice(start, end),
+          pageParams: data.pageParams.slice(start, end),
         };
       },
       options
@@ -574,4 +577,18 @@ export function isInfiniteResultDataEmpty<T extends PlainObjectType>(
   data: InfiniteData<InfiniteQueryResultType<T>, unknown> | undefined
 ) {
   return !data || !data?.pages.some((page) => page.data?.length);
+}
+
+/**
+ * Checks if infinite query result contains a specific id.
+ * 
+ * @param data Infinite query result data
+ * @param {number} id - The id to check for
+ * @returns boolean
+ */
+export function hasInfiniteResultDataId<T extends PlainObjectType>(
+  data: InfiniteData<InfiniteQueryResultType<T>, unknown> | undefined,
+  id: number | undefined
+) {
+  return typeof id === "number" && data?.pages.some((page) => page.data?.some((item) => item.id === id));
 }

@@ -47,31 +47,47 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
      */
     readonly version: string = WeavyClient.version;
 
-    #whenCheckVersion?: Promise<WeavyVersionType>;
+    _whenCheckVersion?: Promise<WeavyVersionType>;
 
     /**
      * Checks the version of the Weavy Context against the Weavy Environment version.
      *
+     * The environment version is read from the anonymous `/ready` endpoint, which returns
+     * `{ "node_id": "...", "version": "33.0.0", "status": "healthy" }` with status 200 when the node is ready,
+     * and the same body with status 503 when it is not. The version is read from both, but the server is only
+     * considered reachable on 200 since every other request to an unhealthy node is also answered with 503.
      */
     async checkVersion(this: this & WeavyType) {
-      if (!this.#whenCheckVersion) {
-        this.#whenCheckVersion = (async () => {
+      if (!this._whenCheckVersion) {
+        this._whenCheckVersion = (async () => {
           await this.whenUrl();
           this.networkStateIsPending = true;
-          let response;
+          let response: Response | undefined;
           try {
-            response = await fetch(new URL("/version", this.url), await this.fetchOptions({}, false));
-            if (!response.ok) {
-              throw new Error(`Could not verify environment version. ${response.status} ${response.statusText}`, {
-                cause: response.status,
-              });
-            }
-            this.networkStateIsPending = false;
-            this.serverState = "ok";
+            response = await fetch(new URL("/ready", this.url), await this.fetchOptions({}, false));
           } catch (e) {
-            this.networkStateIsPending = false;
-            this.serverState = "unreachable";
             console.warn("Could not check Weavy version: " + (e as Error).toString());
+          }
+          this.networkStateIsPending = false;
+          this.serverState = response?.ok ? "ok" : "unreachable";
+
+          // Only a 503 from the node itself carries the version; a 503 from a proxy or a 404 from an older
+          // environment without the version in /ready has no usable body.
+          let environmentVersion: string | undefined;
+          if (response?.ok || response?.status === 503) {
+            try {
+              environmentVersion = ((await response.json()) as { version?: string }).version || undefined;
+            } catch {
+              // Not a JSON body, handled below
+            }
+          }
+
+          if (!environmentVersion) {
+            if (response) {
+              console.warn(
+                `Could not verify environment version. ${response.status} ${response.statusText}`,
+              );
+            }
             return {
               client: {
                 name: WeavyClient.sourceName,
@@ -81,13 +97,13 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
                 name: (this.url as URL)?.hostname,
                 version: undefined,
               },
-          };
+            };
           }
 
-          const environmentVersion = await response.text();
-
-          if (!this.version || !environmentVersion || this.version !== environmentVersion) {
+          if (!this.version || this.version !== environmentVersion) {
             try {
+              // Only major and minor are compared. Patch releases (and prerelease/build suffixes) are considered
+              // compatible, so e.g. a UI kit 32.2.0 against an environment 32.2.1 is not a mismatch.
               const semverVersion = this.version.split(".").slice(0, 2);
               const semverEnvironmentVersion = environmentVersion.split(".").slice(0, 2);
 
@@ -99,10 +115,6 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
                 throw new Error(`Minor version mismatch`, {
                   cause: "minor",
                 });
-              } else if (semverVersion[2] !== semverEnvironmentVersion[2]) {
-                throw new Error(`Patch version mismatch`, {
-                  cause: "patch",
-                });
               }
             } catch (e) {
               throw new Error(
@@ -110,6 +122,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
                   (this.url as URL)?.hostname
                 }@${environmentVersion} - This will likely cause errors!`,
                 {
+                  // eslint-disable-next-line preserve-caught-error, @typescript-eslint/no-unnecessary-type-assertion
                   cause: {
                     mismatch: (e as Error).cause,
                     client: {
@@ -124,7 +137,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
                 },
               );
             } finally {
-              this.#whenCheckVersion = undefined;
+              this._whenCheckVersion = undefined;
             }
           } else {
             console.info(`Weavy version ${this.version} ☑️`);
@@ -141,7 +154,7 @@ export const WeavyVersionMixin = <TBase extends Constructor<WeavyClient>>(Base: 
           };
         })();
       }
-      return await this.#whenCheckVersion;
+      return await this._whenCheckVersion;
     }
   };
 };

@@ -1,0 +1,21 @@
+@use "../base/var";
+@use "../base/breakpoints";
+
+[part~="wy-editor-file"] {
+  min-height: -webkit-fill-available;
+  min-height: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+[part~="wy-editor-toolbar"] {
+    @include breakpoints.container-size-up(md) {
+    order: -1;
+    bottom: unset;
+    top: var(--wy-component-header-offset, 0);
+  }
+}
+
+[part~="wy-editor-toolbar-offset"] {
+  --wy-component-header-offset: calc(#{var.default(--wy-titlebar-height)} + #{var.default(--wy-padding-sm)});
+}

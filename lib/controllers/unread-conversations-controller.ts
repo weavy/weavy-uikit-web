@@ -20,7 +20,7 @@ export interface ConversationFilterProps {
   /**
    * App types for unread scoping.
    */
-  componentTypes: AppTypeGuid[];
+  appTypes: AppTypeGuid[];
 
   /**
    * Optional agent uid for the scope.
@@ -97,8 +97,8 @@ export class UnreadConversationsController implements ReactiveController {
    * Initiates context consumers
    */
   async setContexts() {
-    await whenParentsDefined(this.host as LitElement);
-    this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
+    await whenParentsDefined(this.host);
+    this.weavyContext = new ContextConsumer(this.host, { context: WeavyContext, subscribe: true });
   }
 
   /**

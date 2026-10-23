@@ -42,11 +42,69 @@
   @include highlight.flash;
 }
 
+// centred rather than inline: the row mixes text with icons (the report flag, and the blocked marker in groups), and
+// an icon renders as a flex box that will not sit on the text baseline on its own.
 [part~="wy-message-meta"] {
+  display: flex;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
   font-size: var.default(--wy-font-size-xs);
   margin: 0 0 calc(0.5 * var.default(--wy-gap)) calc(0.5 * var.default(--wy-gap));
   color: color.token(--wy-on-surface-variant);
 }
+
+// revealed by hovering the meta row rather than the whole message, so the flag appears with the name and timestamp it
+// sits beside instead of whenever the pointer is anywhere over the text.
+//
+// NOTE: a plain span wrapping the icon, not the icon itself. wy-icon sets `display: contents` on its host, so the host
+// generates no box and opacity on it is ignored entirely -- the flag would simply always show. The span also carries
+// the colour and the title.
+[part~="wy-message-report"] {
+  display: inline-flex;
+  flex: 0 0 auto;
+  opacity: 0;
+  cursor: pointer;
+  color: color.token(--wy-on-surface-variant);
+  transition: opacity var.default(--wy-transition-fast);
+
+  // the icon is 14px, well under the 24px WCAG 2.5.8 asks for, and it sits right beside the timestamp. The padding
+  // makes the target without moving anything: the negative margin takes the same space back out of the meta row's
+  // flex layout, so the gap either side is unchanged.
+  padding: var.wy-rem(0.3125);
+  margin: var.wy-rem(-0.3125);
+
+  [part~="wy-message-meta"]:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  // Touch devices have no hover, so there would be no way to reach the flag. `any-pointer`, not `hover`, because
+  // `hover` describes only the *primary* input: on a touch laptop or a tablet with a trackpad the mouse is primary and
+  // reports `hover: hover`, leaving the touchscreen with no way in. `any-hover: none` fails the same way, since the
+  // mouse there can hover. `any-pointer: coarse` is true whenever any attached input is touch, which is the question.
+  @media (any-pointer: coarse) {
+    opacity: 1;
+  }
+}
+
+[part~="wy-message-report-reported"] {
+  // always visible rather than hover-only -- the filled icon carries the state, so the colour stays as it is.
+  // Wins over the hover rule above by coming later with equal specificity.
+  opacity: 1;
+  cursor: default;
+}
+
+// a held-back message is dimmed whole -- avatar, name, time and the notice -- so it reads as set aside rather than as
+// something to read. Dimmed piece by piece rather than on the message itself, since opacity on an ancestor cannot be
+// undone further down, and the way out has to stay at full strength.
+[part~="wy-message-blocked"] {
+  [part~="wy-message-author"],
+  [part~="wy-message-meta"],
+  [part~="wy-message-bubble-section"] {
+    opacity: var.default(--wy-opacity-disabled);
+  }
+}
+
 
 [part~="wy-message-bubble"] {
   background-color: var(--wy-component-background-color);
@@ -121,3 +179,37 @@
   justify-content: flex-end;
   margin-top: var.wy-rem(-0.125);
 }
+
+// The one-to-one header avatar opens the other person's profile card, so it needs to read as clickable. Groups get no
+// such treatment -- a group avatar is not one person, so the part is never set there.
+[part~="wy-avatar-interactive"] {
+  cursor: pointer;
+  border-radius: 50%;
+
+  &:focus-visible {
+    outline: var.wy-rem(0.125) solid color.token(--wy-primary);
+    outline-offset: var.wy-rem(0.125);
+  }
+}
+
+// notice replacing the messages in a blocked private chat -- a state of the conversation, not something someone said.
+[part~="wy-conversation-blocked"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var.default(--wy-gap-sm);
+  padding: var.default(--wy-padding);
+  text-align: center;
+  max-width: var.wy-rem(30);
+}
+
+[part~="wy-conversation-blocked-title"] {
+  font-weight: var.default(--wy-font-weight-bold);
+  margin: var.default(--wy-gap-sm) 0;
+}
+
+[part~="wy-conversation-blocked-text"] {
+  color: color.token(--wy-on-surface-variant);
+  margin-top: 0;
+}
+

@@ -1,18 +1,18 @@
-import { LitElement, html, nothing } from "lit";
+import { html, nothing } from "lit";
 import { customElement } from "../../utils/decorators/custom-element";
 import { property } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ref } from "lit/directives/ref.js";
 import type { FileType } from "../../types/files.types";
-import type { FileOpenEventType } from "../../types/files.events";
 import { getExtension } from "../../utils/files";
 import { checkImageLoad, imageLoaded } from "../../utils/images";
 import { partMap } from "../../utils/directives/shadow-part-map";
 import { ShadowPartsController } from "../../controllers/shadow-parts-controller";
-import { NamedEvent } from "../../types/generic.types";
 import imageGridCss from "../../scss/components/image-grid.scss";
 import hostContentsCss from "../../scss/host-contents.scss";
 import { isModifiedClick } from "../../utils/dom";
+import { WeavySubComponent } from "../../classes/weavy-sub-component";
+import { ActionType } from "../../types/action.types";
 
 const MAX_ICON_SIZE = 128;
 
@@ -35,10 +35,10 @@ declare global {
  * @csspart wy-image-icon - The image when it's an icon.
  * @csspart wy-image-grid-more - Overlay on the last image in the limited span.
  *
- * @fires {FileOpenEventType} file-open - When opening a file in preview is requested.
+ * @fires {WyActionEvent} wy-action - When opening a file in preview is requested.
  */
 @customElement("wy-image-grid")
-export class WyImageGrid extends LitElement {
+export class WyImageGrid extends WeavySubComponent {
   static override styles = [imageGridCss, hostContentsCss];
 
   protected exportParts = new ShadowPartsController(this);
@@ -64,7 +64,7 @@ export class WyImageGrid extends LitElement {
   outer: boolean = false;
 
   /**
-   * Dispatch a `file-open` event.
+   * Dispatch an `wy-action` event.
    *
    * @internal
    * @param e - Event that will be prevented.
@@ -81,8 +81,7 @@ export class WyImageGrid extends LitElement {
     e.preventDefault();
     
     if (!file.is_trashed) {
-      const event: FileOpenEventType = new (CustomEvent as NamedEvent)("file-open", { detail: { fileId: file.id } });
-      this.dispatchEvent(event);
+      this.dispatchAction({ action: ActionType.Preview, file });
     }
   }
 

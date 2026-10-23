@@ -5,8 +5,11 @@ export function mediaFallback(media: HTMLVideoElement | HTMLAudioElement) {
   }
   media.classList.add("wy-error");
   media.part.add("wy-error");
-  // TODO: replace with react way
-  media.outerHTML = media.outerHTML.replace(/<(video|audio)/, "<div").replace(/(video|audio)>/, "div>");
+  
+  const fallbackHTML = media.outerHTML.replace(/<(video|audio)/, "<div").replace(/(video|audio)>/, "div>");
+  const fallbackFragment = document.createElement('template');
+  fallbackFragment.innerHTML = fallbackHTML;
+  media.parentNode?.replaceChild(fallbackFragment.content, media);
 }
 
 export function mediaLoaded(event: Event) {
@@ -22,6 +25,7 @@ export function mediaLoaded(event: Event) {
 
 export function mediaError(event: Event) {
   const src = event.target as HTMLSourceElement;
+
   if (src.tagName === "SOURCE" && src.parentNode) {
     const media: HTMLMediaElement = src.parentNode as HTMLMediaElement;
     const errors = parseInt(media.dataset.errors || "0") + 1;

@@ -1,9 +1,9 @@
 import { html, nothing, type PropertyValueMap } from "lit";
 import { customElement } from "../utils/decorators/custom-element";
-import { property } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import { localized, msg } from "@lit/localize";
 import type { FileType, FilesResultType } from "../types/files.types";
-import { getExtension, getIcon } from "../utils/files";
+import { getExtension, getIcon, isFileEditable } from "../utils/files";
 import { QueryController } from "../controllers/query-controller";
 import { getApiOptions } from "../data/api";
 import { repeat } from "lit/directives/repeat.js";
@@ -15,12 +15,14 @@ import {
   getFileVersionsKey,
 } from "../data/file-versions";
 import { openUrl } from "../utils/urls";
-import { relativeTime } from "../utils/datetime";
+import { relativeDays } from "../utils/datetime";
 import { clickOnEnterAndConsumeOnSpace, clickOnSpace } from "../utils/keyboard";
 import { WeavySubAppComponent } from "../classes/weavy-sub-app-component";
 import { ShadowPartsController } from "../controllers/shadow-parts-controller";
-import { FileVersionSelectEventType } from "../types/files.events";
+import { FileEditEventType, FileVersionSelectEventType } from "../types/files.events";
 import { NamedEvent } from "../types/generic.types";
+import type { EditorDraftType } from "../types/editor.types";
+import { getDraftOptions, getFileDraftKey, removeDraft } from "../data/drafts";
 
 import "./ui/wy-dropdown";
 import "./ui/wy-icon";
@@ -50,7 +52,9 @@ declare global {
  *
  * @csspart wy-versions - Wrapper for the versions list.
  *
- * @fires {FileVersionSelectEventType} file-version-select - Emitted when a file version is selected.
+ * @fires {FileVersionSelectEventType} file-version-select - Emitted when a file version, or the unsaved draft (`draft` set), is selected.
+ * @fires {FileEditEventType} edit - Emitted when the file/draft should be edited.
+ * 
  */
 @customElement("wy-file-versions")
 @localized()
@@ -62,13 +66,32 @@ export class WyFileVersions extends WeavySubAppComponent {
    * Source file whose version timeline should be displayed.
    */
   @property({ attribute: false })
-  file!: FileType;
+  file?: FileType;
 
   /**
    * Currently selected version. Falls back to the latest when unset.
    */
   @property({ attribute: false })
   activeVersion?: FileType;
+
+  /**
+   * Whether the unsaved draft is the selected entry rather than a stored version.
+   */
+  @property({ type: Boolean })
+  activeDraft: boolean = false;
+
+  /**
+   * Id used for handling drafts.
+   * @internal
+   */
+  @state()
+  draftKey?: string;
+
+  /**
+   * Query controller for getting file draft.
+   * @internal
+   */
+  private draftQuery = new QueryController<EditorDraftType>(this);
 
   /**
    * Query controller fetching the file versions list.
@@ -95,7 +118,21 @@ export class WyFileVersions extends WeavySubAppComponent {
    */
   selectVersion(versionFile: FileType) {
     this.activeVersion = versionFile;
+    this.activeDraft = false;
     this.dispatchFileVersionSelect(versionFile);
+  }
+
+  /**
+   * Selects the unsaved draft and emits `file-version-select` with `draft` set, so the host can show the draft
+   * without entering edit mode.
+   */
+  selectDraft() {
+    if (!this.file) {
+      return;
+    }
+    this.activeVersion = this.file;
+    this.activeDraft = true;
+    this.dispatchFileVersionSelect(this.file, true);
   }
 
   /**
@@ -105,10 +142,30 @@ export class WyFileVersions extends WeavySubAppComponent {
    * @param versionFile - Version to announce.
    * @returns Whether the event was not canceled.
    */
-  dispatchFileVersionSelect(versionFile: FileType) {
+  dispatchFileVersionSelect(versionFile: FileType, draft: boolean = false) {
     const event: FileVersionSelectEventType = new (CustomEvent as NamedEvent)("file-version-select", {
-      detail: { versionFile },
+      detail: { versionFile, draft },
     });
+    return this.dispatchEvent(event);
+  }
+
+  /**
+   * Emit a `edit` event for the file.
+   *
+   * @internal
+   * @returns Whether the event was not canceled.
+   */
+  dispatchFileEdit() {
+    const file = this.file;
+
+    if (!file) {
+      return;
+    }
+
+    const event: FileEditEventType = new (CustomEvent as NamedEvent)("edit", {
+      detail: { file, edit: true },
+    });
+
     return this.dispatchEvent(event);
   }
 
@@ -147,6 +204,15 @@ export class WyFileVersions extends WeavySubAppComponent {
     openUrl(file.download_url, "_top", file.name, true);
   }
 
+  /**
+   * Removes any draft for the current file.
+   */
+  removeDraft() {
+    if (this.weavy && this.draftKey) {
+      void removeDraft(this.weavy, this.draftKey)
+    }
+  }
+
   override async willUpdate(changedProperties: PropertyValueMap<this>): Promise<void> {
     super.willUpdate(changedProperties);
 
@@ -160,12 +226,27 @@ export class WyFileVersions extends WeavySubAppComponent {
         getApiOptions<FilesResultType>(
           this.weavy,
           getFileVersionsKey(this.app, this.file),
-          `/api/files/${this.file.id}/versions`
-        )
+          `/api/files/${this.file.id}/versions`,
+        ),
       );
 
       this.fileVersionRestoreMutation = getFileVersionRestoreMutation(this.weavy, this.app, this.file);
       this.fileVersionDeleteMutation = getFileVersionDeleteMutation(this.weavy, this.app, this.file);
+    }
+
+    if (
+      (changedProperties.has("weavy") || changedProperties.has("file")) &&
+      this.weavy
+    ) {
+      this.draftKey = this.file ? getFileDraftKey(this.file) : undefined;
+    }
+    
+    if ((changedProperties.has("weavy") || changedProperties.has("draftKey")) && this.weavy) {
+      if (this.draftKey) {
+        await this.draftQuery.trackQuery(getDraftOptions(this.weavy, this.draftKey));
+      } else {
+        this.draftQuery.untrackQuery();
+      }
     }
   }
 
@@ -176,13 +257,67 @@ export class WyFileVersions extends WeavySubAppComponent {
       return html`<wy-progress-circular indeterminate overlay></wy-progress-circular>`;
     }
 
+    let draft;
+
+    const { data: draftContent } = this.draftQuery.result;
+
+    // A cached draft the user can no longer act on (revoked permission, editing turned off) is left out.
+    if (this.file && draftContent && isFileEditable(this.file, this.app, this.componentFeatures)) {
+      const draftIcon = this.file && getIcon(this.file.name || "").icon;
+
+      const ext = getExtension(this.file.name);
+      const modifiedAt = new Date(draftContent.updatedAt);
+      const dateFull = new Intl.DateTimeFormat(this.weavy?.locale, {
+        dateStyle: "full",
+        timeStyle: "short",
+      }).format(modifiedAt);
+      const dateFromNow = relativeDays(this.weavy?.locale, new Date(modifiedAt));
+
+      draft = html`
+        <wy-item
+          size="lg"
+          interactive
+          ?selected=${this.activeDraft}
+          tabindex="0"
+          @click=${() => this.selectDraft()}
+          @keydown=${clickOnEnterAndConsumeOnSpace}
+          @keyup=${clickOnSpace}
+        >
+          <wy-icon slot="image" name=${draftIcon} size="48" kind=${this.file.kind} ext=${ext}></wy-icon>
+          <span slot="title"><em>${msg("Unsaved draft")}</em></span>
+          <span slot="text">
+            <time datetime=${draftContent.updatedAt} title=${dateFull}>${dateFromNow}</time>
+          </span>
+
+          <wy-dropdown slot="actions" directionX="left">
+            <wy-dropdown-item @click=${() => this.dispatchFileEdit()}>
+              <wy-icon name="pencil"></wy-icon>
+              ${msg("Edit")}
+            </wy-dropdown-item>
+            <wy-dropdown-divider></wy-dropdown-divider>
+            <wy-dropdown-item @click=${() => this.removeDraft()}>
+              <wy-icon name="delete"></wy-icon>
+              ${msg("Remove", { desc: "Button action to remove" })}
+            </wy-dropdown-item>
+          </wy-dropdown>
+        </wy-item>
+      `;
+    } else {
+      draft = nothing;
+    }
+
     return data?.data
       ? html`
           <wy-item-list part="wy-versions">
+            ${draft}
             ${repeat(
               data.data,
               (versionFile) => versionFile.id,
               (versionFile: FileType, index) => {
+                if (!this.file) {
+                  return nothing;
+                }
+
                 const versionIcon = getIcon(versionFile.name || "").icon;
                 const num = data.data ? data.data.length - index : NaN;
                 const ext = getExtension(versionFile.name);
@@ -193,7 +328,7 @@ export class WyFileVersions extends WeavySubAppComponent {
                   dateStyle: "full",
                   timeStyle: "short",
                 }).format(modifiedAt);
-                const dateFromNow = relativeTime(this.weavy?.locale, new Date(modifiedAt));
+                const dateFromNow = relativeDays(this.weavy?.locale, new Date(modifiedAt));
 
                 return isExternal
                   ? html`
@@ -205,7 +340,7 @@ export class WyFileVersions extends WeavySubAppComponent {
                       <wy-item
                         size="lg"
                         interactive
-                        ?selected=${versionFile.rev == this.activeVersion?.rev}
+                        ?selected=${!this.activeDraft && versionFile.rev == this.activeVersion?.rev}
                         tabindex="0"
                         @click=${() => this.selectVersion(versionFile)}
                         @keydown=${clickOnEnterAndConsumeOnSpace}
@@ -248,7 +383,7 @@ export class WyFileVersions extends WeavySubAppComponent {
                         </wy-dropdown>
                       </wy-item>
                     `;
-              }
+              },
             )}
           </wy-item-list>
         `

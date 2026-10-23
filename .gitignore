@@ -13,6 +13,9 @@ dist
 
 *.local
 
+# local certificates
+dev/certs/
+
 # editor config
 .vscode/*
 !.vscode/extensions.json

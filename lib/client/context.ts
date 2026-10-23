@@ -13,7 +13,7 @@ export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>
     // CONTEXT PROVIDER
     // SHOULD BE APPLIED LAST TO ENSURE EVERYTHING IS SET BEFORE CONTEXT GETS PROVIDED
 
-    #hostContextProvider?: ContextProvider<typeof WeavyContext>;
+    _hostContextProvider?: ContextProvider<typeof WeavyContext>;
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(...args: any[]) {
@@ -23,7 +23,7 @@ export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>
       // Context root
       if (this.host !== document.documentElement) {
         globalContextProvider?.detachListeners();
-        this.#hostContextProvider = new ContextProvider(this.host, {
+        this._hostContextProvider = new ContextProvider(this.host, {
           context: WeavyContext,
           initialValue: this as unknown as WeavyType,
         });
@@ -34,7 +34,7 @@ export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>
 
     updateContext() {
       if (this.host !== document.documentElement) {
-        this.#hostContextProvider?.updateObservers()
+        this._hostContextProvider?.updateObservers()
       } else {
         globalContextProvider?.updateObservers();
       }
@@ -44,7 +44,7 @@ export const WeavyContextProviderMixin = <TBase extends Constructor<WeavyClient>
       super.destroy();
 
       if (this.host !== document.documentElement) {
-        this.#hostContextProvider?.detachListeners();
+        this._hostContextProvider?.detachListeners();
       } else {
         if (globalContextProvider?.value === (this as unknown as WeavyType)) {
           globalContextProvider?.setValue(undefined);

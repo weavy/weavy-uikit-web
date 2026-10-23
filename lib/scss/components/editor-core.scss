@@ -1,6 +1,7 @@
 @use "../base/var";
 @use "../base/color";
 @use "../base/const";
+@use "../base/text";
 
 [part~="wy-core-editor"] {
   flex: 1 1 100%;
@@ -14,10 +15,8 @@
 
 /** CODEMIRROR **/
 [part~="wy-core-editor"] {
-
   .cm-editor {
     flex: 1 1 100%;
-    max-height: 11.25em;
     background-color: color.token(--wy-surface-container-lowest);
     color: color.token(--wy-on-surface);
     border: var.default(--wy-input-border-width) solid transparent; //#{color.token(--wy-outline-variant)};
@@ -28,7 +27,9 @@
     }
 
     .cm-content {
-      font-family: #{var.default(--wy-input-font-family)}, inherit;
+      font-family:
+        #{var.default(--wy-input-font-family)},
+        inherit;
       font-size: var.default(--wy-input-font-size);
       padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
     }
@@ -53,10 +54,11 @@
   }
 }
 
-[part~="wy-core-post-editor"] {
+[part~="wy-core-editor-multiline"] {
   .cm-editor {
     min-height: 4em;
     border-radius: var.default(--wy-border-radius);
+    max-height: 11.25em;
 
     .cm-line {
       padding: 0;
@@ -64,10 +66,12 @@
   }
 }
 
-[part~="wy-core-editor-message"] {
+[part~="wy-core-editor-line"] {
+  align-self: center;
+
   .cm-editor {
     border-radius: var.default(--wy-input-filled-border-radius);
-    margin: calc(-1 * #{var.default(--wy-input-border-width)});
+    max-height: 11.25em;
 
     &.cm-focused {
       border-color: #{color.token(--wy-outline-variant)};
@@ -75,21 +79,39 @@
 
     .cm-content {
       font-size: var.default(--wy-input-font-size);
-      
+
       min-height: calc(
-        var.default(--wy-input-font-size) * var.wy-rem(1.5) + var.default(--wy-input-padding-y) * 2 - #{var.default(
-            --wy-input-border-width
-          )}
+        var.default(--wy-input-font-size) * var.wy-rem(1.5) + var.default(--wy-input-padding-y) * 2 -
+          #{var.default(--wy-input-border-width)}
       );
-      line-height: var.wy-rem(1.5);
+      line-height: var.wy-rem(1.25); // `normal` is 1.2, but we need 1.25 to get proper metrics for the input (ex 16px * 1.2 -> 19.2px, but 16px * 1.25 -> 20px);
     }
   }
-
 }
 
-[part~="wy-core-editor-comment"] {
+[part~="wy-core-editor-full"] {
   .cm-editor {
-    border-radius: var.wy-rem(1.25);
-    margin: calc(-1 * #{var.default(--wy-input-border-width)});
+    min-height: 100%;
+    border-radius: 0;
+    border: none;
+    background: none;
+    color: inherit;
+
+    .cm-line {
+      word-break: break-word;
+      white-space: pre-wrap;
+      //font-family: var.default(--wy-font-monospace);
+    }
+
+    .cm-content {
+      font-family: inherit;
+      font-size: inherit;
+      line-height: normal;
+      padding: 0;
+    }
+
+    .cm-line {
+      padding: 0;
+    }
   }
 }

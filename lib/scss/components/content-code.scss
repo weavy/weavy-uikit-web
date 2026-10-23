@@ -13,5 +13,18 @@
   box-sizing: border-box;
   width: 100%;
   padding: var.wy-rem(2) var.wy-rem(3.5);
+
+  color: #{color.token(--wy-code-text)};
+  font-family: var.default(--wy-font-monospace);
   font-size: var.default(--wy-font-size-sm);
+  line-height: normal; //1.25;
+
+  pre {
+    margin-block: 0;
+  }
+}
+
+[part~="wy-content-code-edit"] {
+  padding: var.wy-rem(2) var.wy-rem(3.5) var.wy-rem(2) 0;
+
 }

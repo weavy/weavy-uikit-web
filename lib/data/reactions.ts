@@ -1,6 +1,6 @@
 import { MutationObserver } from "@tanstack/query-core";
 import { type WeavyType } from "../client/weavy";
-import { updateCacheItem } from "../utils/query-cache";
+import { updateCacheItems } from "../utils/query-cache";
 import { ReactableType, ReactionsResultType } from "../types/reactions.types";
 import { MemberType } from "../types/members.types";
 import { MsgType } from "../types/msg.types";
@@ -22,13 +22,14 @@ export function reactionMutation(
       });
     },
     onMutate: () => {
-      const queryKey = parentType === "apps" && entityType === "posts" ? [entityType, parentId]: [parentType, parentId, entityType];
-      updateCacheItem<MsgType>(weavy.queryClient, queryKey, entityId, (item) => 
+      // Comments use keys such as ["apps", "comments", 42, around]; include every paging variant.
+      const queryKey = entityType === "comments" ? [parentType, entityType, parentId] : [entityType, parentId];
+      updateCacheItems<MsgType>(weavy.queryClient, { queryKey }, entityId, (item) =>
         updateReaction(item, content, user)
       );
 
       if (parentType === "apps" && entityType === "posts") {
-        updateCacheItem<MsgType>(weavy.queryClient, ["posts", "feed"], entityId, (item) => 
+        updateCacheItems<MsgType>(weavy.queryClient, { queryKey: ["posts", "feed"] }, entityId, (item) =>
           updateReaction(item, content, user)
         );
       }
@@ -37,7 +38,6 @@ export function reactionMutation(
 }
 
 export function getReactionListOptions(weavy: WeavyType, entityType: string, entityId: number) {
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return {
     queryKey: [entityType, entityId, "reactions"],
     enabled: false,
@@ -74,4 +74,3 @@ export function updateReaction(item: MsgType, content: string | undefined, user:
 
   return item;
 }
-

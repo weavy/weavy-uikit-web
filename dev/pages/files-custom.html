@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+    />
+    <link rel="modulepreload" href="%WEAVY_URL%/uikit-web/es/locales/sv-SE.js" />
+    <script type="module" src="/lib"></script>
+    <script type="module" src="/utils/tanstack-dev-tools.ts" async defer></script>
+
+    <style>
+      :root {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          "Open Sans",
+          "Helvetica Neue",
+          sans-serif;
+      }
+
+      html.wy-dark {
+        color-scheme: dark;
+      }
+
+      html {
+        display: flex;
+        height: 100dvh;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0.5rem;
+      }
+
+      .header {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 20px;
+
+        > * {
+          background: lightcyan;
+          border-radius: 0.5rem;
+          padding: 0.5rem;
+          display: flex;
+          gap: 0.5rem;
+          justify-content: center;
+          align-items: center;
+          min-height: 2.5rem;
+        }
+
+        button {
+          height: 100%;
+          position: relative;
+        }
+      }
+
+      .layout {
+        display: flex;
+        flex-direction: column;
+
+        flex: 0 1 100%;
+        margin: 0.5rem;
+        min-height: 0;
+        gap: 0.5rem;
+        margin: .5rem;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 50% 50%;
+        flex: 0 1 100%;
+        min-height: 0;
+        gap: 0.5rem;
+      }
+
+      wy-files {
+        padding: 0.5rem;
+        border: 2px solid gray;
+        --wy-table-border: 0;
+        --wy-border-radius-outer: 0.5rem;
+      }
+
+      wy-file {
+        --wy-padding-outer: 0.5rem;
+        padding: 0.5rem;
+        border: 2px solid gray;
+        --wy-border-radius-outer: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <wy-context id="wy-provider" url="%WEAVY_URL%"></wy-context>
+    <div class="header">
+      <div id="color-menu">
+        <button class="color" value="red">Red</button>
+        <button class="color" value="green">Green</button>
+        <button class="color" value="blue">Blue</button>
+      </div>
+      <div id="color-scheme">
+        <button class="mode" value="light">Light</button>
+        <button class="mode" value="dark">Dark</button>
+      </div>
+    </div>
+    <div class="layout">
+      <wy-file-new id="file-new" uid="acme-custom-files"></wy-file-new>
+      <div class="row">
+        <wy-files uid="acme-custom-files" header="none"></wy-files>
+        <wy-file header="interactive" uid="acme-custom-files"></wy-file>
+      </div>
+    </div>
+    <tanstack-dev-tools></tanstack-dev-tools>
+
+    <script>
+      const wyCreateFile = document.querySelector("wy-file-new");
+      const wyFile = document.querySelector("wy-file");
+      const wyFiles = document.querySelector("wy-files");
+      const appUID = new URLSearchParams(window.location.search).get("appUID");
+      if (appUID != null) {
+        wyCreateFile.setAttribute("uid", appUID);
+        wyFile.setAttribute("uid", appUID);
+        wyFiles.setAttribute("uid", appUID);
+      }
+      wyFile.themeColor = "#e5c07b";
+
+      wyCreateFile.addEventListener(
+        "wy-action",
+        (e) => {
+          if (e.detail.file) {
+            console.log("wyCreateFile wy-action", e.detail.action);
+            wyFile.fileId = e.detail.file.id;
+            wyFile.edit = e.detail.action === "edit";
+            wyFiles.selectedId = e.detail.file.id;
+            wyFiles.highlightId = e.detail.file.id;
+          }
+        },
+        { capture: true },
+      );
+
+      wyFiles.addEventListener(
+        "wy-action",
+        (e) => {
+          console.log("wyFiles wy-action", e.detail.action);
+          if ((e.detail.action === "" || /select|preview|edit|comment|history/.test(e.detail.action)) && e.detail.file) {
+            e.preventDefault();
+            wyFile.fileId = e.detail.file.id;
+            wyFile.edit = e.detail.action === "edit";
+            wyFile.tab = e.detail.action === "comment" ? "comments" : e.detail.action === "history" ? "versions" : undefined;
+          }
+        },
+        { capture: true },
+      );
+
+
+      wyFile.addEventListener("wy-app", (e) => {
+        console.log("wy-app", e.detail);
+      });
+
+      const weavy = document.getElementById("wy-provider");
+      weavy.tokenFactory = async (refresh) => {
+        let response = await fetch(`/api/token${refresh ? "?refresh=true" : ""}`);
+
+        if (response.ok) {
+          let data = await response.json();
+          return data.access_token;
+        } else {
+          throw new Error("Could not get access token from server!");
+        }
+      };
+
+      console.log("Initialized");
+    </script>
+  </body>
+</html>

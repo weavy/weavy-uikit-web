@@ -46,7 +46,7 @@
 
 [part~="wy-overlay"] {
   --wy-component-background-color: #{color.token(--wy-background)};
-  --wy-component-color: #{color.token(--wy-on-background)};
+  --wy-component-color: #{color.token(--wy-on-surface)};
   background-color: var(--wy-component-background-color);
   color: var(--wy-component-color);
   display: flex;

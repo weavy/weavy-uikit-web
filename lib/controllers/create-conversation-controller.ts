@@ -8,28 +8,16 @@ import { CreateAppMutationType, getCreateAppMutation } from "../data/app";
 import { WyActionEventType } from "../types/action.events";
 import { ActionType } from "../types/action.types";
 
-export interface CreateConversationProps {
-  /**
-   * Optional agent uid to use.
-   */
-  agent?: string;
-}
-
 /**
  * Lit element controller for creating a conversation app.
  *
  * - Requires a weavy context.
- * - May use members and an agent.
+ * - Creates a private chat for a single member and a chat room otherwise.
  *
- * @fires {WyActionEventType} wy-selected - Emitted when a conversation app is created and should be selected.
+ * @fires {WyActionEventType} wy-action - Emitted when a conversation app is created and should be selected.
  */
 export class CreateConversationController implements ReactiveController {
   host: LitElement & ReactiveControllerHost;
-
-  /**
-   * Explicit agent id for agent mode. This is also checked for directly on the host.
-   */
-  agent?: string;
 
   private addConversationMutation?: CreateAppMutationType;
 
@@ -53,8 +41,8 @@ export class CreateConversationController implements ReactiveController {
    * Initiates context consumers
    */
   protected async setContexts() {
-    await whenParentsDefined(this.host as LitElement);
-    this.weavyContext = new ContextConsumer(this.host as LitElement, { context: WeavyContext, subscribe: true });
+    await whenParentsDefined(this.host);
+    this.weavyContext = new ContextConsumer(this.host, { context: WeavyContext, subscribe: true });
   }
 
   /**
@@ -92,17 +80,14 @@ export class CreateConversationController implements ReactiveController {
   async create(members: (number | string)[] = []): Promise<AppType> {
     const addConversationMutation = await this.initMutation();
 
-    const agent = this.agent ?? (this.host as CreateConversationProps).agent;
-
-    const memberOptions = agent
-      ? { members: [agent], type: AppTypeString.AgentChat }
-      : { members, type: members.length === 1 ? AppTypeString.PrivateChat : AppTypeString.ChatRoom };
-
     // create conversation
-    const conversation = await addConversationMutation.mutate(memberOptions);
+    const conversation = await addConversationMutation.mutate({
+      members,
+      type: members.length === 1 ? AppTypeString.PrivateChat : AppTypeString.ChatRoom,
+    });
 
-    this.dispatchActionEvent(conversation)
-    
+    this.dispatchActionEvent(conversation);
+
     return conversation;
   }
 

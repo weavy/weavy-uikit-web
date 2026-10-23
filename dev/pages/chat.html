@@ -65,7 +65,7 @@
 <body>
   <wy-context url="%WEAVY_URL%" reactions="👍 ❤️ 😂 😒 😁" tokenUrl="/api/token"></wy-context>
   <div class="toolbar"><button onclick="toggle()">Toggle</button></div>
-  <wy-chat uid="acme-chat" name="Acme Chit Chat">
+  <wy-chat uid="acme-chat" name="Acme Chit Chat" features="report block">
     <wy-notification-button slot="actions" uid="acme-chat"></wy-notification-button>
   </wy-chat>
   <wy-notification-toasts></wy-notification-toasts>
@@ -101,8 +101,10 @@
       console.log("wy-app", e.detail);
     });
 
-    chat.addEventListener("wy-selected", (e) => {
-      console.log("wy-selected", e.detail);
+    chat.addEventListener("wy-action", (e) => {
+      if(e.detail.action === "select" && e.detail.app) {
+        console.log("wy-action select app", e.detail);
+      }
     });
 
   </script>

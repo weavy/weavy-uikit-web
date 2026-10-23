@@ -12,6 +12,19 @@
   border-radius: 0;
 }
 
+[part~="wy-modal-input"] {
+  height: auto;
+  min-height: calc(var.default(--wy-titlebar-height) + var.default(--wy-footerbar-height));
+  border-radius: var.default(--wy-border-radius);
+  box-shadow: var.default(--wy-shadow-level4);
+  margin-top: auto;
+  margin-bottom: auto;
+
+  margin-left: var.default(--wy-padding-lg);
+  margin-right: var.default(--wy-padding-lg);
+
+}
+
 [part~="wy-modal-centered"] {
   @include breakpoints.container-size-up(md) {
     border-radius: var.default(--wy-border-radius);
@@ -34,4 +47,3 @@
     }
   }
 }
-

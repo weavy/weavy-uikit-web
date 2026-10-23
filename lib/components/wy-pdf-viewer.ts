@@ -15,7 +15,6 @@ import type { NamedEvent } from "../types/generic.types";
 import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { EventBus, GenericL10n, PDFHistory, PDFLinkService, PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 //import type * as pdfjsViewerType from "pdfjs-dist/web/pdf_viewer.mjs";
-import type { DocumentInitParameters } from "pdfjs-dist/types/src/display/api";
 
 type pdfjsLibType = typeof import("pdfjs-dist");
 type pdfjsViewerType = typeof import("pdfjs-dist/web/pdf_viewer.mjs");
@@ -266,7 +265,7 @@ export class WyPdfViewer extends LitElement {
     this.progress = { loaded: NaN, total: NaN, percent: NaN };
 
     // Loading document.
-    const loadingTask = pdfjsLib.getDocument(<DocumentInitParameters>{
+    const loadingTask = pdfjsLib.getDocument({
       url: this.src,
       maxImageSize: this.MAX_IMAGE_SIZE,
       enableXfa: this.ENABLE_XFA,
@@ -694,7 +693,7 @@ export class WyPdfViewer extends LitElement {
         <div ${ref(this.viewerContainerRef)} class="wy-pdf-container">
           <div class="pdfViewer"></div>
 
-          <div part="wy-pdf-toolbar">
+          <div part="wy-pdf-toolbar wy-toolbar-area">
             <nav part="wy-toolbar wy-toolbar-center">
               <div part="wy-toolbar-buttons">
                 <input

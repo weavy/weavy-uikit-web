@@ -7,6 +7,8 @@ import { MessageType } from "./messages.types";
 import { PostType } from "./posts.types";
 import { UserOrAgentMinimalType } from "./users.types";
 import { NotificationType } from "./notifications.types";
+import { MsgType } from "./msg.types";
+import { PollOptionType } from "./polls.types";
 
 export type RealtimeDataType = PlainObjectType | number | string | Array<PlainObjectType | number | string>;
 
@@ -57,6 +59,12 @@ export type RealtimePostEventType = RealtimeEventType & {
 // COMMENTS
 export type RealtimeCommentEventType = RealtimeEventType & {
   comment: CommentType;
+};
+
+// POLLS
+export type RealtimeVoteEventType = RealtimeEventType & {
+  poll: MsgType;
+  option: PollOptionType;
 };
 
 // FILES

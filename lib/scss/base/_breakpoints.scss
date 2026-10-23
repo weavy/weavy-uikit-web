@@ -6,33 +6,66 @@ $grid-breakpoints: (
   md: 768px,
   lg: 992px,
   xl: 1200px,
-  xxl: 1400px
+  xxl: 1400px,
 ) !default;
 
 // Makes the @content apply to the given size and container
-@mixin container-size-up($name, $container:null, $breakpoints: $grid-breakpoints) {  
-  $min: map.get($breakpoints, $name);     
+@mixin container-size-up($name, $container: null, $breakpoints: $grid-breakpoints) {
+  $min: map.get($breakpoints, $name);
   @if $container {
     @container #{$container} (inline-size >= #{$min}) {
       @content;
-    }  
+    }
   } @else {
     @container (inline-size >= #{$min}) {
       @content;
-    } 
+    }
   }
 }
 
 // Makes the @content apply to the given size and container
-@mixin container-size-down($name, $container:null, $breakpoints: $grid-breakpoints) {  
-  $max: map.get($breakpoints, $name);     
+@mixin container-size-down($name, $container: null, $breakpoints: $grid-breakpoints) {
+  $max: map.get($breakpoints, $name);
   @if $container {
     @container #{$container} (inline-size < #{$max}) {
       @content;
-    }  
+    }
   } @else {
     @container (inline-size < #{$max}) {
       @content;
-    } 
+    }
+  }
+}
+
+// Media of at least the minimum breakpoint width. No query for the smallest breakpoint.
+// Makes the @content apply to the given breakpoint and wider.
+@mixin media-breakpoint-up($name, $breakpoints: $grid-breakpoints) {
+  @warn "Using window relative media-breakpoint-up(#{$name}). Use container relative container-size-up(#{$name}) instead.";
+
+  $min: breakpoint-min($name, $breakpoints);
+  @if $min {
+    @media (min-width: $min) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+// Makes the @content apply to the given size and container
+@mixin media-size-up($name, $breakpoints: $grid-breakpoints) {
+  $min: map.get($breakpoints, $name);
+
+  @media (width >= #{$min}) {
+    @content;
+  }
+}
+
+// Makes the @content apply to the given size of the viewport
+@mixin media-size-down($name, $breakpoints: $grid-breakpoints) {
+  $max: map.get($breakpoints, $name);
+
+  @media (width < #{$max}) {
+    @content;
   }
 }

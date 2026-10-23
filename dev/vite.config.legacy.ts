@@ -1,17 +1,18 @@
 import { defineConfig, loadEnv } from "vite";
-import packageJson from "../package.json";
+import packageJson from "../package.json" with { type: 'json' };
 import fs from "node:fs";
 import path from "node:path";
 //import { getBabelOutputPlugin } from "@rollup/plugin-babel";
-import { utf8BomPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins";
+import { utf8BomPlugin, excludeNodeInPdfJS } from "../utils/vite-plugins.js";
 //import minifyHTMLLiterals from 'rollup-plugin-minify-html-literals';
 import litCss from "vite-plugin-lit-css";
-import { removeImportMetaUrl } from "../utils/vite-plugins";
+import { removeImportMetaUrl } from "../utils/vite-plugins.js";
+import { fixOverlayInCodemirror } from "../utils/vite-plugins.js";
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
-const sourceName = process.argv.find((s) => s.startsWith("--source-name="))?.split("=")[1] || packageJson.name;
-const version = process.argv.find((s) => s.startsWith("--version="))?.split("=")[1] || packageJson.version;
+const sourceName = packageJson.name;
+const version = packageJson.version;
 
 // https://vitejs.dev/config/
 
@@ -48,6 +49,7 @@ export default defineConfig(({ mode }) => {
       excludeNodeInPdfJS(),
       litCss(),
       removeImportMetaUrl(),
+      fixOverlayInCodemirror(),
       //weavyImportUrlPlugin(),
     ],
     define,
@@ -98,12 +100,6 @@ export default defineConfig(({ mode }) => {
       },*/
       https: httpsConfig,
     },
-    esbuild: {
-      legalComments: "none",
-      charset: "utf8",
-      //banner: "\ufeff", // UTF-8 BOM
-      //keepNames: true,
-    },
     css: {
       preprocessorOptions: {
         scss: {
@@ -140,7 +136,7 @@ export default defineConfig(({ mode }) => {
             intro: `const WEAVY_SOURCE_FORMAT = "esm/bundle";`,
             minifyInternalExports: false,
             preserveModules: false,
-            inlineDynamicImports: true,
+            codeSplitting: false,
           },
           {
             format: "umd",
@@ -148,7 +144,7 @@ export default defineConfig(({ mode }) => {
             intro: `const WEAVY_SOURCE_FORMAT = "umd/bundle";`,
             minifyInternalExports: false,
             preserveModules: false,
-            inlineDynamicImports: true,
+            codeSplitting: false,
             name: "WeavyLib",
             exports: "named",
             footer: `
