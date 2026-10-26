@@ -2,137 +2,62 @@
 
 <img src="https://img.shields.io/badge/Platform-Lit-orange"/> <img src="https://img.shields.io/badge/Language-TypeScript-orange"/>
 
-Web components based UIKit for Weavy. Built as standard custom elements using the Lit platform. Weavy Web components are available both using `html` and `javascript`/`typescript`.
+The Weavy UIKit as standard web components, built with [Lit](https://lit.dev) and TypeScript. The components (`<wy-messenger>`, `<wy-chat>`, `<wy-feed>`, `<wy-files>`, `<wy-comments>`, `<wy-copilot>`, `<wy-notifications>` and more) connect to a Weavy environment and add chat, feeds, file sharing, comments, notifications and AI agents to any web app. They work from plain HTML as well as from JavaScript/TypeScript, and they are the foundation for the framework packages such as [`@weavy/uikit-react`](https://www.npmjs.com/package/@weavy/uikit-react).
 
 ## Installation
 
-```shell
+```bash
 npm install @weavy/uikit-web
 ```
 
-## Getting started
+## Documentation
 
-You need a Weavy server in order to test any of the frontend examples. If you don't have one, you can create one for free after signing up for an account on <a href="https://get.weavy.com">get.weavy.com</a>.
+Guides, concepts and the component reference are maintained on [docs.weavy.com](https://docs.weavy.com):
 
-You also need an application with a user system and a token endpoint. See [Weavy Authentication](https://weavy.com/docs) for more info about configuring authentication and single sign-on between your application and Weavy.
+- [Adding Weavy to your web app](https://docs.weavy.com/guides/javascript) – step-by-step guide: create an environment, configure authentication and add your first component.
+- [Adding the Weavy UIKit](https://docs.weavy.com/learn/uikit), [Authentication](https://docs.weavy.com/learn/authentication), [Components](https://docs.weavy.com/learn/components), [Styling](https://docs.weavy.com/learn/styling) and [Localization](https://docs.weavy.com/learn/localization).
+- [UIKit reference](https://docs.weavy.com/reference/uikit/) – properties, events and slots for every component.
+- [Changelog](https://docs.weavy.com/resources/changelog).
 
-> [Weavy docs](https://weavy.com/docs)
+The published package also contains TypeScript definitions, a [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest) in `dist/custom-elements.json` and a generated markdown API reference in `dist/docs/`.
 
-### Weavy configuration
+## Development
 
-To use any block you must first configure Weavy with an `url` and a `tokenUrl` or `tokenFactory`. This can be done using Javascript or HTML. See [UIKit Web Authentication](https://weavy.com/docs/reference/uikit-web/authentication) for more info about configuring authentication.
+The dev server compiles the components in watch mode and serves a set of demo pages, together with a local auth server that signs in test users against your Weavy environment.
 
-```js
-import { Weavy } from "@weavy/uikit-weavy";
-
-const weavy = new Weavy();
-weavy.url = "https://myenvironment.weavy.io";
-weavy.tokenUrl = "https://myserver.example/api/token";
-```
-
-### Weavy Blocks
-
-To use a weavy block simply create a component in html or javascript.
-
-```html
-<wy-messenger></wy-messenger>
-```
-
-## Run the components demo in developer mode
-
-The developer mode compiles and starts up a developer server that also provides authentication for a set of test users.
-
-### .env
-
-You must provide an `.env` file with your _WEAVY_URL_ and _WEAVY_APIKEY_ to run the development test server. See the [.env.example](./.env.example) for an example configuration.
-
-```ini
-WEAVY_URL="https://mysite.weavy.io"
-WEAVY_APIKEY=""
-```
-
-### Dev server
-
-Once you have configured you `.env` you can start up the auth server and dev server. The dev server runs in watch mode.
+1. Copy `.env.example` to `.env` and set `WEAVY_URL` and `WEAVY_APIKEY` for your environment.
+2. Install and start:
 
 ```bash
 npm install
 npm start
 ```
 
-You should see a list of available component demos, choose any you like.
+The start page lists the available component demos.
 
 ### HTTPS (optional)
 
-By default the dev server runs on plain HTTP, which is fine for most component work. Enable TLS when you need production-like behavior: HTTP/2 (browsers only use it over TLS, and some bugs — e.g. in the realtime reconnect path — only reproduce there), `Secure`/`SameSite=None` cookies for iframe/embedding scenarios, or testing from other devices on your network (only `localhost` is a secure context over plain HTTP).
-
-If you run the Weavy backend locally you already have a trusted ASP.NET developer certificate — export it as PEM (the export directory must exist first):
+The dev server runs on plain HTTP by default. Enable TLS when you need production-like behavior such as HTTP/2, `Secure`/`SameSite=None` cookies for iframe scenarios, or testing from other devices. Export the ASP.NET developer certificate as PEM (`dev/certs/` is ignored by git) and point the `HTTPS_PEM_*` variables in `.env` at the files:
 
 ```bash
 mkdir dev/certs
 dotnet dev-certs https --export-path dev/certs/localhost.pem --format Pem --no-password
 ```
 
-Then point the `HTTPS_PEM_*` variables in your `.env` at the exported pair:
-
 ```ini
 HTTPS_PEM_KEY_PATH="dev/certs/localhost.key"
 HTTPS_PEM_CERT_PATH="dev/certs/localhost.pem"
 ```
 
-Restart `npm start` and the dev server serves `https://localhost:5173`. If the certificate is not trusted yet, run `dotnet dev-certs https --trust` once. [mkcert](https://github.com/FiloSottile/mkcert) works too — it produces a trusted PEM pair for the same two variables. A PFX certificate can be used instead via `HTTPS_PFX_PATH` and `HTTPS_PFX_PASSWORD`.
+Restart `npm start` and the dev server serves `https://localhost:5173`. Run `dotnet dev-certs https --trust` once if the certificate is not trusted. With TLS enabled the auth server runs as a standalone HTTP server on port `3001` (override with `WEAVY_AUTH_PORT`).
 
-Keep certificates out of git: `dev/certs/` is ignored via `.gitignore`.
+### Tests
 
-Note that with TLS enabled, vite serves HTTP/2. The dev auth server therefore runs as a standalone HTTP server (port `3001`, override with `WEAVY_AUTH_PORT`) that vite proxies `/api` to — Express middleware cannot run inside vite's HTTP/2 pipeline.
-
-## Documentation
-
-The main documentation can be found at the [Weavy documentation site](https://weavy.com/docs). A detailed API reference for all components in this package is provided as markdown in the `dist/docs` folder. The API reference is also available as a very detailed custom elements manifest in `dist/custom-elements.json`. 
-
-- [weavy.com/docs](https://weavy.com/docs)
-- [Weavy Component API Reference](./dist/docs/index)
-- [Weavy Custom Elements Manifest](./dist/custom-elements.json)
-
-In-code documentation is provided as JSDoc3 and typescript definitions are also available in the package. It follows Typescript flavor and Open WC flavor.
-
-Learn more about the [custom elements manifest standard](https://github.com/webcomponents/custom-elements-manifest).
-
-To learn more about the different components that you can use and how to setup the authentication flow, head over to our [documentation site](https://weavy.com/docs).
-
-## Tests
-
-There are 2 types of tests in uikit-web - unit and end-to-end.
-
-### Unit
-
-The unit tests can be run as
-
-```
-npm install
-npm run test:unit
+```bash
+npm test            # lint, lit-analyzer, type check and unit tests
+npm run test:unit   # unit tests only (Web Test Runner in Chromium, Firefox and WebKit)
 ```
 
-These tests are standalone and has no dependencies to a Weavy server or other.
+The unit tests in `tests/unit` are standalone and need no Weavy environment.
 
-### End-to-end
-
-We use [Playwright ](https://playwright.dev/)as a framework for the e2e-tests. To run the tests you need to setup the following:
-
-1. A Weavy server running locally or in Azure (locally is recommended).
-2. Configure Weavy with an API-key, and at least 2 users.
-3. Configure the uikit-web to be able to run in dev mode as stated [above](#run-the-components-demo-in-developer-mode).
-
-To run the tests: `npm run test:e2e`
-
-#### Remarks
-
-To run a single test or a subset of tests and also be able to inspect the UI step by step, the console log, network etc run `npx playwright test --ui`
-
-The e2e-tests are currently running in both Chromium and Webkit as headless browsers. Firefox is disabled for now due to too many problems with the uikit-web components.
-
-When running the tests on a newly started Weavy server where the cache hasn't been built up yet a number of tests can fail due to db deadlocks. Re-running the tests will usually solve this.
-
-Running the tests using a Weavy server in Azure can be slow, and also lead to flaky tests. You can increase the waiting timeouts in the tests by editing the timeout const that can be found in the top of each test-file.
-
-Settings for the e2e-tests can be found in `playwright.config.ts` Here you can increase the number of parallell workers for the tests to speed them up, edit the overall timeout for the tests, enable firefox etc.
+The end-to-end tests in `tests/e2e` use [Playwright](https://playwright.dev/) and are not part of `npm test`. They start the dev server, so they need a configured `.env` as described above and a Weavy environment with an API key. Run them with `npx playwright test`, or `npx playwright test --ui` to step through a test and inspect the UI, console and network. Browsers, workers and timeouts are configured in `playwright.config.ts`.
