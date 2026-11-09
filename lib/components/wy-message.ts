@@ -348,9 +348,12 @@ export class WyMessage extends WeavySubAppComponent {
     // into the cache by the mutation before the next fetch brings the real one.
     const reportedTitle = this.reportedAt ? msg(str`Reported by you on ${reportedAtFull}`) : msg("Reported by you");
 
-    // Reporting your own message is rejected by the server, and there is nothing to moderate about it anyway.
+    // Reporting your own message is rejected by the server, and there is nothing to moderate about it anyway. So is
+    // reporting a message from the system (0) or deleted (-1) user, which the host itself authored or nobody answers for.
     // Skeleton messages (negative id) are not on the server yet, so there is nothing to report either.
-    const canReport = Boolean(this.componentFeatures?.allowsFeature(Feature.Report) && !this.me && this.messageId > 0);
+    const canReport = Boolean(
+      this.componentFeatures?.allowsFeature(Feature.Report) && !this.me && this.messageId > 0 && this.author?.id > 0
+    );
 
     // Messages from a blocked user keep their place in a group conversation but hold back what the author wrote, the
     // way Discord and Google Chat do it: hiding the row outright leaves replies pointing at nothing. The message keeps
