@@ -483,12 +483,14 @@ export class WyEditorMsg extends WeavySubAppComponent {
   }
 
   /**
-   * Handle files dropped on the editor.
+   * Handle files dropped or pasted on the editor.
    *
    * @internal
    * @param e - Drop files event
    */
   protected handleDropFiles(e: DropFilesEventType) {
+    // Stop pasted files here, or an outer `drop-files` listener such as `<wy-files>` uploads them too.
+    e.stopPropagation();
     const eventDetail = e.detail;
     if (eventDetail.files) {
       void this.handleUploadFiles(eventDetail.files);
@@ -875,6 +877,7 @@ export class WyEditorMsg extends WeavySubAppComponent {
         .typing=${this.typing}
         .text=${this.text}
         ?disabled=${this.disabled}
+        .ignoreFileDrops=${true}
         @typing=${() => this.handleTyping()}
         @change=${(e: EditorChangeEventType) => {
           this.text = e.detail.text;

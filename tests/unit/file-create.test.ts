@@ -17,6 +17,8 @@ import { getCreateFileMutationOptions } from "../../lib/data/file-create";
 import { ContextProvider } from "@lit/context";
 import { WeavyContext } from "../../lib/contexts/weavy-context";
 import { AppContext } from "../../lib/contexts/apps-context";
+import { UserContext } from "../../lib/contexts/user-context";
+import type { WyActionEventType } from "../../lib/types/action.events";
 import "../../lib/components/wy-file-create";
 import "../../lib/wy-file-new";
 
@@ -592,4 +594,50 @@ describe("file creation mutation errors", () => {
       }
     });
   }
+});
+
+describe("file creation after the app changes", () => {
+  const firstApp = { id: 1, permissions: [PermissionType.Create] } as AppType;
+  const secondApp = { id: 2, permissions: [PermissionType.Create] } as AppType;
+  const blob = { id: 3, name: "notes.txt", size: 0, media_type: "text/plain" };
+
+  it("uploads to the current app and reports it in wy-action", async () => {
+    const weavy = new Weavy();
+    const requests: string[] = [];
+    weavy.upload = (async (url: string | URL, method: string) => {
+      requests.push(`${method} ${url}`);
+      return Response.json(blob);
+    }) as typeof weavy.upload;
+    weavy.fetch = async (url, options) => {
+      requests.push(`${options?.method} ${url}`);
+      return Response.json({ id: 42, name: blob.name, kind: "text" });
+    };
+    try {
+      const host = await fixture<HTMLDivElement>(html`<div></div>`);
+      new ContextProvider(host, { context: WeavyContext, initialValue: weavy });
+      new ContextProvider(host, { context: UserContext, initialValue: { id: 1, name: "Test user" } });
+      const appProvider = new ContextProvider(host, { context: AppContext, initialValue: firstApp });
+      const actionApps: (number | undefined)[] = [];
+      host.addEventListener("wy-action", (e) => actionApps.push((e as WyActionEventType).detail.app?.id));
+      const menu = document.createElement("wy-file-create");
+      host.appendChild(menu);
+      await menu.updateComplete;
+      const controller = (menu as unknown as { createFilesController: CreateFilesController }).createFilesController;
+
+      await controller.uploadFile(new File([], blob.name));
+      appProvider.setValue(secondApp);
+      await menu.updateComplete;
+      await controller.uploadFile(new File([], blob.name));
+
+      expect(requests).to.deep.equal([
+        "POST /api/blobs",
+        "POST /api/apps/1/files",
+        "POST /api/blobs",
+        "POST /api/apps/2/files",
+      ]);
+      expect(actionApps).to.deep.equal([1, 2]);
+    } finally {
+      weavy.destroy();
+    }
+  });
 });

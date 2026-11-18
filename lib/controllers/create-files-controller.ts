@@ -287,6 +287,8 @@ export class CreateFilesController implements ReactiveController {
 
     if (this.app) {
       this.resolveAppContext?.(this.app);
+      // A promise resolves only once; replace it so later awaits get the current app after `uid` changes.
+      this.whenAppContext = Promise.resolve(this.app);
     }
 
     if (this.user) {

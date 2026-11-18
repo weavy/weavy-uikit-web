@@ -104,6 +104,12 @@ export class WyEditorCore extends WeavySubAppComponent {
   @property()
   appearance: "line" | "multiline" | "full" = "multiline";
 
+  /**
+   * Leave dropped files to the host's drop zone instead of inserting their text. Set by the message editors.
+   */
+  @property({ type: Boolean })
+  ignoreFileDrops: boolean = false;
+
   @property()
   filename?: string;
 
@@ -441,6 +447,20 @@ export class WyEditorCore extends WeavySubAppComponent {
                   if (this.componentFeatures?.allowsFeature(Feature.Attachments) && files.length > 0) {
                     return this.dispatchFiles(files);
                   }
+                },
+                drop: (evt: DragEvent, _view: EditorView): boolean | void => {
+                  // Text drags keep CodeMirror's default.
+                  if (!evt.dataTransfer?.files.length) {
+                    return;
+                  }
+
+                  // Message editors: skip CodeMirror's text insert; the drop still bubbles to the host's drop zone.
+                  if (this.ignoreFileDrops) {
+                    return true;
+                  }
+
+                  // File editor: CodeMirror inserts the text; stop the drop so an outer drop zone doesn't upload it too.
+                  evt.stopPropagation();
                 },
                 keyup: (evt: KeyboardEvent, _view: EditorView) => {
                   //this.text = _view.state.doc.toString();

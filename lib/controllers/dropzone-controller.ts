@@ -22,19 +22,43 @@ export class DropZoneController implements ReactiveController {
     host.addController(this);
     this.host = host;
 
-    host.addEventListener("dragstart", () => (this.isDragActive = true));
-    host.addEventListener("dragenter", () => (this.isDragActive = true));
+    // Only file drags show the overlay, which would otherwise swallow drops of text dragged in an editor.
+    // No `dragstart`: it only fires for drags that start inside the host, never for files.
+    host.addEventListener("dragenter", (event: DragEvent) => {
+      if (this.hasFiles(event)) {
+        this.isDragActive = true;
+      }
+    });
     host.addEventListener("dragover", (event: DragEvent) => {
       // prevent default to allow drop
       event.preventDefault();
-      this.isDragActive = true;
+      if (this.hasFiles(event)) {
+        this.isDragActive = true;
+      }
     });
     host.addEventListener("dragleave", () => (this.isDragActive = false));
     host.addEventListener("dragend", () => (this.isDragActive = false));
 
+    // Reset in the capture phase: a nested zone stops the drop, and no `dragleave` follows it.
+    host.addEventListener("drop", () => (this.isDragActive = false), { capture: true });
     host.addEventListener("drop", (e: DragEvent) => this.handleDrop(e));
   }
 
+  /**
+   * Whether a drag carries files. Unlike the files, `types` is readable during the whole drag.
+   *
+   * @param event - A drag event.
+   * @returns `true` when the drag carries at least one file.
+   */
+  private hasFiles(event: DragEvent) {
+    return event.dataTransfer?.types.includes("Files") ?? false;
+  }
+
+  /**
+   * Take the files of a drop and dispatch them as a `drop-files` event on the host.
+   *
+   * @param event - The native drop event.
+   */
   handleDrop(event: DragEvent) {
     //console.log("File(s) dropped");
 
@@ -66,6 +90,8 @@ export class DropZoneController implements ReactiveController {
     }
 
     if (files.length) {
+      // The drop is native and composed, so it would bubble on to any drop zone further out and be taken twice.
+      event.stopPropagation();
       this.dispatchUploadFiles(files);
     }
 

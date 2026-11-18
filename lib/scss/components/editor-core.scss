@@ -31,7 +31,21 @@
         #{var.default(--wy-input-font-family)},
         inherit;
       font-size: var.default(--wy-input-font-size);
-      padding: var.default(--wy-input-padding-y) var.default(--wy-input-padding-x);
+      // No vertical padding here: CodeMirror maps clicks in it to the start or end of the document.
+      padding: 0 var.default(--wy-input-padding-x);
+    }
+  }
+}
+
+[part~="wy-core-editor-line"],
+[part~="wy-core-editor-multiline"] {
+  .cm-editor {
+    .cm-line:first-child {
+      padding-top: var.default(--wy-input-padding-y);
+    }
+
+    .cm-line:last-child {
+      padding-bottom: var.default(--wy-input-padding-y);
     }
   }
 }
@@ -84,7 +98,8 @@
         var.default(--wy-input-font-size) * var.wy-rem(1.5) + var.default(--wy-input-padding-y) * 2 -
           #{var.default(--wy-input-border-width)}
       );
-      line-height: var.wy-rem(1.25); // `normal` is 1.2, but we need 1.25 to get proper metrics for the input (ex 16px * 1.2 -> 19.2px, but 16px * 1.25 -> 20px);
+      // `normal` fits any font's text boxes; when rows overlap, CodeMirror shows the cursor at a wrap on the next row.
+      line-height: normal;
     }
   }
 }
